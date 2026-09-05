@@ -52,6 +52,7 @@ input,select,textarea{width:100%;padding:11px;border:1px solid #ccd7df;border-ra
 <form id="form">
 <label>الاسم الكامل *</label><input id="name" required>
 <label>البرنامج *</label><select id="program" required><option value="">جاري التحميل...</option></select>
+<label>نوع البرنامج *</label><select id="paymentType" required><option value="cash">نقد</option><option value="installment">قسط</option></select>
 <div class="cols">
 <div><label>الهاتف</label><input id="phone"></div>
 <div><label>الجنسية</label><input id="nat" value="عراقي"></div>
@@ -61,7 +62,7 @@ input,select,textarea{width:100%;padding:11px;border:1px solid #ccd7df;border-ra
 <div><label>رقم الفيزا</label><input id="vnum"></div>
 <div><label>تاريخ إصدار الفيزا</label><input id="vdate" type="date"></div>
 <div><label>الدفعة الأولى</label><input id="initial" type="number" min="0" value="0"></div>
-<div><label>أول استحقاق قسط</label><input id="due" type="date"></div>
+<div id="dueWrap"><label>أول استحقاق قسط</label><input id="due" type="date"></div>
 </div>
 <label>رابط نسخة الجواز</label><input id="doc" placeholder="يمكن إضافة رابط الملف لاحقًا">
 <label>ملاحظات</label><textarea id="notes"></textarea>
@@ -95,6 +96,8 @@ function msg(id,text,error){
  el.className='msg'+(error?' err':''); el.textContent=text||'';
 }
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
+function syncPaymentType(){const installment=$('paymentType').value==='installment';$('dueWrap').style.display=installment?'block':'none';$('due').required=installment;}
+$('paymentType').onchange=syncPaymentType;syncPaymentType();
 function statusBadge(s){
  const good=['paid','صادرة','مدفوع','مكتمل'].includes(String(s||''));
  return '<span class="badge '+(good?'ok':'')+'">'+(s||'قيد الإجراء')+'</span>';
@@ -171,7 +174,7 @@ window.openProfile=async function(id){
  '<div><b>الجنسية</b><br>'+esc(p.nationality||'—')+'</div><div><b>رقم الجواز</b><br>'+esc(p.passport_number||'—')+'</div>'+
  '<div><b>انتهاء الجواز</b><br>'+esc(p.passport_expiry||'—')+'</div><div><b>نسخة الجواز</b><br>'+(p.document_url?'<a href="'+esc(p.document_url)+'" target="_blank">فتح النسخة</a>':'—')+'</div></div>'+
  '<div class="section"><h3>الفيزا</h3><div class="cols"><div>الحالة: '+statusBadge(p.visa_status)+'</div><div>الرقم: '+esc(p.visa_number||'—')+'</div><div>تاريخ الإصدار: '+esc(p.visa_issued_at||'—')+'</div></div></div>'+
- '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج: <b>'+esc(pr?.title||'—')+'</b></div><div>التاريخ: '+esc(pr?.departure_date||'—')+'</div><div>الإجمالي: <span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع: <span class="money">'+money(paid)+'</span></div><div>المتبقي: <span class="money">'+money(remaining)+'</span></div><div>الحالة: '+statusBadge(b?.status)+'</div></div></div>'+
+ '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج: <b>'+esc(pr?.title||'—')+'</b></div><div>التاريخ: '+esc(pr?.departure_date||'—')+'</div><div>نوع البرنامج: <b>'+(b?.payment_type==='installment'?'قسط':'نقد')+'</b></div><div>الإجمالي: <span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع: <span class="money">'+money(paid)+'</span></div><div>المتبقي: <span class="money">'+money(remaining)+'</span></div><div>الحالة: '+statusBadge(b?.status)+'</div></div></div>'+
  '<div class="section"><h3>جدول الأقساط</h3>'+
  (ins.length?'<div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+
  ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+statusBadge(x.status)+'</td></tr>').join('')+
@@ -195,7 +198,7 @@ $('form').onsubmit=async e=>{
  const total=Number(pr.price||0),initial=Math.max(Number($('initial').value||0),0);
  const paid=Math.min(initial,total),remaining=total-paid;
  try{
-  const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,total_amount:total,paid_amount:paid,status:remaining?'pending':'paid',notes:'حجز من إدارة المعتمرين'};
+  const paymentType=$('paymentType').value;const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,total_amount:total,paid_amount:paid,payment_type:paymentType,status:remaining?'pending':'paid',notes:'حجز من إدارة المعتمرين'};
   const br=await db.from('bookings').insert(booking).select('id').single();
   if(br.error)throw br.error;
   const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,nationality:$('nat').value.trim()||'عراقي',passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:$('doc').value.trim()||null,notes:$('notes').value.trim()||null,profile_code:'QH-'+Date.now().toString().slice(-8)};
@@ -205,12 +208,12 @@ $('form').onsubmit=async e=>{
    const pay=await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),method:'دفعة أولى',notes:'دفعة أولى عند إنشاء الحجز'});
    if(pay.error)console.warn(pay.error);
   }
-  if(remaining&&$('due').value){
+  if(paymentType==='installment'&&remaining&&$('due').value){
    const ins=await db.from('installment_plans').insert({booking_id:br.data.id,installment_number:1,due_date:$('due').value,amount:remaining,paid_amount:0,status:'pending'});
    if(ins.error)console.warn(ins.error);
   }
   msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');
-  e.target.reset();$('nat').value='عراقي';$('initial').value=0;await load();
+  e.target.reset();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';syncPaymentType();await load();
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 
