@@ -62,8 +62,9 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <div><label>رقم الفيزا</label><input id="vnum"></div>
 <div><label>تاريخ إصدار الفيزا</label><input id="vdate" type="date"></div>
 <div><label>الدفعة الأولى</label><input id="initial" type="number" min="0" value="0"></div>
-<div id="dueWrap"><label>أول استحقاق قسط</label><input id="due" type="date"></div>
+<div id="dueWrap"><label>عدد الأقساط</label><select id="installmentCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div>
 </div>
+<div id="scheduleWrap" class="hide section"><h3>جدول الأقساط</h3><div id="schedule"></div></div>
 <label>رابط نسخة الجواز</label><input id="doc">
 <label>ملاحظات</label><textarea id="notes"></textarea>
 <br><button class="btn p" type="submit">حفظ المعتمر والحجز</button>
@@ -116,8 +117,29 @@ $('loginBtn').onclick=login;
 $('password').onkeydown=e=>{if(e.key==='Enter')login()};
 $('email').onkeydown=e=>{if(e.key==='Enter')login()};
 $('logout').onclick=async()=>{await db.auth.signOut();location.reload()};
-$('paymentType').onchange=()=>{const i=$('paymentType').value==='installment';$('dueWrap').style.display=i?'block':'none';$('due').required=i};
+$('paymentType').onchange=()=>{const i=$('paymentType').value==='installment';$('dueWrap').style.display=i?'block':'none';$('scheduleWrap').classList.toggle('hide',!i);if(i)buildSchedule()};
 $('paymentType').onchange();
+
+
+function buildSchedule(){
+ const count=Number($('installmentCount').value||1);
+ const total=Number((PR.find(x=>x.id===$('program').value)||{}).price||0);
+ const initial=Math.min(Math.max(Number($('initial').value||0),0),total);
+ const balance=Math.max(total-initial,0);
+ if($('paymentType').value!=='installment'||balance<=0){$('scheduleWrap').classList.add('hide');return;}
+ $('scheduleWrap').classList.remove('hide');
+ const base=Math.floor((balance/count)*100)/100;
+ let rem=balance;
+ let rows='';
+ for(let i=1;i<=count;i++){
+   const amount=i===count?rem:base; rem-=amount;
+   rows+='<div class="cols" style="margin-bottom:8px"><div><label>القسط '+i+'</label><input class="instAmount" data-n="'+i+'" type="number" min="0" value="'+amount.toFixed(2)+'"></div><div><label>تاريخ الاستحقاق</label><input class="instDate" data-n="'+i+'" type="date"></div></div>';
+ }
+ $('schedule').innerHTML=rows;
+}
+$('installmentCount').onchange=buildSchedule;
+$('program').onchange=()=>{if($('paymentType').value==='installment')buildSchedule()};
+$('initial').oninput=()=>{if($('paymentType').value==='installment')buildSchedule()};
 
 async function load(){
  const [a,b,c,i]=await Promise.all([
@@ -193,11 +215,18 @@ $('form').onsubmit=async e=>{
   const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,nationality:$('nat').value.trim()||'عراقي',passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:$('doc').value.trim()||null,notes:$('notes').value.trim()||null,profile_code:'QH-'+Date.now().toString().slice(-8)};
   const pp=await db.from('pilgrims').insert(payload);if(pp.error){await db.from('bookings').delete().eq('id',br.data.id);throw pp.error}
   if(paid>0)await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),method:'دفعة أولى',notes:'دفعة أولى'});
-  if(paymentType==='installment'&&remaining>0&&$('due').value){
-   const ir=await db.from('installment_plans').insert({booking_id:br.data.id,installment_number:1,due_date:$('due').value,amount:remaining,paid_amount:0,status:'pending'});
-   if(ir.error)console.warn(ir.error);
+  if(paymentType==='installment'&&remaining>0){
+   const amounts=[...document.querySelectorAll('.instAmount')].map(x=>Number(x.value||0));
+   const dates=[...document.querySelectorAll('.instDate')].map(x=>x.value||null);
+   if(amounts.length===0)throw Error('حدد جدول الأقساط أولًا.');
+   const sum=amounts.reduce((a,b)=>a+b,0);
+   if(Math.abs(sum-remaining)>0.01)throw Error('مجموع الأقساط يجب أن يساوي المتبقي: '+money(remaining));
+   if(dates.some(x=>!x))throw Error('أدخل تاريخ استحقاق كل قسط.');
+   const rows=amounts.map((amount,i)=>({booking_id:br.data.id,installment_number:i+1,due_date:dates[i],amount,paid_amount:0,status:'pending'}));
+   const ir=await db.from('installment_plans').insert(rows);
+   if(ir.error)throw ir.error;
   }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();await load();
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';await load();
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 
