@@ -24,49 +24,105 @@ button,.btn{border:0;border-radius:11px;padding:11px 15px;font:inherit;font-weig
 @media(max-width:850px){.grid,.nav{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
 @media(max-width:520px){.grid,.nav{grid-template-columns:1fr}}
 </style>
-</head>
-<body>
-<header><div class="head"><div class="brand"><img src="logo.png"><div><b>قوافل الحرمين</b><small>المركز الداخلي لإدارة الشركة</small></div></div><button id="logout" class="light">تسجيل الخروج</button></div></header>
+
+<style><body>
+<header class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img src="logo.png" alt="قوافل الحرمين">
+      <div>
+        <strong>قوافل الحرمين</strong>
+        <span>المركز الإداري الداخلي</span>
+      </div>
+    </div>
+    <div class="top-actions">
+      <span class="live-dot">● النظام متصل</span>
+      <button id="menuBtn" class="icon-btn" aria-label="فتح القائمة">☰</button>
+      <button id="logout" class="logout">تسجيل الخروج</button>
+    </div>
+  </div>
+</header>
 
 <div id="login" class="panel login">
-<h2>دخول الإدارة</h2><div id="loginMsg"></div>
-<label>البريد الإلكتروني</label><input id="email" type="email" autocomplete="username">
-<label>كلمة المرور</label><input id="password" type="password" autocomplete="current-password">
-<br><button id="loginBtn" class="primary" style="width:100%">دخول إلى المركز الداخلي</button>
+  <div class="login-logo"><img src="logo.png" alt=""></div>
+  <h2>تسجيل دخول الإدارة</h2>
+  <p>ادخل إلى المركز الداخلي لإدارة قوافل الحرمين.</p>
+  <div id="loginMsg"></div>
+  <label>البريد الإلكتروني</label><input id="email" type="email" autocomplete="username">
+  <label>كلمة المرور</label><input id="password" type="password" autocomplete="current-password">
+  <button id="loginBtn" class="primary" style="width:100%;margin-top:14px">دخول إلى النظام</button>
 </div>
 
-<main id="app" class="wrap hide">
-<section class="panel">
-<h2>لوحة المتابعة</h2>
-<p style="color:#657986">هذه النسخة مخصصة لإدارة <b>قوافل الحرمين من الداخل</b>. لا يوجد فيها أي نظام للوكلاء الخارجيين أو العملاء حاليًا.</p>
-<div class="grid">
-<div class="stat"><span>الرحلات المنشورة</span><b id="programs">0</b></div>
-<div class="stat"><span>إجمالي الحجوزات</span><b id="bookings">0</b></div>
-<div class="stat"><span>المعتمرون المسجلون</span><b id="pilgrims">0</b></div>
-<div class="stat"><span>المقاعد المتاحة</span><b id="seats">0</b></div>
-<div class="stat"><span>إجمالي المبيعات</span><b id="sales">0 د.ع</b></div>
-<div class="stat"><span>المقبوض</span><b id="received">0 د.ع</b></div>
-<div class="stat"><span>المتبقي</span><b id="remaining">0 د.ع</b></div>
-<div class="stat"><span>المصروفات</span><b id="expenses">0 د.ع</b></div>
+<div id="app" class="shell hide">
+  <aside id="sidebar" class="sidebar">
+    <div class="side-head">
+      <div class="side-title">القائمة الرئيسية</div>
+      <button id="closeMenu" class="close-btn">×</button>
+    </div>
+
+    <div class="side-section">الإدارة</div>
+    <a class="nav-item active" href="internal.html"><span>▦</span><div><b>الرئيسية</b><small>نظرة عامة على الشركة</small></div></a>
+    <a class="nav-item" href="admin.html"><span>▤</span><div><b>إدارة البرامج</b><small>الأسعار والمقاعد والحالة</small></div></a>
+    <a class="nav-item" href="pilgrims.html"><span>♙</span><div><b>إدارة المعتمرين</b><small>الملفات والحجوزات والسداد</small></div></a>
+    <a class="nav-item" href="admin.html"><span>◫</span><div><b>إدارة الرحلات</b><small>متابعة الرحلات والتجهيز</small></div></a>
+
+    <div class="side-section">المالية</div>
+    <a class="nav-item" href="financial.html"><span>د.ع</span><div><b>الإدارة المالية</b><small>المقبوضات والمصروفات والأرباح</small></div></a>
+
+    <div class="side-section">قريبًا</div>
+    <div class="nav-item disabled"><span>◉</span><div><b>التقارير المتقدمة</b><small>بعد اعتماد النظام الداخلي</small></div></div>
+    <div class="nav-item disabled"><span>⚙</span><div><b>إعدادات الشركة</b><small>صلاحيات المستخدمين والتهيئة</small></div></div>
+
+    <div class="side-footer">
+      <b>قوافل الحرمين</b>
+      <span>النظام الداخلي — الدينار العراقي</span>
+    </div>
+  </aside>
+
+  <div id="overlay" class="overlay"></div>
+
+  <main class="content">
+    <div class="page-head">
+      <div>
+        <div class="eyebrow">لوحة المتابعة</div>
+        <h1>مرحبًا بك في المركز الداخلي</h1>
+        <p>من هنا تتابع أعمال الشركة اليومية من الرحلات إلى المعتمرين والمالية.</p>
+      </div>
+      <div class="date-chip" id="today"></div>
+    </div>
+
+    <section class="kpis">
+      <div class="kpi"><div class="kpi-icon">▣</div><div><span>الرحلات المنشورة</span><b id="programs">0</b></div></div>
+      <div class="kpi"><div class="kpi-icon">♙</div><div><span>المعتمرون</span><b id="pilgrims">0</b></div></div>
+      <div class="kpi"><div class="kpi-icon">◫</div><div><span>الحجوزات</span><b id="bookings">0</b></div></div>
+      <div class="kpi"><div class="kpi-icon">○</div><div><span>المقاعد المتاحة</span><b id="seats">0</b></div></div>
+    </section>
+
+    <section class="finance-strip">
+      <div><span>إجمالي المبيعات</span><b id="sales">0 د.ع</b></div>
+      <div><span>المقبوض</span><b id="received">0 د.ع</b></div>
+      <div><span>المتبقي</span><b id="remaining">0 د.ع</b></div>
+      <div><span>المصروفات</span><b id="expenses">0 د.ع</b></div>
+    </section>
+
+    <div class="main-grid">
+      <section class="panel">
+        <div class="section-head"><div><h2>الرحلات الحالية</h2><p>ملخص سريع للبرامج المسجلة في النظام</p></div><a href="admin.html" class="section-link">إدارة البرامج ←</a></div>
+        <div id="programList" class="program-list">جاري التحميل...</div>
+      </section>
+
+      <section class="panel">
+        <div class="section-head"><div><h2>يحتاج متابعة</h2><p>تنبيهات تشغيلية مهمة</p></div></div>
+        <div id="alerts" class="alerts">جاري التحميل...</div>
+      </section>
+    </div>
+
+    <section class="panel">
+      <div class="section-head"><div><h2>آخر الحجوزات</h2><p>آخر العمليات المسجلة في النظام</p></div><a href="pilgrims.html" class="section-link">إدارة المعتمرين ←</a></div>
+      <div class="table"><table><thead><tr><th>المعتمر</th><th>الرحلة</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>طريقة السداد</th></tr></thead><tbody id="bookingRows"></tbody></table></div>
+    </section>
+  </main>
 </div>
-</section>
-
-<section class="panel"><h2>أقسام النظام الداخلي</h2>
-<div class="nav">
-<a href="admin.html">🗓️ إدارة الرحلات<small>إنشاء البرامج، الأسعار، المقاعد، الفنادق وحالة الرحلة.</small></a>
-<a href="pilgrims.html">👤 إدارة المعتمرين<small>البيانات، الجواز، التأشيرة، الحجوزات، السداد والأقساط.</small></a>
-<a href="financial.html">💰 الإدارة المالية<small>المقبوضات، المتبقي، المصروفات، وصافي الربح.</small></a>
-<a href="admin.html">⚙️ إعدادات الإدارة<small>نعود إليها لاحقًا بعد تثبيت الهيكل الداخلي.</small></a>
-</div></section>
-
-<div class="two">
-<section class="panel"><h2>⚠️ يحتاج متابعة</h2><div id="alerts">جاري التحميل...</div></section>
-<section class="panel"><h2>📊 الرحلات</h2><div id="programList">جاري التحميل...</div></section>
-</div>
-
-<section class="panel"><h2>📋 آخر الحجوزات</h2><div class="table"><table><thead><tr><th>المعتمر</th><th>الرحلة</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>السداد</th></tr></thead><tbody id="bookingRows"></tbody></table></div></section>
-</main>
-
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);
