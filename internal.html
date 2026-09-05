@@ -1,183 +1,177 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>المركز الداخلي | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--navy:#0b3556;--blue:#0e4d7d;--gold:#c99a32;--bg:#f5f3ed;--line:#dce4e9;--text:#17364e}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif}
-header{background:linear-gradient(135deg,var(--navy),var(--blue));color:#fff;padding:18px 22px}
-.head{max-width:1250px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:15px}
-.brand{display:flex;align-items:center;gap:12px}.brand img{width:55px;height:55px;object-fit:contain;background:#fff;border-radius:12px}.brand b{font-size:21px}.brand small{display:block;color:#ead08d;margin-top:5px}
-.wrap{max-width:1250px;margin:auto;padding:20px}.panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:20px;margin-bottom:16px;box-shadow:0 7px 25px #0000000d}
-.login{max-width:450px;margin:70px auto}.hide{display:none}
-label{display:block;font-weight:700;margin:10px 0 6px}input{width:100%;padding:12px;border:1px solid #ccd8df;border-radius:10px;font:inherit}
-button,.btn{border:0;border-radius:11px;padding:11px 15px;font:inherit;font-weight:800;cursor:pointer;text-decoration:none;display:inline-block}
-.primary{background:var(--navy);color:#fff}.gold{background:var(--gold);color:#fff}.light{background:#fff;color:var(--navy);border:1px solid #cbd8df}
-.msg{padding:11px;border-radius:10px;margin:10px 0;background:#edf8f3}.err{background:#fff0f0;color:#a33}
-.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.stat{padding:17px;border:1px solid var(--line);border-radius:15px;background:#fff}.stat span{font-size:13px;color:#637887}.stat b{display:block;font-size:25px;margin-top:8px;color:var(--navy)}
-.nav{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.nav a{background:#fff;border:1px solid var(--line);border-radius:15px;padding:18px;text-decoration:none;color:var(--navy);font-weight:800}.nav a small{display:block;color:#71838f;font-weight:normal;margin-top:6px;line-height:1.6}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:16px}ul{margin:8px 0;padding-right:22px;line-height:2}
-.badge{display:inline-block;padding:4px 8px;border-radius:20px;background:#fff2cf;font-size:12px;font-weight:800}.danger{background:#fff0f0;color:#a33}.ok{background:#e8f6ee;color:#176644}
-.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:600px}th,td{padding:10px;border-bottom:1px solid var(--line);text-align:right}th{background:#f2f6f8}
-@media(max-width:850px){.grid,.nav{grid-template-columns:1fr 1fr}.two{grid-template-columns:1fr}}
-@media(max-width:520px){.grid,.nav{grid-template-columns:1fr}}
+:root{--navy:#0b3556;--blue:#155985;--gold:#c99a32;--bg:#f4f6f8;--card:#fff;--line:#e3e9ee;--text:#18384f;--muted:#718390;--green:#18734e;--red:#a43b3b;--shadow:0 5px 22px rgba(11,53,86,.07)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}body{direction:rtl}
+.hide{display:none!important}button,input{font:inherit}.top{height:74px;background:var(--navy);color:#fff;position:sticky;top:0;z-index:60}.topin{height:100%;max-width:1500px;margin:auto;padding:0 24px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:12px}.mark{width:47px;height:47px;background:#fff;border:2px solid var(--gold);border-radius:12px;color:var(--navy);display:grid;place-items:center;font-size:27px;font-weight:900}.brand b{display:block;font-size:19px}.brand small{display:block;color:#e4c878;font-size:11px;margin-top:4px}.actions{display:flex;align-items:center;gap:10px}.status{font-size:11px;color:#bde3d0}.btn{border:0;border-radius:10px;padding:9px 13px;cursor:pointer;font-weight:800}.logout{background:#ffffff12;color:#fff;border:1px solid #ffffff35}.menu{display:none;background:#ffffff12;color:#fff;border:1px solid #ffffff35;font-size:20px}
+.login{max-width:430px;margin:85px auto;background:var(--card);padding:30px;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}.login .mark{margin:auto;width:78px;height:78px;font-size:43px;border-radius:19px}.login h2{margin:17px 0 6px;color:var(--navy)}.login p{margin:0 0 20px;color:var(--muted);font-size:12px}.login label{display:block;font-size:12px;font-weight:800;margin:12px 0 6px}.login input{width:100%;padding:12px;border:1px solid #ccd8df;border-radius:10px;outline:none}.primary{width:100%;margin-top:15px;background:var(--navy);color:#fff;padding:12px;border-radius:10px;border:0;font-weight:800;cursor:pointer}.msg{padding:10px;border-radius:9px;background:#edf8f3;font-size:12px;margin:10px 0}.err{background:#fff0f0;color:var(--red)}
+.shell{max-width:1500px;margin:auto;display:flex;min-height:calc(100vh - 74px)}.side{width:278px;background:#fff;border-left:1px solid var(--line);position:sticky;top:74px;height:calc(100vh - 74px);padding:16px 13px;z-index:45;display:flex;flex-direction:column}.side-title{font-size:11px;color:#9aa7af;font-weight:900;padding:8px 11px}.nav{display:flex;align-items:center;gap:11px;padding:12px;border-radius:12px;text-decoration:none;color:var(--text);margin:2px 0}.nav:hover,.nav.active{background:#edf4f8;color:var(--navy)}.ico{width:34px;height:34px;border-radius:9px;background:#f1f5f7;display:grid;place-items:center;color:var(--blue);font-weight:900;font-size:12px}.nav.active .ico{background:var(--navy);color:#fff}.nav b{display:block;font-size:12px}.nav small{display:block;font-size:9px;color:var(--muted);margin-top:4px}.soon{opacity:.5}.sidefoot{margin-top:auto;border-top:1px solid var(--line);padding:14px 10px;font-size:10px;color:var(--muted)}.sidefoot b{display:block;color:var(--navy);font-size:11px;margin-bottom:4px}
+.content{flex:1;padding:27px;min-width:0}.head{display:flex;align-items:flex-end;justify-content:space-between;gap:15px;margin-bottom:21px}.eyebrow{font-size:11px;color:var(--gold);font-weight:900;margin-bottom:6px}.head h1{margin:0;color:var(--navy);font-size:26px}.head p{margin:7px 0 0;color:var(--muted);font-size:12px}.today{background:#fff;border:1px solid var(--line);padding:10px 13px;border-radius:10px;color:var(--muted);font-size:11px;white-space:nowrap}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpi{background:#fff;border:1px solid var(--line);border-radius:15px;padding:15px;display:flex;gap:11px;align-items:center;box-shadow:var(--shadow)}.kicon{width:42px;height:42px;border-radius:11px;background:#edf4f8;color:var(--navy);display:grid;place-items:center;font-weight:900}.kpi span{font-size:10px;color:var(--muted)}.kpi b{display:block;color:var(--navy);font-size:23px;margin-top:5px}
+.finance{margin:12px 0 16px;background:var(--navy);color:#fff;border-radius:15px;padding:16px;display:grid;grid-template-columns:repeat(4,1fr)}.finance div{padding:2px 16px;border-left:1px solid #ffffff20}.finance div:last-child{border-left:0}.finance span{display:block;color:#b7c9d5;font-size:10px}.finance b{display:block;margin-top:7px;font-size:17px}
+.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:15px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow);margin-bottom:15px}.sect{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:13px}.sect h2{margin:0;color:var(--navy);font-size:16px}.sect p{margin:5px 0 0;color:var(--muted);font-size:10px}.link{color:var(--blue);font-size:10px;font-weight:900;text-decoration:none;white-space:nowrap}.program{padding:12px 0;border-bottom:1px solid var(--line)}.program:last-child{border-bottom:0}.program b{font-size:12px}.program small{display:block;color:var(--muted);font-size:10px;margin-top:5px}.alert{padding:11px;border-radius:9px;background:#fff8e7;border-right:3px solid var(--gold);font-size:11px;margin-bottom:8px;line-height:1.7}.alert.ok{background:#edf8f3;border-right-color:var(--green)}.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:right;padding:10px 8px;border-bottom:1px solid var(--line);font-size:10px}th{background:#f4f7f9;color:var(--navy)}td{color:#385367}
+.empty{padding:25px;text-align:center;color:var(--muted);font-size:11px}
+@media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
+@media(max-width:760px){.top{height:68px}.topin{padding:0 14px}.status{display:none}.menu{display:block}.shell{min-height:calc(100vh - 68px)}.side{position:fixed;right:-295px;top:68px;height:calc(100vh - 68px);transition:right .2s;box-shadow:-8px 0 24px #0002}.side.open{right:0}.overlay{display:none}.overlay.show{display:block;position:fixed;inset:68px 0 0;background:#0005;z-index:40}.content{padding:18px 14px}.head{align-items:flex-start;flex-direction:column}.today{display:none}.finance{grid-template-columns:1fr 1fr}.finance div{border-left:0;border-bottom:1px solid #ffffff20;padding:8px}.kpis{grid-template-columns:1fr 1fr}}
+@media(max-width:470px){.brand b{font-size:16px}.brand small{font-size:9px}.kpi{padding:12px}.kpi b{font-size:20px}.finance b{font-size:14px}}
 </style>
-
-<style><body>
-<header class="topbar">
-  <div class="topbar-inner">
-    <div class="brand">
-      <img src="logo.png" alt="قوافل الحرمين">
-      <div>
-        <strong>قوافل الحرمين</strong>
-        <span>المركز الإداري الداخلي</span>
-      </div>
-    </div>
-    <div class="top-actions">
-      <span class="live-dot">● النظام متصل</span>
-      <button id="menuBtn" class="icon-btn" aria-label="فتح القائمة">☰</button>
-      <button id="logout" class="logout">تسجيل الخروج</button>
-    </div>
-  </div>
+</head>
+<body>
+<header class="top">
+<div class="topin">
+  <div class="brand"><div class="mark">ق</div><div><b>قوافل الحرمين</b><small>المركز الإداري الداخلي</small></div></div>
+  <div class="actions"><span class="status">● النظام متصل</span><button id="menu" class="btn menu">☰</button><button id="logout" class="btn logout">تسجيل الخروج</button></div>
+</div>
 </header>
 
-<div id="login" class="panel login">
-  <div class="login-logo"><img src="logo.png" alt=""></div>
+<section id="login" class="login">
+  <div class="mark">ق</div>
   <h2>تسجيل دخول الإدارة</h2>
-  <p>ادخل إلى المركز الداخلي لإدارة قوافل الحرمين.</p>
+  <p>المركز الداخلي لإدارة عمليات قوافل الحرمين.</p>
   <div id="loginMsg"></div>
   <label>البريد الإلكتروني</label><input id="email" type="email" autocomplete="username">
   <label>كلمة المرور</label><input id="password" type="password" autocomplete="current-password">
-  <button id="loginBtn" class="primary" style="width:100%;margin-top:14px">دخول إلى النظام</button>
-</div>
+  <button id="loginBtn" class="primary">دخول إلى النظام</button>
+</section>
 
 <div id="app" class="shell hide">
-  <aside id="sidebar" class="sidebar">
-    <div class="side-head">
-      <div class="side-title">القائمة الرئيسية</div>
-      <button id="closeMenu" class="close-btn">×</button>
-    </div>
-
-    <div class="side-section">الإدارة</div>
-    <a class="nav-item active" href="internal.html"><span>▦</span><div><b>الرئيسية</b><small>نظرة عامة على الشركة</small></div></a>
-    <a class="nav-item" href="admin.html"><span>▤</span><div><b>إدارة البرامج</b><small>الأسعار والمقاعد والحالة</small></div></a>
-    <a class="nav-item" href="pilgrims.html"><span>♙</span><div><b>إدارة المعتمرين</b><small>الملفات والحجوزات والسداد</small></div></a>
-    <a class="nav-item" href="admin.html"><span>◫</span><div><b>إدارة الرحلات</b><small>متابعة الرحلات والتجهيز</small></div></a>
-
-    <div class="side-section">المالية</div>
-    <a class="nav-item" href="financial.html"><span>د.ع</span><div><b>الإدارة المالية</b><small>المقبوضات والمصروفات والأرباح</small></div></a>
-
-    <div class="side-section">قريبًا</div>
-    <div class="nav-item disabled"><span>◉</span><div><b>التقارير المتقدمة</b><small>بعد اعتماد النظام الداخلي</small></div></div>
-    <div class="nav-item disabled"><span>⚙</span><div><b>إعدادات الشركة</b><small>صلاحيات المستخدمين والتهيئة</small></div></div>
-
-    <div class="side-footer">
-      <b>قوافل الحرمين</b>
-      <span>النظام الداخلي — الدينار العراقي</span>
-    </div>
+  <aside id="side" class="side">
+    <div class="side-title">الإدارة اليومية</div>
+    <a class="nav active" href="qawafel_internal_final.html"><span class="ico">▦</span><div><b>الرئيسية</b><small>لوحة المتابعة</small></div></a>
+    <a class="nav" href="admin.html"><span class="ico">▤</span><div><b>إدارة البرامج</b><small>الأسعار والمقاعد وحالة البرنامج</small></div></a>
+    <a class="nav" href="pilgrims.html"><span class="ico">♙</span><div><b>إدارة المعتمرين</b><small>الملفات والحجوزات والسداد</small></div></a>
+    <a class="nav" href="admin.html"><span class="ico">◫</span><div><b>إدارة الرحلات</b><small>التجهيز والمتابعة التشغيلية</small></div></a>
+    <div class="side-title">المالية</div>
+    <a class="nav" href="financial.html"><span class="ico">د.ع</span><div><b>الإدارة المالية</b><small>المقبوضات والمصروفات والأرباح</small></div></a>
+    <div class="side-title">أقسام لاحقة</div>
+    <div class="nav soon"><span class="ico">▥</span><div><b>التقارير</b><small>بعد اعتماد الدورة الداخلية</small></div></div>
+    <div class="nav soon"><span class="ico">⚙</span><div><b>إعدادات الشركة</b><small>الصلاحيات والتهيئة</small></div></div>
+    <div class="sidefoot"><b>قوافل الحرمين للحج والعمرة</b><span>العملة المعتمدة: الدينار العراقي</span></div>
   </aside>
-
   <div id="overlay" class="overlay"></div>
 
   <main class="content">
-    <div class="page-head">
-      <div>
-        <div class="eyebrow">لوحة المتابعة</div>
-        <h1>مرحبًا بك في المركز الداخلي</h1>
-        <p>من هنا تتابع أعمال الشركة اليومية من الرحلات إلى المعتمرين والمالية.</p>
-      </div>
-      <div class="date-chip" id="today"></div>
+    <div class="head">
+      <div><div class="eyebrow">المركز الداخلي</div><h1>لوحة المتابعة</h1><p>ملخص أعمال الشركة اليوم في شاشة واحدة.</p></div>
+      <div id="today" class="today"></div>
     </div>
 
     <section class="kpis">
-      <div class="kpi"><div class="kpi-icon">▣</div><div><span>الرحلات المنشورة</span><b id="programs">0</b></div></div>
-      <div class="kpi"><div class="kpi-icon">♙</div><div><span>المعتمرون</span><b id="pilgrims">0</b></div></div>
-      <div class="kpi"><div class="kpi-icon">◫</div><div><span>الحجوزات</span><b id="bookings">0</b></div></div>
-      <div class="kpi"><div class="kpi-icon">○</div><div><span>المقاعد المتاحة</span><b id="seats">0</b></div></div>
+      <div class="kpi"><div class="kicon">▣</div><div><span>الرحلات المنشورة</span><b id="programs">0</b></div></div>
+      <div class="kpi"><div class="kicon">♙</div><div><span>المعتمرون</span><b id="pilgrims">0</b></div></div>
+      <div class="kpi"><div class="kicon">◫</div><div><span>الحجوزات</span><b id="bookings">0</b></div></div>
+      <div class="kpi"><div class="kicon">○</div><div><span>المقاعد المتاحة</span><b id="seats">0</b></div></div>
     </section>
 
-    <section class="finance-strip">
+    <section class="finance">
       <div><span>إجمالي المبيعات</span><b id="sales">0 د.ع</b></div>
       <div><span>المقبوض</span><b id="received">0 د.ع</b></div>
       <div><span>المتبقي</span><b id="remaining">0 د.ع</b></div>
       <div><span>المصروفات</span><b id="expenses">0 د.ع</b></div>
     </section>
 
-    <div class="main-grid">
-      <section class="panel">
-        <div class="section-head"><div><h2>الرحلات الحالية</h2><p>ملخص سريع للبرامج المسجلة في النظام</p></div><a href="admin.html" class="section-link">إدارة البرامج ←</a></div>
-        <div id="programList" class="program-list">جاري التحميل...</div>
+    <div class="grid2">
+      <section class="card">
+        <div class="sect"><div><h2>الرحلات الحالية</h2><p>البرامج المسجلة في النظام</p></div><a class="link" href="admin.html">فتح إدارة البرامج ←</a></div>
+        <div id="programList">جاري التحميل...</div>
       </section>
-
-      <section class="panel">
-        <div class="section-head"><div><h2>يحتاج متابعة</h2><p>تنبيهات تشغيلية مهمة</p></div></div>
-        <div id="alerts" class="alerts">جاري التحميل...</div>
+      <section class="card">
+        <div class="sect"><div><h2>يحتاج متابعة</h2><p>تنبيهات تشغيلية</p></div></div>
+        <div id="alerts">جاري التحميل...</div>
       </section>
     </div>
 
-    <section class="panel">
-      <div class="section-head"><div><h2>آخر الحجوزات</h2><p>آخر العمليات المسجلة في النظام</p></div><a href="pilgrims.html" class="section-link">إدارة المعتمرين ←</a></div>
-      <div class="table"><table><thead><tr><th>المعتمر</th><th>الرحلة</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>طريقة السداد</th></tr></thead><tbody id="bookingRows"></tbody></table></div>
+    <section class="card">
+      <div class="sect"><div><h2>آخر الحجوزات</h2><p>آخر العمليات المسجلة</p></div><a class="link" href="pilgrims.html">فتح إدارة المعتمرين ←</a></div>
+      <div class="table"><table><thead><tr><th>المعتمر</th><th>البرنامج</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>السداد</th></tr></thead><tbody id="bookingRows"></tbody></table></div>
     </section>
   </main>
 </div>
+
 <script>
-const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
-const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);
+const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
 let B=[],P=[],PR=[],I=[],E=[];
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function setMsg(t,e=false){$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
-async function isAdmin(){
- const {data:{user}}=await db.auth.getUser(); if(!user)return null;
- const {data,error}=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
- return error||!data?null:user;
+function showLoginMsg(t,e=false){$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
+function isAdmin(){
+ return db.auth.getUser().then(async r=>{
+   if(!r.data.user)return null;
+   const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();
+   return q.error||!q.data?null:r.data.user;
+ });
 }
-async function login(){
+async function signIn(){
  const email=$('email').value.trim(),password=$('password').value;
- if(!email||!password)return setMsg('أدخل البريد وكلمة المرور.',true);
- $('loginBtn').disabled=true;setMsg('جاري التحقق...');
- try{const {error}=await db.auth.signInWithPassword({email,password});if(error)throw error;if(!await isAdmin()){await db.auth.signOut();throw Error('الحساب غير مخول للإدارة.')}$('login').classList.add('hide');$('app').classList.remove('hide');await load()}
- catch(e){setMsg(e.message||'تعذر الدخول.',true)}finally{$('loginBtn').disabled=false}
+ if(!email||!password)return showLoginMsg('أدخل البريد الإلكتروني وكلمة المرور.',true);
+ $('loginBtn').disabled=true;showLoginMsg('جاري التحقق...');
+ try{
+   const r=await db.auth.signInWithPassword({email,password});
+   if(r.error)throw r.error;
+   if(!await isAdmin()){await db.auth.signOut();throw Error('هذا الحساب غير مخول للدخول إلى الإدارة.')}
+   $('login').classList.add('hide');$('app').classList.remove('hide');await load();
+ }catch(e){showLoginMsg(e.message||'تعذر تسجيل الدخول.',true)}
+ finally{$('loginBtn').disabled=false}
 }
-$('loginBtn').onclick=login;$('password').onkeydown=e=>{if(e.key==='Enter')login()};
+$('loginBtn').onclick=signIn;
+$('password').onkeydown=e=>{if(e.key==='Enter')signIn()};
 $('logout').onclick=async()=>{await db.auth.signOut();location.reload()};
+$('menu').onclick=()=>{$('side').classList.add('open');$('overlay').classList.add('show')};
+$('overlay').onclick=()=>{$('side').classList.remove('open');$('overlay').classList.remove('show')};
+document.querySelectorAll('.nav').forEach(a=>a.addEventListener('click',()=>{$('side').classList.remove('open');$('overlay').classList.remove('show')}));
 
+function setToday(){
+ $('today').textContent=new Intl.DateTimeFormat('ar-IQ',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(new Date());
+}
 async function load(){
  const [b,p,pr,i,e]=await Promise.all([
-  db.from('bookings').select('*').order('created_at',{ascending:false}),
-  db.from('pilgrims').select('*'),
-  db.from('programs').select('*').order('departure_date'),
-  db.from('installment_plans').select('*').order('due_date'),
-  db.from('expenses').select('*').order('expense_date',{ascending:false})
+   db.from('bookings').select('*').order('created_at',{ascending:false}),
+   db.from('pilgrims').select('*'),
+   db.from('programs').select('*').order('departure_date'),
+   db.from('installment_plans').select('*').order('due_date'),
+   db.from('expenses').select('*').order('expense_date',{ascending:false})
  ]);
- const er=[b,p,pr,i,e].find(x=>x.error);if(er){$('alerts').innerHTML='<span class="badge danger">'+esc(er.error.message)+'</span>';return}
+ const er=[b,p,pr,i,e].find(x=>x.error);
+ if(er){$('alerts').innerHTML='<div class="alert">'+esc(er.error.message)+'</div>';return}
  B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];
  $('programs').textContent=PR.filter(x=>x.status==='published').length;
- $('bookings').textContent=B.length;$('pilgrims').textContent=P.length;
+ $('pilgrims').textContent=P.length;
+ $('bookings').textContent=B.length;
  $('seats').textContent=PR.reduce((s,x)=>s+Number(x.seats_available||0),0);
- const sales=B.reduce((s,x)=>s+Number(x.total_amount||0),0),rec=B.reduce((s,x)=>s+Number(x.paid_amount||0),0),exp=E.reduce((s,x)=>s+Number(x.amount||0),0);
- $('sales').textContent=money(sales);$('received').textContent=money(rec);$('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));$('expenses').textContent=money(exp);
- renderAlerts();renderPrograms();renderBookings();
+ $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
+ $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
+ $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
+ $('expenses').textContent=money(E.reduce((s,x)=>s+Number(x.amount||0),0));
+ render();
 }
-function renderAlerts(){
- const today=new Date().toISOString().slice(0,10), a=[];
+function render(){
+ const today=new Date().toISOString().slice(0,10);
  const overdue=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today).length;
  const visa=P.filter(x=>x.visa_status&&x.visa_status!=='issued').length;
  const docs=P.filter(x=>!x.passport_number||!x.passport_expiry).length;
- if(overdue)a.push('يوجد '+overdue+' قسط متأخر يحتاج متابعة.');
- if(visa)a.push('يوجد '+visa+' معتمرًا لم تُستكمل حالة تأشيرته.');
- if(docs)a.push('يوجد '+docs+' ملفًا ناقصًا في بيانات الجواز.');
- $('alerts').innerHTML=a.length?'<ul>'+a.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<span class="badge ok">لا توجد تنبيهات حرجة حاليًا.</span>';
+ const alerts=[];
+ if(overdue)alerts.push('يوجد '+overdue+' قسط متأخر يحتاج متابعة.');
+ if(visa)alerts.push('يوجد '+visa+' ملف تأشيرة غير مكتمل.');
+ if(docs)alerts.push('يوجد '+docs+' ملف جواز يحتاج استكمالاً.');
+ $('alerts').innerHTML=alerts.length?alerts.map(x=>'<div class="alert">'+esc(x)+'</div>').join(''):'<div class="alert ok">لا توجد تنبيهات حرجة حاليًا.</div>';
+
+ $('programList').innerHTML=PR.map(x=>'<div class="program"><b>'+esc(x.title)+'</b><small>'+esc(x.departure_date||'—')+' · المقاعد المتاحة: '+Number(x.seats_available||0)+' · '+esc(x.status)+'</small></div>').join('')||'<div class="empty">لا توجد رحلات مسجلة.</div>';
+
+ $('bookingRows').innerHTML=B.slice(0,12).map(b=>{
+   const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);
+   return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+(b.payment_type==='installment'?'أقساط':'نقد')+'</td></tr>'
+ }).join('')||'<tr><td colspan="6" class="empty">لا توجد حجوزات.</td></tr>';
 }
-function renderPrograms(){
- $('programList').innerHTML=PR.map(x=>'<div style="padding:10px 0;border-bottom:1px solid #dce4e9"><b>'+esc(x.title)+'</b><br><small>'+esc(x.departure_date||'—')+' — المقاعد المتاحة: '+Number(x.seats_available||0)+' — '+esc(x.status)+'</small></div>').join('')||'لا توجد رحلات.';
-}
-function renderBookings(){
- $('bookingRows').innerHTML=B.slice(0,12).map(b=>{const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);return '<tr><td>'+esc(p?.full_name||b.full_name)+'</td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+(b.payment_type==='installment'?'أقساط':'نقد')+'</td></tr>'}).join('')||'<tr><td colspan="6">لا توجد حجوزات.</td></tr>';
-}
-(async()=>{const{data:{session}}=await db.auth.getSession();if(session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}})();
+setToday();
+(async()=>{const s=await db.auth.getSession();if(s.data.session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}})();
 </script>
-</body></html>
+</body>
+</html>
