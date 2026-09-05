@@ -186,13 +186,24 @@ async function badgeData(p,b,pr){
 function badgeHtml(d){return '<article class="print-badge"><div class="btop"><div><div class="logo-text">قوافل الحرمين</div><div class="sub">للحج والعمرة</div></div><div class="sub">بطاقة معتمر</div></div><div class="body"><img class="photo" src="'+(d.photo||'')+'" onerror="this.style.visibility=\'hidden\'"><div><div class="name">'+esc(d.name)+'</div><div class="line"><b>الرحلة:</b> '+esc(d.trip)+'</div><div class="line"><b>المدينة:</b> '+esc(d.medina)+'</div><div class="line"><b>مكة:</b> '+esc(d.makkah)+'</div><div class="line"><b>السفر:</b> '+esc(d.travel)+'</div><div class="line"><b>الحجز:</b> '+esc(d.booking)+'</div></div><img class="qr" src="'+d.qr+'"></div><div class="foot"><span>ملف: '+esc(d.profile)+'</span><span>0778 007 7122 · 0781 479 9623</span></div></article>'}
 async function printBadges(list,title){
  if(!list.length)return alert('لا توجد بيانات لهذه الرحلة.');
- document.body.classList.add('printing-badges');
+ // Open the print window immediately from the user's click. This is more reliable on iPhone/iPad than window.print() after async work.
+ const w=window.open('about:blank','_blank');
+ if(!w){return alert('المتصفح منع نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم اضغط طباعة الباج مرة أخرى.');}
+ w.document.open();
+ w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باجات — '+esc(title||'قوافل الحرمين')+'</title><style>'+badgePrintCSS()+'</style></head><body><div id="printArea" class="badge-grid"><div style="padding:20px;text-align:center;font-family:Tahoma,Arial">جاري تجهيز الباجات…</div></div></body></html>');
+ w.document.close();
  const cards=[];
  for(const x of list){const b=B.find(z=>z.id===x.booking_id),pr=PR.find(z=>z.id===b?.program_id);cards.push(badgeHtml(await badgeData(x,b,pr)))}
- $('badgePrint').innerHTML='<div class="badge-grid">'+cards.join('')+'</div>';
- document.title='باجات — '+(title||'قوافل الحرمين');
- setTimeout(()=>{window.print();setTimeout(()=>{document.body.classList.remove('printing-badges');$('badgePrint').innerHTML='';document.title='المعتمرون | قوافل الحرمين'},500)},150);
+ const area=w.document.getElementById('printArea');
+ if(area) area.innerHTML=cards.join('');
+ // Wait for remote QR/images before opening the print dialog.
+ const imgs=Array.from(w.document.images);
+ await Promise.all(imgs.map(img=>new Promise(resolve=>{if(img.complete)return resolve();img.onload=img.onerror=resolve;})));
+ setTimeout(()=>{w.focus();w.print();},250);
 }
+function badgePrintCSS(){return `
+*{box-sizing:border-box}body{margin:0;background:#fff;font-family:Tahoma,Arial}.badge-grid{display:grid;grid-template-columns:1fr 1fr;gap:8mm;padding:8mm}.print-badge{width:90mm;height:60mm;border:1px solid #d8dde2;border-radius:4mm;background:#fff;position:relative;overflow:hidden;padding:5mm;box-shadow:none;page-break-inside:avoid}.print-badge .btop{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d9bd75;padding-bottom:2.5mm;margin-bottom:2.5mm}.print-badge .logo-text{font-weight:900;color:#0c3b63;font-size:4mm}.print-badge .sub{font-size:2.2mm;color:#8b6b25;margin-top:1mm}.print-badge .body{display:grid;grid-template-columns:25mm 1fr 17mm;gap:3mm;align-items:center}.print-badge .photo{width:25mm;height:31mm;border-radius:2mm;object-fit:cover;border:1px solid #ccd7df}.print-badge .name{font-weight:900;font-size:4.2mm;color:#072b49;margin-bottom:2mm}.print-badge .line{font-size:2.6mm;margin:1.2mm 0;color:#36566a}.print-badge .line b{color:#0c3b63}.print-badge .qr{width:17mm;height:17mm}.print-badge .foot{position:absolute;bottom:0;right:0;left:0;background:#072b49;color:#fff;font-size:2.3mm;padding:2mm 4mm;display:flex;justify-content:space-between}@page{size:A4;margin:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.badge-grid{padding:8mm}}
+`}
 $('printTripBadges').onclick=async()=>{const id=$('badgeProgram').value;if(!id)return alert('اختر الرحلة أولًا.');const list=P.filter(x=>{const b=B.find(z=>z.id===x.booking_id);return b?.program_id===id});const pr=PR.find(x=>x.id===id);await printBadges(list,pr?.title)};
 async function openProfile(id){
  const p=P.find(x=>x.id===id);if(!p)return;
