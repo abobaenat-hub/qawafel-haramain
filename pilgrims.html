@@ -180,6 +180,8 @@ window.openProfile=async function(id){
  ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+statusBadge(x.status)+'</td></tr>').join('')+
  '</tbody></table></div>':'لا توجد أقساط مسجلة.')+'</div>'+
  '<div class="section"><h3>سجل الدفعات</h3><div id="paymentsBox">جاري التحميل...</div></div>'+
+ '<div class="section noPrint" id="paymentActions">'+(b?.payment_type==='installment'?'<button class="btn p" id="managePaymentsBtn" type="button">💰 إدارة الدفعات والأقساط</button>':'<span class="badge ok">برنامج نقدي — لا توجد أقساط</span>')+'</div>'+
+ '<div class="section hide noPrint" id="paymentManager"></div>'+
  '<div class="section"><b>ملاحظات:</b><br>'+esc(p.notes||'—')+'</div>';
  $('paymentsBox').innerHTML='جاري التحميل...';
  if(b?.id){
@@ -188,6 +190,73 @@ window.openProfile=async function(id){
   else $('paymentsBox').innerHTML=data?.length?'<div class="table"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th><th>ملاحظات</th></tr></thead><tbody>'+
    data.map(x=>'<tr><td>'+esc(x.payment_date||x.created_at||'—')+'</td><td>'+money(x.amount)+'</td><td>'+esc(x.method||'—')+'</td><td>'+esc(x.notes||'—')+'</td></tr>').join('')+'</tbody></table></div>':'لا توجد دفعات مسجلة.';
  }
+
+ if(b?.payment_type==='installment'){
+   const mb=$('managePaymentsBtn');
+   if(mb)mb.onclick=()=>openPaymentManager(b,p);
+ }
+ $('profile').scrollIntoView({behavior:'smooth'});
+};
+
+async function openPaymentManager(b,p){
+ const box=$('paymentManager'); if(!box)return;
+ box.classList.remove('hide');
+ box.innerHTML='<h3>إدارة الدفعات والأقساط</h3><div id="pmMsg">جاري تحميل الأقساط...</div><div id="installmentsBox"></div><div id="newPaymentBox"></div>';
+ const [ir,pr]=await Promise.all([
+   db.from('installment_plans').select('*').eq('booking_id',b.id).order('installment_number'),
+   db.from('payments').select('*').eq('booking_id',b.id).order('payment_date',{ascending:false})
+ ]);
+ if(ir.error){$('pmMsg').innerHTML='<span class="danger">'+esc(ir.error.message)+'</span>';return}
+ const ins=ir.data||[], payments=pr.data||[];
+ $('pmMsg').innerHTML='الإجمالي: <b>'+money(b.total_amount)+'</b> — المدفوع: <b>'+money(b.paid_amount)+'</b> — المتبقي: <b>'+money(b.remaining_amount)+'</b>';
+ $('installmentsBox').innerHTML=ins.length?'<div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>'+
+ ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+statusBadge(x.status)+'</td><td><button class="btn w" type="button" onclick="window.payInstallment(\''+x.id+'\','+Number(x.amount||0)+','+Number(x.paid_amount||0)+',\''+b.id+'\')">تسجيل دفعة</button></td></tr>').join('')+
+ '</tbody></table></div>':'لا توجد أقساط مسجلة.';
+ $('newPaymentBox').innerHTML='<div class="section"><h4>إضافة دفعة عامة</h4><div class="cols"><div><label>المبلغ</label><input id="pmAmount" type="number" min="1"></div><div><label>تاريخ الدفع</label><input id="pmDate" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>طريقة الدفع</label><input id="pmMethod" value="نقد"></div><div><label>ملاحظات</label><input id="pmNotes"></div></div><button class="btn p" type="button" id="savePaymentBtn">تسجيل الدفعة</button></div>';
+ $('savePaymentBtn').onclick=()=>recordPayment(b);
+}
+
+window.payInstallment=async function(id,amount,already,bid){
+ const val=prompt('أدخل مبلغ الدفعة لهذا القسط:',String(Math.max(amount-already,0)));
+ if(val===null)return;
+ const n=Number(val); if(!n||n<0)return alert('أدخل مبلغًا صحيحًا.');
+ await applyPayment(bid,n,'دفعة قسط');
+};
+
+async function recordPayment(b){
+ const n=Number($('pmAmount').value||0);
+ if(!n||n<=0)return msg('pmMsg','أدخل مبلغ الدفعة.',true);
+ await applyPayment(b.id,n,$('pmMethod').value||'دفعة',$('pmNotes').value||'');
+};
+
+async function applyPayment(bid,amount,method,notes){
+ const {data:b,error:be}=await db.from('bookings').select('*').eq('id',bid).single();
+ if(be) return msg('pmMsg',be.message,true);
+ if(amount>Number(b.remaining_amount||0))return msg('pmMsg','مبلغ الدفعة أكبر من المتبقي.',true);
+ const payment=await db.from('payments').insert({booking_id:bid,amount,payment_date:new Date().toISOString().slice(0,10),method,notes:notes||null});
+ if(payment.error)return msg('pmMsg',payment.error.message,true);
+ const newPaid=Number(b.paid_amount||0)+amount;
+ const up=await db.from('bookings').update({paid_amount:newPaid,status:newPaid>=Number(b.total_amount||0)?'paid':'pending'}).eq('id',bid);
+ if(up.error)return msg('pmMsg',up.error.message,true);
+ // Apply the payment to installments in order.
+ let left=amount;
+ const ir=await db.from('installment_plans').select('*').eq('booking_id',bid).order('installment_number');
+ if(!ir.error){
+   for(const x of ir.data||[]){
+     const due=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);
+     if(left<=0)break;
+     const add=Math.min(left,due);
+     if(add>0){
+       const np=Number(x.paid_amount||0)+add;
+       await db.from('installment_plans').update({paid_amount:np,status:np>=Number(x.amount||0)?'paid':'partial'}).eq('id',x.id);
+       left-=add;
+     }
+   }
+ }
+ await load();
+ const p2=P.find(x=>x.id===bid || x.booking_id===bid);
+ if(p2)window.openProfile(p2.id);
+};
  $('profile').scrollIntoView({behavior:'smooth'});
 };
 
