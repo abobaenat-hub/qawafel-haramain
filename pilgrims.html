@@ -6,29 +6,29 @@
 <title>المعتمرون | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--n:#0c3b63;--d:#072b49;--g:#c79a3b;--c:#f7f5ef;--l:#dfe6ea;--r:#a33;--ok:#176644}
+:root{--n:#0c3b63;--d:#072b49;--g:#c79a3b;--c:#f7f5ef;--l:#dfe6ea;--r:#a33}
 *{box-sizing:border-box}body{margin:0;background:var(--c);color:#17364e;font-family:Tahoma,Arial}
-.top{background:var(--d);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.top small{display:block;color:#e1bd72;margin-top:4px}.wrap{max-width:1250px;margin:auto;padding:18px}
-.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer}.p{background:var(--n);color:#fff}.w{background:#fff;color:var(--n);border:1px solid #ccd7df}
+.top{background:var(--d);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.top small{display:block;color:#e1bd72;margin-top:4px}.wrap{max-width:1200px;margin:auto;padding:18px}
 .panel{background:#fff;border:1px solid var(--l);border-radius:18px;padding:20px;margin:15px 0;box-shadow:0 8px 25px #0000000b}
 .login{max-width:460px;margin:70px auto}label{display:block;font-weight:800;margin:10px 0 5px}
-input,select,textarea{width:100%;padding:11px;border:1px solid #ccd7df;border-radius:10px;font:inherit}
+input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-radius:10px;font:inherit}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer}.p{background:var(--n);color:#fff}.w{background:#fff;color:var(--n);border:1px solid #ccd7df}
 .grid{display:grid;grid-template-columns:1fr 1.5fr;gap:15px}.cols{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:#fff;border:1px solid var(--l);border-radius:14px;padding:14px}.stat b{display:block;font-size:22px;color:var(--n);margin-top:5px}
 .msg{padding:11px;border-radius:10px;margin:10px 0;background:#edf8f3}.err{background:#fff0f0;color:var(--r)}
-.hide{display:none}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:#fff;border:1px solid var(--l);border-radius:14px;padding:14px}.stat b{display:block;font-size:22px;color:var(--n);margin-top:5px}
-.table{overflow:auto}table{width:100%;min-width:780px;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid var(--l);text-align:right}th{background:#f2f6f8;color:var(--n)}
-.badge{padding:5px 9px;border-radius:20px;font-size:12px;font-weight:800;background:#fff2cf}.ok{background:#e7f6ef;color:#176644}.danger{background:#fff0f0;color:#a33}
-.profileHead{display:flex;justify-content:space-between;gap:10px;align-items:center}.money{font-weight:900;color:var(--n)}.section{border-top:1px solid var(--l);padding-top:15px;margin-top:15px}
+.hide{display:none}.table{overflow:auto}table{width:100%;min-width:800px;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid var(--l);text-align:right}th{background:#f2f6f8;color:var(--n)}
+.badge{padding:5px 9px;border-radius:20px;font-size:12px;font-weight:800;background:#fff2cf}.ok{background:#e7f6ef;color:#176644}
+.section{border-top:1px solid var(--l);padding-top:15px;margin-top:15px}.money{font-weight:900;color:var(--n)}
 @media(max-width:850px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
-@media(max-width:550px){.cols,.stats{grid-template-columns:1fr}.top{align-items:flex-start}.top .actions{display:flex;flex-direction:column}}
-@media print{.top,#login,.noPrint,#app>.stats,#app>.grid{display:none!important}.wrap{max-width:none;padding:0}.panel{box-shadow:none;border:0}}
+@media(max-width:550px){.cols,.stats{grid-template-columns:1fr}}
+@media print{.top,#login,.noPrint,#app>.stats,#app>.grid{display:none!important}.panel{box-shadow:none;border:0}}
 </style>
 </head>
 <body>
 <div class="top">
- <div><b>قوافل الحرمين</b><small>إدارة ملفات المعتمرين</small></div>
- <div class="actions"><a class="btn w" href="admin.html">لوحة الإدارة</a> <button class="btn w noPrint" id="logout">خروج</button></div>
+<div><b>قوافل الحرمين</b><small>إدارة ملفات المعتمرين</small></div>
+<div><a class="btn w" href="admin.html">لوحة الإدارة</a> <button id="logout" class="btn w noPrint">خروج</button></div>
 </div>
 
 <div id="login" class="panel login">
@@ -40,10 +40,10 @@ input,select,textarea{width:100%;padding:11px;border:1px solid #ccd7df;border-ra
 
 <main id="app" class="wrap hide">
 <div class="stats">
- <div class="stat">المعتمرون<b id="pc">0</b></div>
- <div class="stat">الحجوزات<b id="bc">0</b></div>
- <div class="stat">المدفوع<b id="paid">0</b></div>
- <div class="stat">المتبقي<b id="rem">0</b></div>
+<div class="stat">المعتمرون<b id="pc">0</b></div>
+<div class="stat">الحجوزات<b id="bc">0</b></div>
+<div class="stat">المدفوع<b id="paid">0</b></div>
+<div class="stat">المتبقي<b id="rem">0</b></div>
 </div>
 
 <div class="grid">
@@ -64,17 +64,16 @@ input,select,textarea{width:100%;padding:11px;border:1px solid #ccd7df;border-ra
 <div><label>الدفعة الأولى</label><input id="initial" type="number" min="0" value="0"></div>
 <div id="dueWrap"><label>أول استحقاق قسط</label><input id="due" type="date"></div>
 </div>
-<label>رابط نسخة الجواز</label><input id="doc" placeholder="يمكن إضافة رابط الملف لاحقًا">
+<label>رابط نسخة الجواز</label><input id="doc">
 <label>ملاحظات</label><textarea id="notes"></textarea>
 <br><button class="btn p" type="submit">حفظ المعتمر والحجز</button>
 </form>
 </section>
 
 <section class="panel">
-<h2>قائمة المعتمرين</h2>
-<input id="search" placeholder="بحث بالاسم أو الهاتف أو الجواز أو رمز الملف">
+<h2>قائمة المعتمرين</h2><input id="search" placeholder="بحث بالاسم أو الهاتف أو الجواز أو رمز الملف">
 <div id="listMsg"></div>
-<div class="table"><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الجواز</th><th>الفيزا</th><th>الرحلة</th><th>الحساب</th><th>الملف</th></tr></thead>
+<div class="table"><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الجواز</th><th>الفيزا</th><th>البرنامج</th><th>السداد</th><th>الملف</th></tr></thead>
 <tbody id="rows"></tbody></table></div>
 </section>
 </div>
@@ -83,57 +82,44 @@ input,select,textarea{width:100%;padding:11px;border:1px solid #ccd7df;border-ra
 </main>
 
 <script>
-(function(){
-'use strict';
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
 const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K);
 const $=id=>document.getElementById(id);
 let P=[],B=[],PR=[],I=[];
 
-function msg(id,text,error){
- const el=$(id); if(!el)return;
- el.className='msg'+(error?' err':''); el.textContent=text||'';
-}
+function msg(id,text,error=false){const e=$(id);if(e){e.className='msg'+(error?' err':'');e.textContent=text||''}}
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
-function syncPaymentType(){const installment=$('paymentType').value==='installment';$('dueWrap').style.display=installment?'block':'none';$('due').required=installment;}
-$('paymentType').onchange=syncPaymentType;syncPaymentType();
-function statusBadge(s){
- const good=['paid','صادرة','مدفوع','مكتمل'].includes(String(s||''));
- return '<span class="badge '+(good?'ok':'')+'">'+(s||'قيد الإجراء')+'</span>';
-}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function badge(s){return '<span class="badge '+(['paid','صادرة','مدفوع'].includes(String(s||''))?'ok':'')+'">'+esc(s||'قيد الإجراء')+'</span>'}
+
 async function isAdmin(){
  const {data:{user}}=await db.auth.getUser();
  if(!user)return null;
  const {data,error}=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
- if(error||!data)return null;
- return user;
+ return error||!data?null:user;
 }
-function showApp(user){
- $('login').classList.add('hide'); $('app').classList.remove('hide');
- load();
-}
-async function doLogin(){
+async function login(){
  const email=$('email').value.trim(),password=$('password').value;
  if(!email||!password)return msg('loginMsg','أدخل البريد الإلكتروني وكلمة المرور.',true);
- $('loginBtn').disabled=true; msg('loginMsg','جاري التحقق...');
+ $('loginBtn').disabled=true;msg('loginMsg','جاري التحقق...');
  try{
-   const {data,error}=await db.auth.signInWithPassword({email,password});
-   if(error)throw error;
-   if(!data.user)throw Error('لم يتم العثور على بيانات الحساب.');
-   const admin=await isAdmin();
-   if(!admin){await db.auth.signOut();throw Error('هذا الحساب غير مخول للإدارة.');}
-   showApp(admin); msg('loginMsg','تم الدخول بنجاح');
+  const {data,error}=await db.auth.signInWithPassword({email,password});
+  if(error)throw error;
+  const u=await isAdmin();
+  if(!u){await db.auth.signOut();throw Error('هذا الحساب غير مخول للإدارة.')}
+  $('login').classList.add('hide');$('app').classList.remove('hide');await load();
  }catch(e){msg('loginMsg',e.message||'تعذر تسجيل الدخول.',true)}
  finally{$('loginBtn').disabled=false}
 }
-$('loginBtn').onclick=doLogin;
-$('password').onkeydown=e=>{if(e.key==='Enter')doLogin()};
-$('email').onkeydown=e=>{if(e.key==='Enter')doLogin()};
+$('loginBtn').onclick=login;
+$('password').onkeydown=e=>{if(e.key==='Enter')login()};
+$('email').onkeydown=e=>{if(e.key==='Enter')login()};
 $('logout').onclick=async()=>{await db.auth.signOut();location.reload()};
+$('paymentType').onchange=()=>{const i=$('paymentType').value==='installment';$('dueWrap').style.display=i?'block':'none';$('due').required=i};
+$('paymentType').onchange();
 
 async function load(){
- msg('listMsg','جاري تحميل البيانات...');
  const [a,b,c,i]=await Promise.all([
   db.from('pilgrims').select('*').order('created_at',{ascending:false}),
   db.from('bookings').select('*').order('created_at',{ascending:false}),
@@ -147,152 +133,75 @@ async function load(){
  $('paid').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('rem').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
  $('program').innerHTML='<option value="">اختر البرنامج</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+' — '+money(x.price)+'</option>').join('');
- render();msg('listMsg','');
+ render();
 }
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
 function render(){
  const q=$('search').value.trim().toLowerCase();
  $('rows').innerHTML=P.filter(x=>[x.full_name,x.phone,x.passport_number,x.profile_code].some(v=>String(v||'').toLowerCase().includes(q))).map(x=>{
   const b=B.find(z=>z.id===x.booking_id),pr=PR.find(z=>z.id===b?.program_id);
-  return '<tr><td><b>'+esc(x.full_name)+'</b><br><small>'+esc(x.profile_code)+'</small></td>'+
-  '<td>'+esc(x.phone||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td><td>'+statusBadge(x.visa_status)+'</td>'+
-  '<td>'+esc(pr?.title||'—')+'</td><td>'+money(b?.paid_amount)+' / '+money(b?.remaining_amount)+'</td>'+
-  '<td><button class="btn p" onclick="window.openProfile(\''+x.id+'\')">فتح</button></td></tr>'
+  return '<tr><td><b>'+esc(x.full_name)+'</b><br><small>'+esc(x.profile_code)+'</small></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td><td>'+badge(x.visa_status)+'</td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b?.paid_amount)+' / '+money(b?.remaining_amount)+'</td><td><button class="btn p" onclick="openProfile(\''+x.id+'\')">فتح</button></td></tr>'
  }).join('')||'<tr><td colspan="7">لا يوجد معتمرون.</td></tr>';
 }
 $('search').oninput=render;
 
-window.openProfile=async function(id){
- const p=P.find(x=>x.id===id); if(!p)return;
- const b=B.find(x=>x.id===p.booking_id),pr=PR.find(x=>x.id===b?.program_id);
- const ins=I.filter(x=>x.booking_id===b?.id);
- const paid=Number(b?.paid_amount||0),remaining=Number(b?.remaining_amount||0);
+async function openProfile(id){
+ const p=P.find(x=>x.id===id);if(!p)return;
+ const b=B.find(x=>x.id===p.booking_id),pr=PR.find(x=>x.id===b?.program_id),ins=I.filter(x=>x.booking_id===b?.id);
  $('profile').classList.remove('hide');
- $('profile').innerHTML=
- '<div class="profileHead"><div><h2>ملف المعتمر</h2><small>'+esc(p.profile_code||'')+'</small></div><div class="noPrint"><button class="btn w" onclick="window.print()">طباعة الملف</button></div></div>'+
- '<div class="cols"><div><b>الاسم</b><br>'+esc(p.full_name)+'</div><div><b>الهاتف</b><br>'+esc(p.phone||'—')+'</div>'+
- '<div><b>الجنسية</b><br>'+esc(p.nationality||'—')+'</div><div><b>رقم الجواز</b><br>'+esc(p.passport_number||'—')+'</div>'+
- '<div><b>انتهاء الجواز</b><br>'+esc(p.passport_expiry||'—')+'</div><div><b>نسخة الجواز</b><br>'+(p.document_url?'<a href="'+esc(p.document_url)+'" target="_blank">فتح النسخة</a>':'—')+'</div></div>'+
- '<div class="section"><h3>الفيزا</h3><div class="cols"><div>الحالة: '+statusBadge(p.visa_status)+'</div><div>الرقم: '+esc(p.visa_number||'—')+'</div><div>تاريخ الإصدار: '+esc(p.visa_issued_at||'—')+'</div></div></div>'+
- '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج: <b>'+esc(pr?.title||'—')+'</b></div><div>التاريخ: '+esc(pr?.departure_date||'—')+'</div><div>نوع البرنامج: <b>'+(b?.payment_type==='installment'?'قسط':'نقد')+'</b></div><div>الإجمالي: <span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع: <span class="money">'+money(paid)+'</span></div><div>المتبقي: <span class="money">'+money(remaining)+'</span></div><div>الحالة: '+statusBadge(b?.status)+'</div></div></div>'+
- '<div class="section"><h3>جدول الأقساط</h3>'+
- (ins.length?'<div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+
- ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+statusBadge(x.status)+'</td></tr>').join('')+
- '</tbody></table></div>':'لا توجد أقساط مسجلة.')+'</div>'+
- '<div class="section"><h3>سجل الدفعات</h3><div id="paymentsBox">جاري التحميل...</div></div>'+
- '<div class="section noPrint" id="paymentActions">'+(b?.payment_type==='installment'?'<button class="btn p" id="managePaymentsBtn" type="button">💰 إدارة الدفعات والأقساط</button>':'<span class="badge ok">برنامج نقدي — لا توجد أقساط</span>')+'</div>'+
- '<div class="section hide noPrint" id="paymentManager"></div>'+
- '<div class="section"><b>ملاحظات:</b><br>'+esc(p.notes||'—')+'</div>';
- $('paymentsBox').innerHTML='جاري التحميل...';
- if(b?.id){
-  const {data,error}=await db.from('payments').select('*').eq('booking_id',b.id).order('payment_date',{ascending:false});
-  if(error)$('paymentsBox').innerHTML='<span class="danger">'+esc(error.message)+'</span>';
-  else $('paymentsBox').innerHTML=data?.length?'<div class="table"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>الطريقة</th><th>ملاحظات</th></tr></thead><tbody>'+
-   data.map(x=>'<tr><td>'+esc(x.payment_date||x.created_at||'—')+'</td><td>'+money(x.amount)+'</td><td>'+esc(x.method||'—')+'</td><td>'+esc(x.notes||'—')+'</td></tr>').join('')+'</tbody></table></div>':'لا توجد دفعات مسجلة.';
- }
-
- if(b?.payment_type==='installment'){
-   const mb=$('managePaymentsBtn');
-   if(mb)mb.onclick=()=>openPaymentManager(b,p);
- }
+ $('profile').innerHTML='<h2>ملف المعتمر: '+esc(p.full_name)+'</h2>'+
+ '<div class="cols"><div>رمز الملف<br><b>'+esc(p.profile_code||'—')+'</b></div><div>الهاتف<br>'+esc(p.phone||'—')+'</div><div>الجنسية<br>'+esc(p.nationality||'—')+'</div><div>الجواز<br>'+esc(p.passport_number||'—')+'</div><div>انتهاء الجواز<br>'+esc(p.passport_expiry||'—')+'</div><div>الفيزا<br>'+badge(p.visa_status)+' '+esc(p.visa_number||'')+'</div></div>'+
+ '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج<br><b>'+esc(pr?.title||'—')+'</b></div><div>نوع البرنامج<br><b>'+(b?.payment_type==='installment'?'قسط':'نقد')+'</b></div><div>الإجمالي<br><span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع<br><span class="money">'+money(b?.paid_amount)+'</span></div><div>المتبقي<br><span class="money">'+money(b?.remaining_amount)+'</span></div><div>الحالة<br>'+badge(b?.status)+'</div></div></div>'+
+ (b?.payment_type==='installment'?'<div class="section"><h3>الأقساط</h3><div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+((ins.length?ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join(''):'<tr><td colspan="5">لا توجد أقساط.</td></tr>'))+'</tbody></table></div><button id="manageBtn" class="btn p noPrint">💰 إدارة الدفعات والأقساط</button><div id="manager" class="section hide"></div></div>':'<div class="section"><span class="badge ok">برنامج نقدي — لا توجد أقساط</span></div>')+
+ '<div class="section"><button class="btn w noPrint" onclick="window.print()">طباعة الملف</button></div>';
+ if(b?.payment_type==='installment')$('manageBtn').onclick=()=>managePayments(b);
  $('profile').scrollIntoView({behavior:'smooth'});
-};
-
-async function openPaymentManager(b,p){
- const box=$('paymentManager'); if(!box)return;
- box.classList.remove('hide');
- box.innerHTML='<h3>إدارة الدفعات والأقساط</h3><div id="pmMsg">جاري تحميل الأقساط...</div><div id="installmentsBox"></div><div id="newPaymentBox"></div>';
- const [ir,pr]=await Promise.all([
-   db.from('installment_plans').select('*').eq('booking_id',b.id).order('installment_number'),
-   db.from('payments').select('*').eq('booking_id',b.id).order('payment_date',{ascending:false})
- ]);
- if(ir.error){$('pmMsg').innerHTML='<span class="danger">'+esc(ir.error.message)+'</span>';return}
- const ins=ir.data||[], payments=pr.data||[];
- $('pmMsg').innerHTML='الإجمالي: <b>'+money(b.total_amount)+'</b> — المدفوع: <b>'+money(b.paid_amount)+'</b> — المتبقي: <b>'+money(b.remaining_amount)+'</b>';
- $('installmentsBox').innerHTML=ins.length?'<div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>'+
- ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+statusBadge(x.status)+'</td><td><button class="btn w" type="button" onclick="window.payInstallment(\''+x.id+'\','+Number(x.amount||0)+','+Number(x.paid_amount||0)+',\''+b.id+'\')">تسجيل دفعة</button></td></tr>').join('')+
- '</tbody></table></div>':'لا توجد أقساط مسجلة.';
- $('newPaymentBox').innerHTML='<div class="section"><h4>إضافة دفعة عامة</h4><div class="cols"><div><label>المبلغ</label><input id="pmAmount" type="number" min="1"></div><div><label>تاريخ الدفع</label><input id="pmDate" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>طريقة الدفع</label><input id="pmMethod" value="نقد"></div><div><label>ملاحظات</label><input id="pmNotes"></div></div><button class="btn p" type="button" id="savePaymentBtn">تسجيل الدفعة</button></div>';
- $('savePaymentBtn').onclick=()=>recordPayment(b);
 }
 
-window.payInstallment=async function(id,amount,already,bid){
- const val=prompt('أدخل مبلغ الدفعة لهذا القسط:',String(Math.max(amount-already,0)));
- if(val===null)return;
- const n=Number(val); if(!n||n<0)return alert('أدخل مبلغًا صحيحًا.');
- await applyPayment(bid,n,'دفعة قسط');
-};
-
-async function recordPayment(b){
- const n=Number($('pmAmount').value||0);
- if(!n||n<=0)return msg('pmMsg','أدخل مبلغ الدفعة.',true);
- await applyPayment(b.id,n,$('pmMethod').value||'دفعة',$('pmNotes').value||'');
-};
-
-async function applyPayment(bid,amount,method,notes){
- const {data:b,error:be}=await db.from('bookings').select('*').eq('id',bid).single();
- if(be) return msg('pmMsg',be.message,true);
- if(amount>Number(b.remaining_amount||0))return msg('pmMsg','مبلغ الدفعة أكبر من المتبقي.',true);
- const payment=await db.from('payments').insert({booking_id:bid,amount,payment_date:new Date().toISOString().slice(0,10),method,notes:notes||null});
- if(payment.error)return msg('pmMsg',payment.error.message,true);
- const newPaid=Number(b.paid_amount||0)+amount;
- const up=await db.from('bookings').update({paid_amount:newPaid,status:newPaid>=Number(b.total_amount||0)?'paid':'pending'}).eq('id',bid);
- if(up.error)return msg('pmMsg',up.error.message,true);
- // Apply the payment to installments in order.
+async function managePayments(b){
+ const box=$('manager');box.classList.remove('hide');box.innerHTML='<h4>إدارة الدفعات</h4><div id="pm"></div><div class="cols"><div><label>مبلغ الدفعة</label><input id="payAmount" type="number" min="1"></div><div><label>تاريخ الدفع</label><input id="payDate" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>طريقة الدفع</label><input id="payMethod" value="نقد"></div><div><label>ملاحظات</label><input id="payNotes"></div></div><button id="savePay" class="btn p noPrint">تسجيل الدفعة</button>';
+ const r=await db.from('installment_plans').select('*').eq('booking_id',b.id).order('installment_number');
+ $('pm').innerHTML=r.error?'<div class="msg err">'+esc(r.error.message)+'</div>':(r.data?.length?'<div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+r.data.map(x=>'<tr><td>'+x.installment_number+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join('')+'</tbody></table></div>':'لا توجد أقساط.');
+ $('savePay').onclick=()=>savePayment(b);
+}
+async function savePayment(b){
+ const amount=Number($('payAmount').value||0);if(amount<=0)return msg('pm','أدخل مبلغًا صحيحًا.',true);
+ const fresh=await db.from('bookings').select('*').eq('id',b.id).single();if(fresh.error)return msg('pm',fresh.error.message,true);
+ if(amount>Number(fresh.data.remaining_amount||0))return msg('pm','مبلغ الدفعة أكبر من المتبقي.',true);
+ const pay=await db.from('payments').insert({booking_id:b.id,amount,payment_date:$('payDate').value,method:$('payMethod').value||'نقد',notes:$('payNotes').value||null});
+ if(pay.error)return msg('pm',pay.error.message,true);
+ const nb=Number(fresh.data.paid_amount||0)+amount;
+ const up=await db.from('bookings').update({paid_amount:nb,status:nb>=Number(fresh.data.total_amount||0)?'paid':'pending'}).eq('id',b.id);
+ if(up.error)return msg('pm',up.error.message,true);
  let left=amount;
- const ir=await db.from('installment_plans').select('*').eq('booking_id',bid).order('installment_number');
- if(!ir.error){
-   for(const x of ir.data||[]){
-     const due=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);
-     if(left<=0)break;
-     const add=Math.min(left,due);
-     if(add>0){
-       const np=Number(x.paid_amount||0)+add;
-       await db.from('installment_plans').update({paid_amount:np,status:np>=Number(x.amount||0)?'paid':'partial'}).eq('id',x.id);
-       left-=add;
-     }
-   }
+ const ir=await db.from('installment_plans').select('*').eq('booking_id',b.id).order('installment_number');
+ if(!ir.error)for(const x of ir.data||[]){
+  const due=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);if(left<=0)break;
+  const add=Math.min(left,due);if(add){const np=Number(x.paid_amount||0)+add;await db.from('installment_plans').update({paid_amount:np,status:np>=Number(x.amount||0)?'paid':'partial'}).eq('id',x.id);left-=add}
  }
- await load();
- const p2=P.find(x=>x.id===bid || x.booking_id===bid);
- if(p2)window.openProfile(p2.id);
-};
- $('profile').scrollIntoView({behavior:'smooth'});
-};
+ await load();const np=P.find(x=>x.booking_id===b.id);if(np)openProfile(np.id);
+}
 
 $('form').onsubmit=async e=>{
  e.preventDefault();msg('formMsg','جاري الحفظ...');
- const pr=PR.find(x=>x.id===$('program').value);
- if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);
- const total=Number(pr.price||0),initial=Math.max(Number($('initial').value||0),0);
- const paid=Math.min(initial,total),remaining=total-paid;
+ const pr=PR.find(x=>x.id===$('program').value);if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);
+ const total=Number(pr.price||0),paymentType=$('paymentType').value,paid=Math.min(Math.max(Number($('initial').value||0),0),total);
+ const remaining=total-paid;
  try{
-  const paymentType=$('paymentType').value;const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,total_amount:total,paid_amount:paid,payment_type:paymentType,status:remaining?'pending':'paid',notes:'حجز من إدارة المعتمرين'};
-  const br=await db.from('bookings').insert(booking).select('id').single();
-  if(br.error)throw br.error;
+  const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,total_amount:total,paid_amount:paid,status:remaining?'pending':'paid',notes:'حجز من إدارة المعتمرين',payment_type:paymentType};
+  const br=await db.from('bookings').insert(booking).select('id').single();if(br.error)throw br.error;
   const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,nationality:$('nat').value.trim()||'عراقي',passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:$('doc').value.trim()||null,notes:$('notes').value.trim()||null,profile_code:'QH-'+Date.now().toString().slice(-8)};
-  const prr=await db.from('pilgrims').insert(payload);
-  if(prr.error){await db.from('bookings').delete().eq('id',br.data.id);throw prr.error}
-  if(paid>0){
-   const pay=await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),method:'دفعة أولى',notes:'دفعة أولى عند إنشاء الحجز'});
-   if(pay.error)console.warn(pay.error);
+  const pp=await db.from('pilgrims').insert(payload);if(pp.error){await db.from('bookings').delete().eq('id',br.data.id);throw pp.error}
+  if(paid>0)await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),method:'دفعة أولى',notes:'دفعة أولى'});
+  if(paymentType==='installment'&&remaining>0&&$('due').value){
+   const ir=await db.from('installment_plans').insert({booking_id:br.data.id,installment_number:1,due_date:$('due').value,amount:remaining,paid_amount:0,status:'pending'});
+   if(ir.error)console.warn(ir.error);
   }
-  if(paymentType==='installment'&&remaining&&$('due').value){
-   const ins=await db.from('installment_plans').insert({booking_id:br.data.id,installment_number:1,due_date:$('due').value,amount:remaining,paid_amount:0,status:'pending'});
-   if(ins.error)console.warn(ins.error);
-  }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');
-  e.target.reset();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';syncPaymentType();await load();
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();await load();
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 
-(async()=>{
- try{
-  const {data:{session}}=await db.auth.getSession();
-  if(session){const user=await isAdmin();if(user)showApp(user)}
- }catch(e){msg('loginMsg',e.message||'تعذر فحص الجلسة.',true)}
-})();
-})();
+(async()=>{try{const{data:{session}}=await db.auth.getSession();if(session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}}catch(e){msg('loginMsg',e.message||'تعذر فحص الجلسة.',true)}})();
 </script>
 </body>
 </html>
