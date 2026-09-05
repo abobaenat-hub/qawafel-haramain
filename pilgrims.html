@@ -195,7 +195,7 @@ $('form').onsubmit=async e=>{
  const total=Number(pr.price||0),initial=Math.max(Number($('initial').value||0),0);
  const paid=Math.min(initial,total),remaining=total-paid;
  try{
-  const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,passengers_count:1,total_amount:total,paid_amount:paid,remaining_amount:remaining,status:remaining?'pending':'paid',notes:'حجز من إدارة المعتمرين'};
+  const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,total_amount:total,paid_amount:paid,status:remaining?'pending':'paid',notes:'حجز من إدارة المعتمرين'};
   const br=await db.from('bookings').insert(booking).select('id').single();
   if(br.error)throw br.error;
   const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,nationality:$('nat').value.trim()||'عراقي',passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:$('doc').value.trim()||null,notes:$('notes').value.trim()||null,profile_code:'QH-'+Date.now().toString().slice(-8)};
