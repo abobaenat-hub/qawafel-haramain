@@ -14,7 +14,7 @@
 input,select{width:100%;padding:12px;border:1px solid #ccd7df;border-radius:10px;font:inherit}
 button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;cursor:pointer}.p{background:var(--n);color:#fff}.w{background:#fff;color:var(--n);border:1px solid #ccd7df}
 .hide{display:none}.msg{padding:11px;border-radius:10px;margin:10px 0;background:#edf8f3}.err{background:#fff0f0;color:var(--r)}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:#fff;border:1px solid var(--l);border-radius:14px;padding:16px}.stat b{display:block;font-size:23px;color:var(--n);margin-top:7px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.stat{background:#fff;border:1px solid var(--l);border-radius:14px;padding:16px}.stat b{display:block;font-size:23px;color:var(--n);margin-top:7px}
 .table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:750px}th,td{padding:11px;border-bottom:1px solid var(--l);text-align:right}th{background:#f2f6f8;color:var(--n)}
 .badge{padding:5px 9px;border-radius:20px;background:#fff2cf;font-size:12px;font-weight:bold}.ok{background:#e7f6ef;color:#176644}.danger{background:#fff0f0;color:#a33}
 .filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:15px}
@@ -34,7 +34,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div class="stat">إجمالي المبيعات<b id="sales">0 د.ع</b></div>
 <div class="stat">المقبوض<b id="received">0 د.ع</b></div>
 <div class="stat">المتبقي<b id="remaining">0 د.ع</b></div>
-<div class="stat">المتأخر<b id="late">0 د.ع</b></div>
+<div class="stat">المتأخر<b id="late">0 د.ع</b></div><div class="stat">صافي الربح<b id="profit">0 د.ع</b></div>
 </div>
 
 <div class="panel">
@@ -46,6 +46,24 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 </div>
 </div>
 
+<section class="panel">
+<h2>💸 تسجيل مصروف</h2>
+<div id="expenseMsg"></div>
+<div class="filters" style="grid-template-columns:1fr 1fr 1fr">
+<div><label>نوع المصروف</label><select id="expenseCategory"><option>فنادق</option><option>نقل وباصات</option><option>تأشيرات</option><option>وجبات</option><option>تسويق وإعلانات</option><option>رواتب وأجور</option><option>مكاتب وعمولات</option><option>مصاريف إدارية</option><option>أخرى</option></select></div>
+<div><label>المبلغ</label><input id="expenseAmount" type="number" min="0" placeholder="مثلاً 500000"></div>
+<div><label>التاريخ</label><input id="expenseDate" type="date"></div>
+</div>
+<label>الرحلة المرتبطة (اختياري)</label><select id="expenseProgram"><option value="">مصروف عام للشركة</option></select>
+<label>البيان</label><input id="expenseDescription" placeholder="مثلاً دفعة فندق مكة">
+<label>ملاحظات</label><input id="expenseNotes" placeholder="ملاحظات إضافية">
+<br><button id="addExpense" class="p">حفظ المصروف</button>
+</section>
+
+<section class="panel">
+<h2>📋 سجل المصروفات</h2>
+<div class="table"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>الرحلة</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
+</section>
 <div class="cards">
 <section class="panel"><h3>ملخص الرحلات</h3><div id="programReport"></div></section>
 <section class="panel"><h3>الأقساط المستحقة والمتأخرة</h3><div id="installmentReport"></div></section>
@@ -60,7 +78,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);
-let B=[],P=[],PR=[],I=[];
+let B=[],P=[],PR=[],I=[],E=[];
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function msg(id,t,e=false){$(id).className='msg'+(e?' err':'');$(id).textContent=t||''}
@@ -79,22 +97,27 @@ async function login(){
 $('loginBtn').onclick=login;$('password').onkeydown=e=>{if(e.key==='Enter')login()};
 
 async function load(){
- const [b,p,pr,i]=await Promise.all([
+ const [b,p,pr,i,e]=await Promise.all([
   db.from('bookings').select('*').order('created_at',{ascending:false}),
   db.from('pilgrims').select('*'),
   db.from('programs').select('*').order('departure_date'),
-  db.from('installment_plans').select('*').order('due_date')
+  db.from('installment_plans').select('*').order('due_date'),
+  db.from('expenses').select('*').order('expense_date',{ascending:false})
  ]);
- const er=[b,p,pr,i].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
- B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];
+ const er=[b,p,pr,i,e].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
+ B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];
  $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
  $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
  const today=new Date().toISOString().slice(0,10);
  const late=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today).reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0);
  $('late').textContent=money(late);
+ $('profit').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0)-E.reduce((s,x)=>s+Number(x.amount||0),0));
  $('programFilter').innerHTML='<option value="">كل البرامج</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
+ $('expenseProgram').innerHTML='<option value="">مصروف عام للشركة</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
+ $('expenseDate').value=new Date().toISOString().slice(0,10);
  render();
+ renderExpenses();
 }
 function render(){
  const q=$('search').value.trim().toLowerCase(),pf=$('programFilter').value,sf=$('statusFilter').value;
@@ -118,7 +141,35 @@ function render(){
  const due=I.filter(x=>x.status!=='paid'),late=due.filter(x=>x.due_date&&x.due_date<today);
  $('installmentReport').innerHTML='<p>أقساط غير مسددة: <b>'+due.length+'</b></p><p>قيمة غير مسددة: <b>'+money(due.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p><p>أقساط متأخرة: <b>'+late.length+'</b></p><p>قيمة المتأخر: <b>'+money(late.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p>';
 }
-$('search').oninput=render;$('programFilter').onchange=render;$('statusFilter').onchange=render;
+$('search').oninput=()=>{render();renderExpenses()};$('programFilter').onchange=()=>{render();renderExpenses()};$('statusFilter').onchange=render;
+function renderExpenses(){
+ const q=$('search').value.trim().toLowerCase(), pf=$('programFilter').value;
+ const list=E.filter(x=>{
+   const pr=PR.find(z=>z.id===x.program_id);
+   const matchQ=!q||[x.description,x.category,x.notes,pr?.title].some(v=>String(v||'').toLowerCase().includes(q));
+   const matchP=!pf||x.program_id===pf;
+   return matchQ&&matchP;
+ });
+ $('expenseRows').innerHTML=list.map(x=>{
+   const pr=PR.find(z=>z.id===x.program_id);
+   return '<tr><td>'+esc(x.expense_date)+'</td><td><b>'+esc(x.description)+'</b></td><td>'+esc(x.category)+'</td><td>'+esc(pr?.title||'عام')+'</td><td>'+money(x.amount)+'</td><td>'+esc(x.notes||'—')+'</td></tr>';
+ }).join('')||'<tr><td colspan="6">لا توجد مصروفات مسجلة.</td></tr>';
+}
+$('addExpense').onclick=async()=>{
+ const category=$('expenseCategory').value, amount=Number($('expenseAmount').value), date=$('expenseDate').value;
+ const description=$('expenseDescription').value.trim(), notes=$('expenseNotes').value.trim(), program_id=$('expenseProgram').value||null;
+ if(!amount||amount<0||!date||!description)return msg('expenseMsg','أكمل نوع المصروف والمبلغ والتاريخ والبيان.',true);
+ $('addExpense').disabled=true;msg('expenseMsg','جاري حفظ المصروف...');
+ try{
+   const {data:{user}}=await db.auth.getUser();
+   const {error}=await db.from('expenses').insert({category,amount,expense_date:date,description,notes,program_id,created_by:user?.id||null});
+   if(error)throw error;
+   $('expenseAmount').value='';$('expenseDescription').value='';$('expenseNotes').value='';
+   msg('expenseMsg','تم حفظ المصروف بنجاح.');
+   await load();
+ }catch(e){msg('expenseMsg',e.message||'تعذر حفظ المصروف.',true)}
+ finally{$('addExpense').disabled=false}
+};
 (async()=>{const{data:{session}}=await db.auth.getSession();if(session&&await admin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}})();
 </script>
 </body></html>
