@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>المالية | قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--n:#0c3b63;--d:#072b49;--c:#f7f5ef;--l:#dfe6ea;--r:#a33}
+*{box-sizing:border-box}body{margin:0;background:var(--c);color:#17364e;font-family:Tahoma,Arial}
+.top{background:var(--d);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center}
+.top small{display:block;color:#e1bd72;margin-top:4px}.wrap{max-width:1250px;margin:auto;padding:18px}
+.panel{background:#fff;border:1px solid var(--l);border-radius:18px;padding:20px;margin:15px 0;box-shadow:0 8px 25px #0001}
+.login{max-width:460px;margin:70px auto}label{display:block;font-weight:bold;margin:10px 0 5px}
+input,select{width:100%;padding:12px;border:1px solid #ccd7df;border-radius:10px;font:inherit}
+button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;cursor:pointer}.p{background:var(--n);color:#fff}.w{background:#fff;color:var(--n);border:1px solid #ccd7df}
+.hide{display:none}.msg{padding:11px;border-radius:10px;margin:10px 0;background:#edf8f3}.err{background:#fff0f0;color:var(--r)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{background:#fff;border:1px solid var(--l);border-radius:14px;padding:16px}.stat b{display:block;font-size:23px;color:var(--n);margin-top:7px}
+.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:750px}th,td{padding:11px;border-bottom:1px solid var(--l);text-align:right}th{background:#f2f6f8;color:var(--n)}
+.badge{padding:5px 9px;border-radius:20px;background:#fff2cf;font-size:12px;font-weight:bold}.ok{background:#e7f6ef;color:#176644}.danger{background:#fff0f0;color:#a33}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+@media(max-width:800px){.stats,.cards,.filters{grid-template-columns:1fr 1fr}}@media(max-width:550px){.stats,.cards,.filters{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="top"><div><b>قوافل الحرمين</b><small>اللوحة المالية</small></div><div><a class="btn w" href="admin.html">لوحة الإدارة</a></div></div>
+
+<div id="login" class="panel login"><h2>دخول الإدارة</h2><div id="loginMsg"></div>
+<label>البريد الإلكتروني</label><input id="email" type="email">
+<label>كلمة المرور</label><input id="password" type="password">
+<br><button id="loginBtn" class="p" style="width:100%">دخول</button></div>
+
+<main id="app" class="wrap hide">
+<div class="stats">
+<div class="stat">إجمالي المبيعات<b id="sales">0 د.ع</b></div>
+<div class="stat">المقبوض<b id="received">0 د.ع</b></div>
+<div class="stat">المتبقي<b id="remaining">0 د.ع</b></div>
+<div class="stat">المتأخر<b id="late">0 د.ع</b></div>
+</div>
+
+<div class="panel">
+<h2>التقارير المالية</h2>
+<div class="filters">
+<input id="search" placeholder="بحث باسم المعتمر أو الهاتف">
+<select id="programFilter"><option value="">كل البرامج</option></select>
+<select id="statusFilter"><option value="">كل الحالات</option><option value="paid">مسدد</option><option value="pending">غير مكتمل</option><option value="late">متأخر</option></select>
+</div>
+</div>
+
+<div class="cards">
+<section class="panel"><h3>ملخص الرحلات</h3><div id="programReport"></div></section>
+<section class="panel"><h3>الأقساط المستحقة والمتأخرة</h3><div id="installmentReport"></div></section>
+</div>
+
+<section class="panel">
+<h3>كشف الحساب</h3><div id="tableMsg"></div>
+<div class="table"><table><thead><tr><th>المعتمر</th><th>البرنامج</th><th>نوع الدفع</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody id="rows"></tbody></table></div>
+</section>
+</main>
+
+<script>
+const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);
+let B=[],P=[],PR=[],I=[];
+function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+function msg(id,t,e=false){$(id).className='msg'+(e?' err':'');$(id).textContent=t||''}
+function badge(s){return '<span class="badge '+(s==='paid'?'ok':'')+'">'+(s==='paid'?'مسدد':'غير مكتمل')+'</span>'}
+async function admin(){
+ const {data:{user}}=await db.auth.getUser();if(!user)return null;
+ const {data,error}=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
+ return error||!data?null:user;
+}
+async function login(){
+ const e=$('email').value.trim(),pw=$('password').value;if(!e||!pw)return msg('loginMsg','أدخل البريد وكلمة المرور.',true);
+ $('loginBtn').disabled=true;msg('loginMsg','جاري التحقق...');
+ try{const {data,error}=await db.auth.signInWithPassword({email:e,password:pw});if(error)throw error;if(!await admin()){await db.auth.signOut();throw Error('الحساب غير مخول للإدارة.')}$('login').classList.add('hide');$('app').classList.remove('hide');await load()}
+ catch(x){msg('loginMsg',x.message||'تعذر الدخول.',true)}finally{$('loginBtn').disabled=false}
+}
+$('loginBtn').onclick=login;$('password').onkeydown=e=>{if(e.key==='Enter')login()};
+
+async function load(){
+ const [b,p,pr,i]=await Promise.all([
+  db.from('bookings').select('*').order('created_at',{ascending:false}),
+  db.from('pilgrims').select('*'),
+  db.from('programs').select('*').order('departure_date'),
+  db.from('installment_plans').select('*').order('due_date')
+ ]);
+ const er=[b,p,pr,i].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
+ B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];
+ $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
+ $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
+ $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
+ const today=new Date().toISOString().slice(0,10);
+ const late=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today).reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0);
+ $('late').textContent=money(late);
+ $('programFilter').innerHTML='<option value="">كل البرامج</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
+ render();
+}
+function render(){
+ const q=$('search').value.trim().toLowerCase(),pf=$('programFilter').value,sf=$('statusFilter').value;
+ let rows=B.filter(b=>{
+  const p=P.find(x=>x.booking_id===b.id),name=p?.full_name||b.full_name||'',pr=PR.find(x=>x.id===b.program_id);
+  const matchQ=[name,b.phone,p?.phone].some(v=>String(v||'').toLowerCase().includes(q));
+  const matchP=!pf||b.program_id===pf;
+  let status=b.status||'pending';
+  const lateB=I.some(x=>x.booking_id===b.id&&x.status!=='paid'&&x.due_date<new Date().toISOString().slice(0,10));
+  if(lateB)status='late';
+  return matchQ&&matchP&&(!sf||sf===status);
+ });
+ $('rows').innerHTML=rows.map(b=>{
+  const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);
+  const late=I.some(x=>x.booking_id===b.id&&x.status!=='paid'&&x.due_date<new Date().toISOString().slice(0,10));
+  return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+(b.payment_type==='installment'?'قسط':'نقد')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+badge(b.status==='paid'?'paid':late?'late':'pending')+'</td></tr>'
+ }).join('')||'<tr><td colspan="7">لا توجد نتائج.</td></tr>';
+ const by={};B.forEach(b=>{by[b.program_id]??={total:0,paid:0,remaining:0,count:0};by[b.program_id].total+=Number(b.total_amount||0);by[b.program_id].paid+=Number(b.paid_amount||0);by[b.program_id].remaining+=Number(b.remaining_amount||0);by[b.program_id].count++});
+ $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id);return '<div style="padding:10px 0;border-bottom:1px solid #dfe6ea"><b>'+esc(pr?.title||'—')+'</b><br>حجوزات: '+x.count+' — مبيعات: '+money(x.total)+'<br>مقبوض: '+money(x.paid)+' — متبقي: '+money(x.remaining)+'</div>'}).join('')||'لا توجد بيانات.';
+ const today=new Date().toISOString().slice(0,10);
+ const due=I.filter(x=>x.status!=='paid'),late=due.filter(x=>x.due_date&&x.due_date<today);
+ $('installmentReport').innerHTML='<p>أقساط غير مسددة: <b>'+due.length+'</b></p><p>قيمة غير مسددة: <b>'+money(due.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p><p>أقساط متأخرة: <b>'+late.length+'</b></p><p>قيمة المتأخر: <b>'+money(late.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p>';
+}
+$('search').oninput=render;$('programFilter').onchange=render;$('statusFilter').onchange=render;
+(async()=>{const{data:{session}}=await db.auth.getSession();if(session&&await admin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}})();
+</script>
+</body></html>
