@@ -69,7 +69,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <div><label>رقم الفيزا</label><input id="vnum"></div>
 <div><label>تاريخ إصدار الفيزا</label><input id="vdate" type="date"></div>
 </div>
-<div id="scheduleWrap" class="hide section"><h3>جدول الأقساط</h3><div id="schedule"></div></div>
+<div id="scheduleWrap" class="hide section"><h3>جدول الأقساط</h3><div style="background:#f8fafc;border:1px solid #d9e3e8;border-radius:12px;padding:12px;margin-bottom:12px"><label>تاريخ أول قسط *</label><input id="firstInstallmentDate" type="date" required><small style="display:block;color:#6b7780;margin-top:6px">بعد تحديد تاريخ أول قسط، يحسب النظام تلقائيًا موعد كل قسط بعده كل 30 يومًا.</small></div><div id="schedule"></div></div>
 <label>ملاحظات</label><textarea id="notes"></textarea>
 <br><button class="btn p" type="submit">حفظ المعتمر والحجز</button>
 </form>
@@ -142,6 +142,12 @@ function updateInstallmentSummary(total,balance,count){
 $('paymentType').onchange=()=>{const i=$('paymentType').value==='installment';$('installmentDetails').classList.toggle('hide',!i);$('scheduleWrap').classList.toggle('hide',!i);if(i)buildSchedule()};
 $('paymentType').onchange();
 
+function addDaysISO(dateStr,days){
+ if(!dateStr)return '';
+ const d=new Date(dateStr+'T00:00:00Z');
+ d.setUTCDate(d.getUTCDate()+days);
+ return d.toISOString().slice(0,10);
+}
 function buildSchedule(){
  const count=Number($('installmentCount').value||1);
  const pr0=PR.find(x=>x.id===$('program').value)||{}; const total=Number(($('paymentType').value==='installment'?pr0.installment_price:pr0.price)||0);
@@ -155,15 +161,18 @@ function buildSchedule(){
  const base=Math.floor((balance/count)*100)/100;
  let rem=balance;
  let rows='';
+ const firstDate=$('firstInstallmentDate').value||'';
  for(let i=1;i<=count;i++){
    const amount=i===count?rem:base; rem-=amount;
-   rows+='<div class="cols" style="margin-bottom:8px"><div><label>القسط '+i+'</label><input class="instAmount" data-n="'+i+'" type="number" min="0" value="'+amount.toFixed(2)+'"></div><div><label>تاريخ الاستحقاق</label><input class="instDate" data-n="'+i+'" type="date"></div></div>';
+   const due=firstDate?addDaysISO(firstDate,(i-1)*30):'—';
+   rows+='<div class="cols" style="margin-bottom:8px"><div><label>القسط '+i+'</label><input class="instAmount" data-n="'+i+'" type="number" min="0" value="'+amount.toFixed(2)+'"></div><div><label>تاريخ الاستحقاق</label><input class="instDate" data-n="'+i+'" type="date" value="'+due+'" readonly style="background:#f3f5f7"></div></div>';
  }
  $('schedule').innerHTML=rows;
 }
 $('installmentCount').onchange=buildSchedule;
 $('program').onchange=()=>{if($('paymentType').value==='installment')buildSchedule()};
 $('initial').oninput=()=>{if($('paymentType').value==='installment')buildSchedule()};
+$('firstInstallmentDate').onchange=()=>{if($('paymentType').value==='installment')buildSchedule()};
 
 async function load(){
  const [a,b,c,i]=await Promise.all([
@@ -356,12 +365,12 @@ $('form').onsubmit=async e=>{
    if(amounts.length===0)throw Error('حدد جدول الأقساط أولًا.');
    const sum=amounts.reduce((a,b)=>a+b,0);
    if(Math.abs(sum-remaining)>0.01)throw Error('مجموع الأقساط يجب أن يساوي المتبقي: '+money(remaining));
-   if(dates.some(x=>!x))throw Error('أدخل تاريخ استحقاق كل قسط.');
+   if(dates.some(x=>!x))throw Error('حدد تاريخ أول قسط، وسيحسب النظام بقية المواعيد تلقائيًا كل 30 يومًا.');
    const rows=amounts.map((amount,i)=>({booking_id:br.data.id,installment_number:i+1,due_date:dates[i],amount,paid_amount:0,status:'pending'}));
    const ir=await db.from('installment_plans').insert(rows);
    if(ir.error)throw ir.error;
   }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 
