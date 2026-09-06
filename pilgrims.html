@@ -60,7 +60,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <div><label>الجنسية</label><input id="nat" value="عراقي"></div>
 <div><label>تاريخ الميلاد *</label><input id="birthDate" type="date" required><small id="ageHint" style="display:block;color:#6b7b88;margin-top:5px"></small></div>
 <div><label>رقم الجواز</label><input id="pass"></div>
-<div><label>انتهاء الجواز *</label><input id="pex" type="date" required><small id="pexHint" style="display:block;color:#6b7b88;margin-top:5px">يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر.</small></div>
+<div><label>انتهاء الجواز *</label><input id="pex" type="date" required aria-describedby="pexHint"><small id="pexHint" style="display:block;color:#6b7b88;margin-top:5px;font-weight:600">يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر.</small></div>
 <div><label>صورة المعتمر *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير بالكاميرا<input id="photoCamera" type="file" accept="image/*" capture="user" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل من الهاتف<input id="photoUpload" type="file" accept="image/*" style="display:none"></label></div><small id="photoHint" style="display:block;color:#6b7b88;margin-top:5px">اختر التصوير بالكاميرا أو تحميل صورة من الهاتف.</small><img id="photoPreview" class="photo-preview hide" alt="معاينة الصورة"></div>
 <div><label>صورة الجواز *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير الجواز<input id="passportCamera" type="file" accept="image/*" capture="environment" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل من الهاتف<input id="passportUpload" type="file" accept="image/*" style="display:none"></label></div><small id="passportHint" style="display:block;color:#6b7b88;margin-top:5px">اختر تصوير الجواز بالكاميرا أو تحميل صورة الجواز من الهاتف.</small></div>
 <div id="guardianWrap" class="hide"><label>وكالة ولي الأمر للمعتمر دون 18 سنة *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير الوكالة<input id="guardianCamera" type="file" accept="image/*,application/pdf" capture="environment" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل الوكالة<input id="guardianUpload" type="file" accept="image/*,application/pdf" style="display:none"></label></div><small id="guardianHint" style="display:block;color:#a33;margin-top:5px">مطلوبة لأن عمر المعتمر أقل من 18 سنة.</small></div>
@@ -275,17 +275,23 @@ function passportMinDate(){
 }
 function validatePassportExpiry(show=true){
  const input=$('pex'); const d=input.value; const min=passportMinDate();
+ const saveBtn=$('form').querySelector('button[type=submit]');
  input.min=min;
  if(!d){
    input.setCustomValidity('');
+   input.style.borderColor='';
    $('pexHint').style.color='#6b7b88';
    $('pexHint').textContent='الحد الأدنى لانتهاء الجواز: '+min+' — يجب أن تكون الصلاحية 7 أشهر كاملة على الأقل من تاريخ تثبيت المعتمر.';
+   if(saveBtn) saveBtn.disabled=false;
    return false;
  }
  const ok=d>=min;
- $('pexHint').style.color=ok?'#176644':'#a33';
- $('pexHint').textContent=ok?'صلاحية الجواز مناسبة لمدة 7 أشهر من تاريخ التثبيت ✅':'❌ الجواز غير مقبول: الحد الأدنى لانتهاء الجواز هو '+min+' (7 أشهر من تاريخ التثبيت).';
- input.setCustomValidity(ok?'':'صلاحية الجواز أقل من 7 أشهر من تاريخ تثبيت المعتمر.');
+ input.setCustomValidity(ok?'':'❌ تاريخ انتهاء الجواز غير مقبول. يجب أن يكون بعد 7 أشهر على الأقل من تاريخ تثبيت المعتمر.');
+ input.style.borderColor=ok?'#176644':'#c62828';
+ input.style.backgroundColor=ok?'':'#fff2f2';
+ $('pexHint').style.color=ok?'#176644':'#c62828';
+ $('pexHint').textContent=ok?'✅ صلاحية الجواز مناسبة لمدة 7 أشهر من تاريخ التثبيت.':'❌ مرفوض فورًا: تاريخ انتهاء الجواز أقل من 7 أشهر. الحد الأدنى هو '+min+'.';
+ if(saveBtn) saveBtn.disabled=!ok;
  return ok;
 }
 validatePassportExpiry(false);
