@@ -49,9 +49,10 @@
     <a class="nav" href="admin.html"><span class="ico">◫</span><div><b>إدارة الرحلات</b><small>التجهيز والمتابعة التشغيلية</small></div></a>
     <div class="side-title">المالية</div>
     <a class="nav" href="financial.html"><span class="ico">د.ع</span><div><b>الإدارة المالية</b><small>المقبوضات والمصروفات والأرباح</small></div></a>
-    <div class="side-title">أقسام لاحقة</div>
-    <div class="nav soon"><span class="ico">▥</span><div><b>التقارير</b><small>بعد اعتماد الدورة الداخلية</small></div></div>
-    <div class="nav soon"><span class="ico">⚙</span><div><b>إعدادات الشركة</b><small>الصلاحيات والتهيئة</small></div></div>
+    <div class="side-title">الإدارة</div>
+    <a class="nav" href="employees.html"><span class="ico">👥</span><div><b>الموظفون والصلاحيات</b><small>إضافة الموظفين وتحديد الوصول</small></div></a>
+    <div class="nav soon"><span class="ico">▥</span><div><b>التقارير</b><small>قريبًا</small></div></div>
+    <div class="nav soon"><span class="ico">⚙</span><div><b>إعدادات الشركة</b><small>قريبًا</small></div></div>
     <div class="sidefoot"><b>قوافل الحرمين للحج والعمرة</b><span>العملة المعتمدة: الدينار العراقي</span></div>
   </aside>
   <div id="overlay" class="overlay"></div>
@@ -103,12 +104,13 @@ let B=[],P=[],PR=[],I=[],E=[];
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function showLoginMsg(t,e=false){$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
-function isAdmin(){
- return db.auth.getUser().then(async r=>{
-   if(!r.data.user)return null;
-   const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();
-   return q.error||!q.data?null:r.data.user;
- });
+async function isAdmin(){
+ const r=await db.auth.getUser();
+ if(!r.data.user)return null;
+ const s=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();
+ if(!s.error&&s.data?.active)return r.data.user;
+ const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();
+ return q.error||!q.data?null:r.data.user;
 }
 async function signIn(){
  const email=$('email').value.trim(),password=$('password').value;
