@@ -7,7 +7,7 @@
 <style>body.auth-pending #loginView{display:none!important}
 :root{--navy:#0c3b63;--gold:#c79a3b;--cream:#f7f5ef;--line:#e3e7ea;--muted:#6b7780;--danger:#b43d3d;--green:#16805c}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:#17364e;font-family:Tahoma,Arial,sans-serif}
-.top{background:#072b49;color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between}.brand{font-weight:900}.brand small{display:block;color:#e1bd72;font-size:11px;margin-top:4px}
+.top{background:#072b49;color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:10px;font-weight:900}.brand small{display:block;color:#e1bd72;font-size:11px;margin-top:4px}
 .wrap{max-width:1200px;margin:auto;padding:24px}.login,.panel{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
 .login{max-width:440px;margin:70px auto;padding:30px}.login h1,.panel h2{color:var(--navy)}
 label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,select,textarea{width:100%;border:1px solid #d6dee4;border-radius:10px;padding:12px;font:inherit}textarea{min-height:90px}
@@ -20,7 +20,7 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
 </style>
 </head>
 <body class="auth-pending">
-<header class="top"><div class="brand">قوافل الحرمين<small>إدارة البرامج والرحلات</small></div><div style="display:flex;align-items:center;gap:8px"><a href="./index.html" class="btn ghost" style="text-decoration:none">← لوحة الشركة</a><button id="logout" class="btn ghost hidden">تسجيل الخروج</button></div></header>
+<header class="top"><div class="brand"><img src="./logo.png" alt="قوافل الحرمين"> <span>قوافل الحرمين<small>إدارة البرامج والرحلات</small></span></div><div style="display:flex;align-items:center;gap:8px"><a href="./index.html" class="btn ghost" style="text-decoration:none">← لوحة الشركة</a><button id="logout" class="btn ghost hidden">تسجيل الخروج</button></div></header>
 <div id="loginView" class="wrap"><div class="login"><h1>دخول الإدارة</h1><p>هذه الصفحة مخصصة لفريق إدارة قوافل الحرمين.</p><div id="loginMsg"></div><label>البريد الإلكتروني</label><input id="email" type="email"><label>كلمة المرور</label><input id="password" type="password"><button id="loginBtn" class="btn primary" style="width:100%;margin-top:18px">دخول</button></div></div>
 
 <main id="adminView" class="wrap hidden">
