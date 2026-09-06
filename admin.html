@@ -1,2 +1,23 @@
 <!doctype html>
-<html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>إدارة البرامج | قوافل الحرمين</title><script>location.replace("programs.html"+location.search+location.hash);</script></head><body></body></html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>قوافل الحرمين</title>
+<script>
+(function () {
+  const raw = decodeURIComponent((location.search || '') + ' ' + (location.hash || '')).toLowerCase();
+  const routes = [
+    {keys:['pilgrims','pilgrim','معتمرين','المعتمرين'], url:'pilgrims.html'},
+    {keys:['employees','employee','staff','موظفين','الموظفون','الصلاحيات'], url:'employees.html'},
+    {keys:['financial','finance','مالية','المالية'], url:'financial.html'},
+    {keys:['archive','أرشيف','الارشيف'], url:'archive.html'},
+    {keys:['programs','program','trips','trip','برامج','البرامج','رحلات','الرحلات'], url:'programs.html'}
+  ];
+  const hit = routes.find(r => r.keys.some(k => raw.includes(k)));
+  location.replace(hit ? hit.url : 'index.html');
+})();
+</script>
+</head>
+<body></body>
+</html>
