@@ -60,7 +60,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <div><label>الجنسية</label><input id="nat" value="عراقي"></div>
 <div><label>تاريخ الميلاد *</label><input id="birthDate" type="date" required><small id="ageHint" style="display:block;color:#6b7b88;margin-top:5px"></small></div>
 <div><label>رقم الجواز</label><input id="pass"></div>
-<div><label>انتهاء الجواز *</label><input id="pex" type="date"><small id="pexHint" style="display:block;color:#6b7b88;margin-top:5px">يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل بعد موعد السفر.</small></div>
+<div><label>انتهاء الجواز *</label><input id="pex" type="date" required><small id="pexHint" style="display:block;color:#6b7b88;margin-top:5px">يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر.</small></div>
 <div><label>صورة المعتمر *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير بالكاميرا<input id="photoCamera" type="file" accept="image/*" capture="user" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل من الهاتف<input id="photoUpload" type="file" accept="image/*" style="display:none"></label></div><small id="photoHint" style="display:block;color:#6b7b88;margin-top:5px">اختر التصوير بالكاميرا أو تحميل صورة من الهاتف.</small><img id="photoPreview" class="photo-preview hide" alt="معاينة الصورة"></div>
 <div><label>صورة الجواز *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير الجواز<input id="passportCamera" type="file" accept="image/*" capture="environment" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل من الهاتف<input id="passportUpload" type="file" accept="image/*" style="display:none"></label></div><small id="passportHint" style="display:block;color:#6b7b88;margin-top:5px">اختر تصوير الجواز بالكاميرا أو تحميل صورة الجواز من الهاتف.</small></div>
 <div id="guardianWrap" class="hide"><label>وكالة ولي الأمر للمعتمر دون 18 سنة *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير الوكالة<input id="guardianCamera" type="file" accept="image/*,application/pdf" capture="environment" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل الوكالة<input id="guardianUpload" type="file" accept="image/*,application/pdf" style="display:none"></label></div><small id="guardianHint" style="display:block;color:#a33;margin-top:5px">مطلوبة لأن عمر المعتمر أقل من 18 سنة.</small></div>
@@ -259,7 +259,25 @@ function updateMinor(){ const age=calcAge($('birthDate').value); const wrap=$('g
 $('birthDate').addEventListener('change',updateMinor);
 updateMinor();
 
-$('pex').addEventListener('change',()=>{ const d=$('pex').value; if(!d){$('pexHint').textContent='يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر.';return;} const today=new Date(); today.setHours(0,0,0,0); const min=new Date(today); min.setMonth(min.getMonth()+7); const ok=new Date(d+'T00:00:00')>=min; $('pexHint').style.color=ok?'#176644':'#a33'; $('pexHint').textContent=ok?'صلاحية الجواز مناسبة لمدة 7 أشهر من تاريخ التثبيت ✅':'صلاحية الجواز غير كافية — يجب أن ينتهي في '+min.toLocaleDateString('en-CA')+' أو بعده.'; });
+function passportMinDate(){
+ const t=new Date();
+ const min=new Date(t.getFullYear(),t.getMonth()+7,t.getDate());
+ const y=min.getFullYear(); const m=String(min.getMonth()+1).padStart(2,'0'); const d=String(min.getDate()).padStart(2,'0');
+ return `${y}-${m}-${d}`;
+}
+function validatePassportExpiry(show=true){
+ const input=$('pex'); const d=input.value; const min=passportMinDate();
+ input.min=min;
+ if(!d){ $('pexHint').style.color='#6b7b88'; $('pexHint').textContent='يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر.'; return false; }
+ const ok=d>=min;
+ $('pexHint').style.color=ok?'#176644':'#a33';
+ $('pexHint').textContent=ok?'صلاحية الجواز مناسبة لمدة 7 أشهر من تاريخ التثبيت ✅':'❌ الجواز غير مقبول: يجب أن يكون تاريخ الانتهاء '+min+' أو بعده (7 أشهر من تاريخ التثبيت).';
+ if(show && !ok){ $('pex').setCustomValidity('صلاحية الجواز أقل من 7 أشهر من تاريخ تثبيت المعتمر.'); } else { $('pex').setCustomValidity(''); }
+ return ok;
+}
+validatePassportExpiry(false);
+$('pex').addEventListener('change',()=>validatePassportExpiry(true));
+$('pex').addEventListener('input',()=>validatePassportExpiry(false));
 $('program').addEventListener('change',()=>$('pex').dispatchEvent(new Event('change')));
 $('form').onsubmit=async e=>{
  e.preventDefault();msg('formMsg','جاري الحفظ...');
@@ -267,8 +285,8 @@ $('form').onsubmit=async e=>{
  const total=Number(pr.price||0),paymentType=$('paymentType').value,passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date,paid=Math.min(Math.max(Number($('initial').value||0),0),total);
  const remaining=total-paid;
  if(!passportExpiry)return msg('formMsg','أدخل تاريخ انتهاء الجواز.',true);
- const minExpiry=new Date(); minExpiry.setHours(0,0,0,0); minExpiry.setMonth(minExpiry.getMonth()+7); const exp=new Date(passportExpiry+'T00:00:00');
- if(Number.isNaN(exp.getTime())||exp < minExpiry){return msg('formMsg','لا يمكن إضافة المعتمر: يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر (حتى '+minExpiry.toLocaleDateString('en-CA')+').',true);}
+ const minExpiry=passportMinDate();
+ if(passportExpiry < minExpiry){validatePassportExpiry(true); $('pex').focus(); return msg('formMsg','❌ لا يمكن إضافة المعتمر: صلاحية الجواز أقل من 7 أشهر من تاريخ تثبيت المعتمر. يجب أن ينتهي في '+minExpiry+' أو بعده.',true);}
  const age=calcAge($('birthDate').value); if(age===null)return msg('formMsg','أدخل تاريخ ميلاد المعتمر.',true);
  const guardianFile=$('guardianCamera').files?.[0] || $('guardianUpload').files?.[0]; if(age<18 && !guardianFile)return msg('formMsg','المعتمر دون 18 سنة: يجب إرفاق وكالة ولي الأمر.',true);
  const passportFile=$('passportCamera').files?.[0] || $('passportUpload').files?.[0]; if(!passportFile)return msg('formMsg','أرفق صورة الجواز: صوّر بالكاميرا أو حمّل ملفًا من الهاتف.',true);
@@ -294,7 +312,7 @@ $('form').onsubmit=async e=>{
    const ir=await db.from('installment_plans').insert(rows);
    if(ir.error)throw ir.error;
   }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('pexHint').textContent='يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر.';await load();
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 
