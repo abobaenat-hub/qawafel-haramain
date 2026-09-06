@@ -54,6 +54,10 @@ body.auth-pending #login{display:none!important}
  .sidefoot{margin-top:10px}.account-card{margin-top:9px}
 }
 @media(max-width:380px){.side{width:268px;right:-278px}.drawer-brand b{font-size:10px}.nav{min-height:55px}}
+
+/* V40 - executive attention center */
+.attention-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin:0 0 14px}.attention-list{display:grid;gap:8px}.attention-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--text);background:#fff;transition:transform .15s,border-color .15s,box-shadow .15s}.attention-item:hover{transform:translateY(-1px);border-color:#c8d9e3;box-shadow:0 7px 18px rgba(11,53,86,.06)}.ai-main{display:flex;align-items:center;gap:9px;min-width:0}.ai-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:12px;flex:none;background:#fff1f1;color:var(--red)}.attention-item.warning .ai-icon{background:#fff8e7;color:var(--orange)}.attention-item.info .ai-icon{background:#edf5f9;color:var(--blue)}.attention-item.success .ai-icon{background:#edf8f3;color:var(--green)}.attention-item b{display:block;font-size:10px;color:var(--navy)}.attention-item small{display:block;color:var(--muted);font-size:8px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ai-arrow{color:#9aa7af;font-size:12px}.activity-row{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid var(--line)}.activity-row:last-child{border-bottom:0}.activity-icon{width:32px;height:32px;border-radius:9px;background:#edf5f9;color:var(--blue);display:grid;place-items:center;font-size:9px;font-weight:900;flex:none}.activity-row b{display:block;font-size:9px;color:var(--navy)}.activity-row small{display:block;font-size:8px;color:var(--muted);margin-top:3px}.activity-time{margin-right:auto;color:#9aa7af;font-size:7px;white-space:nowrap}.bar{height:7px;background:#edf2f5;border-radius:999px;overflow:hidden;margin-top:5px}.bar i{display:block;height:100%;background:var(--blue);border-radius:999px}.trip-top{display:flex;justify-content:space-between;gap:8px}.trip-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:5px;color:var(--muted);font-size:8px}.trip-badge{font-size:8px;font-weight:900;padding:5px 8px;border-radius:999px;background:#edf5f9;color:var(--blue);white-space:nowrap}.compact-card{padding:14px}.compact-card .sect{margin-bottom:8px}
+@media(max-width:760px){.attention-grid{grid-template-columns:1fr;gap:10px}.attention-item{padding:10px}.activity-time{font-size:7px}}
 </style>
 </head>
 <body class="auth-pending">
@@ -144,19 +148,19 @@ body.auth-pending #login{display:none!important}
       <div><span>المصروفات</span><b id="expenses">0 د.ع</b></div>
     </section>
 
-    <div class="grid2">
-      <section class="card">
+    <div class="attention-grid">
+      <section class="card compact-card">
+        <div class="sect"><div><h2>يحتاج انتباهك</h2><p>أهم الأمور التي تحتاج إجراء اليوم</p></div><span id="alertCount" class="mini-count">0</span></div>
+        <div id="attentionList" class="attention-list">جاري التحميل...</div>
+      </section>
+      <section class="card compact-card">
         <div class="sect"><div><h2>الرحلات القادمة</h2><p>الإشغال والمقاعد وحالة كل رحلة</p></div><a class="link" href="./programs.html">إدارة الرحلات ←</a></div>
         <div id="programList">جاري التحميل...</div>
-      </section>
-      <section class="card">
-        <div class="sect"><div><h2>يحتاج متابعة</h2><p>تنبيهات تشغيلية ومالية</p></div><span id="alertCount" class="mini-count">0</span></div>
-        <div id="alerts">جاري التحميل...</div>
       </section>
     </div>
 
     <section class="card">
-      <div class="sect"><div><h2>آخر العمليات</h2><p>ملخص سريع لآخر ما تم تسجيله في النظام</p></div><a class="link" href="./pilgrims.html">عرض الكل ←</a></div>
+      <div class="sect"><div><h2>آخر نشاط في الشركة</h2><p>الحجوزات والدفعات والمصروفات الأخيرة</p></div><a class="link" href="./pilgrims.html">عرض المعتمرين ←</a></div>
       <div id="activity" class="activity">جاري التحميل...</div>
     </section>
 
@@ -172,7 +176,7 @@ const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
 const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
-let B=[],P=[],PR=[],I=[],E=[],STAFF=null;
+let B=[],P=[],PR=[],I=[],E=[],PA=[],STAFF=null;
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function showLoginMsg(t,e=false){document.body.classList.remove('auth-pending');$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
@@ -234,16 +238,17 @@ function setToday(){
  $('today').textContent=new Intl.DateTimeFormat('ar-IQ',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(new Date());
 }
 async function load(){
- const [b,p,pr,i,e]=await Promise.all([
+ const [b,p,pr,i,e,pa]=await Promise.all([
    db.from('bookings').select('*').order('created_at',{ascending:false}),
    db.from('pilgrims').select('*'),
    db.from('programs').select('*').order('departure_date'),
    db.from('installment_plans').select('*').order('due_date'),
-   db.from('expenses').select('*').order('expense_date',{ascending:false})
+   db.from('expenses').select('*').order('expense_date',{ascending:false}),
+   db.from('payments').select('*').order('payment_date',{ascending:false}).limit(12)
  ]);
- const er=[b,p,pr,i,e].find(x=>x.error);
+ const er=[b,p,pr,i,e,pa].find(x=>x.error);
  if(er){$('alerts').innerHTML='<div class="alert">'+esc(er.error.message)+'</div>';return}
- B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];
+ B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];PA=pa.data||[];
  $('programs').textContent=PR.filter(x=>x.status==='published').length;
  $('pilgrims').textContent=P.length;
  $('bookings').textContent=B.length;
@@ -263,27 +268,34 @@ async function load(){
 }
 function render(){
  const today=new Date().toISOString().slice(0,10);
- const overdue=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today).length;
- const visa=P.filter(x=>x.visa_status&&x.visa_status!=='issued').length;
- const docs=P.filter(x=>!x.passport_number||!x.passport_expiry).length;
  const due=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<=today).sort((a,b)=>String(a.due_date).localeCompare(String(b.due_date)));
- const alerts=[]; $('dueCount').textContent=due.length; $('dueMeta').textContent=due.length?'يحتاج متابعة الآن':'لا توجد مستحقات اليوم';
- due.forEach(x=>{const b=B.find(z=>z.id===x.booking_id);const p=P.find(z=>z.booking_id===x.booking_id);const name=p?.full_name||b?.full_name||'معتمر';const rem=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);const late=x.due_date<today;alerts.push((late?'🔴 ':'🟠 ')+name+' — القسط رقم '+x.installment_number+' '+(late?'متأخر منذ ':'مستحق اليوم ')+x.due_date+' — المتبقي '+money(rem));});
- if(visa)alerts.push('يوجد '+visa+' ملف تأشيرة غير مكتمل.');
- if(docs)alerts.push('يوجد '+docs+' ملف جواز يحتاج استكمالاً.');
- $('alertCount').textContent=alerts.length; $('alerts').innerHTML=alerts.length?alerts.slice(0,8).map(x=>'<div class="alert '+(x.startsWith('🔴')?'critical':'warning')+'"><span class="adot"></span><span>'+esc(x)+'</span></div>').join(''):'<div class="alert ok success"><span class="adot"></span><span>لا توجد تنبيهات حرجة حاليًا.</span></div>';
+ const overdue=due.filter(x=>x.due_date<today);
+ const dueToday=due.filter(x=>x.due_date===today);
+ const visa=P.filter(x=>x.visa_status&&x.visa_status!=='issued');
+ const docs=P.filter(x=>!x.passport_number||!x.passport_expiry);
+ const upcoming=PR.filter(x=>x.departure_date && x.departure_date>=today).sort((a,b)=>String(a.departure_date).localeCompare(String(b.departure_date)));
+ const nearTrips=upcoming.filter(x=>{const d=Math.ceil((new Date(x.departure_date+'T00:00:00')-new Date(today+'T00:00:00'))/86400000);return d<=14;});
+ const attention=[];
+ if(overdue.length)attention.push({cls:'critical',icon:'🔴',title:'أقساط متأخرة',desc:overdue.length+' قسط متأخر يحتاج متابعة',href:'./financial.html'});
+ if(dueToday.length)attention.push({cls:'warning',icon:'🟠',title:'أقساط مستحقة اليوم',desc:dueToday.length+' قسط مستحق اليوم',href:'./financial.html'});
+ if(docs.length)attention.push({cls:'warning',icon:'📄',title:'ملفات جواز تحتاج متابعة',desc:docs.length+' ملف يحتاج استكمال البيانات',href:'./pilgrims.html'});
+ if(visa.length)attention.push({cls:'info',icon:'🛂',title:'تأشيرات تحتاج متابعة',desc:visa.length+' ملف تأشيرة غير مكتمل',href:'./pilgrims.html'});
+ if(nearTrips.length)attention.push({cls:'info',icon:'🚌',title:'رحلات خلال 14 يومًا',desc:nearTrips.length+' رحلة قريبة من موعد الانطلاق',href:'./programs.html'});
+ $('dueCount').textContent=due.length; $('dueMeta').textContent=due.length?'يحتاج متابعة الآن':'لا توجد مستحقات اليوم';
+ $('alertCount').textContent=attention.length;
+ $('attentionList').innerHTML=attention.length?attention.slice(0,7).map(a=>'<a class="attention-item '+a.cls+'" href="'+a.href+'"><span class="ai-main"><span class="ai-icon">'+a.icon+'</span><span><b>'+esc(a.title)+'</b><small>'+esc(a.desc)+'</small></span></span><span class="ai-arrow">←</span></a>').join(''):'<div class="empty-state">✓ لا توجد أمور حرجة تحتاج إجراء حاليًا.</div>';
 
- const upcoming=PR.filter(x=>!x.departure_date||x.departure_date>=today).slice(0,5);
- $('programList').innerHTML=upcoming.map(x=>{
+ $('programList').innerHTML=upcoming.slice(0,5).map(x=>{
    const avail=Number(x.seats_available||0), booked=B.filter(b=>b.program_id===x.id).length, cap=avail+booked, used=cap?Math.max(0,Math.min(100,Math.round(booked/cap*100))):0;
    return '<div class="trip"><div class="trip-top"><b>'+esc(x.title)+'</b><span class="trip-badge">'+esc(x.status||'مفتوح')+'</span></div><div class="trip-meta"><span>📅 '+esc(x.departure_date||'—')+'</span><span>💺 المتاح: '+avail+'</span><span>👤 المحجوز: '+booked+'</span></div><div class="occupancy"><span>نسبة الإشغال</span><b>'+used+'%</b></div><div class="bar"><i style="width:'+used+'%"></i></div></div>';
  }).join('')||'<div class="empty">لا توجد رحلات قادمة.</div>';
 
  const activity=[];
- B.slice(0,5).forEach(b=>{const p=P.find(x=>x.booking_id===b.id);const pr=PR.find(x=>x.id===b.program_id);activity.push({icon:'♙',title:'حجز جديد',desc:(p?.full_name||b.full_name||'معتمر')+' · '+(pr?.title||'برنامج غير محدد'),time:b.created_at});});
- E.slice(0,3).forEach(e=>activity.push({icon:'د.ع',title:'مصروف مسجل',desc:(e.description||e.title||'مصروف')+' · '+money(e.amount),time:e.created_at||e.expense_date}));
- activity.sort((a,b)=>String(b.time||'').localeCompare(String(a.time||'')));
- $('activity').innerHTML=activity.slice(0,7).map(a=>'<div class="activity-row"><div class="activity-icon">'+esc(a.icon)+'</div><div><b>'+esc(a.title)+'</b><small>'+esc(a.desc)+'</small></div><span class="activity-time">'+(a.time?new Date(a.time).toLocaleDateString('ar-IQ'):'—')+'</span></div>').join('')||'<div class="empty">لا توجد عمليات مسجلة بعد.</div>';
+ B.slice(0,8).forEach(b=>{const p=P.find(x=>x.booking_id===b.id);const pr=PR.find(x=>x.id===b.program_id);activity.push({icon:'♙',title:'حجز جديد',desc:(p?.full_name||b.full_name||'معتمر')+' · '+(pr?.title||'برنامج غير محدد'),time:b.created_at||b.created_at});});
+ PA.slice(0,8).forEach(x=>{const b=B.find(z=>z.id===x.booking_id);const p=P.find(z=>z.booking_id===x.booking_id);activity.push({icon:'د.ع',title:'دفعة مسجلة',desc:(p?.full_name||b?.full_name||'معتمر')+' · '+money(x.amount),time:x.payment_date||x.created_at});});
+ E.slice(0,5).forEach(e=>activity.push({icon:'د.ع',title:'مصروف مسجل',desc:(e.description||e.title||'مصروف')+' · '+money(e.amount),time:e.created_at||e.expense_date}));
+ activity.sort((a,b)=>new Date(b.time||0)-new Date(a.time||0));
+ $('activity').innerHTML=activity.slice(0,8).map(a=>'<div class="activity-row"><div class="activity-icon">'+esc(a.icon)+'</div><div><b>'+esc(a.title)+'</b><small>'+esc(a.desc)+'</small></div><span class="activity-time">'+(a.time?new Date(a.time).toLocaleDateString('ar-IQ'):'—')+'</span></div>').join('')||'<div class="empty">لا توجد عمليات مسجلة بعد.</div>';
 
  $('bookingRows').innerHTML=B.slice(0,12).map(b=>{
    const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);
