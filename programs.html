@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إدارة البرامج | قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>body.auth-pending #loginView{display:none!important}
+:root{--navy:#0c3b63;--gold:#c79a3b;--cream:#f7f5ef;--line:#e3e7ea;--muted:#6b7780;--danger:#b43d3d;--green:#16805c}
+*{box-sizing:border-box}body{margin:0;background:var(--cream);color:#17364e;font-family:Tahoma,Arial,sans-serif}
+.top{background:#072b49;color:#fff;padding:14px 22px;display:flex;align-items:center;justify-content:space-between}.brand{font-weight:900}.brand small{display:block;color:#e1bd72;font-size:11px;margin-top:4px}
+.wrap{max-width:1200px;margin:auto;padding:24px}.login,.panel{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 10px 30px rgba(0,0,0,.06)}
+.login{max-width:440px;margin:70px auto;padding:30px}.login h1,.panel h2{color:var(--navy)}
+label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,select,textarea{width:100%;border:1px solid #d6dee4;border-radius:10px;padding:12px;font:inherit}textarea{min-height:90px}
+.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:800;cursor:pointer}.primary{background:var(--navy);color:#fff}.gold{background:var(--gold);color:#fff}.ghost{background:#fff;border:1px solid #ccd6dd;color:var(--navy)}.danger{background:#fff0f0;color:var(--danger);border:1px solid #efcaca}
+.grid{display:grid;grid-template-columns:1.1fr .9fr;gap:20px}.panel{padding:22px}.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}.stat{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px}.stat span{color:var(--muted);font-size:13px}.stat b{display:block;font-size:25px;color:var(--navy);margin-top:6px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.tablewrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:720px}th,td{text-align:right;padding:12px;border-bottom:1px solid var(--line);font-size:13px}th{background:#f4f7f9;color:var(--navy)}
+.badge{display:inline-block;padding:5px 9px;border-radius:20px;font-size:11px;font-weight:900}.published{background:#e7f6ef;color:#116342}.draft{background:#edf1f4;color:#596770}.full{background:#fff1d8;color:#8a641c}.stopped{background:#ffe8e8;color:#a03434}
+.actions{display:flex;gap:6px;flex-wrap:wrap}.msg{padding:10px;border-radius:10px;margin:12px 0;font-size:13px}.ok{background:#edf8f3;color:#116342}.err{background:#fff0f0;color:#a03434}.hidden{display:none!important}.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:850px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.wrap{padding:14px}}@media(max-width:520px){.stats{grid-template-columns:1fr}.row2{grid-template-columns:1fr}}
+</style>
+</head>
+<body class="auth-pending">
+<header class="top"><div class="brand">قوافل الحرمين<small>لوحة الإدارة</small></div><div style="display:flex;align-items:center;gap:8px"><a href="index.html" class="btn ghost" style="text-decoration:none">← لوحة الشركة</a><button id="logout" class="btn ghost hidden">تسجيل الخروج</button></div></header>
+<div id="loginView" class="wrap"><div class="login"><h1>دخول الإدارة</h1><p>هذه الصفحة مخصصة لفريق إدارة قوافل الحرمين.</p><div id="loginMsg"></div><label>البريد الإلكتروني</label><input id="email" type="email"><label>كلمة المرور</label><input id="password" type="password"><button id="loginBtn" class="btn primary" style="width:100%;margin-top:18px">دخول</button></div></div>
+
+<main id="adminView" class="wrap hidden">
+<div class="stats">
+<div class="stat"><span>إجمالي البرامج</span><b id="sAll">0</b></div>
+<div class="stat"><span>المنشورة</span><b id="sPublished">0</b></div>
+<div class="stat"><span>إجمالي المقاعد</span><b id="sSeats">0</b></div>
+<div class="stat"><span>المقاعد المتاحة</span><b id="sAvailable">0</b></div>
+</div>
+<div class="grid">
+<section class="panel">
+<div class="toolbar"><div><h2 style="margin-bottom:4px">البرامج</h2><small>إدارة رحلات العمرة والحج</small></div><button id="newBtn" class="btn gold">+ برنامج جديد</button></div>
+<div id="listMsg"></div><div class="tablewrap"><table><thead><tr><th>البرنامج</th><th>التاريخ</th><th>السكن</th><th>السعر</th><th>المقاعد</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="programRows"></tbody></table></div>
+</section>
+<section class="panel">
+<h2 id="formTitle">إضافة برنامج</h2><div id="formMsg"></div>
+<form id="programForm">
+<input id="id" type="hidden"><label>اسم البرنامج</label><input id="title" required>
+<div class="row2"><div><label>تاريخ الذهاب</label><input id="departure_date" type="date"></div><div><label>تاريخ العودة</label><input id="return_date" type="date"></div></div>
+<div class="row2"><div><label>فندق المدينة</label><input id="city_hotel"></div><div><label>فندق مكة</label><input id="makkah_hotel"></div></div>
+<div class="row2"><div><label>نوع الرحلة</label><select id="travel_type"><option>بر</option><option>جو</option><option>مختلط</option></select></div><div><label>العملة</label><select id="currency"><option value="IQD">د.ع</option><option value="SAR">ريال</option><option value="USD">دولار</option></select></div></div>
+<div class="row2"><div><label>السعر</label><input id="price" type="number" min="0" required></div><div><label>إجمالي المقاعد</label><input id="seats_total" type="number" min="0"></div></div>
+<div class="row2"><div><label>المقاعد المتاحة</label><input id="seats_available" type="number" min="0"></div><div><label>الحالة</label><select id="status"><option value="draft">مسودة</option><option value="published">منشور</option><option value="full">مكتمل</option><option value="stopped">متوقف</option><option value="archived">مؤرشف</option></select></div></div>
+<label>الخدمات</label><textarea id="services"></textarea><label>الوصف</label><textarea id="description"></textarea>
+<div class="actions" style="margin-top:14px"><a href="financial.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:10px;background:#0c3b63;color:#fff;text-decoration:none;font-weight:700;margin:6px">💰 الإدارة المالية</a><button class="btn primary" type="submit">حفظ البرنامج</button><button id="resetBtn" class="btn ghost" type="button">إلغاء</button></div>
+</form></section>
+</div></main>
+
+<script>
+const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+function msg(el,text,type='ok'){el.innerHTML=text?`<div class="msg ${type==='ok'?'ok':'err'}">${text}</div>`:''}
+async function showAdmin(){const{data,error}=await db.from('admin_users').select('role').eq('user_id',(await db.auth.getUser()).data.user.id).maybeSingle();if(error||!data){await db.auth.signOut();return showLogin('هذا الحساب ليس مخولًا لإدارة المنصة.')}$('loginView').classList.add('hidden');$('adminView').classList.remove('hidden');$('logout').classList.remove('hidden');loadPrograms()}
+function showLogin(text=''){document.body.classList.remove('auth-pending');$('loginView').classList.remove('hidden');$('adminView').classList.add('hidden');$('logout').classList.add('hidden');if(text)msg($('loginMsg'),text,'err')}
+$('loginBtn').onclick=async()=>{msg($('loginMsg'),'');const{error}=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error)return msg($('loginMsg'),error.message,'err');showAdmin()}
+$('logout').onclick=async()=>{await db.auth.signOut();showLogin()}
+$('newBtn').onclick=()=>{resetForm();$('formTitle').textContent='إضافة برنامج'};$('resetBtn').onclick=resetForm;
+function resetForm(){$('programForm').reset();$('id').value='';$('currency').value='IQD';$('travel_type').value='بر';$('status').value='draft';msg($('formMsg'),'')}
+function fill(p){for(const k of ['id','title','departure_date','return_date','city_hotel','makkah_hotel','travel_type','price','currency','seats_total','seats_available','services','description','status'])$(k).value=p[k]??'';$('formTitle').textContent='تعديل البرنامج';window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})}
+function statusName(s){return({draft:'مسودة',published:'منشور',full:'مكتمل',stopped:'متوقف',archived:'مؤرشف'})[s]||s}
+function esc(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+async function loadPrograms(){const{data,error}=await db.from('programs').select('*').order('departure_date',{ascending:true});if(error)return msg($('listMsg'),error.message,'err');$('programRows').innerHTML=data.map(p=>`<tr><td><b>${esc(p.title)}</b></td><td>${p.departure_date||'—'}</td><td>${esc(p.city_hotel||'—')}<br>${esc(p.makkah_hotel||'—')}</td><td>${Number(p.price).toLocaleString('ar-IQ')} ${p.currency==='IQD'?'د.ع':p.currency}</td><td>${p.seats_available??0}/${p.seats_total??0}</td><td><span class="badge ${p.status}">${statusName(p.status)}</span></td><td><div class="actions"><button class="btn ghost" onclick='fill(${JSON.stringify(p)})'>تعديل</button><button class="btn danger" onclick="removeProgram('${p.id}')">حذف</button></div></td></tr>`).join('');$('sAll').textContent=data.length;$('sPublished').textContent=data.filter(x=>x.status==='published').length;$('sSeats').textContent=data.reduce((a,x)=>a+(x.seats_total||0),0);$('sAvailable').textContent=data.reduce((a,x)=>a+(x.seats_available||0),0)}
+$('programForm').onsubmit=async e=>{e.preventDefault();msg($('formMsg'),'جاري الحفظ...');const id=$('id').value;const payload={title:$('title').value.trim(),departure_date:$('departure_date').value||null,return_date:$('return_date').value||null,city_hotel:$('city_hotel').value.trim()||null,makkah_hotel:$('makkah_hotel').value.trim()||null,travel_type:$('travel_type').value,price:Number($('price').value||0),currency:$('currency').value,seats_total:Number($('seats_total').value||0),seats_available:Number($('seats_available').value||0),services:$('services').value.trim()||null,description:$('description').value.trim()||null,status:$('status').value};const r=id?await db.from('programs').update(payload).eq('id',id):await db.from('programs').insert(payload);if(r.error)return msg($('formMsg'),r.error.message,'err');msg($('formMsg'),'تم حفظ البرنامج بنجاح');resetForm();loadPrograms()}
+async function removeProgram(id){if(!confirm('حذف هذا البرنامج؟'))return;const{error}=await db.from('programs').delete().eq('id',id);if(error)return msg($('listMsg'),error.message,'err');loadPrograms()}
+db.auth.onAuthStateChange((_e,session)=>session?showAdmin():showLogin());
+(async()=>{const{data}=await db.auth.getSession();document.body.classList.remove('auth-pending');data.session?showAdmin():showLogin()})();
+</script>
+</body>
+</html>
