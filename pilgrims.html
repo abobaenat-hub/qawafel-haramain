@@ -200,9 +200,9 @@ async function isAdmin(){
  const {data:{user}}=await db.auth.getUser();
  if(!user)return null;
  const {data:staff,error:staffError}=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',user.id).maybeSingle();
- if(!staffError && staff?.active) return user;
+ if(!staffError && staff?.active && (['super_admin','manager'].includes(staff.role)||(staff.permissions||[]).some(x=>['booking_staff','visa'].includes(x)))) return user;
  const {data:legacy,error:legacyError}=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
- return !legacyError && legacy ? user : null;
+ return !legacyError && legacy?.role==='super_admin' ? user : null;
 }
 async function login(){
  const email=$('email').value.trim(),password=$('password').value;
