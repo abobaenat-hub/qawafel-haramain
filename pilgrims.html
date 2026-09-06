@@ -199,8 +199,10 @@ function badge(s){return '<span class="badge '+(['paid','صادرة','مدفوع
 async function isAdmin(){
  const {data:{user}}=await db.auth.getUser();
  if(!user)return null;
- const {data,error}=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
- return error||!data?null:user;
+ const {data:staff,error:staffError}=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',user.id).maybeSingle();
+ if(!staffError && staff?.active) return user;
+ const {data:legacy,error:legacyError}=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
+ return !legacyError && legacy ? user : null;
 }
 async function login(){
  const email=$('email').value.trim(),password=$('password').value;

@@ -85,8 +85,10 @@ function msg(id,t,e=false){$(id).className='msg'+(e?' err':'');$(id).textContent
 function badge(s){return '<span class="badge '+(s==='paid'?'ok':'')+'">'+(s==='paid'?'مسدد':'غير مكتمل')+'</span>'}
 async function admin(){
  const {data:{user}}=await db.auth.getUser();if(!user)return null;
- const {data,error}=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
- return error||!data?null:user;
+ const {data:staff,error:staffError}=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',user.id).maybeSingle();
+ if(!staffError && staff?.active && (staff.role==='super_admin'||staff.role==='manager'||(staff.permissions||[]).includes('finance'))) return user;
+ const {data:legacy,error:legacyError}=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
+ return !legacyError && legacy?.role==='super_admin' ? user : null;
 }
 async function login(){
  const e=$('email').value.trim(),pw=$('password').value;if(!e||!pw)return msg('loginMsg','أدخل البريد وكلمة المرور.',true);
