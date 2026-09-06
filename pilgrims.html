@@ -93,6 +93,14 @@ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
 const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K);
 const $=id=>document.getElementById(id);
+// ترتيب بيانات ولي الأمر مباشرة بعد حقل تاريخ الميلاد
+(function(){
+  const birth=$('birthDate'), minor=$('minorWrap');
+  if(birth && minor){
+    const birthBox=birth.closest('div');
+    if(birthBox && birthBox.parentElement) birthBox.parentElement.insertBefore(minor, birthBox.nextSibling);
+  }
+})();
 let P=[],B=[],PR=[],I=[];
 
 function msg(id,text,error=false){const e=$(id);if(e){e.className='msg'+(error?' err':'');e.textContent=text||''}}
