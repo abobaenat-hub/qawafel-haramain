@@ -18,12 +18,27 @@
 @media(max-width:1050px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}@media(max-width:760px){.top{height:70px}.topin{padding:0 13px}.status{display:none}.menu{display:block}.shell{min-height:calc(100vh - 70px)}.side{position:fixed;right:-303px;top:70px;height:calc(100vh - 70px);transition:right .2s;box-shadow:-8px 0 24px #0002}.side.open{right:0}.overlay{display:none}.overlay.show{display:block;position:fixed;inset:70px 0 0;background:#0005;z-index:40}.content{padding:16px 12px}.head{align-items:flex-start;flex-direction:column}.today{display:none}.finance{grid-template-columns:1fr 1fr}.finance div{border-left:0;border-bottom:1px solid var(--line);padding:11px}.kpis{grid-template-columns:1fr 1fr}.mark{width:132px;height:58px}.brand b{font-size:15px}.brand small{font-size:8px}}
 @media(max-width:470px){.kpi{padding:12px;min-height:82px}.kicon{width:36px;height:36px}.kpi b{font-size:19px}.finance b{font-size:14px}}
 body.auth-pending #login{display:none!important}
+
+/* V36 dashboard polish */
+.top{backdrop-filter:blur(10px)}
+.brand{min-width:0}.brand-copy{min-width:0}.brand b{letter-spacing:.1px}
+.menu{width:42px;height:42px;padding:0;display:none;place-items:center}
+.side{scrollbar-width:thin}.nav-group{margin-bottom:4px}.side-title.toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}.side-title.toggle .chev{transition:transform .2s}.nav-group.collapsed .chev{transform:rotate(180deg)}.nav-group.collapsed .group-items{display:none}
+.kpi{position:relative;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}.kpi:after{content:'';position:absolute;width:80px;height:80px;border-radius:50%;background:#ffffff0d;left:-20px;bottom:-35px}.kpi:hover{transform:translateY(-2px)}
+.kpi .kmeta{display:block;font-size:8px;color:#ffffffb8;margin-top:4px}
+.section-label{display:flex;align-items:center;gap:8px;margin:18px 0 10px;color:#6d7d88;font-size:10px;font-weight:900}.section-label:after{content:'';height:1px;background:var(--line);flex:1}
+.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 14px}.quick a{display:flex;align-items:center;gap:9px;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px 12px;color:var(--navy);box-shadow:var(--shadow);font-size:10px;font-weight:900}.quick i{font-style:normal;width:30px;height:30px;border-radius:9px;background:#eef5f9;display:grid;place-items:center;color:var(--blue);font-size:13px}.quick small{display:block;color:var(--muted);font-size:8px;margin-top:3px;font-weight:400}
+.alert{display:flex;align-items:flex-start;gap:7px}.alert .adot{width:7px;height:7px;border-radius:50%;background:var(--gold);margin-top:5px;flex:none}.alert.ok .adot{background:var(--green)}
+.activity{display:grid;gap:0}.activity-row{display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.activity-row:last-child{border-bottom:0}.activity-icon{width:34px;height:34px;border-radius:10px;background:#eef5f9;display:grid;place-items:center;color:var(--blue);font-size:12px}.activity-row b{font-size:10px}.activity-row small{display:block;color:var(--muted);font-size:8px;margin-top:3px}.activity-time{font-size:8px;color:#9aa7af;white-space:nowrap}
+.trip{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;background:#fbfcfd}.trip:last-child{margin-bottom:0}.trip-top{display:flex;justify-content:space-between;gap:10px}.trip b{font-size:10px}.badge{font-size:8px;padding:4px 7px;border-radius:999px;background:#edf8f3;color:var(--green);font-weight:900}.trip-meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:8px;margin-top:7px}.bar{height:6px;background:#edf1f3;border-radius:99px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--blue);border-radius:99px}
+@media(max-width:760px){.menu{display:grid}.quick{grid-template-columns:1fr 1fr}.brand-copy{display:block}.brand b{font-size:14px}.mark{width:118px;height:56px}.content{padding-top:14px}.head h1{font-size:23px}}
+@media(max-width:470px){.quick a{padding:9px}.quick i{width:28px;height:28px}.quick small{font-size:7px}.brand small{font-size:7px}}
 </style>
 </head>
 <body class="auth-pending">
 <header class="top">
 <div class="topin">
-  <div class="brand"><div class="mark"><img src="./logo.png" alt="قوافل الحرمين"></div><div><b>قوافل الحرمين</b><small>المركز الإداري الداخلي</small></div></div>
+  <div class="brand"><div class="mark"><img src="./logo.png" alt="قوافل الحرمين"></div><div class="brand-copy"><b>قوافل الحرمين</b><small>المركز الإداري الداخلي</small></div></div>
   <div class="actions"><span class="status">● النظام متصل</span><button id="menu" class="btn menu">☰</button><button id="logout" class="btn logout">تسجيل الخروج</button></div>
 </div>
 </header>
@@ -40,20 +55,35 @@ body.auth-pending #login{display:none!important}
 
 <div id="app" class="shell hide">
   <aside id="side" class="side">
-    <div class="side-title">الإدارة اليومية</div>
-    <a class="nav active" href="./index.html"><span class="ico">▦</span><div><b>الرئيسية</b><small>لوحة المتابعة</small></div></a>
-    <a class="nav" href="./programs.html"><span class="ico">▤</span><div><b>إدارة البرامج</b><small>الأسعار والمقاعد وحالة البرنامج</small></div></a>
-    <a class="nav" href="./pilgrims.html"><span class="ico">♙</span><div><b>إدارة المعتمرين</b><small>الملفات والحجوزات والسداد</small></div></a>
-    <a class="nav" href="./archive.html"><span class="ico">🗃️</span><div><b>أرشيف المعتمرين</b><small>السجل التاريخي لكل معتمر</small></div></a>
-    <a class="nav" href="./programs.html"><span class="ico">◫</span><div><b>إدارة الرحلات</b><small>التجهيز والمتابعة التشغيلية</small></div></a>
-    <div class="side-title">المالية</div>
-    <a class="nav" href="./financial.html"><span class="ico">د.ع</span><div><b>الإدارة المالية</b><small>المقبوضات والمصروفات والأرباح</small></div></a>
-    <div class="side-title">الإدارة</div>
-    <a class="nav" href="./employees.html"><span class="ico">♟</span><div><b>الموظفون والصلاحيات</b><small>المستخدمون ومستويات الوصول</small></div></a>
-    <div class="side-title">أقسام لاحقة</div>
-    <div class="nav soon"><span class="ico">▥</span><div><b>التقارير</b><small>بعد اعتماد الدورة الداخلية</small></div></div>
-    <div class="nav soon"><span class="ico">⚙</span><div><b>إعدادات الشركة</b><small>الصلاحيات والتهيئة</small></div></div>
-    <div class="sidefoot"><b>قوافل الحرمين للحج والعمرة</b><span>العملة المعتمدة: الدينار العراقي</span></div>
+    <div class="side-title">الرئيسية</div>
+    <a class="nav active" href="./index.html"><span class="ico">⌂</span><div><b>لوحة الشركة</b><small>نظرة شاملة على العمل</small></div></a>
+
+    <div class="nav-group">
+      <div class="side-title toggle" data-group="operations">العمليات <span class="chev">⌃</span></div>
+      <div class="group-items">
+        <a class="nav" href="./programs.html"><span class="ico">▤</span><div><b>إدارة البرامج</b><small>الأسعار والمقاعد وحالة البرنامج</small></div></a>
+        <a class="nav" href="./pilgrims.html"><span class="ico">♙</span><div><b>إدارة المعتمرين</b><small>الملفات والحجوزات والسداد</small></div></a>
+        <a class="nav" href="./archive.html"><span class="ico">▣</span><div><b>أرشيف المعتمرين</b><small>السجل التاريخي لكل معتمر</small></div></a>
+        <a class="nav" href="./programs.html"><span class="ico">◫</span><div><b>إدارة الرحلات</b><small>التجهيز والمتابعة التشغيلية</small></div></a>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="side-title toggle" data-group="finance">المالية <span class="chev">⌃</span></div>
+      <div class="group-items">
+        <a class="nav" href="./financial.html"><span class="ico">د.ع</span><div><b>الإدارة المالية</b><small>المقبوضات والمصروفات والأرباح</small></div></a>
+      </div>
+    </div>
+
+    <div class="nav-group">
+      <div class="side-title toggle" data-group="management">الإدارة <span class="chev">⌃</span></div>
+      <div class="group-items">
+        <a class="nav" href="./employees.html"><span class="ico">♟</span><div><b>الموظفون والصلاحيات</b><small>المستخدمون ومستويات الوصول</small></div></a>
+        <div class="nav soon"><span class="ico">▥</span><div><b>التقارير</b><small>قريبًا</small></div></div>
+        <div class="nav soon"><span class="ico">⚙</span><div><b>إعدادات الشركة</b><small>قريبًا</small></div></div>
+      </div>
+    </div>
+    <div class="sidefoot"><b>قوافل الحرمين للحج والعمرة</b><span>المركز الإداري الداخلي · الدينار العراقي</span></div>
   </aside>
   <div id="overlay" class="overlay"></div>
 
@@ -70,6 +100,14 @@ body.auth-pending #login{display:none!important}
       <div class="kpi"><div class="kicon">○</div><div><span>المقاعد المتاحة</span><b id="seats">0</b></div></div>
     </section>
 
+    <div class="section-label">اختصارات سريعة</div>
+    <section class="quick">
+      <a href="./pilgrims.html"><i>♙</i><div>إضافة معتمر<small>فتح ملف وحجز جديد</small></div></a>
+      <a href="./programs.html"><i>＋</i><div>برنامج جديد<small>إدارة البرامج والرحلات</small></div></a>
+      <a href="./financial.html"><i>د.ع</i><div>المالية<small>الدفعات والمصروفات</small></div></a>
+      <a href="./archive.html"><i>▣</i><div>الأرشيف<small>البحث في السجل الدائم</small></div></a>
+    </section>
+
     <section id="financeBox" class="finance role-finance hide">
       <div><span>إجمالي المبيعات</span><b id="sales">0 د.ع</b></div>
       <div><span>المقبوض</span><b id="received">0 د.ع</b></div>
@@ -79,14 +117,19 @@ body.auth-pending #login{display:none!important}
 
     <div class="grid2">
       <section class="card">
-        <div class="sect"><div><h2>الرحلات الحالية</h2><p>البرامج المسجلة في النظام</p></div><a class="link" href="./programs.html">فتح إدارة البرامج ←</a></div>
+        <div class="sect"><div><h2>الرحلات القادمة</h2><p>الإشغال والمقاعد وحالة كل رحلة</p></div><a class="link" href="./programs.html">إدارة الرحلات ←</a></div>
         <div id="programList">جاري التحميل...</div>
       </section>
       <section class="card">
-        <div class="sect"><div><h2>يحتاج متابعة</h2><p>تنبيهات تشغيلية</p></div></div>
+        <div class="sect"><div><h2>يحتاج متابعة</h2><p>تنبيهات تشغيلية ومالية</p></div></div>
         <div id="alerts">جاري التحميل...</div>
       </section>
     </div>
+
+    <section class="card">
+      <div class="sect"><div><h2>آخر العمليات</h2><p>ملخص سريع لآخر ما تم تسجيله في النظام</p></div><a class="link" href="./pilgrims.html">عرض الكل ←</a></div>
+      <div id="activity" class="activity">جاري التحميل...</div>
+    </section>
 
     <section class="card">
       <div class="sect"><div><h2>آخر الحجوزات</h2><p>آخر العمليات المسجلة</p></div><a class="link" href="./pilgrims.html">فتح إدارة المعتمرين ←</a></div>
@@ -115,11 +158,12 @@ async function getAccess(){
 async function isAdmin(){const x=await getAccess();return x?x.user:null;}
 function canSeeFinance(){
  const r=STAFF?.role, ps=STAFF?.permissions||[];
- return r==='super_admin'||r==='manager'||ps.includes('super_admin')||ps.includes('manager');
+ return r==='super_admin'||r==='manager'||r==='finance'||ps.includes('super_admin')||ps.includes('manager')||ps.includes('finance');
 }
 function setupAccess(){
  const finance=canSeeFinance();
  $('financeBox').classList.toggle('hide',!finance);
+ const finLink=document.querySelector('a[href=\"./financial.html\"]'); if(finLink) finLink.classList.toggle('hide',!finance);
  $('roleNote').classList.remove('hide');
  const label=STAFF?.role==='super_admin'?'المدير العام':STAFF?.role==='manager'?'المدير':'الموظف';
  $('roleNote').textContent='صلاحية الدخول: '+label;
@@ -177,15 +221,27 @@ function render(){
  due.forEach(x=>{const b=B.find(z=>z.id===x.booking_id);const p=P.find(z=>z.booking_id===x.booking_id);const name=p?.full_name||b?.full_name||'معتمر';const rem=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);const late=x.due_date<today;alerts.push((late?'🔴 ':'🟠 ')+name+' — القسط رقم '+x.installment_number+' '+(late?'متأخر منذ ':'مستحق اليوم ')+x.due_date+' — المتبقي '+money(rem));});
  if(visa)alerts.push('يوجد '+visa+' ملف تأشيرة غير مكتمل.');
  if(docs)alerts.push('يوجد '+docs+' ملف جواز يحتاج استكمالاً.');
- $('alerts').innerHTML=alerts.length?alerts.map(x=>'<div class="alert">'+esc(x)+'</div>').join(''):'<div class="alert ok">لا توجد تنبيهات حرجة حاليًا.</div>';
+ $('alerts').innerHTML=alerts.length?alerts.slice(0,8).map(x=>'<div class="alert"><span class="adot"></span><span>'+esc(x)+'</span></div>').join(''):'<div class="alert ok"><span class="adot"></span><span>لا توجد تنبيهات حرجة حاليًا.</span></div>';
 
- $('programList').innerHTML=PR.map(x=>'<div class="program"><b>'+esc(x.title)+'</b><small>'+esc(x.departure_date||'—')+' · المقاعد المتاحة: '+Number(x.seats_available||0)+' · '+esc(x.status)+'</small></div>').join('')||'<div class="empty">لا توجد رحلات مسجلة.</div>';
+ const upcoming=PR.filter(x=>!x.departure_date||x.departure_date>=today).slice(0,5);
+ $('programList').innerHTML=upcoming.map(x=>{
+   const cap=Math.max(Number(x.seats_total||x.total_seats||x.seats||0), Number(x.seats_available||0));
+   const avail=Number(x.seats_available||0), used=cap?Math.max(0,Math.min(100,Math.round((cap-avail)/cap*100))):0;
+   return '<div class="trip"><div class="trip-top"><b>'+esc(x.title)+'</b><span class="badge">'+esc(x.status||'مفتوح')+'</span></div><div class="trip-meta"><span>📅 '+esc(x.departure_date||'—')+'</span><span>💺 المتاح: '+avail+'</span><span>📊 الإشغال: '+used+'%</span></div><div class="bar"><i style="width:'+used+'%"></i></div></div>';
+ }).join('')||'<div class="empty">لا توجد رحلات قادمة.</div>';
+
+ const activity=[];
+ B.slice(0,5).forEach(b=>{const p=P.find(x=>x.booking_id===b.id);const pr=PR.find(x=>x.id===b.program_id);activity.push({icon:'♙',title:'حجز جديد',desc:(p?.full_name||b.full_name||'معتمر')+' · '+(pr?.title||'برنامج غير محدد'),time:b.created_at});});
+ E.slice(0,3).forEach(e=>activity.push({icon:'د.ع',title:'مصروف مسجل',desc:(e.description||e.title||'مصروف')+' · '+money(e.amount),time:e.created_at||e.expense_date}));
+ activity.sort((a,b)=>String(b.time||'').localeCompare(String(a.time||'')));
+ $('activity').innerHTML=activity.slice(0,7).map(a=>'<div class="activity-row"><div class="activity-icon">'+esc(a.icon)+'</div><div><b>'+esc(a.title)+'</b><small>'+esc(a.desc)+'</small></div><span class="activity-time">'+(a.time?new Date(a.time).toLocaleDateString('ar-IQ'):'—')+'</span></div>').join('')||'<div class="empty">لا توجد عمليات مسجلة بعد.</div>';
 
  $('bookingRows').innerHTML=B.slice(0,12).map(b=>{
    const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);
    return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+(b.payment_type==='installment'?'أقساط':'نقد')+'</td></tr>'
  }).join('')||'<tr><td colspan="6" class="empty">لا توجد حجوزات.</td></tr>';
 }
+document.querySelectorAll('.side-title.toggle').forEach(t=>t.onclick=()=>t.parentElement.classList.toggle('collapsed'));
 setToday();
 (async()=>{const s=await db.auth.getSession();if(s.data.session){const access=await getAccess(); if(access){STAFF=access.staff;setupAccess();$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load();}else{document.body.classList.remove('auth-pending')}}else{document.body.classList.remove('auth-pending')}})();
 </script>
