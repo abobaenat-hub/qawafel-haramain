@@ -1,2 +1,1 @@
-Qawafel Haramain V48
-Workflow: auto-detect returning pilgrim by name and reuse archive profile
+Qawafel Haramain Platform - V49
