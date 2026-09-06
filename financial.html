@@ -27,6 +27,10 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 
 .supplierGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.supplierPayGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.supplierCard{border:1px solid #dfe6ea;border-radius:16px;padding:15px;background:linear-gradient(180deg,#fff,#fafcfd);margin:10px 0}.supplierCard h4{margin:0;color:var(--n)}.supplierMeta{color:#718390;font-size:12px;margin-top:5px}.supplierKpi{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}.supplierKpi>div{background:#f5f8fa;border-radius:12px;padding:10px}.supplierKpi small{display:block;color:#74848e}.supplierKpi b{display:block;margin-top:5px;color:var(--n)}
 @media(max-width:800px){.supplierPayGrid{grid-template-columns:1fr 1fr}.supplierGrid{grid-template-columns:1fr}.supplierKpi{grid-template-columns:1fr 1fr}}@media(max-width:550px){.supplierPayGrid{grid-template-columns:1fr}.supplierKpi{grid-template-columns:1fr 1fr}}
+
+.reportToolbar{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end}.reportKpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:15px}.reportKpi{background:linear-gradient(180deg,#fff,#f7fafc);border:1px solid #dfe6ea;border-radius:15px;padding:13px}.reportKpi small{display:block;color:#72838d}.reportKpi b{display:block;font-size:18px;color:var(--n);margin-top:6px}.reportKpi.profit b{color:#176644}.reportKpi.loss b{color:#a33}.reportNote{background:#f7f3e8;border-right:4px solid #c79a3b;padding:11px;border-radius:10px;color:#6d5a31;font-size:12px;margin-top:12px}.reportActions{display:flex;gap:8px;flex-wrap:wrap}.reportTable{margin-top:14px}.reportEmpty{text-align:center;padding:25px;color:#718390}.reportPrintHeader{display:none}
+@media(max-width:1000px){.reportKpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){.reportToolbar{grid-template-columns:1fr 1fr}.reportKpis{grid-template-columns:1fr 1fr}}
+@media print{body{background:#fff}.top,.financeHero,.stats,.filters,.purchaseBox,.cards,.supplierGrid,.supplierPayGrid,.reportToolbar,.reportActions{display:none!important}.panel{box-shadow:none;border:0}.reportPrintHeader{display:block;text-align:center;margin-bottom:15px}.reportPrintHeader h1{margin:0;color:#0c3b63}.reportPrintHeader p{margin:5px 0;color:#666}.reportKpis{grid-template-columns:repeat(3,1fr)}.reportTable{font-size:11px}button{display:none!important}}
 </style>
 </head>
 <body class="auth-pending">
@@ -95,6 +99,20 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <label>ملاحظات</label><input id="supplierPayNotes" placeholder="مثلاً دفعة أولى للمورّد">
 <button id="saveSupplierPayment" class="p" style="margin-top:12px">💾 حفظ دفعة المورّد</button>
 </section></div>
+
+<section class="panel" id="advancedReportPanel">
+<div class="reportPrintHeader"><h1>قوافل الحرمين للحج والعمرة</h1><p>التقرير المالي الإداري</p><div id="printReportPeriod"></div></div>
+<h2>📊 التقرير المالي الاحترافي</h2>
+<div class="reportToolbar">
+<div><label>من تاريخ</label><input id="reportFrom" type="date"></div>
+<div><label>إلى تاريخ</label><input id="reportTo" type="date"></div>
+<div><label>الرحلة</label><select id="reportProgram"><option value="">كل الرحلات</option></select></div>
+<div class="reportActions"><button id="runReport" class="p">🔎 عرض التقرير</button><button id="printReport" class="w">🖨️ طباعة / PDF</button></div>
+</div>
+<div class="reportNote">التقرير يعتمد على <b>سعر البيع الفعلي بعد الخصم</b>، ويخصم منه <b>سعر الجملة للمقعد</b> ثم مصروفات الرحلة للوصول إلى صافي الربح. المصروفات العامة تظهر منفصلة ولا تُحمّل على الرحلات.</div>
+<div class="reportKpis" id="reportKpis"></div>
+<div class="table reportTable"><table><thead><tr><th>الرحلة</th><th>المعتمرون</th><th>المبيعات</th><th>المقبوض</th><th>الجملة</th><th>الربح الإجمالي</th><th>مصروفات الرحلة</th><th>صافي الربح</th><th>هامش الربح</th></tr></thead><tbody id="advancedReportRows"></tbody></table></div>
+</section>
 
 <section class="panel"><h2>📒 التزامات المورّدين</h2><div class="hint">المستحق المتوقع يُحسب من عدد المقاعد المباعة × سعر الجملة للمقعد، ثم نطرح ما دُفع للمورّد.</div><div class="table"><table><thead><tr><th>المورّد</th><th>الرحلة</th><th>عدد المعتمرين</th><th>المستحق المتوقع</th><th>المدفوع للمورّد</th><th>المتبقي</th></tr></thead><tbody id="supplierObligationRows"></tbody></table></div></section>
 
@@ -183,6 +201,7 @@ async function load(){
  $('expenseDate').value=new Date().toISOString().slice(0,10); $('supplierPayDate').value=new Date().toISOString().slice(0,10);
  render();
  renderExpenses();
+ initReport();
 }
 function fillPurchasePrograms(){
  $('purchaseProgram').innerHTML='<option value="">اختر الرحلة...</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
@@ -280,6 +299,40 @@ $('saveSupplierPayment').onclick=async()=>{
  $('saveSupplierPayment').disabled=true;
  try{const {data:{user}}=await db.auth.getUser();const {error}=await db.from('supplier_payments').insert({supplier_id,program_id,amount,payment_date,payment_method,reference,notes,created_by:user?.id||null});if(error)throw error;msg('supplierPayMsg','تم تسجيل دفعة المورّد بنجاح.');$('supplierPayAmount').value='';$('supplierPayReference').value='';$('supplierPayNotes').value='';await load();}catch(e){msg('supplierPayMsg',e.message||'تعذر تسجيل الدفعة.',true)}finally{$('saveSupplierPayment').disabled=false}
 };
+
+function dateOnly(v){return v?String(v).slice(0,10):''}
+function initReport(){
+ const now=new Date(), y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0');
+ $('reportFrom').value=`${y}-${m}-01`; $('reportTo').value=now.toISOString().slice(0,10);
+ $('reportProgram').innerHTML='<option value="">كل الرحلات</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
+ renderAdvancedReport();
+}
+function renderAdvancedReport(){
+ const from=$('reportFrom').value,to=$('reportTo').value,pid=$('reportProgram').value;
+ const bookings=B.filter(b=>{const d=dateOnly(b.created_at);return (!from||d>=from)&&(!to||d<=to)&&(!pid||b.program_id===pid)});
+ const programs=pid?PR.filter(p=>p.id===pid):PR;
+ let sales=0,received=0,cost=0,tripExp=0,people=0;
+ const rows=[];
+ programs.forEach(pr=>{
+   const bs=bookings.filter(b=>b.program_id===pr.id); if(!bs.length)return;
+   const n=bs.reduce((s,b)=>s+Math.max(Number(b.passengers_count||1),1),0);
+   const s=bs.reduce((x,b)=>x+Number(b.total_amount||0),0), r=bs.reduce((x,b)=>x+Number(b.paid_amount||0),0);
+   const c=n*Number(pr.purchase_cost||0);
+   const ex=E.filter(e=>e.program_id===pr.id&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((x,e)=>x+Number(e.amount||0),0);
+   const g=s-c, net=g-ex, margin=s?(net/s*100):0;
+   sales+=s;received+=r;cost+=c;tripExp+=ex;people+=n;
+   rows.push({pr,n,s,r,c,g,ex,net,margin});
+ });
+ const generalExp=E.filter(e=>!e.program_id&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((x,e)=>x+Number(e.amount||0),0);
+ const gross=sales-cost, net=gross-tripExp-generalExp, remaining=sales-received, margin=sales?(net/s*100):0;
+ const supplierPaid=SP.filter(x=>(!from||dateOnly(x.payment_date)>=from)&&(!to||dateOnly(x.payment_date)<=to)&&(!pid||x.program_id===pid)).reduce((x,e)=>x+Number(e.amount||0),0);
+ $('reportKpis').innerHTML=[['المبيعات الفعلية',sales,''],['المقبوض',received,''],['المتبقي',remaining,''],['تكلفة الجملة',cost,''],['الربح الإجمالي',gross,'profit'],['مصروفات الرحلات',tripExp,''],['مصروفات عامة',generalExp,''],['صافي الربح',net,net>=0?'profit':'loss'],['هامش صافي الربح',margin.toFixed(1)+' %',net>=0?'profit':'loss']].map(x=>'<div class="reportKpi '+x[2]+'"><small>'+x[0]+'</small><b>'+((typeof x[1]==='number')?money(x[1]):x[1])+'</b></div>').join('');
+ $('advancedReportRows').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.pr.title)+'</b></td><td>'+x.n+'</td><td>'+money(x.s)+'</td><td>'+money(x.r)+'</td><td>'+money(x.c)+'</td><td>'+money(x.g)+'</td><td>'+money(x.ex)+'</td><td><b class="'+(x.net>=0?'marginGood':'marginBad')+'">'+money(x.net)+'</b></td><td>'+x.margin.toFixed(1)+'%</td></tr>').join('')||'<tr><td colspan="9" class="reportEmpty">لا توجد رحلات ضمن الفترة المحددة.</td></tr>';
+ $('printReportPeriod').textContent='الفترة: '+(from||'—')+' إلى '+(to||'—')+(pid?' — '+(PR.find(x=>x.id===pid)?.title||''):'');
+}
+$('runReport').onclick=renderAdvancedReport;
+$('printReport').onclick=()=>{renderAdvancedReport();window.print()};
+
 function renderExpenses(){
  const q=$('search').value.trim().toLowerCase(), pf=$('programFilter').value;
  const list=E.filter(x=>{
