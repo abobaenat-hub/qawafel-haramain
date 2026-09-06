@@ -161,8 +161,9 @@ function render(){
  const overdue=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today).length;
  const visa=P.filter(x=>x.visa_status&&x.visa_status!=='issued').length;
  const docs=P.filter(x=>!x.passport_number||!x.passport_expiry).length;
+ const due=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<=today).sort((a,b)=>String(a.due_date).localeCompare(String(b.due_date)));
  const alerts=[];
- if(overdue)alerts.push('يوجد '+overdue+' قسط متأخر يحتاج متابعة.');
+ due.forEach(x=>{const b=B.find(z=>z.id===x.booking_id);const p=P.find(z=>z.booking_id===x.booking_id);const name=p?.full_name||b?.full_name||'معتمر';const rem=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);const late=x.due_date<today;alerts.push((late?'🔴 ':'🟠 ')+name+' — القسط رقم '+x.installment_number+' '+(late?'متأخر منذ ':'مستحق اليوم ')+x.due_date+' — المتبقي '+money(rem));});
  if(visa)alerts.push('يوجد '+visa+' ملف تأشيرة غير مكتمل.');
  if(docs)alerts.push('يوجد '+docs+' ملف جواز يحتاج استكمالاً.');
  $('alerts').innerHTML=alerts.length?alerts.map(x=>'<div class="alert">'+esc(x)+'</div>').join(''):'<div class="alert ok">لا توجد تنبيهات حرجة حاليًا.</div>';

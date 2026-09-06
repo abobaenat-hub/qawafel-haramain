@@ -239,26 +239,34 @@ async function openProfile(id){
 }
 
 async function managePayments(b){
- const box=$('manager');box.classList.remove('hide');box.innerHTML='<h4>إدارة الدفعات</h4><div style="background:#f8fafc;border:1px solid #dfe6ea;border-radius:10px;padding:10px;margin-bottom:10px;color:#36566a">كل دفعة تُسجل على حجز هذا المعتمر، ثم يوزعها النظام تلقائيًا على أقدم قسط مستحق أولًا.</div><div id="pm"></div><div class="cols"><div><label>مبلغ الدفعة</label><input id="payAmount" type="number" min="1"></div><div><label>تاريخ الدفع</label><input id="payDate" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>طريقة الدفع</label><input id="payMethod" value="نقد"></div><div><label>ملاحظات</label><input id="payNotes"></div></div><button id="savePay" class="btn p noPrint">تسجيل الدفعة</button>';
+ const box=$('manager');box.classList.remove('hide');box.innerHTML='<h4>إدارة الدفعات والأقساط</h4><div style="background:#f8fafc;border:1px solid #dfe6ea;border-radius:10px;padding:10px;margin-bottom:10px;color:#36566a">عند حضور المعتمر، اختر القسط المستحق نفسه ثم اضغط «تسديد هذا القسط». هكذا تُحفظ الدفعة مرتبطة بالقسط في السجل المالي، ويمكن أيضًا تسجيل دفعة جزئية.</div><div id="pm"></div>';
  const r=await db.from('installment_plans').select('*').eq('booking_id',b.id).order('installment_number');
- $('pm').innerHTML=r.error?'<div class="msg err">'+esc(r.error.message)+'</div>':(r.data?.length?'<div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+r.data.map(x=>'<tr><td>'+x.installment_number+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join('')+'</tbody></table></div>':'لا توجد أقساط.');
- $('savePay').onclick=()=>savePayment(b);
+ if(r.error){$('pm').innerHTML='<div class="msg err">'+esc(r.error.message)+'</div>';return;}
+ $('pm').innerHTML=r.data?.length?'<div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>'+r.data.map(x=>{const rem=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);const today=new Date().toISOString().slice(0,10);const overdue=rem>0&&x.due_date&&x.due_date<today;return '<tr><td>'+x.installment_number+'</td><td>'+esc(x.due_date||'—')+(overdue?' <span class="badge" style="background:#fff0f0;color:#a33">متأخر</span>':'')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+money(rem)+'</td><td>'+badge(rem<=0?'paid':overdue?'overdue':x.status)+'</td><td>'+(rem>0?'<button class="btn p noPrint" data-pay-inst="'+x.id+'" data-pay-booking="'+b.id+'" data-due="'+rem+'">💰 تسديد هذا القسط</button>':'<span class="badge ok">مسدد</span>')+'</td></tr>';}).join('')+'</tbody></table></div>':'لا توجد أقساط.';
+ document.querySelectorAll('[data-pay-inst]').forEach(btn=>btn.onclick=()=>paySpecificInstallment(b,btn.dataset.payInst,Number(btn.dataset.due||0)));
+}
+
+async function paySpecificInstallment(b,installmentId,due){
+ const amountRaw=prompt('مبلغ السداد لهذا القسط (المتبقي '+money(due)+')',String(due));
+ if(amountRaw===null)return;
+ const amount=Number(amountRaw);
+ if(!amount||amount<=0)return alert('أدخل مبلغًا صحيحًا.');
+ if(amount>due)return alert('المبلغ أكبر من المتبقي لهذا القسط: '+money(due));
+ const method=prompt('طريقة الدفع','نقد');
+ if(method===null)return;
+ const notes=prompt('ملاحظات (اختياري)','');
+ const {data,error}=await db.rpc('record_installment_payment',{p_booking_id:b.id,p_installment_id:installmentId,p_amount:amount,p_payment_date:new Date().toISOString(),p_payment_method:method||'نقد',p_notes:notes||null});
+ if(error)return alert(error.message||'تعذر تسجيل الدفعة.');
+ alert(data?.installment_remaining>0?'تم تسجيل الدفعة الجزئية للقسط.':'تم تسديد القسط بالكامل ✅');
+ await load();const np=P.find(x=>x.booking_id===b.id);if(np)openProfile(np.id);
 }
 async function savePayment(b){
- const amount=Number($('payAmount').value||0);if(amount<=0)return msg('pm','أدخل مبلغًا صحيحًا.',true);
- const fresh=await db.from('bookings').select('*').eq('id',b.id).single();if(fresh.error)return msg('pm',fresh.error.message,true);
- if(amount>Number(fresh.data.remaining_amount||0))return msg('pm','مبلغ الدفعة أكبر من المتبقي.',true);
- const pay=await db.from('payments').insert({booking_id:b.id,amount,payment_date:$('payDate').value,method:$('payMethod').value||'نقد',notes:$('payNotes').value||null});
- if(pay.error)return msg('pm',pay.error.message,true);
- const nb=Number(fresh.data.paid_amount||0)+amount;
- const up=await db.from('bookings').update({paid_amount:nb,status:nb>=Number(fresh.data.total_amount||0)?'paid':'pending'}).eq('id',b.id);
- if(up.error)return msg('pm',up.error.message,true);
+ const amount=Number($('payAmount')?.value||0);if(amount<=0)return msg('pm','أدخل مبلغًا صحيحًا.',true);
+ const r=await db.from('installment_plans').select('*').eq('booking_id',b.id).neq('status','paid').order('installment_number');
+ if(r.error)return msg('pm',r.error.message,true);
  let left=amount;
- const ir=await db.from('installment_plans').select('*').eq('booking_id',b.id).order('installment_number');
- if(!ir.error)for(const x of ir.data||[]){
-  const due=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);if(left<=0)break;
-  const add=Math.min(left,due);if(add){const np=Number(x.paid_amount||0)+add;await db.from('installment_plans').update({paid_amount:np,status:np>=Number(x.amount||0)?'paid':'partial'}).eq('id',x.id);left-=add}
- }
+ for(const x of r.data||[]){ if(left<=0)break; const due=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0); if(due<=0)continue; const add=Math.min(left,due); const {error}=await db.rpc('record_installment_payment',{p_booking_id:b.id,p_installment_id:x.id,p_amount:add,p_payment_date:$('payDate')?.value||new Date().toISOString(),p_payment_method:$('payMethod')?.value||'نقد',p_notes:$('payNotes')?.value||null}); if(error)return msg('pm',error.message,true); left-=add; }
+ if(left>0)return msg('pm','مبلغ الدفعة أكبر من إجمالي الأقساط المتبقية.',true);
  await load();const np=P.find(x=>x.booking_id===b.id);if(np)openProfile(np.id);
 }
 
