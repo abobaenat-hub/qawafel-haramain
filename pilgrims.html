@@ -259,34 +259,46 @@ function updateMinor(){ const age=calcAge($('birthDate').value); const wrap=$('g
 $('birthDate').addEventListener('change',updateMinor);
 updateMinor();
 
-function passportMinDate(){
+function todayLocal(){
  const t=new Date();
- const min=new Date(t.getFullYear(),t.getMonth()+7,t.getDate());
- const y=min.getFullYear(); const m=String(min.getMonth()+1).padStart(2,'0'); const d=String(min.getDate()).padStart(2,'0');
- return `${y}-${m}-${d}`;
+ return {y:t.getFullYear(),m:t.getMonth()+1,d:t.getDate()};
+}
+function passportMinDate(){
+ const t=todayLocal();
+ // 7 calendar months from the date the pilgrim is registered (today), not from the trip date.
+ let y=t.y, m=t.m+7, d=t.d;
+ if(m>12){ y+=Math.floor((m-1)/12); m=((m-1)%12)+1; }
+ // Clamp to last valid day of target month (handles month-end dates safely).
+ const lastDay=new Date(y,m,0).getDate();
+ d=Math.min(d,lastDay);
+ return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
 function validatePassportExpiry(show=true){
  const input=$('pex'); const d=input.value; const min=passportMinDate();
  input.min=min;
- if(!d){ $('pexHint').style.color='#6b7b88'; $('pexHint').textContent='يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر.'; return false; }
+ if(!d){
+   input.setCustomValidity('');
+   $('pexHint').style.color='#6b7b88';
+   $('pexHint').textContent='الحد الأدنى لانتهاء الجواز: '+min+' — يجب أن تكون الصلاحية 7 أشهر كاملة على الأقل من تاريخ تثبيت المعتمر.';
+   return false;
+ }
  const ok=d>=min;
  $('pexHint').style.color=ok?'#176644':'#a33';
- $('pexHint').textContent=ok?'صلاحية الجواز مناسبة لمدة 7 أشهر من تاريخ التثبيت ✅':'❌ الجواز غير مقبول: يجب أن يكون تاريخ الانتهاء '+min+' أو بعده (7 أشهر من تاريخ التثبيت).';
- if(show && !ok){ $('pex').setCustomValidity('صلاحية الجواز أقل من 7 أشهر من تاريخ تثبيت المعتمر.'); } else { $('pex').setCustomValidity(''); }
+ $('pexHint').textContent=ok?'صلاحية الجواز مناسبة لمدة 7 أشهر من تاريخ التثبيت ✅':'❌ الجواز غير مقبول: الحد الأدنى لانتهاء الجواز هو '+min+' (7 أشهر من تاريخ التثبيت).';
+ input.setCustomValidity(ok?'':'صلاحية الجواز أقل من 7 أشهر من تاريخ تثبيت المعتمر.');
  return ok;
 }
 validatePassportExpiry(false);
-$('pex').addEventListener('change',()=>validatePassportExpiry(true));
-$('pex').addEventListener('input',()=>validatePassportExpiry(false));
-$('program').addEventListener('change',()=>$('pex').dispatchEvent(new Event('change')));
+['change','input','blur'].forEach(ev=>$('pex').addEventListener(ev,()=>validatePassportExpiry(true)));
+$('program').addEventListener('change',()=>validatePassportExpiry(true));
 $('form').onsubmit=async e=>{
- e.preventDefault();msg('formMsg','جاري الحفظ...');
+ e.preventDefault();msg('formMsg','جاري التحقق من البيانات...');
  const pr=PR.find(x=>x.id===$('program').value);if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);
  const total=Number(pr.price||0),paymentType=$('paymentType').value,passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date,paid=Math.min(Math.max(Number($('initial').value||0),0),total);
  const remaining=total-paid;
  if(!passportExpiry)return msg('formMsg','أدخل تاريخ انتهاء الجواز.',true);
  const minExpiry=passportMinDate();
- if(passportExpiry < minExpiry){validatePassportExpiry(true); $('pex').focus(); return msg('formMsg','❌ لا يمكن إضافة المعتمر: صلاحية الجواز أقل من 7 أشهر من تاريخ تثبيت المعتمر. يجب أن ينتهي في '+minExpiry+' أو بعده.',true);}
+ if(!validatePassportExpiry(true) || passportExpiry < minExpiry){ $('pex').focus(); return msg('formMsg','❌ لا يمكن إضافة المعتمر: صلاحية الجواز أقل من 7 أشهر. الحد الأدنى لانتهاء الجواز هو '+minExpiry+'.',true);}
  const age=calcAge($('birthDate').value); if(age===null)return msg('formMsg','أدخل تاريخ ميلاد المعتمر.',true);
  const guardianFile=$('guardianCamera').files?.[0] || $('guardianUpload').files?.[0]; if(age<18 && !guardianFile)return msg('formMsg','المعتمر دون 18 سنة: يجب إرفاق وكالة ولي الأمر.',true);
  const passportFile=$('passportCamera').files?.[0] || $('passportUpload').files?.[0]; if(!passportFile)return msg('formMsg','أرفق صورة الجواز: صوّر بالكاميرا أو حمّل ملفًا من الهاتف.',true);
