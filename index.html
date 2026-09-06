@@ -19,9 +19,10 @@
 @media(max-width:1000px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}
 @media(max-width:760px){.top{height:68px}.topin{padding:0 14px}.status{display:none}.menu{display:block}.shell{min-height:calc(100vh - 68px)}.side{position:fixed;right:-295px;top:68px;height:calc(100vh - 68px);transition:right .2s;box-shadow:-8px 0 24px #0002}.side.open{right:0}.overlay{display:none}.overlay.show{display:block;position:fixed;inset:68px 0 0;background:#0005;z-index:40}.content{padding:18px 14px}.head{align-items:flex-start;flex-direction:column}.today{display:none}.finance{grid-template-columns:1fr 1fr}.finance div{border-left:0;border-bottom:1px solid #ffffff20;padding:8px}.kpis{grid-template-columns:1fr 1fr}}
 @media(max-width:470px){.brand b{font-size:16px}.brand small{font-size:9px}.kpi{padding:12px}.kpi b{font-size:20px}.finance b{font-size:14px}}
+body.auth-pending #login{display:none!important}
 </style>
 </head>
-<body>
+<body class="auth-pending">
 <header class="top">
 <div class="topin">
   <div class="brand"><div class="mark">ق</div><div><b>قوافل الحرمين</b><small>المركز الإداري الداخلي</small></div></div>
@@ -102,7 +103,7 @@ const $=id=>document.getElementById(id);
 let B=[],P=[],PR=[],I=[],E=[];
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function showLoginMsg(t,e=false){$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
+function showLoginMsg(t,e=false){document.body.classList.remove('auth-pending');$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
 function isAdmin(){
  return db.auth.getUser().then(async r=>{
    if(!r.data.user)return null;
@@ -110,7 +111,7 @@ function isAdmin(){
    return q.error||!q.data?null:r.data.user;
  });
 }
-async function signIn(){
+async function signIn(){document.body.classList.remove('auth-pending');
  const email=$('email').value.trim(),password=$('password').value;
  if(!email||!password)return showLoginMsg('أدخل البريد الإلكتروني وكلمة المرور.',true);
  $('loginBtn').disabled=true;showLoginMsg('جاري التحقق...');
@@ -172,7 +173,7 @@ function render(){
  }).join('')||'<tr><td colspan="6" class="empty">لا توجد حجوزات.</td></tr>';
 }
 setToday();
-(async()=>{const s=await db.auth.getSession();if(s.data.session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}})();
+(async()=>{const s=await db.auth.getSession();document.body.classList.remove('auth-pending');if(s.data.session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}})();
 </script>
 </body>
 </html>
