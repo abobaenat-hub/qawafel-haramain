@@ -75,6 +75,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <div class="cols">
 <div><label>الهاتف</label><input id="phone"></div>
 <div><label>الجنسية</label><input id="nat" value="عراقي"></div>
+<div><label>الجنس *</label><select id="gender" required><option value="">اختر الجنس</option><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select></div>
 <div><label>تاريخ الميلاد *</label><input id="birthDate" type="date" required><small id="ageHint" style="display:block;color:#6b7b88;margin-top:5px"></small></div>
 <div><label>رقم الجواز</label><input id="pass"></div>
 <div><label>انتهاء الجواز *</label><input id="pex" type="date" required aria-describedby="pexHint" oninput="validatePassportExpiry(true)" onchange="validatePassportExpiry(true)"><small id="pexHint" style="display:block;color:#6b7b88;margin-top:5px;font-weight:600">يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر.</small><div id="pexStatus" style="display:none;margin-top:6px;padding:8px 10px;border-radius:8px;font-weight:800"></div></div>
@@ -151,6 +152,7 @@ function applyArchiveData(a){
  archiveConfirmed=true; archiveMatch=a;
  if($('phone'))$('phone').value=a.phone||'';
  if($('nat'))$('nat').value=a.nationality||'عراقي';
+ if($('gender'))$('gender').value=a.gender||'';
  if($('pass'))$('pass').value=a.passport_number||'';
  if($('pex'))$('pex').value=a.passport_expiry||'';
  if($('birthDate'))$('birthDate').value=a.birth_date||'';
@@ -463,9 +465,9 @@ $('form').onsubmit=async e=>{
   let passportImagePath=archiveConfirmed?(archiveMatch?.passport_image_path||null):null; if(passportFile){const pext=(passportFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; passportImagePath='passport-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+pext; const upPassport=await db.storage.from('pilgrim-photos').upload(passportImagePath,passportFile,{upsert:false,contentType:passportFile.type||'image/jpeg'}); if(upPassport.error)throw upPassport.error;}
   let guardianPath=archiveConfirmed?(archiveMatch?.guardian_authorization_path||null):null; if(guardianFile){const gext=(guardianFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; guardianPath='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+gext; const ug=await db.storage.from('pilgrim-photos').upload(guardianPath,guardianFile,{upsert:false,contentType:guardianFile.type||'application/octet-stream'}); if(ug.error)throw ug.error;}
   const br=await db.from('bookings').insert(booking).select('id').single();if(br.error)throw br.error;
-  const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,nationality:$('nat').value.trim()||'عراقي',passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8)};
+  const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,nationality:$('nat').value.trim()||'عراقي',gender:$('gender').value||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8)};
   const pp=await db.from('pilgrims').insert(payload).select('id,archive_id').single();if(pp.error){await db.from('bookings').delete().eq('id',br.data.id);throw pp.error}
-  if(pp.data?.archive_id){const au={phone:$('phone').value.trim()||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,nationality:$('nat').value.trim()||'عراقي',birth_date:$('birthDate').value,guardian_accompanied:accompanied};if(photoPath)au.photo_path=photoPath;if(passportImagePath)au.passport_image_path=passportImagePath;if(guardianPath)au.guardian_authorization_path=guardianPath;await db.from('pilgrim_archive').update(au).eq('id',pp.data.archive_id);}
+  if(pp.data?.archive_id){const au={phone:$('phone').value.trim()||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,nationality:$('nat').value.trim()||'عراقي',gender:$('gender').value||null,birth_date:$('birthDate').value,guardian_accompanied:accompanied};if(photoPath)au.photo_path=photoPath;if(passportImagePath)au.passport_image_path=passportImagePath;if(guardianPath)au.guardian_authorization_path=guardianPath;await db.from('pilgrim_archive').update(au).eq('id',pp.data.archive_id);}
   if(paid>0)await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),method:'دفعة أولى',notes:'دفعة أولى'});
   if(paymentType==='installment'&&remaining>0){
    const amounts=[...document.querySelectorAll('.instAmount')].map(x=>Number(x.value||0));
@@ -478,7 +480,7 @@ $('form').onsubmit=async e=>{
    const ir=await db.from('installment_plans').insert(rows);
    if(ir.error)throw ir.error;
   }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('nat').value='عراقي';$('gender').value='';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 

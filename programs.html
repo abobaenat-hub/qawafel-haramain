@@ -142,7 +142,7 @@ async function openTripPilgrims(id){
  $('tripPilgrimSearch').value='';
  $('tripModal').classList.remove('hidden');$('tripModal').setAttribute('aria-hidden','false');
  $('tripPilgrimGrid').innerHTML='<div class="empty-pilgrims" style="grid-column:1/-1">جاري تحميل المعتمرين…</div>';
- const [{data:bs,error:be},{data:ps,error:pe}]=await Promise.all([db.from('bookings').select('id,program_id,status,total_amount,paid_amount,payment_type').eq('program_id',id),db.from('pilgrims').select('id,booking_id,full_name,phone,passport_number,profile_code,visa_status,photo_path').order('full_name')]);
+ const [{data:bs,error:be},{data:ps,error:pe}]=await Promise.all([db.from('bookings').select('id,program_id,status,total_amount,paid_amount,payment_type').eq('program_id',id),db.from('pilgrims').select('id,booking_id,full_name,phone,passport_number,profile_code,visa_status,photo_path,gender,birth_date').order('full_name')]);
  if(be||pe){$('tripPilgrimGrid').innerHTML='<div class="empty-pilgrims" style="grid-column:1/-1;color:#a03434">تعذر تحميل بيانات المعتمرين.</div>';return}
  const bookings=(bs||[]).filter(x=>x.status!=='cancelled');
  const map=new Map(bookings.map(x=>[x.id,x]));
@@ -177,7 +177,43 @@ $('tripPilgrimSearch')?.addEventListener('input',renderTripPilgrims);
 $('printBadgesTrip')?.addEventListener('click',()=>{ if(activeTrip) window.location.href='./pilgrims.html?program='+encodeURIComponent(activeTrip.id); });
 $('passportStickersTrip')?.addEventListener('click',()=>alert('ستيكر الجواز سنربطه بطباعة جماعية من هذه الرحلة في المرحلة التالية.'));
 $('zamzamStickersTrip')?.addEventListener('click',()=>alert('ستيكر زمزم سنربطه بطباعة جماعية من هذه الرحلة في المرحلة التالية.'));
-$('tripReportTrip')?.addEventListener('click',()=>{ if(activeTrip) window.location.href='./pilgrims.html?program='+encodeURIComponent(activeTrip.id); });
+function calcAgeForReport(birth){
+ const d=birth?new Date(birth+'T00:00:00'):null; if(!d||Number.isNaN(d.getTime())) return null;
+ const now=new Date(); let age=now.getFullYear()-d.getFullYear();
+ const md=now.getMonth()-d.getMonth(); if(md<0 || (md===0 && now.getDate()<d.getDate())) age--;
+ return age;
+}
+function escReport(v){return String(v??'—').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
+function genderReportLabel(g){return g==='ذكر'?'ذكر':g==='أنثى'?'أنثى':'غير محدد'}
+function openTripReport(){
+ if(!activeTrip)return;
+ const people=allProgramPilgrims||[];
+ let men=0,women=0,children=0,unknown=0;
+ people.forEach(x=>{
+   const age=calcAgeForReport(x.birth_date);
+   if(age!==null && age<12){children++; return;}
+   if(x.gender==='ذكر')men++; else if(x.gender==='أنثى')women++; else unknown++;
+ });
+ const rows=people.map((x,i)=>{
+   const age=calcAgeForReport(x.birth_date);
+   return `<tr><td>${i+1}</td><td class="name">${escReport(x.full_name)}</td><td>${genderReportLabel(x.gender)}</td><td>${age===null?'—':age}</td><td>${escReport(x.profile_code)}</td><td>${escReport(x.passport_number)}</td></tr>`;
+ }).join('');
+ const w=window.open('about:blank','_blank','width=1000,height=800');
+ if(!w){alert('المتصفح منع نافذة الكشف. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');return;}
+ w.document.open();
+ w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>كشف رحلة - ${escReport(activeTrip.title)}</title><style>
+ @page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,"Tahoma",sans-serif;color:#12344f;margin:0;background:#fff}.head{border-bottom:4px solid #c79a3b;padding:0 0 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.brand{font-size:25px;font-weight:900;color:#0c3b63}.sub{font-size:13px;color:#687985;margin-top:5px}.title{font-size:24px;font-weight:900;margin:12px 0 4px;color:#0c3b63}.meta{font-size:12px;color:#526775;line-height:1.9}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:14px 0}.box{border:1px solid #dbe4e9;border-radius:12px;padding:10px;background:#f8fafc}.box span{display:block;font-size:11px;color:#71808b}.box b{display:block;font-size:22px;color:#0c3b63;margin-top:4px}.note{font-size:11px;color:#697984;margin:8px 0 12px}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#0c3b63;color:#fff;padding:8px;border:1px solid #0c3b63}td{padding:7px 6px;border:1px solid #dce4e9;text-align:center}td.name{text-align:right;font-weight:700}tr:nth-child(even) td{background:#f8fafc}.footer{margin-top:18px;border-top:2px solid #c79a3b;padding-top:8px;display:flex;justify-content:space-between;font-size:10px;color:#657681}.print{position:fixed;left:18px;top:18px;border:0;border-radius:10px;background:#c79a3b;color:#fff;padding:10px 16px;font-weight:800;cursor:pointer}@media print{.print{display:none}}
+ </style></head><body><button class="print" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
+ <div class="head"><div><div class="brand">قوافل الحرمين للحج والعمرة</div><div class="sub">كشف رسمي لمعتمري الرحلة</div></div><div style="text-align:left;font-size:12px;color:#526775">بغداد - العامرية</div></div>
+ <div class="title">كشف رحلة: ${escReport(activeTrip.title)}</div><div class="meta">📅 تاريخ الرحلة: ${escReport(activeTrip.departure_date||'غير محدد')} &nbsp; | &nbsp; 🚌 نوع السفر: ${escReport(activeTrip.travel_type||'—')}<br>🏨 فندق المدينة: ${escReport(activeTrip.city_hotel||'—')} &nbsp; | &nbsp; 🕋 فندق مكة: ${escReport(activeTrip.makkah_hotel||'—')}</div>
+ <div class="summary"><div class="box"><span>إجمالي المعتمرين</span><b>${people.length}</b></div><div class="box"><span>الرجال (12 سنة فأكثر)</span><b>${men}</b></div><div class="box"><span>النساء (12 سنة فأكثر)</span><b>${women}</b></div><div class="box"><span>الأطفال (دون 12 سنة)</span><b>${children}</b></div></div>
+ ${unknown?`<div class="note">⚠️ يوجد ${unknown} معتمر/معتمرين من عمر 12 سنة فأكثر لم يُحدد الجنس لهم بعد، لذلك لم يدخلوا ضمن عدد الرجال أو النساء.</div>`:''}
+ <table><thead><tr><th>#</th><th>اسم المعتمر</th><th>الجنس</th><th>العمر</th><th>رقم المعتمر</th><th>رقم الجواز</th></tr></thead><tbody>${rows||'<tr><td colspan="6">لا يوجد معتمرون في هذه الرحلة.</td></tr>'}</tbody></table>
+ <div class="footer"><span>أُعدّ من نظام قوافل الحرمين</span><span>للاستفسار: +964 778 007 7122 &nbsp; | &nbsp; +966 54 876 9707</span></div>
+ <script>window.onload=()=>setTimeout(()=>window.print(),350)<\/script></body></html>`);
+ w.document.close();
+}
+$('tripReportTrip')?.addEventListener('click',openTripReport);
 $('tripModal')?.addEventListener('click',e=>{if(e.target.id==='tripModal')closeTripModal()});
 $('programForm').onsubmit=async e=>{e.preventDefault();msg($('formMsg'),'جاري الحفظ...');const id=$('id').value;const payload={title:$('title').value.trim(),departure_date:$('departure_date').value||null,return_date:$('return_date').value||null,city_hotel:$('city_hotel').value.trim()||null,makkah_hotel:$('makkah_hotel').value.trim()||null,travel_type:$('travel_type').value,price:Number($('price').value||0),installment_price:Number($('installment_price').value||0),currency:$('currency').value,seats_total:Number($('seats_total').value||0),seats_available:Number($('seats_available').value||0),services:$('services').value.trim()||null,description:$('description').value.trim()||null,status:$('status').value};const r=id?await db.from('programs').update(payload).eq('id',id):await db.from('programs').insert(payload);if(r.error)return msg($('formMsg'),r.error.message,'err');msg($('formMsg'),'تم حفظ البرنامج بنجاح');resetForm();loadPrograms()}
 async function removeProgram(id){if(!confirm('حذف هذا البرنامج؟'))return;const{error}=await db.from('programs').delete().eq('id',id);if(error)return msg($('listMsg'),error.message,'err');loadPrograms()}
