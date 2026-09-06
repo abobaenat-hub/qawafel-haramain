@@ -17,6 +17,10 @@
 .grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow);margin-bottom:14px}.sect{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.sect h2{margin:0;color:var(--navy);font-size:15px}.sect p{margin:5px 0 0;color:var(--muted);font-size:9px}.link{color:var(--blue);font-size:9px;font-weight:900;text-decoration:none;white-space:nowrap}.program{padding:11px 0;border-bottom:1px solid var(--line)}.program:last-child{border-bottom:0}.program b{font-size:11px}.program small{display:block;color:var(--muted);font-size:9px;margin-top:4px}.alert{padding:10px;border-radius:10px;background:#fff8e7;border-right:3px solid var(--gold);font-size:10px;margin-bottom:7px;line-height:1.7}.alert.ok{background:#edf8f3;border-right-color:var(--green)}.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:right;padding:10px 8px;border-bottom:1px solid var(--line);font-size:9px}th{background:#f5f7f9;color:var(--navy)}td{color:#385367}.empty{padding:25px;text-align:center;color:var(--muted);font-size:10px}.role-note{display:inline-flex;align-items:center;gap:6px;background:#eef5f9;color:var(--navy);padding:7px 10px;border-radius:10px;font-size:9px;font-weight:800;margin-top:9px}
 @media(max-width:1050px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}@media(max-width:760px){.top{height:70px}.topin{padding:0 13px}.status{display:none}.menu{display:block}.shell{min-height:calc(100vh - 70px)}.side{position:fixed;right:-303px;top:70px;height:calc(100vh - 70px);transition:right .2s;box-shadow:-8px 0 24px #0002}.side.open{right:0}.overlay{display:none}.overlay.show{display:block;position:fixed;inset:70px 0 0;background:#0005;z-index:40}.content{padding:16px 12px}.head{align-items:flex-start;flex-direction:column}.today{display:none}.finance{grid-template-columns:1fr 1fr}.finance div{border-left:0;border-bottom:1px solid var(--line);padding:11px}.kpis{grid-template-columns:1fr 1fr}.mark{width:132px;height:58px}.brand b{font-size:15px}.brand small{font-size:8px}}
 @media(max-width:470px){.kpi{padding:12px;min-height:82px}.kicon{width:36px;height:36px}.kpi b{font-size:19px}.finance b{font-size:14px}}
+/* V38 executive dashboard */
+.hero-line{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}.welcome{font-size:11px;color:var(--navy);font-weight:900}.live-pill{display:inline-flex;align-items:center;gap:6px;background:#edf8f3;color:#17724b;border:1px solid #d7eee2;padding:6px 9px;border-radius:999px;font-size:8px;font-weight:900}.live-dot{width:7px;height:7px;border-radius:50%;background:#21a366;box-shadow:0 0 0 3px #21a36620}.kpi-link{text-decoration:none;color:inherit;display:block}.kpi.clickable{cursor:pointer}.metric-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 15px}.metric{background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px 14px;box-shadow:var(--shadow)}.metric span{display:block;color:var(--muted);font-size:8px}.metric b{display:block;color:var(--navy);font-size:16px;margin-top:5px}.metric small{display:block;color:#9aa7af;font-size:8px;margin-top:3px}.trip .trip-top{align-items:center}.trip-badge{font-size:8px;font-weight:900;padding:5px 8px;border-radius:999px;background:#edf5f9;color:var(--blue);white-space:nowrap}.occupancy{font-size:8px;color:var(--muted);margin-top:8px;display:flex;justify-content:space-between}.empty-state{padding:18px;border:1px dashed #dbe4e9;border-radius:12px;text-align:center;color:var(--muted);font-size:9px;background:#fbfcfd}.mini-count{font-size:8px;color:var(--muted);background:#f3f6f8;border-radius:999px;padding:4px 7px;font-weight:900}.section-action{display:flex;align-items:center;gap:8px}.critical{background:#fff1f1!important;border-right-color:var(--red)!important}.warning{background:#fff8e7!important;border-right-color:var(--orange)!important}.success{background:#edf8f3!important;border-right-color:var(--green)!important}
+@media(max-width:760px){.metric-strip{grid-template-columns:1fr 1fr}.hero-line{margin-top:8px}.welcome{font-size:10px}}
+@media(max-width:470px){.metric-strip{grid-template-columns:1fr 1fr}.metric{padding:10px}.metric b{font-size:14px}}
 body.auth-pending #login{display:none!important}
 
 /* V36 dashboard polish */
@@ -108,15 +112,21 @@ body.auth-pending #login{display:none!important}
 
   <main class="content">
     <div class="head">
-      <div><div class="eyebrow">المركز الداخلي</div><h1>لوحة المتابعة</h1><p>ملخص أعمال الشركة اليوم في شاشة واحدة.</p></div>
+      <div><div class="eyebrow">المركز الداخلي</div><h1>لوحة الشركة</h1><p>نظرة تنفيذية سريعة على حركة الشركة والرحلات والحجوزات.</p><div class="hero-line"><span class="welcome" id="welcomeName">أهلاً بك</span><span class="live-pill"><i class="live-dot"></i>النظام يعمل</span></div></div>
       <div><div id="today" class="today"></div><div id="roleNote" class="role-note hide"></div></div>
     </div>
 
     <section class="kpis">
-      <div class="kpi"><div class="kicon">▣</div><div><span>الرحلات المنشورة</span><b id="programs">0</b></div></div>
-      <div class="kpi"><div class="kicon">♙</div><div><span>المعتمرون</span><b id="pilgrims">0</b></div></div>
-      <div class="kpi"><div class="kicon">◫</div><div><span>الحجوزات</span><b id="bookings">0</b></div></div>
-      <div class="kpi"><div class="kicon">○</div><div><span>المقاعد المتاحة</span><b id="seats">0</b></div></div>
+      <a class="kpi-link" href="./programs.html"><div class="kpi clickable"><div class="kicon">▣</div><div><span>الرحلات المنشورة</span><b id="programs">0</b><span class="kmeta">فتح إدارة البرامج</span></div></div></a>
+      <a class="kpi-link" href="./pilgrims.html"><div class="kpi clickable"><div class="kicon">♙</div><div><span>المعتمرون</span><b id="pilgrims">0</b><span class="kmeta">إدارة الملفات والحجوزات</span></div></div></a>
+      <a class="kpi-link" href="./pilgrims.html"><div class="kpi clickable"><div class="kicon">◫</div><div><span>الحجوزات</span><b id="bookings">0</b><span class="kmeta">آخر الحجوزات</span></div></div></a>
+      <a class="kpi-link" href="./programs.html"><div class="kpi clickable"><div class="kicon">○</div><div><span>المقاعد المتاحة</span><b id="seats">0</b><span class="kmeta">الطاقة المتبقية للرحلات</span></div></div></a>
+    </section>
+
+    <section class="metric-strip">
+      <div class="metric"><span>أقرب رحلة</span><b id="nextTrip">—</b><small id="nextTripMeta">لا توجد رحلة قادمة</small></div>
+      <div class="metric"><span>إشغال الرحلات القادمة</span><b id="overallOccupancy">0%</b><small id="occupancyMeta">من المقاعد المحسوبة</small></div>
+      <div class="metric"><span>الأقساط التي تحتاج متابعة</span><b id="dueCount">0</b><small id="dueMeta">مستحق أو متأخر</small></div>
     </section>
 
     <div class="section-label">اختصارات سريعة</div>
@@ -140,7 +150,7 @@ body.auth-pending #login{display:none!important}
         <div id="programList">جاري التحميل...</div>
       </section>
       <section class="card">
-        <div class="sect"><div><h2>يحتاج متابعة</h2><p>تنبيهات تشغيلية ومالية</p></div></div>
+        <div class="sect"><div><h2>يحتاج متابعة</h2><p>تنبيهات تشغيلية ومالية</p></div><span id="alertCount" class="mini-count">0</span></div>
         <div id="alerts">جاري التحميل...</div>
       </section>
     </div>
@@ -186,7 +196,7 @@ function setupAccess(){
  $('roleNote').classList.remove('hide');
  const label=STAFF?.role==='super_admin'?'المدير العام':STAFF?.role==='manager'?'المدير':'الموظف';
  $('roleNote').textContent='صلاحية الدخول: '+label;
- $('accountName').textContent=STAFF?.full_name||STAFF?.email||'المستخدم';
+ $('accountName').textContent=STAFF?.full_name||STAFF?.email||'المستخدم'; $('welcomeName').textContent='أهلاً '+(STAFF?.full_name||'بك');
  $('accountRole').textContent=label+' · الحساب متصل';
 }
 async function signIn(){document.body.classList.remove('auth-pending');
@@ -236,6 +246,13 @@ async function load(){
  $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
  $('expenses').textContent=money(E.reduce((s,x)=>s+Number(x.amount||0),0));
+ const todayDate=new Date();
+ const upcoming=PR.filter(x=>x.departure_date && new Date(x.departure_date+'T00:00:00')>=new Date(todayDate.toDateString())).sort((a,b)=>String(a.departure_date).localeCompare(String(b.departure_date)));
+ const next=upcoming[0];
+ $('nextTrip').textContent=next?.title||'—';
+ if(next){const d=Math.max(0,Math.ceil((new Date(next.departure_date+'T00:00:00')-new Date(todayDate.toDateString()))/86400000));$('nextTripMeta').textContent=next.departure_date+' · بعد '+d+' يوم';} else $('nextTripMeta').textContent='لا توجد رحلة قادمة';
+ let totalSeats=0,usedSeats=0; upcoming.forEach(x=>{const avail=Number(x.seats_available||0);const booked=B.filter(b=>b.program_id===x.id).length;totalSeats+=avail+booked;usedSeats+=booked;});
+ $('overallOccupancy').textContent=totalSeats?Math.round(usedSeats/totalSeats*100)+'%':'0%'; $('occupancyMeta').textContent=totalSeats?(usedSeats+' مشغولة من '+totalSeats):'لا توجد طاقة محسوبة';
  render();
 }
 function render(){
@@ -244,17 +261,16 @@ function render(){
  const visa=P.filter(x=>x.visa_status&&x.visa_status!=='issued').length;
  const docs=P.filter(x=>!x.passport_number||!x.passport_expiry).length;
  const due=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<=today).sort((a,b)=>String(a.due_date).localeCompare(String(b.due_date)));
- const alerts=[];
+ const alerts=[]; $('dueCount').textContent=due.length; $('dueMeta').textContent=due.length?'يحتاج متابعة الآن':'لا توجد مستحقات اليوم';
  due.forEach(x=>{const b=B.find(z=>z.id===x.booking_id);const p=P.find(z=>z.booking_id===x.booking_id);const name=p?.full_name||b?.full_name||'معتمر';const rem=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);const late=x.due_date<today;alerts.push((late?'🔴 ':'🟠 ')+name+' — القسط رقم '+x.installment_number+' '+(late?'متأخر منذ ':'مستحق اليوم ')+x.due_date+' — المتبقي '+money(rem));});
  if(visa)alerts.push('يوجد '+visa+' ملف تأشيرة غير مكتمل.');
  if(docs)alerts.push('يوجد '+docs+' ملف جواز يحتاج استكمالاً.');
- $('alerts').innerHTML=alerts.length?alerts.slice(0,8).map(x=>'<div class="alert"><span class="adot"></span><span>'+esc(x)+'</span></div>').join(''):'<div class="alert ok"><span class="adot"></span><span>لا توجد تنبيهات حرجة حاليًا.</span></div>';
+ $('alertCount').textContent=alerts.length; $('alerts').innerHTML=alerts.length?alerts.slice(0,8).map(x=>'<div class="alert '+(x.startsWith('🔴')?'critical':'warning')+'"><span class="adot"></span><span>'+esc(x)+'</span></div>').join(''):'<div class="alert ok success"><span class="adot"></span><span>لا توجد تنبيهات حرجة حاليًا.</span></div>';
 
  const upcoming=PR.filter(x=>!x.departure_date||x.departure_date>=today).slice(0,5);
  $('programList').innerHTML=upcoming.map(x=>{
-   const cap=Math.max(Number(x.seats_total||x.total_seats||x.seats||0), Number(x.seats_available||0));
-   const avail=Number(x.seats_available||0), used=cap?Math.max(0,Math.min(100,Math.round((cap-avail)/cap*100))):0;
-   return '<div class="trip"><div class="trip-top"><b>'+esc(x.title)+'</b><span class="badge">'+esc(x.status||'مفتوح')+'</span></div><div class="trip-meta"><span>📅 '+esc(x.departure_date||'—')+'</span><span>💺 المتاح: '+avail+'</span><span>📊 الإشغال: '+used+'%</span></div><div class="bar"><i style="width:'+used+'%"></i></div></div>';
+   const avail=Number(x.seats_available||0), booked=B.filter(b=>b.program_id===x.id).length, cap=avail+booked, used=cap?Math.max(0,Math.min(100,Math.round(booked/cap*100))):0;
+   return '<div class="trip"><div class="trip-top"><b>'+esc(x.title)+'</b><span class="trip-badge">'+esc(x.status||'مفتوح')+'</span></div><div class="trip-meta"><span>📅 '+esc(x.departure_date||'—')+'</span><span>💺 المتاح: '+avail+'</span><span>👤 المحجوز: '+booked+'</span></div><div class="occupancy"><span>نسبة الإشغال</span><b>'+used+'%</b></div><div class="bar"><i style="width:'+used+'%"></i></div></div>';
  }).join('')||'<div class="empty">لا توجد رحلات قادمة.</div>';
 
  const activity=[];
