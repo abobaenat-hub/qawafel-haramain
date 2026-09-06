@@ -314,7 +314,10 @@ function renderAdvancedReport(){
  let sales=0,received=0,cost=0,tripExp=0,people=0;
  const rows=[];
  programs.forEach(pr=>{
-   const bs=bookings.filter(b=>b.program_id===pr.id); if(!bs.length)return;
+   const bs=bookings.filter(b=>b.program_id===pr.id);
+   // عند اختيار رحلة محددة، اعرض الرحلة حتى لو لم تُسجل عليها حجوزات/دفعات بعد،
+   // حتى تظهر تكلفة الجملة والربحية المتوقعة بوضوح.
+   if(!bs.length && !pid) return;
    const n=bs.reduce((s,b)=>s+Math.max(Number(b.passengers_count||1),1),0);
    const s=bs.reduce((x,b)=>x+Number(b.total_amount||0),0), r=bs.reduce((x,b)=>x+Number(b.paid_amount||0),0);
    const c=n*Number(pr.purchase_cost||0);
