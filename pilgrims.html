@@ -52,7 +52,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <section class="panel">
 <h2>إضافة معتمر</h2><div id="formMsg"></div>
 <form id="form">
-<label>الاسم الكامل *</label><input id="name" required>
+<label>الاسم الرباعي *</label><input id="name" required autocomplete="off"><div id="nameDuplicate" style="display:none;margin-top:6px;padding:9px 11px;border-radius:9px;font-weight:800"></div>
 <label>البرنامج *</label><select id="program" required><option value="">جاري التحميل...</option></select>
 <label>نوع البرنامج *</label><select id="paymentType" required><option value="cash">نقد</option><option value="installment">قسط</option></select>
 <div id="installmentDetails" class="hide" style="grid-column:1/-1;border:1px solid #d9e3e8;border-radius:14px;padding:14px;background:#f8fafc;margin-top:2px"><div style="font-weight:900;color:#0c3b63;margin-bottom:10px">تفاصيل التقسيط</div><div id="installmentPriceHint" style="font-size:13px;color:#8b6b25;margin-bottom:10px;font-weight:700"></div><div class="cols"><div><label>إجمالي البرنامج</label><div id="installmentTotal" class="moneyBox">—</div></div><div><label>المبلغ المدفوع الآن</label><input id="initial" type="number" min="0" value="0"></div><div><label>المبلغ المتبقي</label><div id="installmentRemaining" class="moneyBox">—</div></div><div><label>عدد الأقساط</label><select id="installmentCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div><div><label>القسط الشهري التقريبي</label><div id="monthlyAmount" class="moneyBox">—</div></div><div><label>آخر قسط</label><div id="lastInstallment" class="moneyBox">—</div></div></div><small style="display:block;color:#6b7780;margin-top:9px">يتحدث المبلغ المتبقي والقسط الشهري تلقائيًا عند تغيير الدفعة الأولى أو عدد الأقساط.</small></div>
@@ -101,6 +101,50 @@ const $=id=>document.getElementById(id);
   }
 })();
 let P=[],B=[],PR=[],I=[];
+let nameDuplicate=false;
+let nameCheckTimer=null;
+function normalizeName(v){
+ return String(v||'').toLowerCase().replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[\u064B-\u065F\u0670]/g,'').replace(/\s+/g,' ').trim();
+}
+function showNameDuplicate(existsName){
+ const box=$('nameDuplicate'); if(!box)return;
+ nameDuplicate=!!existsName;
+ box.style.display='block';
+ box.style.background='#fff0f0'; box.style.color='#b3261e'; box.style.border='1px solid #efb4b0';
+ box.textContent='❌ هذا الاسم موجود سابقًا في أرشيف المعتمرين'+(existsName?' — '+existsName:'')+'، ولا يمكن تسجيله مرة أخرى.';
+ const btn=$('form')?.querySelector('button[type=submit]'); if(btn)btn.disabled=nameDuplicate;
+}
+function clearNameDuplicate(){
+ const box=$('nameDuplicate'); if(box){box.style.display='none';box.textContent='';}
+ nameDuplicate=false; const btn=$('form')?.querySelector('button[type=submit]'); if(btn)btn.disabled=false;
+}
+async function checkDuplicateName(){
+ const raw=$('name')?.value||'', n=normalizeName(raw);
+ if(!n){clearNameDuplicate();return false;}
+ if(n.split(' ').filter(Boolean).length<2){clearNameDuplicate();return false;}
+ try{
+   const [a,pil]=await Promise.all([
+     db.from('pilgrim_archive').select('full_name').limit(5000),
+     db.from('pilgrims').select('full_name').limit(5000)
+   ]);
+   if(a.error)throw a.error; if(pil.error)throw pil.error;
+   const all=[...(a.data||[]),...(pil.data||[])];
+   const hit=all.find(x=>normalizeName(x.full_name)===n);
+   if(hit){showNameDuplicate(hit.full_name);return true;}
+   clearNameDuplicate();return false;
+ }catch(e){
+   console.warn('duplicate name check',e);
+   clearNameDuplicate();return false;
+ }
+}
+function scheduleNameCheck(){
+ clearTimeout(nameCheckTimer);
+ const raw=$('name')?.value||'';
+ if(normalizeName(raw).split(' ').filter(Boolean).length<2){clearNameDuplicate();return;}
+ nameCheckTimer=setTimeout(checkDuplicateName,350);
+}
+$('name')?.addEventListener('input',scheduleNameCheck);
+$('name')?.addEventListener('blur',checkDuplicateName);
 
 function msg(id,text,error=false){const e=$(id);if(e){e.className='msg'+(error?' err':'');e.textContent=text||''}}
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
@@ -338,7 +382,7 @@ validatePassportExpiry(false);
 $('program').addEventListener('change',()=>validatePassportExpiry(true));
 document.getElementById('form').addEventListener('submit',function(e){ if(!validatePassportExpiry(true)){ e.preventDefault(); e.stopImmediatePropagation(); return false; } }, true);
 $('form').onsubmit=async e=>{
- e.preventDefault();msg('formMsg','جاري التحقق من البيانات...');
+ e.preventDefault();if(nameDuplicate || await checkDuplicateName()){return msg('formMsg','❌ هذا الاسم موجود سابقًا في أرشيف المعتمرين ولا يمكن تسجيله مرة أخرى.',true);}msg('formMsg','جاري التحقق من البيانات...');
  const pr=PR.find(x=>x.id===$('program').value);if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);
  const paymentType=$('paymentType').value, total=Number((paymentType==='installment'?pr.installment_price:pr.price)||0),passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date,paid=Math.min(Math.max(Number($('initial').value||0),0),total);
  const remaining=total-paid;
@@ -370,7 +414,7 @@ $('form').onsubmit=async e=>{
    const ir=await db.from('installment_plans').insert(rows);
    if(ir.error)throw ir.error;
   }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();clearNameDuplicate();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 
