@@ -1,1 +1,5 @@
-Qawafel Haramain V43
+Qawafel Haramain Platform — V45
+
+Based on V44. Includes employee management UI improvements and a safe "delete pilgrim from trip" action.
+
+Delete from trip removes the current booking/payment/installment history while preserving the permanent archive profile.
