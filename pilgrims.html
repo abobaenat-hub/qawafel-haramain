@@ -19,7 +19,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 .msg{padding:11px;border-radius:10px;margin:10px 0;background:#edf8f3}.err{background:#fff0f0;color:var(--r)}
 .hide{display:none}.table{overflow:auto}table{width:100%;min-width:800px;border-collapse:collapse}th,td{padding:10px;border-bottom:1px solid var(--l);text-align:right}th{background:#f2f6f8;color:var(--n)}
 .badge{padding:5px 9px;border-radius:20px;font-size:12px;font-weight:800;background:#fff2cf}.ok{background:#e7f6ef;color:#176644}
-.section{border-top:1px solid var(--l);padding-top:15px;margin-top:15px}.money{font-weight:900;color:var(--n)}
+.section{border-top:1px solid var(--l);padding-top:15px;margin-top:15px}.money{font-weight:900;color:var(--n)}.moneyBox{min-height:46px;display:flex;align-items:center;padding:11px 12px;border:1px solid #d6e0e6;border-radius:10px;background:#fff;font-weight:900;color:var(--n)}
 @media(max-width:850px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
 @media(max-width:550px){.cols,.stats{grid-template-columns:1fr}}
 @media print{.top,#login,.noPrint,#app>.stats,#app>.grid{display:none!important}.panel{box-shadow:none;border:0}}
@@ -29,7 +29,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 </head>
 <body class="auth-pending">
 <div class="top">
-<div><b>قوافل الحرمين</b><small>إدارة ملفات المعتمرين</small></div>
+<div style="display:flex;align-items:center;gap:12px"><div style="width:92px;height:58px;background:#fff;border:1px solid var(--g);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="./logo.png" alt="قوافل الحرمين" style="width:100%;height:100%;object-fit:contain"></div><div><b>قوافل الحرمين</b><small>إدارة ملفات المعتمرين</small></div></div>
 <div><a class="btn w" href="./index.html">لوحة الشركة</a> <button id="logout" class="btn w noPrint">خروج</button></div>
 </div>
 
@@ -55,6 +55,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <label>الاسم الكامل *</label><input id="name" required>
 <label>البرنامج *</label><select id="program" required><option value="">جاري التحميل...</option></select>
 <label>نوع البرنامج *</label><select id="paymentType" required><option value="cash">نقد</option><option value="installment">قسط</option></select>
+<div id="installmentDetails" class="hide" style="grid-column:1/-1;border:1px solid #d9e3e8;border-radius:14px;padding:14px;background:#f8fafc;margin-top:2px"><div style="font-weight:900;color:#0c3b63;margin-bottom:10px">تفاصيل التقسيط</div><div class="cols"><div><label>إجمالي البرنامج</label><div id="installmentTotal" class="moneyBox">—</div></div><div><label>المبلغ المدفوع الآن</label><input id="initial" type="number" min="0" value="0"></div><div><label>المبلغ المتبقي</label><div id="installmentRemaining" class="moneyBox">—</div></div><div><label>عدد الأقساط</label><select id="installmentCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div><div><label>القسط الشهري التقريبي</label><div id="monthlyAmount" class="moneyBox">—</div></div><div><label>آخر قسط</label><div id="lastInstallment" class="moneyBox">—</div></div></div><small style="display:block;color:#6b7780;margin-top:9px">يتحدث المبلغ المتبقي والقسط الشهري تلقائيًا عند تغيير الدفعة الأولى أو عدد الأقساط.</small></div>
 <div class="cols">
 <div><label>الهاتف</label><input id="phone"></div>
 <div><label>الجنسية</label><input id="nat" value="عراقي"></div>
@@ -67,8 +68,6 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <div><label>حالة الفيزا</label><select id="visa"><option>قيد الإجراء</option><option>صادرة</option><option>مرفوضة</option></select></div>
 <div><label>رقم الفيزا</label><input id="vnum"></div>
 <div><label>تاريخ إصدار الفيزا</label><input id="vdate" type="date"></div>
-<div><label>الدفعة الأولى</label><input id="initial" type="number" min="0" value="0"></div>
-<div id="dueWrap"><label>عدد الأقساط</label><select id="installmentCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div>
 </div>
 <div id="scheduleWrap" class="hide section"><h3>جدول الأقساط</h3><div id="schedule"></div></div>
 <label>ملاحظات</label><textarea id="notes"></textarea>
@@ -131,16 +130,27 @@ $('loginBtn').onclick=login;
 $('password').onkeydown=e=>{if(e.key==='Enter')login()};
 $('email').onkeydown=e=>{if(e.key==='Enter')login()};
 $('logout').onclick=async()=>{await db.auth.signOut();location.reload()};
-$('paymentType').onchange=()=>{const i=$('paymentType').value==='installment';$('dueWrap').style.display=i?'block':'none';$('scheduleWrap').classList.toggle('hide',!i);if(i)buildSchedule()};
+function updateInstallmentSummary(total,balance,count){
+ const box=$('installmentDetails');
+ if(!box)return;
+ $('installmentTotal').textContent=money(total);
+ $('installmentRemaining').textContent=money(balance);
+ const monthly=count>0?Math.floor((balance/count)*100)/100:0;
+ $('monthlyAmount').textContent=money(monthly);
+ $('lastInstallment').textContent=money(balance-monthly*Math.max(count-1,0));
+}
+$('paymentType').onchange=()=>{const i=$('paymentType').value==='installment';$('installmentDetails').classList.toggle('hide',!i);$('scheduleWrap').classList.toggle('hide',!i);if(i)buildSchedule()};
 $('paymentType').onchange();
-
 
 function buildSchedule(){
  const count=Number($('installmentCount').value||1);
  const total=Number((PR.find(x=>x.id===$('program').value)||{}).price||0);
  const initial=Math.min(Math.max(Number($('initial').value||0),0),total);
  const balance=Math.max(total-initial,0);
- if($('paymentType').value!=='installment'||balance<=0){$('scheduleWrap').classList.add('hide');return;}
+ if($('paymentType').value!=='installment'){ $('installmentDetails').classList.add('hide'); $('scheduleWrap').classList.add('hide'); return; }
+ $('installmentDetails').classList.remove('hide');
+ updateInstallmentSummary(total,balance,count);
+ if(balance<=0){$('scheduleWrap').classList.add('hide');$('schedule').innerHTML='';return;}
  $('scheduleWrap').classList.remove('hide');
  const base=Math.floor((balance/count)*100)/100;
  let rem=balance;
