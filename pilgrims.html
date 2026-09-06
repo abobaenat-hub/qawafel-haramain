@@ -240,10 +240,25 @@ function render(){
  const q=$('search').value.trim().toLowerCase();
  $('rows').innerHTML=P.filter(x=>[x.full_name,x.phone,x.passport_number,x.profile_code].some(v=>String(v||'').toLowerCase().includes(q))).map(x=>{
   const b=B.find(z=>z.id===x.booking_id),pr=PR.find(z=>z.id===b?.program_id);
-  return '<tr><td><b>'+esc(x.full_name)+'</b><br><small>'+esc(x.profile_code)+'</small></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td><td>'+badge(x.visa_status)+'</td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b?.paid_amount)+' / '+money(b?.remaining_amount)+'</td><td><button class="btn p" onclick="openProfile(\''+x.id+'\')">فتح</button></td></tr>'
+  return '<tr><td><b>'+esc(x.full_name)+'</b><br><small>'+esc(x.profile_code)+'</small></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td><td>'+badge(x.visa_status)+'</td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b?.paid_amount)+' / '+money(b?.remaining_amount)+'</td><td><button class="btn p" onclick="openProfile(\''+x.id+'\')">فتح</button> <button class="btn" style="border-color:#c62828;color:#c62828" onclick="deletePilgrim(\''+x.id+'\',false)">حذف من الرحلة</button></td></tr>'
  }).join('')||'<tr><td colspan="7">لا يوجد معتمرون.</td></tr>';
 }
 $('search').oninput=render;
+
+async function deletePilgrim(id, permanent=false){
+ const p=P.find(x=>x.id===id); if(!p) return;
+ const text=permanent
+  ? '⚠️ حذف نهائي\n\nسيتم حذف المعتمر من الرحلة ومن الأرشيف نهائيًا.\nهذا الإجراء لا يمكن التراجع عنه.\n\nهل أنت متأكد؟'
+  : 'حذف من الرحلة\n\nسيتم إخراج المعتمر من الرحلة الحالية فقط، وسيبقى ملفه محفوظًا في الأرشيف.\n\nهل أنت متأكد؟';
+ if(!confirm(text)) return;
+ try{
+  const r=await db.rpc('delete_pilgrim_record',{p_pilgrim_id:id,p_permanent:permanent});
+  if(r.error) throw r.error;
+  msg('listMsg', permanent?'تم حذف المعتمر نهائيًا.':'تم حذف المعتمر من الرحلة مع الاحتفاظ بملفه في الأرشيف.');
+  $('profile').classList.add('hide');
+  await load();
+ }catch(e){ msg('listMsg',e.message||'تعذر حذف المعتمر.',true); }
+}
 
 async function photoUrl(path){
  if(!path)return '';
@@ -281,7 +296,7 @@ async function openProfile(id){
  const p=P.find(x=>x.id===id);if(!p)return;
  const b=B.find(x=>x.id===p.booking_id),pr=PR.find(x=>x.id===b?.program_id),ins=I.filter(x=>x.booking_id===b?.id);
  $('profile').classList.remove('hide');
- $('profile').innerHTML='<h2>ملف المعتمر: '+esc(p.full_name)+'</h2>'+
+ $('profile').innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><h2 style="margin:0">ملف المعتمر: '+esc(p.full_name)+'</h2><div><button class="btn" style="border-color:#c62828;color:#c62828" onclick="deletePilgrim(\''+p.id+'\',false)">حذف من الرحلة</button><button class="btn" style="border-color:#8b0000;color:#8b0000" onclick="deletePilgrim(\''+p.id+'\',true)">حذف نهائي</button></div></div>'+
  '<div class="cols"><div>رمز الملف<br><b>'+esc(p.profile_code||'—')+'</b></div><div>الهاتف<br>'+esc(p.phone||'—')+'</div><div>الجنسية<br>'+esc(p.nationality||'—')+'</div><div>الجواز<br>'+esc(p.passport_number||'—')+'</div><div>انتهاء الجواز<br>'+esc(p.passport_expiry||'—')+'</div><div>الفيزا<br>'+badge(p.visa_status)+' '+esc(p.visa_number||'')+'</div></div>'+
  '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج<br><b>'+esc(pr?.title||'—')+'</b></div><div>نوع البرنامج<br><b>'+(b?.payment_type==='installment'?'قسط':'نقد')+'</b></div><div>الإجمالي<br><span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع<br><span class="money">'+money(b?.paid_amount)+'</span></div><div>المتبقي<br><span class="money">'+money(b?.remaining_amount)+'</span></div><div>الحالة<br>'+badge(b?.status)+'</div></div></div>'+
  (b?.payment_type==='installment'?'<div class="section"><h3>الأقساط</h3><div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+((ins.length?ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join(''):'<tr><td colspan="5">لا توجد أقساط.</td></tr>'))+'</tbody></table></div><button id="manageBtn" class="btn p noPrint">💰 إدارة الدفعات والأقساط</button><div id="manager" class="section hide"></div></div>':'<div class="section"><span class="badge ok">برنامج نقدي — لا توجد أقساط</span></div>')+
