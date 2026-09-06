@@ -18,6 +18,8 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
 .actions{display:flex;gap:6px;flex-wrap:wrap}.msg{padding:10px;border-radius:10px;margin:12px 0;font-size:13px}.ok{background:#edf8f3;color:#116342}.err{background:#fff0f0;color:#a03434}.hidden{display:none!important}.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 @media(max-width:850px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}.tripcards{grid-template-columns:1fr}.wrap{padding:14px}}@media(max-width:520px){.stats{grid-template-columns:1fr}.row2{grid-template-columns:1fr}}
 @media(max-width:600px){.brand img{width:140px;height:68px}.top{padding:10px 12px}}
+
+.trip-modal{position:fixed;inset:0;background:rgba(7,43,73,.62);z-index:5000;display:flex;align-items:center;justify-content:center;padding:16px}.trip-modal-card{width:min(1100px,100%);max-height:94vh;overflow:auto;background:#f7f5ef;border-radius:24px;box-shadow:0 24px 80px rgba(0,0,0,.25)}.trip-modal-head{background:linear-gradient(135deg,#072b49,#0c3b63);color:#fff;padding:22px 24px;position:sticky;top:0;z-index:3}.trip-modal-head-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}.trip-modal-title{font-size:24px;font-weight:900;margin:0 0 6px}.trip-modal-sub{color:#dbe8f0;font-size:13px;line-height:1.8}.close-trip{border:1px solid rgba(255,255,255,.3);background:rgba(255,255,255,.1);color:#fff;border-radius:12px;padding:9px 12px;font-weight:900;cursor:pointer}.trip-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:16px}.trip-summary .box{background:#fff;border:1px solid var(--line);border-radius:15px;padding:13px}.trip-summary .box span{display:block;color:var(--muted);font-size:11px}.trip-summary .box b{display:block;color:var(--navy);font-size:22px;margin-top:5px}.trip-pilgrim-area{padding:0 16px 20px}.trip-pilgrim-toolbar{background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:12px}.trip-pilgrim-toolbar input{flex:1;min-width:220px}.trip-pilgrim-count{font-weight:900;color:var(--navy)}.pilgrim-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.pilgrim-card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;display:grid;grid-template-columns:62px 1fr;gap:12px;align-items:center;box-shadow:0 5px 18px rgba(0,0,0,.04)}.pilgrim-photo{width:62px;height:74px;border-radius:12px;object-fit:cover;background:#eef2f4;border:1px solid #dbe3e8}.pilgrim-name{font-weight:900;color:var(--navy);font-size:14px;line-height:1.5}.pilgrim-meta{font-size:11px;color:var(--muted);line-height:1.8;margin-top:3px}.pilgrim-actions{grid-column:1/-1;display:flex;gap:7px;flex-wrap:wrap;border-top:1px solid #edf0f2;padding-top:10px}.pilgrim-actions a{font-size:11px;padding:8px 10px;text-decoration:none}.visa-ok{background:#e7f6ef;color:#176644}.visa-pending{background:#fff2cf;color:#8a641c}.visa-bad{background:#ffe8e8;color:#a03434}.empty-pilgrims{background:#fff;border:1px dashed #cbd7de;border-radius:16px;padding:35px;text-align:center;color:var(--muted)}@media(max-width:850px){.pilgrim-grid{grid-template-columns:repeat(2,1fr)}.trip-summary{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.trip-modal{padding:0}.trip-modal-card{max-height:100vh;border-radius:0}.trip-modal-head{padding:17px}.trip-modal-title{font-size:19px}.pilgrim-grid{grid-template-columns:1fr}.trip-summary{grid-template-columns:1fr 1fr;padding:10px}.trip-pilgrim-area{padding:0 10px 15px}}
 </style>
 </head>
 <body class="auth-pending">
@@ -53,6 +55,26 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
 </form></section>
 </div></main>
 
+<div id="tripModal" class="trip-modal hidden" aria-hidden="true">
+  <div class="trip-modal-card">
+    <div class="trip-modal-head">
+      <div class="trip-modal-head-top">
+        <div><div id="tripModalTitle" class="trip-modal-title">معتمرو الرحلة</div><div id="tripModalSub" class="trip-modal-sub"></div></div>
+        <button class="close-trip" onclick="closeTripModal()">✕ إغلاق</button>
+      </div>
+    </div>
+    <div id="tripSummary" class="trip-summary"></div>
+    <div class="trip-pilgrim-area">
+      <div class="trip-pilgrim-toolbar">
+        <input id="tripPilgrimSearch" placeholder="🔎 ابحث باسم المعتمر أو رقم الجواز أو الهاتف">
+        <span id="tripPilgrimCount" class="trip-pilgrim-count">0 معتمر</span>
+        <a id="tripManageLink" class="btn primary" href="#">👥 إدارة المعتمرين</a>
+      </div>
+      <div id="tripPilgrimGrid" class="pilgrim-grid"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
 const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
@@ -68,6 +90,39 @@ function resetForm(){$('programForm').reset();$('id').value='';$('currency').val
 function fill(p){for(const k of ['id','title','departure_date','return_date','city_hotel','makkah_hotel','travel_type','price','installment_price','currency','seats_total','seats_available','services','description','status'])$(k).value=p[k]??'';$('formTitle').textContent='تعديل البرنامج';window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})}
 function statusName(s){return({draft:'مسودة',published:'منشور',full:'مكتمل',stopped:'متوقف',archived:'مؤرشف'})[s]||s}
 function esc(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
+let allProgramPilgrims=[];
+let activeTrip=null;
+function visaLabel(v){return v==='صادرة'?'<span class="badge visa-ok">الفيزا صادرة</span>':v==='مرفوضة'?'<span class="badge visa-bad">الفيزا مرفوضة</span>':'<span class="badge visa-pending">الفيزا قيد الإجراء</span>'}
+function moneyShort(n,c){return Number(n||0).toLocaleString('ar-IQ')+' '+(c==='IQD'?'د.ع':c||'')}
+function closeTripModal(){const m=$('tripModal');m.classList.add('hidden');m.setAttribute('aria-hidden','true');activeTrip=null}
+function renderTripPilgrims(){
+ const q=($('tripPilgrimSearch')?.value||'').trim().toLowerCase();
+ const list=allProgramPilgrims.filter(x=>{const hay=[x.full_name,x.passport_number,x.phone,x.profile_code].join(' ').toLowerCase();return !q||hay.includes(q)});
+ $('tripPilgrimCount').textContent=list.length+' معتمر';
+ $('tripPilgrimGrid').innerHTML=list.length?list.map(x=>{const img=x.photo_url||'';return `<article class="pilgrim-card"><img class="pilgrim-photo" src="${img}" onerror="this.style.visibility='hidden'" alt=""><div><div class="pilgrim-name">${esc(x.full_name||'—')}</div><div class="pilgrim-meta">🔖 ${esc(x.profile_code||'—')}<br>🛂 ${esc(x.passport_number||'—')}<br>${visaLabel(x.visa_status||'قيد الإجراء')}</div></div><div class="pilgrim-actions"><a class="btn ghost" href="./pilgrims.html?program=${encodeURIComponent(activeTrip.id)}">👤 فتح إدارة المعتمرين</a><button class="btn primary" onclick="openPilgrimFromTrip('${x.id}')">عرض البيانات</button></div></article>`}).join(''):'<div class="empty-pilgrims" style="grid-column:1/-1">لا يوجد معتمرون مطابقون للبحث في هذه الرحلة.</div>';
+}
+function openPilgrimFromTrip(id){window.location.href='./pilgrims.html?program='+encodeURIComponent(activeTrip.id)+'&pilgrim='+encodeURIComponent(id)}
+async function openTripPilgrims(id){
+ const p=window.__programs?.find(x=>x.id===id); if(!p)return;
+ activeTrip=p;
+ $('tripModalTitle').textContent='معتمرو الرحلة — '+(p.title||'');
+ $('tripModalSub').innerHTML='🗓 '+(p.departure_date||'غير محدد')+' &nbsp; · &nbsp; 🚌 '+esc(p.travel_type||'—')+'<br>🏨 المدينة: '+esc(p.city_hotel||'—')+' &nbsp; | &nbsp; مكة: '+esc(p.makkah_hotel||'—');
+ $('tripManageLink').href='./pilgrims.html?program='+encodeURIComponent(id);
+ $('tripPilgrimSearch').value='';
+ $('tripModal').classList.remove('hidden');$('tripModal').setAttribute('aria-hidden','false');
+ $('tripPilgrimGrid').innerHTML='<div class="empty-pilgrims" style="grid-column:1/-1">جاري تحميل المعتمرين…</div>';
+ const [{data:bs,error:be},{data:ps,error:pe}]=await Promise.all([db.from('bookings').select('id,program_id,status,total_amount,paid_amount,payment_type').eq('program_id',id),db.from('pilgrims').select('id,booking_id,full_name,phone,passport_number,profile_code,visa_status,photo_path').order('full_name')]);
+ if(be||pe){$('tripPilgrimGrid').innerHTML='<div class="empty-pilgrims" style="grid-column:1/-1;color:#a03434">تعذر تحميل بيانات المعتمرين.</div>';return}
+ const bookings=(bs||[]).filter(x=>x.status!=='cancelled');
+ const map=new Map(bookings.map(x=>[x.id,x]));
+ const people=(ps||[]).filter(x=>map.has(x.booking_id));
+ const total=people.length, cap=Number(p.seats_total||0), available=Math.max(cap-total,0), used=cap?Math.min(100,Math.round(total/cap*100)):0;
+ $('tripSummary').innerHTML=`<div class="box"><span>المعتمرون</span><b>${total}</b></div><div class="box"><span>إجمالي المقاعد</span><b>${cap}</b></div><div class="box"><span>المقاعد المتاحة</span><b>${available}</b></div><div class="box"><span>نسبة الإشغال</span><b>${used}%</b></div>`;
+ const paths=people.filter(x=>x.photo_path);
+ await Promise.all(paths.map(async x=>{try{const r=await db.storage.from('pilgrim-photos').createSignedUrl(x.photo_path,3600);x.photo_url=r.data?.signedUrl||''}catch(e){x.photo_url=''}}));
+ allProgramPilgrims=people; renderTripPilgrims();
+}
+
 async function loadPrograms(){
  const [{data,error},{data:bookings}] = await Promise.all([
    db.from('programs').select('*').order('departure_date',{ascending:true}),
@@ -75,17 +130,20 @@ async function loadPrograms(){
  ]);
  if(error)return msg($('listMsg'),error.message,'err');
  const B=bookings||[];
+ window.__programs=data;
  function render(){
    const q=($('tripSearch')?.value||'').trim().toLowerCase(), f=$('tripFilter')?.value||'all';
    const rows=data.filter(p=>{const hay=[p.title,p.city_hotel,p.makkah_hotel].join(' ').toLowerCase();return (f==='all'||p.status===f)&&(!q||hay.includes(q));});
    $('programRows').innerHTML=rows.map(p=>`<tr><td><b>${esc(p.title)}</b></td><td>${p.departure_date||'—'}</td><td>${esc(p.city_hotel||'—')}<br>${esc(p.makkah_hotel||'—')}</td><td><b>نقد:</b> ${Number(p.price||0).toLocaleString('ar-IQ')} ${p.currency==='IQD'?'د.ع':p.currency}<br><b>قسط:</b> ${Number(p.installment_price??p.price??0).toLocaleString('ar-IQ')} ${p.currency==='IQD'?'د.ع':p.currency}</td><td>${p.seats_available??0}/${p.seats_total??0}</td><td><span class="badge ${p.status}">${statusName(p.status)}</span></td><td><div class="actions"><button class="btn ghost" onclick='fill(${JSON.stringify(p)})'>تعديل</button><button class="btn danger" onclick="removeProgram('${p.id}')">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">لا توجد رحلات مطابقة.</td></tr>';
-   $('tripCards').innerHTML=rows.slice(0,6).map(p=>{const booked=B.filter(x=>x.program_id===p.id&&x.status!=='cancelled').length;const cap=Number(p.seats_total||0);const used=cap?Math.min(100,Math.round(booked/cap*100)):0;return `<div class="tripcard"><div class="triphead"><div><div class="triptitle">${esc(p.title)}</div><div class="tripmeta">🗓 ${p.departure_date||'غير محدد'} · 🚌 ${esc(p.travel_type||'—')}<br>🏨 ${esc(p.city_hotel||'—')} / ${esc(p.makkah_hotel||'—')}</div></div><span class="badge ${p.status}">${statusName(p.status)}</span></div><div class="progress"><i style="width:${used}%"></i></div><div class="tripfoot"><span>المحجوز <b>${booked}</b> من ${cap}</span><b>${used}% إشغال</b></div><div class="mini-actions"><a class="btn ghost" href="./pilgrims.html?program=${encodeURIComponent(p.id)}">👥 المعتمرون</a><button class="btn primary" onclick='fill(${JSON.stringify(p)})'>✏️ تعديل</button></div></div>`}).join('')||'<div class="empty">لا توجد رحلات.</div>';
+   $('tripCards').innerHTML=rows.slice(0,6).map(p=>{const booked=B.filter(x=>x.program_id===p.id&&x.status!=='cancelled').length;const cap=Number(p.seats_total||0);const used=cap?Math.min(100,Math.round(booked/cap*100)):0;return `<div class="tripcard"><div class="triphead"><div><div class="triptitle">${esc(p.title)}</div><div class="tripmeta">🗓 ${p.departure_date||'غير محدد'} · 🚌 ${esc(p.travel_type||'—')}<br>🏨 ${esc(p.city_hotel||'—')} / ${esc(p.makkah_hotel||'—')}</div></div><span class="badge ${p.status}">${statusName(p.status)}</span></div><div class="progress"><i style="width:${used}%"></i></div><div class="tripfoot"><span>المحجوز <b>${booked}</b> من ${cap}</span><b>${used}% إشغال</b></div><div class="mini-actions"><button class="btn gold" onclick="openTripPilgrims('${p.id}')">👥 المعتمرون</button><a class="btn ghost" href="./pilgrims.html?program=${encodeURIComponent(p.id)}">إدارة كاملة</a><button class="btn primary" onclick='fill(${JSON.stringify(p)})'>✏️ تعديل</button></div></div>`}).join('')||'<div class="empty">لا توجد رحلات.</div>';
    $('sAll').textContent=data.length;$('sPublished').textContent=data.filter(x=>x.status==='published').length;$('sSeats').textContent=data.reduce((a,x)=>a+Number(x.seats_total||0),0);$('sAvailable').textContent=data.reduce((a,x)=>a+Number(x.seats_available||0),0);
  }
  render();
  if($('tripSearch')) $('tripSearch').oninput=render;
  if($('tripFilter')) $('tripFilter').onchange=render;
 }
+$('tripPilgrimSearch')?.addEventListener('input',renderTripPilgrims);
+$('tripModal')?.addEventListener('click',e=>{if(e.target.id==='tripModal')closeTripModal()});
 $('programForm').onsubmit=async e=>{e.preventDefault();msg($('formMsg'),'جاري الحفظ...');const id=$('id').value;const payload={title:$('title').value.trim(),departure_date:$('departure_date').value||null,return_date:$('return_date').value||null,city_hotel:$('city_hotel').value.trim()||null,makkah_hotel:$('makkah_hotel').value.trim()||null,travel_type:$('travel_type').value,price:Number($('price').value||0),installment_price:Number($('installment_price').value||0),currency:$('currency').value,seats_total:Number($('seats_total').value||0),seats_available:Number($('seats_available').value||0),services:$('services').value.trim()||null,description:$('description').value.trim()||null,status:$('status').value};const r=id?await db.from('programs').update(payload).eq('id',id):await db.from('programs').insert(payload);if(r.error)return msg($('formMsg'),r.error.message,'err');msg($('formMsg'),'تم حفظ البرنامج بنجاح');resetForm();loadPrograms()}
 async function removeProgram(id){if(!confirm('حذف هذا البرنامج؟'))return;const{error}=await db.from('programs').delete().eq('id',id);if(error)return msg($('listMsg'),error.message,'err');loadPrograms()}
 db.auth.onAuthStateChange((_e,session)=>session?showAdmin():showLogin());
