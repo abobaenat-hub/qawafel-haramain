@@ -175,7 +175,7 @@ function render(){
  }).join('')||'<tr><td colspan="6" class="empty">لا توجد حجوزات.</td></tr>';
 }
 setToday();
-(async()=>{const s=await db.auth.getSession();document.body.classList.remove('auth-pending');if(s.data.session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}})();
+(async()=>{const s=await db.auth.getSession();if(s.data.session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load()}else{document.body.classList.remove('auth-pending')}})();
 </script>
 </body>
 </html>

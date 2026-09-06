@@ -55,7 +55,7 @@ const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 function msg(el,text,type='ok'){el.innerHTML=text?`<div class="msg ${type==='ok'?'ok':'err'}">${text}</div>`:''}
-async function showAdmin(){const{data,error}=await db.from('admin_users').select('role').eq('user_id',(await db.auth.getUser()).data.user.id).maybeSingle();if(error||!data){await db.auth.signOut();return showLogin('هذا الحساب ليس مخولًا لإدارة المنصة.')}$('loginView').classList.add('hidden');$('adminView').classList.remove('hidden');$('logout').classList.remove('hidden');loadPrograms()}
+async function showAdmin(){const u=(await db.auth.getUser()).data.user;if(!u){return showLogin()}const{data,error}=await db.from('admin_users').select('role').eq('user_id',u.id).maybeSingle();if(error||!data){await db.auth.signOut();return showLogin('هذا الحساب ليس مخولًا لإدارة المنصة.')}$('loginView').classList.add('hidden');$('adminView').classList.remove('hidden');$('logout').classList.remove('hidden');document.body.classList.remove('auth-pending');loadPrograms()}
 function showLogin(text=''){document.body.classList.remove('auth-pending');$('loginView').classList.remove('hidden');$('adminView').classList.add('hidden');$('logout').classList.add('hidden');if(text)msg($('loginMsg'),text,'err')}
 $('loginBtn').onclick=async()=>{msg($('loginMsg'),'');const{error}=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error)return msg($('loginMsg'),error.message,'err');showAdmin()}
 $('logout').onclick=async()=>{await db.auth.signOut();showLogin()}
@@ -68,7 +68,7 @@ async function loadPrograms(){const{data,error}=await db.from('programs').select
 $('programForm').onsubmit=async e=>{e.preventDefault();msg($('formMsg'),'جاري الحفظ...');const id=$('id').value;const payload={title:$('title').value.trim(),departure_date:$('departure_date').value||null,return_date:$('return_date').value||null,city_hotel:$('city_hotel').value.trim()||null,makkah_hotel:$('makkah_hotel').value.trim()||null,travel_type:$('travel_type').value,price:Number($('price').value||0),currency:$('currency').value,seats_total:Number($('seats_total').value||0),seats_available:Number($('seats_available').value||0),services:$('services').value.trim()||null,description:$('description').value.trim()||null,status:$('status').value};const r=id?await db.from('programs').update(payload).eq('id',id):await db.from('programs').insert(payload);if(r.error)return msg($('formMsg'),r.error.message,'err');msg($('formMsg'),'تم حفظ البرنامج بنجاح');resetForm();loadPrograms()}
 async function removeProgram(id){if(!confirm('حذف هذا البرنامج؟'))return;const{error}=await db.from('programs').delete().eq('id',id);if(error)return msg($('listMsg'),error.message,'err');loadPrograms()}
 db.auth.onAuthStateChange((_e,session)=>session?showAdmin():showLogin());
-(async()=>{const{data}=await db.auth.getSession();document.body.classList.remove('auth-pending');data.session?showAdmin():showLogin()})();
+(async()=>{const{data}=await db.auth.getSession();data.session?showAdmin():showLogin()})();
 </script>
 </body>
 </html>

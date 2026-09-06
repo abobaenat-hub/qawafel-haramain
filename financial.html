@@ -83,7 +83,7 @@ function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function msg(id,t,e=false){$(id).className='msg'+(e?' err':'');$(id).textContent=t||''}
 function badge(s){return '<span class="badge '+(s==='paid'?'ok':'')+'">'+(s==='paid'?'مسدد':'غير مكتمل')+'</span>'}
-async function admin(){document.body.classList.remove('auth-pending');
+async function admin(){
  const {data:{user}}=await db.auth.getUser();if(!user)return null;
  const {data,error}=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
  return error||!data?null:user;
@@ -170,6 +170,6 @@ $('addExpense').onclick=async()=>{
  }catch(e){msg('expenseMsg',e.message||'تعذر حفظ المصروف.',true)}
  finally{$('addExpense').disabled=false}
 };
-(async()=>{const{data:{session}}=await db.auth.getSession();document.body.classList.remove('auth-pending');if(session&&await admin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}})();
+(async()=>{const{data:{session}}=await db.auth.getSession();if(session&&await admin()){$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load()}else{document.body.classList.remove('auth-pending')}})();
 </script>
 </body></html>

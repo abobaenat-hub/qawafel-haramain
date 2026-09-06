@@ -108,7 +108,7 @@ function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function badge(s){return '<span class="badge '+(['paid','صادرة','مدفوع'].includes(String(s||''))?'ok':'')+'">'+esc(s||'قيد الإجراء')+'</span>'}
 
-async function isAdmin(){document.body.classList.remove('auth-pending');
+async function isAdmin(){
  const {data:{user}}=await db.auth.getUser();
  if(!user)return null;
  const {data,error}=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
@@ -123,7 +123,7 @@ async function login(){
   if(error)throw error;
   const u=await isAdmin();
   if(!u){await db.auth.signOut();throw Error('هذا الحساب غير مخول للإدارة.')}
-  $('login').classList.add('hide');$('app').classList.remove('hide');await load();
+  $('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load();
  }catch(e){msg('loginMsg',e.message||'تعذر تسجيل الدخول.',true)}
  finally{$('loginBtn').disabled=false}
 }
@@ -347,7 +347,7 @@ $('form').onsubmit=async e=>{
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 
-(async()=>{try{const{data:{session}}=await db.auth.getSession();document.body.classList.remove('auth-pending');if(session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}}catch(e){msg('loginMsg',e.message||'تعذر فحص الجلسة.',true)}})();
+(async()=>{try{const{data:{session}}=await db.auth.getSession();if(session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load()}else{document.body.classList.remove('auth-pending')}}catch(e){document.body.classList.remove('auth-pending');msg('loginMsg',e.message||'تعذر فحص الجلسة.',true)}})();
 </script>
 </body>
 </html>
