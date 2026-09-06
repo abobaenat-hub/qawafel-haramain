@@ -60,7 +60,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <div><label>الجنسية</label><input id="nat" value="عراقي"></div>
 <div><label>تاريخ الميلاد *</label><input id="birthDate" type="date" required><small id="ageHint" style="display:block;color:#6b7b88;margin-top:5px"></small></div>
 <div><label>رقم الجواز</label><input id="pass"></div>
-<div><label>انتهاء الجواز *</label><input id="pex" type="date" required aria-describedby="pexHint"><small id="pexHint" style="display:block;color:#6b7b88;margin-top:5px;font-weight:600">يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر.</small></div>
+<div><label>انتهاء الجواز *</label><input id="pex" type="date" required aria-describedby="pexHint" oninput="validatePassportExpiry(true)" onchange="validatePassportExpiry(true)"><small id="pexHint" style="display:block;color:#6b7b88;margin-top:5px;font-weight:600">يجب أن يكون الجواز صالحًا لمدة 7 أشهر على الأقل من تاريخ تثبيت المعتمر.</small><div id="pexStatus" style="display:none;margin-top:6px;padding:8px 10px;border-radius:8px;font-weight:800"></div></div>
 <div><label>صورة المعتمر *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير بالكاميرا<input id="photoCamera" type="file" accept="image/*" capture="user" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل من الهاتف<input id="photoUpload" type="file" accept="image/*" style="display:none"></label></div><small id="photoHint" style="display:block;color:#6b7b88;margin-top:5px">اختر التصوير بالكاميرا أو تحميل صورة من الهاتف.</small><img id="photoPreview" class="photo-preview hide" alt="معاينة الصورة"></div>
 <div><label>صورة الجواز *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير الجواز<input id="passportCamera" type="file" accept="image/*" capture="environment" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل من الهاتف<input id="passportUpload" type="file" accept="image/*" style="display:none"></label></div><small id="passportHint" style="display:block;color:#6b7b88;margin-top:5px">اختر تصوير الجواز بالكاميرا أو تحميل صورة الجواز من الهاتف.</small></div>
 <div id="guardianWrap" class="hide"><label>وكالة ولي الأمر للمعتمر دون 18 سنة *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير الوكالة<input id="guardianCamera" type="file" accept="image/*,application/pdf" capture="environment" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل الوكالة<input id="guardianUpload" type="file" accept="image/*,application/pdf" style="display:none"></label></div><small id="guardianHint" style="display:block;color:#a33;margin-top:5px">مطلوبة لأن عمر المعتمر أقل من 18 سنة.</small></div>
@@ -173,7 +173,6 @@ function render(){
  }).join('')||'<tr><td colspan="7">لا يوجد معتمرون.</td></tr>';
 }
 $('search').oninput=render;
-$('photo').onchange=()=>{const f=$('photo').files?.[0];const im=$('photoPreview');if(!f){im.classList.add('hide');im.removeAttribute('src');return}im.src=URL.createObjectURL(f);im.classList.remove('hide')};
 
 async function photoUrl(path){
  if(!path)return '';
@@ -282,6 +281,7 @@ function validatePassportExpiry(show=true){
    input.style.borderColor='';
    $('pexHint').style.color='#6b7b88';
    $('pexHint').textContent='الحد الأدنى لانتهاء الجواز: '+min+' — يجب أن تكون الصلاحية 7 أشهر كاملة على الأقل من تاريخ تثبيت المعتمر.';
+   const st=$('pexStatus'); if(st){st.style.display='none';st.textContent='';}
    if(saveBtn) saveBtn.disabled=false;
    return false;
  }
@@ -291,12 +291,14 @@ function validatePassportExpiry(show=true){
  input.style.backgroundColor=ok?'':'#fff2f2';
  $('pexHint').style.color=ok?'#176644':'#c62828';
  $('pexHint').textContent=ok?'✅ صلاحية الجواز مناسبة لمدة 7 أشهر من تاريخ التثبيت.':'❌ مرفوض فورًا: تاريخ انتهاء الجواز أقل من 7 أشهر. الحد الأدنى هو '+min+'.';
+ const st=$('pexStatus'); if(st){st.style.display='block';st.style.background=ok?'#e7f6ef':'#fff0f0';st.style.color=ok?'#176644':'#c62828';st.textContent=ok?'✅ الجواز مقبول':'❌ الجواز مرفوض — الحد الأدنى '+min;}
  if(saveBtn) saveBtn.disabled=!ok;
  return ok;
 }
 validatePassportExpiry(false);
 ['change','input','blur'].forEach(ev=>$('pex').addEventListener(ev,()=>validatePassportExpiry(true)));
 $('program').addEventListener('change',()=>validatePassportExpiry(true));
+document.getElementById('form').addEventListener('submit',function(e){ if(!validatePassportExpiry(true)){ e.preventDefault(); e.stopImmediatePropagation(); return false; } }, true);
 $('form').onsubmit=async e=>{
  e.preventDefault();msg('formMsg','جاري التحقق من البيانات...');
  const pr=PR.find(x=>x.id===$('program').value);if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);
