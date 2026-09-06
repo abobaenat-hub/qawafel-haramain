@@ -25,7 +25,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 @media print{.top,#login,.noPrint,#app>.stats,#app>.grid{display:none!important}.panel{box-shadow:none;border:0}}
 
 .badge-tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.badge-tools select{max-width:360px}.photo-preview{width:90px;height:110px;border:1px dashed #b9c7d0;border-radius:10px;object-fit:cover;background:#f5f7f8;display:block;margin-top:7px}.badge-grid{display:grid;grid-template-columns:1fr 1fr;gap:8mm;padding:8mm}.print-badge{width:90mm;height:60mm;border:1px solid #d8dde2;border-radius:4mm;background:#fff;position:relative;overflow:hidden;padding:5mm;box-shadow:0 2px 8px #0001;page-break-inside:avoid}.print-badge .btop{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #d9bd75;padding-bottom:2.5mm;margin-bottom:2.5mm}.print-badge .logo-text{font-weight:900;color:#0c3b63;font-size:4mm}.print-badge .sub{font-size:2.2mm;color:#8b6b25;margin-top:1mm}.print-badge .body{display:grid;grid-template-columns:25mm 1fr 17mm;gap:3mm;align-items:center}.print-badge .photo{width:25mm;height:31mm;border-radius:2mm;object-fit:cover;border:1px solid #ccd7df}.print-badge .name{font-weight:900;font-size:4.2mm;color:#072b49;margin-bottom:2mm}.print-badge .line{font-size:2.6mm;margin:1.2mm 0;color:#36566a}.print-badge .line b{color:#0c3b63}.print-badge .qr{width:17mm;height:17mm}.print-badge .foot{position:absolute;bottom:0;right:0;left:0;background:#072b49;color:#fff;font-size:2.3mm;padding:2mm 4mm;display:flex;justify-content:space-between}.print-only{display:none}@media print{body.printing-badges>*{display:none!important}.print-only{display:block!important}.badge-grid{padding:8mm}.print-badge{box-shadow:none}}
-.danger{background:#fff0f0!important;color:#a43b3b!important;border:1px solid #f0c9c9!important}.danger:hover{filter:brightness(.98)}@media(max-width:600px){#rows td:last-child{min-width:170px}.table table{font-size:12px}}
+.archive-box{background:#f8fbfd;border:1px solid #d9e3e8;border-radius:14px;padding:14px;margin:15px 0}.archive-box h3{margin:0 0 8px;color:var(--n)}.modal{position:fixed;inset:0;background:#0008;display:flex;align-items:center;justify-content:center;padding:18px;z-index:9999}.modal-card{background:#fff;border-radius:18px;max-width:620px;width:100%;max-height:90vh;overflow:auto;padding:20px;box-shadow:0 20px 60px #0005}.modal-card .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.danger{background:#fff0f0!important;color:#a43b3b!important;border:1px solid #f0c9c9!important}.danger:hover{filter:brightness(.98)}@media(max-width:600px){#rows td:last-child{min-width:170px}.table table{font-size:12px}}
 </style>
 </head>
 <body class="auth-pending">
@@ -53,7 +53,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <section class="panel">
 <h2>إضافة معتمر</h2><div id="formMsg"></div>
 <form id="form">
-<label>الاسم الرباعي *</label><input id="name" required autocomplete="off"><div id="nameDuplicate" style="display:none;margin-top:6px;padding:9px 11px;border-radius:9px;font-weight:800"></div>
+<label>الاسم الرباعي *</label><input id="name" required autocomplete="off"><div id="nameDuplicate" style="display:none;margin-top:6px;padding:11px 12px;border-radius:11px;font-weight:800"></div><div id="archiveMatchBox" class="hide" style="margin-top:8px;padding:12px;border:1px solid #d9b35b;background:#fffaf0;border-radius:12px"><div id="archiveMatchText" style="color:#7a5a14;font-weight:800"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button id="useArchiveBtn" type="button" class="btn p">نعم، أضفه للرحلة الحالية</button><button id="newClientBtn" type="button" class="btn w">لا، إلغاء</button></div></div>
 <label>البرنامج *</label><select id="program" required><option value="">جاري التحميل...</option></select>
 <label>نوع البرنامج *</label><select id="paymentType" required><option value="cash">نقد</option><option value="installment">قسط</option></select>
 <div id="installmentDetails" class="hide" style="grid-column:1/-1;border:1px solid #d9e3e8;border-radius:14px;padding:14px;background:#f8fafc;margin-top:2px"><div style="font-weight:900;color:#0c3b63;margin-bottom:10px">تفاصيل التقسيط</div><div id="installmentPriceHint" style="font-size:13px;color:#8b6b25;margin-bottom:10px;font-weight:700"></div><div class="cols"><div><label>إجمالي البرنامج</label><div id="installmentTotal" class="moneyBox">—</div></div><div><label>المبلغ المدفوع الآن</label><input id="initial" type="number" min="0" value="0"></div><div><label>المبلغ المتبقي</label><div id="installmentRemaining" class="moneyBox">—</div></div><div><label>عدد الأقساط</label><select id="installmentCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div><div><label>القسط الشهري التقريبي</label><div id="monthlyAmount" class="moneyBox">—</div></div><div><label>آخر قسط</label><div id="lastInstallment" class="moneyBox">—</div></div></div><small style="display:block;color:#6b7780;margin-top:9px">يتحدث المبلغ المتبقي والقسط الشهري تلقائيًا عند تغيير الدفعة الأولى أو عدد الأقساط.</small></div>
@@ -76,6 +76,10 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 </form>
 </section>
 
+<section class="panel archive-box noPrint">
+<h3>♻️ العملاء السابقون</h3>
+<p style="margin:6px 0;color:#6b7780">عند إدخال اسم معتمر مسجل سابقًا، سيكتشفه النظام تلقائيًا ويعرض خيار إضافته إلى الرحلة الحالية مع استرجاع بيانات ملفه من الأرشيف.</p>
+</section>
 <section class="panel">
 <h2>قائمة المعتمرين</h2><div class="badge-tools noPrint"><select id="badgeProgram"><option value="">اختر الرحلة لطباعة الباجات</option></select><button id="printTripBadges" class="btn p">🎫 طباعة باجات الرحلة كاملة</button></div><input id="search" placeholder="بحث بالاسم أو الهاتف أو الجواز أو رمز الملف">
 <div id="listMsg"></div>
@@ -101,41 +105,64 @@ const $=id=>document.getElementById(id);
     if(birthBox && birthBox.parentElement) birthBox.parentElement.insertBefore(minor, birthBox.nextSibling);
   }
 })();
-let P=[],B=[],PR=[],I=[];
+let P=[],B=[],PR=[],I=[],A=[];
 let nameDuplicate=false;
 let nameCheckTimer=null;
 function normalizeName(v){
  return String(v||'').toLowerCase().replace(/[أإآ]/g,'ا').replace(/ى/g,'ي').replace(/ة/g,'ه').replace(/[\u064B-\u065F\u0670]/g,'').replace(/\s+/g,' ').trim();
 }
+let archiveMatch=null;
+let archiveConfirmed=false;
 function showNameDuplicate(existsName){
  const box=$('nameDuplicate'); if(!box)return;
- nameDuplicate=!!existsName;
- box.style.display='block';
- box.style.background='#fff0f0'; box.style.color='#b3261e'; box.style.border='1px solid #efb4b0';
- box.textContent='❌ هذا الاسم موجود سابقًا في أرشيف المعتمرين'+(existsName?' — '+existsName:'')+'، ولا يمكن تسجيله مرة أخرى.';
- const btn=$('form')?.querySelector('button[type=submit]'); if(btn)btn.disabled=nameDuplicate;
+ box.style.display='block'; box.style.background='#fff0f0'; box.style.color='#b3261e'; box.style.border='1px solid #efb4b0';
+ box.textContent='هذا الاسم مسجل كعميل سابق في أرشيف المعتمرين: '+(existsName||'')+' .';
 }
 function clearNameDuplicate(){
  const box=$('nameDuplicate'); if(box){box.style.display='none';box.textContent='';}
- nameDuplicate=false; const btn=$('form')?.querySelector('button[type=submit]'); if(btn)btn.disabled=false;
+ nameDuplicate=false;
 }
+function showArchiveMatch(a){
+ const sameConfirmed=!!(archiveConfirmed && archiveMatch && a && archiveMatch.id===a.id); archiveMatch=a||null; archiveConfirmed=sameConfirmed; nameDuplicate=false;
+ const box=$('archiveMatchBox'), text=$('archiveMatchText');
+ if(!box||!text)return;
+ if(!a){box.classList.add('hide');text.textContent='';return;}
+ box.classList.remove('hide');
+ text.innerHTML='🟡 هذا الاسم مسجل كعميل سابق: <b>'+esc(a.full_name)+'</b><br><span style="font-weight:600;color:#6b7780">هل ترغب بإضافته إلى الرحلة الحالية؟ سيسترجع النظام بياناته المحفوظة من الأرشيف.</span>';
+}
+function clearArchiveMatch(){archiveMatch=null;archiveConfirmed=false;const box=$('archiveMatchBox');if(box)box.classList.add('hide');}
+function applyArchiveData(a){
+ if(!a)return;
+ archiveConfirmed=true; archiveMatch=a;
+ if($('phone'))$('phone').value=a.phone||'';
+ if($('nat'))$('nat').value=a.nationality||'عراقي';
+ if($('pass'))$('pass').value=a.passport_number||'';
+ if($('pex'))$('pex').value=a.passport_expiry||'';
+ if($('birthDate'))$('birthDate').value=a.birth_date||'';
+ if($('notes') && a.notes && !$('notes').value)$('notes').value=a.notes;
+ if(a.visa_status && $('visa'))$('visa').value=a.visa_status;
+ if(a.visa_number && $('vnum'))$('vnum').value=a.visa_number;
+ clearNameDuplicate();
+ const box=$('archiveMatchBox'), text=$('archiveMatchText');
+ if(box&&text){box.classList.remove('hide');text.innerHTML='✅ تم اختيار العميل السابق <b>'+esc(a.full_name)+'</b>. أكمل بيانات الرحلة والدفع فقط.';box.style.background='#e9f7ef';box.style.borderColor='#b8dec9';}
+ updateMinor();
+ validatePassportExpiry(true);
+}
+$('useArchiveBtn')?.addEventListener('click',()=>applyArchiveData(archiveMatch));
+$('newClientBtn')?.addEventListener('click',()=>{archiveConfirmed=false;archiveMatch=null;clearNameDuplicate();clearArchiveMatch();msg('formMsg','تم إلغاء إضافة العميل السابق. إذا أردت تسجيل شخص جديد، أدخل اسمًا مختلفًا.',false);$('name')?.focus();});
 async function checkDuplicateName(){
  const raw=$('name')?.value||'', n=normalizeName(raw);
- if(!n){clearNameDuplicate();return false;}
- if(n.split(' ').filter(Boolean).length<2){clearNameDuplicate();return false;}
+ if(!n){clearNameDuplicate();clearArchiveMatch();return false;}
+ if(n.split(' ').filter(Boolean).length<2){clearNameDuplicate();clearArchiveMatch();return false;}
  try{
-   const [a,pil]=await Promise.all([
-     db.from('pilgrim_archive').select('full_name').limit(5000),
-     db.from('pilgrims').select('full_name').limit(5000)
-   ]);
-   if(a.error)throw a.error; if(pil.error)throw pil.error;
-   const all=[...(a.data||[]),...(pil.data||[])];
-   const hit=all.find(x=>normalizeName(x.full_name)===n);
-   if(hit){showNameDuplicate(hit.full_name);return true;}
-   clearNameDuplicate();return false;
+   const {data,error}=await db.from('pilgrim_archive').select('*').limit(5000);
+   if(error)throw error;
+   const hit=(data||[]).find(x=>normalizeName(x.full_name)===n);
+   if(hit){showNameDuplicate(hit.full_name);showArchiveMatch(hit);return true;}
+   clearNameDuplicate();clearArchiveMatch();return false;
  }catch(e){
-   console.warn('duplicate name check',e);
-   clearNameDuplicate();return false;
+   console.warn('archive name check',e);
+   clearNameDuplicate();clearArchiveMatch();return false;
  }
 }
 function scheduleNameCheck(){
@@ -220,15 +247,16 @@ $('initial').oninput=()=>{if($('paymentType').value==='installment')buildSchedul
 $('firstInstallmentDate').onchange=()=>{if($('paymentType').value==='installment')buildSchedule()};
 
 async function load(){
- const [a,b,c,i]=await Promise.all([
+ const [a,b,c,i,ar]=await Promise.all([
   db.from('pilgrims').select('*').order('created_at',{ascending:false}),
   db.from('bookings').select('*').order('created_at',{ascending:false}),
   db.from('programs').select('*').order('departure_date'),
-  db.from('installment_plans').select('*').order('due_date')
+  db.from('installment_plans').select('*').order('due_date'),
+  db.from('pilgrim_archive').select('*').order('full_name')
  ]);
- const er=[a,b,c,i].find(x=>x.error);
+ const er=[a,b,c,i,ar].find(x=>x.error);
  if(er)return msg('listMsg',er.error.message,true);
- P=a.data||[];B=b.data||[];PR=c.data||[];I=i.data||[];
+ P=a.data||[];B=b.data||[];PR=c.data||[];I=i.data||[];A=ar.data||[];
  $('pc').textContent=P.length;$('bc').textContent=B.length;
  $('paid').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('rem').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
@@ -237,6 +265,7 @@ async function load(){
  render();
 }
 
+function archiveAlreadyInProgram(archiveId,programId){return P.some(p=>p.archive_id===archiveId && B.some(b=>b.id===p.booking_id && b.program_id===programId && b.status!=='cancelled'));}
 function render(){
  const q=$('search').value.trim().toLowerCase();
  $('rows').innerHTML=P.filter(x=>[x.full_name,x.phone,x.passport_number,x.profile_code].some(v=>String(v||'').toLowerCase().includes(q))).map(x=>{
@@ -402,8 +431,8 @@ validatePassportExpiry(false);
 $('program').addEventListener('change',()=>validatePassportExpiry(true));
 document.getElementById('form').addEventListener('submit',function(e){ if(!validatePassportExpiry(true)){ e.preventDefault(); e.stopImmediatePropagation(); return false; } }, true);
 $('form').onsubmit=async e=>{
- e.preventDefault();if(nameDuplicate || await checkDuplicateName()){return msg('formMsg','❌ هذا الاسم موجود سابقًا في أرشيف المعتمرين ولا يمكن تسجيله مرة أخرى.',true);}msg('formMsg','جاري التحقق من البيانات...');
- const pr=PR.find(x=>x.id===$('program').value);if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);
+ e.preventDefault();await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('formMsg','⚠️ هذا الاسم مسجل كعميل سابق. اختر: نعم، أضفه للرحلة الحالية، أو لا، إلغاء.',true);}if(nameDuplicate)return msg('formMsg','❌ لا يمكن المتابعة بهذا الاسم.',true);msg('formMsg','جاري التحقق من البيانات...');
+ const pr=PR.find(x=>x.id===$('program').value);if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);if(archiveConfirmed&&archiveMatch&&archiveAlreadyInProgram(archiveMatch.id,pr.id))return msg('formMsg','❌ هذا العميل مضاف بالفعل إلى الرحلة الحالية.',true);
  const paymentType=$('paymentType').value, total=Number((paymentType==='installment'?pr.installment_price:pr.price)||0),passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date,paid=Math.min(Math.max(Number($('initial').value||0),0),total);
  const remaining=total-paid;
  if(!passportExpiry)return msg('formMsg','أدخل تاريخ انتهاء الجواز.',true);
@@ -415,13 +444,13 @@ $('form').onsubmit=async e=>{
  const photoFile=$('photoCamera').files?.[0] || $('photoUpload').files?.[0]; if(!photoFile)return msg('formMsg','أرفق الصورة الشخصية: صوّر بالكاميرا أو حمّل ملفًا من الهاتف.',true);
  try{
   const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,total_amount:total,paid_amount:paid,status:remaining?'pending':'paid',notes:'حجز من إدارة المعتمرين',payment_type:paymentType};
-  let photoPath=null; if(photoFile){const ext=(photoFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; photoPath='pilgrim-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; const upPhoto=await db.storage.from('pilgrim-photos').upload(photoPath,photoFile,{upsert:false,contentType:photoFile.type||'image/jpeg'}); if(upPhoto.error)throw upPhoto.error;}
-  const pext=(passportFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; const passportImagePath='passport-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+pext; const upPassport=await db.storage.from('pilgrim-photos').upload(passportImagePath,passportFile,{upsert:false,contentType:passportFile.type||'image/jpeg'}); if(upPassport.error)throw upPassport.error;
-  let guardianPath=null; if(guardianFile){const gext=(guardianFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; guardianPath='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+gext; const ug=await db.storage.from('pilgrim-photos').upload(guardianPath,guardianFile,{upsert:false,contentType:guardianFile.type||'application/octet-stream'}); if(ug.error)throw ug.error;}
+  let photoPath=archiveConfirmed?(archiveMatch?.photo_path||null):null; if(photoFile){const ext=(photoFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; photoPath='pilgrim-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; const upPhoto=await db.storage.from('pilgrim-photos').upload(photoPath,photoFile,{upsert:false,contentType:photoFile.type||'image/jpeg'}); if(upPhoto.error)throw upPhoto.error;}
+  let passportImagePath=archiveConfirmed?(archiveMatch?.passport_image_path||null):null; if(passportFile){const pext=(passportFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; passportImagePath='passport-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+pext; const upPassport=await db.storage.from('pilgrim-photos').upload(passportImagePath,passportFile,{upsert:false,contentType:passportFile.type||'image/jpeg'}); if(upPassport.error)throw upPassport.error;}
+  let guardianPath=archiveConfirmed?(archiveMatch?.guardian_authorization_path||null):null; if(guardianFile){const gext=(guardianFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; guardianPath='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+gext; const ug=await db.storage.from('pilgrim-photos').upload(guardianPath,guardianFile,{upsert:false,contentType:guardianFile.type||'application/octet-stream'}); if(ug.error)throw ug.error;}
   const br=await db.from('bookings').insert(booking).select('id').single();if(br.error)throw br.error;
-  const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,nationality:$('nat').value.trim()||'عراقي',passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,profile_code:'QH-'+Date.now().toString().slice(-8)};
+  const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,nationality:$('nat').value.trim()||'عراقي',passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8)};
   const pp=await db.from('pilgrims').insert(payload).select('id,archive_id').single();if(pp.error){await db.from('bookings').delete().eq('id',br.data.id);throw pp.error}
-  if(pp.data?.archive_id) await db.from('pilgrim_archive').update({photo_path:photoPath,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value}).eq('id',pp.data.archive_id);
+  if(pp.data?.archive_id){const au={phone:$('phone').value.trim()||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,nationality:$('nat').value.trim()||'عراقي',birth_date:$('birthDate').value,guardian_accompanied:accompanied};if(photoPath)au.photo_path=photoPath;if(passportImagePath)au.passport_image_path=passportImagePath;if(guardianPath)au.guardian_authorization_path=guardianPath;await db.from('pilgrim_archive').update(au).eq('id',pp.data.archive_id);}
   if(paid>0)await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),method:'دفعة أولى',notes:'دفعة أولى'});
   if(paymentType==='installment'&&remaining>0){
    const amounts=[...document.querySelectorAll('.instAmount')].map(x=>Number(x.value||0));
@@ -434,7 +463,7 @@ $('form').onsubmit=async e=>{
    const ir=await db.from('installment_plans').insert(rows);
    if(ir.error)throw ir.error;
   }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();clearNameDuplicate();$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('nat').value='عراقي';$('initial').value=0;$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 
