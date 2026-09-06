@@ -189,6 +189,11 @@ function canSeeFinance(){
  const r=STAFF?.role, ps=STAFF?.permissions||[];
  return r==='super_admin'||r==='manager'||r==='finance'||ps.includes('super_admin')||ps.includes('manager')||ps.includes('finance');
 }
+function safeDisplayName(){
+ const n=String(STAFF?.full_name||'').trim();
+ if(!n || /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(n) || /@/.test(n)) return STAFF?.role==='super_admin'?'المدير العام':STAFF?.role==='manager'?'المدير':'المستخدم';
+ return n;
+}
 function setupAccess(){
  const finance=canSeeFinance();
  $('financeBox').classList.toggle('hide',!finance);
@@ -196,7 +201,8 @@ function setupAccess(){
  $('roleNote').classList.remove('hide');
  const label=STAFF?.role==='super_admin'?'المدير العام':STAFF?.role==='manager'?'المدير':'الموظف';
  $('roleNote').textContent='صلاحية الدخول: '+label;
- $('accountName').textContent=STAFF?.full_name||STAFF?.email||'المستخدم'; $('welcomeName').textContent='أهلاً '+(STAFF?.full_name||'بك');
+ const displayName=safeDisplayName();
+ $('accountName').textContent=displayName; $('welcomeName').textContent='أهلاً '+displayName;
  $('accountRole').textContent=label+' · الحساب متصل';
 }
 async function signIn(){document.body.classList.remove('auth-pending');
