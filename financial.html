@@ -32,7 +32,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <label>كلمة المرور</label><input id="password" type="password">
 <br><button id="loginBtn" class="p" style="width:100%">دخول</button></div>
 
-<main id="app" class="wrap hide"><section class="financeHero"><h1>💰 المركز المالي</h1><p>اعرف تكلفة كل رحلة، مبيعاتها، مصروفاتها، وربحها الحقيقي قبل وبعد التحصيل.</p><div class="profitGrid"><div class="profitCard"><small>قيمة المبيعات</small><b id="heroSales">0 د.ع</b></div><div class="profitCard"><small>تكلفة شراء الرحلات</small><b id="heroCost">0 د.ع</b></div><div class="profitCard"><small>المصروفات الإضافية</small><b id="heroExpenses">0 د.ع</b></div><div class="profitCard"><small>صافي الربح المتوقع</small><b id="heroNet">0 د.ع</b></div></div></section>
+<main id="app" class="wrap hide"><section class="financeHero"><h1>💰 المركز المالي</h1><p>اعرف تكلفة كل رحلة، مبيعاتها، مصروفاتها، وربحها الحقيقي قبل وبعد التحصيل.</p><div class="profitGrid"><div class="profitCard"><small>قيمة المبيعات</small><b id="heroSales">0 د.ع</b></div><div class="profitCard"><small>تكلفة الجملة على المبيعات</small><b id="heroCost">0 د.ع</b></div><div class="profitCard"><small>المصروفات الإضافية</small><b id="heroExpenses">0 د.ع</b></div><div class="profitCard"><small>صافي الربح المتوقع</small><b id="heroNet">0 د.ع</b></div></div></section>
 <div class="stats">
 <div class="stat">إجمالي المبيعات<b id="sales">0 د.ع</b></div>
 <div class="stat">المقبوض<b id="received">0 د.ع</b></div>
@@ -51,17 +51,17 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 
 <section class="panel purchaseBox">
   <div class="purchaseTitle">
-    <div><h2>🏷️ تسجيل تكلفة شراء الرحلة</h2><div class="purchaseHint">هنا تسجل سعر الجملة الذي تدفعه قوافل الحرمين لمورّد الرحلة. بعد الحفظ يدخل تلقائيًا في حساب الربح ولا يُحسب المقبوض بدلًا عنه.</div></div>
+    <div><h2>🏷️ تسجيل تكلفة شراء الرحلة</h2><div class="purchaseHint">هنا تسجل سعر الجملة الذي تدفعه قوافل الحرمين عن المعتمر الواحد في هذه الرحلة. بعد الحفظ يدخل تلقائيًا في حساب الربح الفعلي لكل معتمر والرحلة.</div></div>
     <span class="badge" style="background:#fff2cf;color:#8a641c">تكلفة الشراء</span>
   </div>
   <div id="purchaseMsg" class="purchaseMsg"></div>
   <div class="purchaseGrid">
     <div><label class="purchaseLabel">اختر الرحلة</label><select id="purchaseProgram"><option value="">اختر الرحلة...</option></select></div>
-    <div><label class="purchaseLabel">سعر الجملة علينا</label><input id="purchaseAmount" type="number" min="0" placeholder="مثلاً 25000000"></div>
+    <div><label class="purchaseLabel">تكلفة المعتمر علينا (سعر الجملة)</label><input id="purchaseAmount" type="number" min="0" placeholder="مثلاً 625000"></div>
     <div><label class="purchaseLabel">العملة</label><select id="purchaseCurrency"><option value="IQD">دينار عراقي</option><option value="SAR">ريال سعودي</option><option value="USD">دولار</option></select></div>
   </div>
   <div id="purchasePreview" class="purchasePreview"></div>
-  <div class="purchaseWarn">⚠️ هذه التكلفة هي تكلفة شراء الرحلة كاملة من المورّد، وليست سعر بيع المعتمر.</div>
+  <div class="purchaseWarn">⚠️ أدخل تكلفة <b>المعتمر الواحد</b> علينا من المورّد (سعر الجملة)، وليس إجمالي الرحلة.</div>
   <button id="savePurchase" class="p" style="margin-top:13px">💾 حفظ تكلفة الرحلة</button>
 </section>
 
@@ -134,7 +134,7 @@ async function load(){
  const late=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today).reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0);
  $('late').textContent=money(late);
  const salesTotal=B.reduce((s,x)=>s+Number(x.total_amount||0),0);
-  const purchaseTotal=PR.reduce((s,x)=>s+Number(x.purchase_cost||0),0);
+  const purchaseTotal=B.reduce((s,b)=>{const pr=PR.find(x=>x.id===b.program_id);return s+Number(pr?.purchase_cost||0)*Math.max(Number(b.passengers_count||1),1)},0);
   const expenseTotal=E.reduce((s,x)=>s+Number(x.amount||0),0);
   const netExpected=salesTotal-purchaseTotal-expenseTotal;
   $('profit').textContent=money(netExpected);
@@ -154,20 +154,16 @@ function updatePurchasePreview(){
  if(!pr){$('purchaseAmount').value='';$('purchaseCurrency').value='IQD';$('purchasePreview').innerHTML='';return;}
  $('purchaseAmount').value=Number(pr.purchase_cost||0)||'';
  $('purchaseCurrency').value=pr.purchase_cost_currency||pr.currency||'IQD';
- const seats=Number(pr.seats_total||0), cost=Number(pr.purchase_cost||0), sold=Math.max(seats-Number(pr.seats_available||0),0);
- const costSeat=seats?cost/seats:0;
- const sales=B.filter(b=>b.program_id===pr.id).reduce((s,b)=>s+Number(b.total_amount||0),0);
- const gross=sales-cost;
- $('purchasePreview').innerHTML='<div class="purchaseMetric"><small>تكلفة الرحلة الحالية</small><b>'+money(cost)+'</b></div><div class="purchaseMetric"><small>تكلفة المقعد</small><b>'+money(costSeat)+'</b></div><div class="purchaseMetric profit"><small>الربح الإجمالي المتوقع</small><b>'+money(gross)+'</b></div>';
+ const costSeat=Number(pr.purchase_cost||0); const sold=B.filter(b=>b.program_id===pr.id).reduce((s,b)=>s+Math.max(Number(b.passengers_count||1),1),0); const totalCost=sold*costSeat; const sales=B.filter(b=>b.program_id===pr.id).reduce((s,b)=>s+Number(b.total_amount||0),0); const gross=sales-totalCost; $('purchasePreview').innerHTML='<div class="purchaseMetric"><small>تكلفة المعتمر الواحد</small><b>'+money(costSeat)+'</b></div><div class="purchaseMetric"><small>إجمالي تكلفة المبيعات الحالية</small><b>'+money(totalCost)+'</b></div><div class="purchaseMetric profit"><small>الربح الإجمالي الحالي</small><b>'+money(gross)+'</b></div>';
 }
 $('purchaseProgram').onchange=updatePurchasePreview;
-$('purchaseAmount').oninput=()=>{const pr=PR.find(x=>x.id===$('purchaseProgram').value);if(!pr)return;const seats=Number(pr.seats_total||0),cost=Number($('purchaseAmount').value||0),sales=B.filter(b=>b.program_id===pr.id).reduce((s,b)=>s+Number(b.total_amount||0),0);$('purchasePreview').innerHTML='<div class="purchaseMetric"><small>تكلفة الرحلة الحالية</small><b>'+money(cost)+'</b></div><div class="purchaseMetric"><small>تكلفة المقعد</small><b>'+money(seats?cost/seats:0)+'</b></div><div class="purchaseMetric profit"><small>الربح الإجمالي المتوقع</small><b>'+money(sales-cost)+'</b></div>';};
+$('purchaseAmount').oninput=()=>{const pr=PR.find(x=>x.id===$('purchaseProgram').value);if(!pr)return;const cost=Number($('purchaseAmount').value||0),sold=B.filter(b=>b.program_id===pr.id).reduce((s,b)=>s+Math.max(Number(b.passengers_count||1),1),0),totalCost=sold*cost,sales=B.filter(b=>b.program_id===pr.id).reduce((s,b)=>s+Number(b.total_amount||0),0);$('purchasePreview').innerHTML='<div class="purchaseMetric"><small>تكلفة المعتمر الواحد</small><b>'+money(cost)+'</b></div><div class="purchaseMetric"><small>إجمالي تكلفة المبيعات الحالية</small><b>'+money(totalCost)+'</b></div><div class="purchaseMetric profit"><small>الربح الإجمالي الحالي</small><b>'+money(sales-totalCost)+'</b></div>';};
 $('savePurchase').onclick=async()=>{
  const id=$('purchaseProgram').value, amount=Number($('purchaseAmount').value||0), currency=$('purchaseCurrency').value;
  if(!id)return msg('purchaseMsg','اختر الرحلة أولًا.',true);
  if(amount<0)return msg('purchaseMsg','أدخل تكلفة صحيحة.',true);
  $('savePurchase').disabled=true;msg('purchaseMsg','جاري حفظ تكلفة الشراء...');
- try{const {error}=await db.rpc('update_program_purchase_cost',{p_program_id:id,p_purchase_cost:amount,p_currency:currency});if(error)throw error;msg('purchaseMsg','تم تسجيل تكلفة شراء الرحلة بنجاح. الآن ستدخل تلقائيًا في حساب الربح.');await load();$('purchaseProgram').value=id;updatePurchasePreview();}
+ try{const {error}=await db.rpc('update_program_purchase_cost',{p_program_id:id,p_purchase_cost:amount,p_currency:currency});if(error)throw error;msg('purchaseMsg','تم تسجيل سعر الجملة للمعتمر الواحد بنجاح، وسيُحسب تلقائيًا على كل معتمر في هذه الرحلة.');await load();$('purchaseProgram').value=id;updatePurchasePreview();}
  catch(e){msg('purchaseMsg',e.message||'تعذر حفظ تكلفة الشراء.',true)}finally{$('savePurchase').disabled=false}
 };
 
@@ -188,7 +184,7 @@ function render(){
   return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+(b.payment_type==='installment'?'قسط':'نقد')+'</td><td>'+money(b.base_price||b.total_amount)+'</td><td>'+(Number(b.discount_amount||0)>0?'<span class="badge" style="background:#fff2cf;color:#8a641c">-'+money(b.discount_amount)+'</span>':'—')+'</td><td><b>'+money(b.total_amount)+'</b></td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+badge(b.status==='paid'?'paid':late?'late':'pending')+'</td></tr>'
  }).join('')||'<tr><td colspan="7">لا توجد نتائج.</td></tr>';
  const by={};B.forEach(b=>{by[b.program_id]??={total:0,paid:0,remaining:0,count:0};by[b.program_id].total+=Number(b.total_amount||0);by[b.program_id].paid+=Number(b.paid_amount||0);by[b.program_id].remaining+=Number(b.remaining_amount||0);by[b.program_id].count++});
- $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const cost=Number(pr.purchase_cost||0);const linkedExpenses=E.filter(e=>e.program_id===id).reduce((s,e)=>s+Number(e.amount||0),0);const gross=x.total-cost;const net=gross-linkedExpenses;const seats=Number(pr.seats_total||0);const sold=x.count;const costSeat=seats?cost/seats:0;const avgSale=sold?x.total/sold:0;const profitSeat=avgSale-costSeat;const cls=net>=0?'marginGood':'marginBad';return '<div class="tripCard"><div class="tripHead"><h4>'+esc(pr.title||'—')+'</h4><span class="badge '+(net>=0?'ok':'')+'">'+(net>=0?'رابحة':'خسارة')+'</span></div><div class="tripNums"><div class="tripNum"><small>المبيعات الفعلية</small><b>'+money(x.total)+'</b></div><div class="tripNum"><small>تكلفة الشراء</small><b>'+money(cost)+'</b></div><div class="tripNum"><small>الربح الإجمالي</small><b>'+money(gross)+'</b></div><div class="tripNum"><small>المصروفات المرتبطة</small><b>'+money(linkedExpenses)+'</b></div><div class="tripNum"><small>صافي الربح</small><b class="'+cls+'">'+money(net)+'</b></div><div class="tripNum"><small>تكلفة المقعد</small><b>'+money(costSeat)+'</b></div><div class="tripNum"><small>متوسط البيع/معتمر</small><b>'+money(avgSale)+'</b></div><div class="tripNum"><small>ربح المقعد التقريبي</small><b class="'+(profitSeat>=0?'marginGood':'marginBad')+'">'+money(profitSeat)+'</b></div><div class="tripNum"><small>المقبوض</small><b>'+money(x.paid)+'</b></div><div class="tripNum"><small>المتبقي</small><b>'+money(x.remaining)+'</b></div></div></div>'}).join('')||'لا توجد بيانات.';
+ $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0);const sold=x.count;const totalCost=sold*costSeat;const linkedExpenses=E.filter(e=>e.program_id===id).reduce((s,e)=>s+Number(e.amount||0),0);const gross=x.total-totalCost;const net=gross-linkedExpenses;const avgSale=sold?x.total/sold:0;const profitSeat=avgSale-costSeat;const cls=net>=0?'marginGood':'marginBad';return '<div class="tripCard"><div class="tripHead"><h4>'+esc(pr.title||'—')+'</h4><span class="badge '+(net>=0?'ok':'')+'">'+(net>=0?'رابحة':'خسارة')+'</span></div><div class="tripNums"><div class="tripNum"><small>المبيعات الفعلية</small><b>'+money(x.total)+'</b></div><div class="tripNum"><small>تكلفة الجملة على المعتمرين</small><b>'+money(totalCost)+'</b></div><div class="tripNum"><small>الربح الإجمالي</small><b>'+money(gross)+'</b></div><div class="tripNum"><small>المصروفات المرتبطة</small><b>'+money(linkedExpenses)+'</b></div><div class="tripNum"><small>صافي الربح</small><b class="'+cls+'">'+money(net)+'</b></div><div class="tripNum"><small>تكلفة المقعد</small><b>'+money(costSeat)+'</b></div><div class="tripNum"><small>متوسط البيع/معتمر</small><b>'+money(avgSale)+'</b></div><div class="tripNum"><small>ربح المقعد التقريبي</small><b class="'+(profitSeat>=0?'marginGood':'marginBad')+'">'+money(profitSeat)+'</b></div><div class="tripNum"><small>المقبوض</small><b>'+money(x.paid)+'</b></div><div class="tripNum"><small>المتبقي</small><b>'+money(x.remaining)+'</b></div></div></div>'}).join('')||'لا توجد بيانات.';
  const today=new Date().toISOString().slice(0,10);
  const due=I.filter(x=>x.status!=='paid'),late=due.filter(x=>x.due_date&&x.due_date<today);
  $('installmentReport').innerHTML='<p>أقساط غير مسددة: <b>'+due.length+'</b></p><p>قيمة غير مسددة: <b>'+money(due.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p><p>أقساط متأخرة: <b>'+late.length+'</b></p><p>قيمة المتأخر: <b>'+money(late.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p>';
