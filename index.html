@@ -33,6 +33,23 @@ body.auth-pending #login{display:none!important}
 .trip{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;background:#fbfcfd}.trip:last-child{margin-bottom:0}.trip-top{display:flex;justify-content:space-between;gap:10px}.trip b{font-size:10px}.badge{font-size:8px;padding:4px 7px;border-radius:999px;background:#edf8f3;color:var(--green);font-weight:900}.trip-meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:8px;margin-top:7px}.bar{height:6px;background:#edf1f3;border-radius:99px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--blue);border-radius:99px}
 @media(max-width:760px){.menu{display:grid}.quick{grid-template-columns:1fr 1fr}.brand-copy{display:block}.brand b{font-size:14px}.mark{width:118px;height:56px}.content{padding-top:14px}.head h1{font-size:23px}}
 @media(max-width:470px){.quick a{padding:9px}.quick i{width:28px;height:28px}.quick small{font-size:7px}.brand small{font-size:7px}}
+
+/* V37 — premium mobile drawer */
+.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:6px 7px 10px;border-bottom:1px solid var(--line);margin-bottom:4px}
+.drawer-brand{display:flex;align-items:center;gap:9px;min-width:0}.drawer-brand img{width:38px;height:38px;object-fit:contain;border:1px solid #e4d08b;border-radius:10px;background:#fff}.drawer-brand b{display:block;font-size:11px;color:var(--navy)}.drawer-brand small{display:block;color:var(--muted);font-size:8px;margin-top:2px}
+.drawer-close{width:34px;height:34px;border:1px solid var(--line);background:#f7f9fa;color:var(--navy);border-radius:10px;font-size:18px;cursor:pointer;display:grid;place-items:center}
+.nav{min-height:58px}.nav .ico{box-shadow:inset 0 0 0 1px #e7eef2}.nav.active{box-shadow:inset -3px 0 0 var(--gold)}
+.side-title.toggle{padding-top:13px;padding-bottom:7px}.side-title.toggle .chev{font-size:13px;color:#7e8d97}
+.sidefoot{background:#f7fafb;border:1px solid var(--line);border-radius:14px;margin:12px 2px 2px;padding:11px}.sidefoot b{font-size:10px}.sidefoot span{font-size:8px;line-height:1.7}
+.account-card{display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,#0b3556,#176b9b);color:#fff;border-radius:14px;padding:10px;margin:10px 2px 2px}.account-avatar{width:36px;height:36px;border-radius:11px;background:#ffffff18;border:1px solid #ffffff30;display:grid;place-items:center;font-weight:900}.account-card b{display:block;font-size:10px}.account-card small{display:block;font-size:8px;color:#dcecf5;margin-top:3px}.account-card .dot{margin-right:auto;width:7px;height:7px;border-radius:50%;background:#75d39b;box-shadow:0 0 0 4px #ffffff12}
+.overlay{opacity:0;pointer-events:none;transition:opacity .2s}.overlay.show{opacity:1;pointer-events:auto}
+@media(max-width:760px){
+ .side{width:282px;right:-292px;top:70px;padding:10px 10px 12px;box-shadow:-14px 0 34px #0003;transition:right .24s cubic-bezier(.2,.8,.2,1)}
+ .side.open{right:0}.content{min-height:calc(100vh - 70px)}
+ .drawer-head{padding-top:3px}.nav{padding:9px 8px}.nav b{font-size:10px}.nav small{font-size:8px}.ico{width:34px;height:34px}
+ .sidefoot{margin-top:10px}.account-card{margin-top:9px}
+}
+@media(max-width:380px){.side{width:268px;right:-278px}.drawer-brand b{font-size:10px}.nav{min-height:55px}}
 </style>
 </head>
 <body class="auth-pending">
@@ -55,6 +72,7 @@ body.auth-pending #login{display:none!important}
 
 <div id="app" class="shell hide">
   <aside id="side" class="side">
+    <div class="drawer-head"><div class="drawer-brand"><img src="./logo.png" alt="قوافل الحرمين"><div><b>المركز الإداري</b><small>قوافل الحرمين للحج والعمرة</small></div></div><button id="drawerClose" class="drawer-close" aria-label="إغلاق القائمة">×</button></div>
     <div class="side-title">الرئيسية</div>
     <a class="nav active" href="./index.html"><span class="ico">⌂</span><div><b>لوحة الشركة</b><small>نظرة شاملة على العمل</small></div></a>
 
@@ -83,6 +101,7 @@ body.auth-pending #login{display:none!important}
         <div class="nav soon"><span class="ico">⚙</span><div><b>إعدادات الشركة</b><small>قريبًا</small></div></div>
       </div>
     </div>
+    <div id="accountCard" class="account-card"><div class="account-avatar">♙</div><div><b id="accountName">المستخدم</b><small id="accountRole">حساب إداري</small></div><span class="dot"></span></div>
     <div class="sidefoot"><b>قوافل الحرمين للحج والعمرة</b><span>المركز الإداري الداخلي · الدينار العراقي</span></div>
   </aside>
   <div id="overlay" class="overlay"></div>
@@ -167,6 +186,8 @@ function setupAccess(){
  $('roleNote').classList.remove('hide');
  const label=STAFF?.role==='super_admin'?'المدير العام':STAFF?.role==='manager'?'المدير':'الموظف';
  $('roleNote').textContent='صلاحية الدخول: '+label;
+ $('accountName').textContent=STAFF?.full_name||STAFF?.email||'المستخدم';
+ $('accountRole').textContent=label+' · الحساب متصل';
 }
 async function signIn(){document.body.classList.remove('auth-pending');
  const email=$('email').value.trim(),password=$('password').value;
@@ -183,9 +204,15 @@ async function signIn(){document.body.classList.remove('auth-pending');
 $('loginBtn').onclick=signIn;
 $('password').onkeydown=e=>{if(e.key==='Enter')signIn()};
 $('logout').onclick=async()=>{await db.auth.signOut();location.reload()};
-$('menu').onclick=()=>{$('side').classList.add('open');$('overlay').classList.add('show')};
-$('overlay').onclick=()=>{$('side').classList.remove('open');$('overlay').classList.remove('show')};
-document.querySelectorAll('.nav').forEach(a=>a.addEventListener('click',()=>{$('side').classList.remove('open');$('overlay').classList.remove('show')}));
+function closeDrawer(){document.body.classList.remove('drawer-open');$('side').classList.remove('open');$('overlay').classList.remove('show')}
+function openDrawer(){document.body.classList.add('drawer-open');$('side').classList.add('open');$('overlay').classList.add('show')}
+$('menu').onclick=openDrawer;
+$('drawerClose').onclick=closeDrawer;
+$('overlay').onclick=closeDrawer;
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
+document.querySelectorAll('.nav').forEach(a=>a.addEventListener('click',closeDrawer));
+document.querySelectorAll('.side-title.toggle').forEach(t=>t.addEventListener('click',()=>{const g=t.closest('.nav-group');g.classList.toggle('collapsed');localStorage.setItem('qawafel_group_'+t.dataset.group,g.classList.contains('collapsed')?'1':'0')}));
+document.querySelectorAll('.nav-group').forEach(g=>{const t=g.querySelector('.side-title.toggle');if(t&&localStorage.getItem('qawafel_group_'+t.dataset.group)==='1')g.classList.add('collapsed')});
 
 function setToday(){
  $('today').textContent=new Intl.DateTimeFormat('ar-IQ',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(new Date());
