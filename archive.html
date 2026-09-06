@@ -9,8 +9,26 @@ async function loadArchive(){
   if(!session){location.href='index.html';return;}
   document.getElementById('rows').innerHTML='<tr><td colspan="7" class="empty">جاري تحميل الأرشيف…</td></tr>';
   try{
-    const {data,error}=await sb.rpc('get_pilgrim_archive');
-    if(error) throw error;
+    let {data,error}=await sb.rpc('get_pilgrim_archive');
+    if(error){
+      // Fallback: load archive rows directly, then assemble trip history from pilgrims/bookings.
+      const {data:rows,error:re}=await sb.from('pilgrim_archive').select('*').order('created_at',{ascending:false});
+      if(re) throw error;
+      const ids=(rows||[]).map(x=>x.id);
+      let bookings=[];
+      if(ids.length){
+        const {data:ps,error:pe}=await sb.from('pilgrims').select('archive_id,booking_id').in('archive_id',ids);
+        if(pe) throw pe;
+        const bids=[...(new Set((ps||[]).map(x=>x.booking_id).filter(Boolean)))];
+        if(bids.length){
+          const {data:bs,error:be}=await sb.from('bookings').select('id,booking_number,full_name,phone,passengers_count,total_amount,paid_amount,remaining_amount,status,payment_type,created_at,updated_at,program_id').in('id',bids);
+          if(be) throw be;
+          const byId=new Map((bs||[]).map(b=>[b.id,b]));
+          bookings=(ps||[]).map(x=>byId.get(x.booking_id)?{archive_id:x.archive_id,booking:byId.get(x.booking_id)}:null).filter(Boolean);
+        }
+      }
+      data=(rows||[]).map(a=>({...a,bookings:bookings.filter(x=>x.archive_id===a.id).map(x=>x.booking)}));
+    }
     archives=(data||[]).map(a=>({...a,_bookings:Array.isArray(a.bookings)?a.bookings:[],_paid:(Array.isArray(a.bookings)?a.bookings:[]).reduce((n,b)=>n+Number(b.paid_amount||0),0)}));
     render();
   }catch(error){
@@ -21,5 +39,12 @@ async function loadArchive(){
 
 function render(){let q=(document.getElementById('q').value||'').trim().toLowerCase(),sort=document.getElementById('sort').value;let arr=archives.filter(a=>!q||[a.full_name,a.phone,a.passport_number].some(v=>String(v||'').toLowerCase().includes(q)));arr.sort((a,b)=>sort==='name'?String(a.full_name||'').localeCompare(String(b.full_name||''),'ar'):sort==='many'?(b._bookings.length-a._bookings.length):(new Date(b.created_at)-new Date(a.created_at)));document.getElementById('s1').textContent=archives.length.toLocaleString('ar-IQ');document.getElementById('s2').textContent=archives.reduce((s,a)=>s+a._bookings.length,0).toLocaleString('ar-IQ');document.getElementById('s3').textContent=archives.filter(a=>a._bookings.length>1).length.toLocaleString('ar-IQ');document.getElementById('s4').textContent=money(archives.reduce((s,a)=>s+a._paid,0));document.getElementById('rows').innerHTML=arr.length?arr.map(a=>{let last=a._bookings.slice().sort((x,y)=>new Date(y.created_at)-new Date(x.created_at))[0];return `<tr><td><div class="name">${esc(a.full_name||'—')}</div><small>${esc(a.nationality||'')}</small></td><td>${esc(a.phone||'—')}</td><td>${esc(a.passport_number||'—')}</td><td><span class="pill">${a._bookings.length} مرة</span></td><td>${last?new Date(last.created_at).toLocaleDateString('ar-IQ'):'—'}</td><td>${money(a._paid)}</td><td><button class="btn" onclick="detail('${a.id}')">فتح الملف</button></td></tr>`}).join(''):'<tr><td colspan="7" class="empty">لا توجد نتائج</td></tr>'}
 function detail(id){let a=archives.find(x=>x.id===id);if(!a)return;document.getElementById('mtitle').textContent='ملف: '+(a.full_name||'معتمر');document.getElementById('detail').innerHTML=`<div class="grid"><div class="card"><small>الاسم</small><br><b>${esc(a.full_name||'—')}</b></div><div class="card"><small>الهاتف</small><br><b>${esc(a.phone||'—')}</b></div><div class="card"><small>الجواز</small><br><b>${esc(a.passport_number||'—')}</b></div><div class="card"><small>انتهاء الجواز</small><br><b>${esc(a.passport_expiry||'—')}</b></div><div class="card"><small>الجنسية</small><br><b>${esc(a.nationality||'—')}</b></div><div class="card"><small>المحافظة</small><br><b>${esc(a.governorate||'—')}</b></div><div class="card"><small>عدد مرات السفر</small><br><b>${a._bookings.length}</b></div><div class="card"><small>إجمالي المدفوع</small><br><b>${money(a._paid)}</b></div></div><div class="history"><h3>سجل الرحلات</h3>${a._bookings.length?a._bookings.slice().sort((x,y)=>new Date(y.created_at)-new Date(x.created_at)).map(b=>`<div class="card" style="margin:8px 0"><b>${esc(b.booking_number||'حجز')}</b> — ${new Date(b.created_at).toLocaleDateString('ar-IQ')}<br><small>قيمة الحجز: ${money(b.total_amount)} · المدفوع: ${money(b.paid_amount)} · المتبقي: ${money(Number(b.total_amount||0)-Number(b.paid_amount||0))} · ${esc(b.payment_type||'')}</small></div>`).join(''):'<div class="empty">لا توجد رحلات مسجلة</div>'}</div>`;document.getElementById('modal').style.display='block'}
-function closeM(){document.getElementById('modal').style.display='none'}function esc(v){return String(v).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}document.getElementById('q').addEventListener('input',render);document.getElementById('sort').addEventListener('change',render);window.addEventListener('DOMContentLoaded',loadArchive);
+function closeM(){document.getElementById('modal').style.display='none'}function esc(v){return String(v).replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]))}document.getElementById('q').addEventListener('input',render);document.getElementById('sort').addEventListener('change',render);async function bootArchive(){
+  try{
+    await loadArchive();
+  }catch(e){
+    document.getElementById('rows').innerHTML='<tr><td colspan="7" class="empty" style="color:#b42318">تعذر تشغيل الأرشيف: '+esc(e?.message||'خطأ غير معروف')+'</td></tr>';
+  }
+}
+if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',bootArchive,{once:true}); else bootArchive();
 </script></body></html>
