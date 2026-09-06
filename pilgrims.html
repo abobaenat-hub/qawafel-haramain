@@ -29,7 +29,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 </head>
 <body class="auth-pending">
 <div class="top">
-<div style="display:flex;align-items:center;gap:12px"><div style="width:92px;height:58px;background:#fff;border:1px solid var(--g);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="./logo.png" alt="قوافل الحرمين" style="width:100%;height:100%;object-fit:contain"></div><div><b>قوافل الحرمين</b><small>إدارة ملفات المعتمرين</small></div></div>
+<div style="display:flex;align-items:center;gap:12px"><div style="width:180px;height:82px;background:#fff;border:1px solid var(--g);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="./logo.png" alt="قوافل الحرمين" style="width:100%;height:100%;object-fit:contain"></div><div><b>قوافل الحرمين</b><small>إدارة ملفات المعتمرين</small></div></div>
 <div><a class="btn w" href="./index.html">لوحة الشركة</a> <button id="logout" class="btn w noPrint">خروج</button></div>
 </div>
 
@@ -55,7 +55,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <label>الاسم الكامل *</label><input id="name" required>
 <label>البرنامج *</label><select id="program" required><option value="">جاري التحميل...</option></select>
 <label>نوع البرنامج *</label><select id="paymentType" required><option value="cash">نقد</option><option value="installment">قسط</option></select>
-<div id="installmentDetails" class="hide" style="grid-column:1/-1;border:1px solid #d9e3e8;border-radius:14px;padding:14px;background:#f8fafc;margin-top:2px"><div style="font-weight:900;color:#0c3b63;margin-bottom:10px">تفاصيل التقسيط</div><div class="cols"><div><label>إجمالي البرنامج</label><div id="installmentTotal" class="moneyBox">—</div></div><div><label>المبلغ المدفوع الآن</label><input id="initial" type="number" min="0" value="0"></div><div><label>المبلغ المتبقي</label><div id="installmentRemaining" class="moneyBox">—</div></div><div><label>عدد الأقساط</label><select id="installmentCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div><div><label>القسط الشهري التقريبي</label><div id="monthlyAmount" class="moneyBox">—</div></div><div><label>آخر قسط</label><div id="lastInstallment" class="moneyBox">—</div></div></div><small style="display:block;color:#6b7780;margin-top:9px">يتحدث المبلغ المتبقي والقسط الشهري تلقائيًا عند تغيير الدفعة الأولى أو عدد الأقساط.</small></div>
+<div id="installmentDetails" class="hide" style="grid-column:1/-1;border:1px solid #d9e3e8;border-radius:14px;padding:14px;background:#f8fafc;margin-top:2px"><div style="font-weight:900;color:#0c3b63;margin-bottom:10px">تفاصيل التقسيط</div><div id="installmentPriceHint" style="font-size:13px;color:#8b6b25;margin-bottom:10px;font-weight:700"></div><div class="cols"><div><label>إجمالي البرنامج</label><div id="installmentTotal" class="moneyBox">—</div></div><div><label>المبلغ المدفوع الآن</label><input id="initial" type="number" min="0" value="0"></div><div><label>المبلغ المتبقي</label><div id="installmentRemaining" class="moneyBox">—</div></div><div><label>عدد الأقساط</label><select id="installmentCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div><div><label>القسط الشهري التقريبي</label><div id="monthlyAmount" class="moneyBox">—</div></div><div><label>آخر قسط</label><div id="lastInstallment" class="moneyBox">—</div></div></div><small style="display:block;color:#6b7780;margin-top:9px">يتحدث المبلغ المتبقي والقسط الشهري تلقائيًا عند تغيير الدفعة الأولى أو عدد الأقساط.</small></div>
 <div class="cols">
 <div><label>الهاتف</label><input id="phone"></div>
 <div><label>الجنسية</label><input id="nat" value="عراقي"></div>
@@ -133,7 +133,7 @@ $('logout').onclick=async()=>{await db.auth.signOut();location.reload()};
 function updateInstallmentSummary(total,balance,count){
  const box=$('installmentDetails');
  if(!box)return;
- $('installmentTotal').textContent=money(total);
+ $('installmentTotal').textContent=money(total);$('installmentPriceHint').textContent='سعر هذا البرنامج بالتقسيط: '+money(total);
  $('installmentRemaining').textContent=money(balance);
  const monthly=count>0?Math.floor((balance/count)*100)/100:0;
  $('monthlyAmount').textContent=money(monthly);
@@ -144,7 +144,7 @@ $('paymentType').onchange();
 
 function buildSchedule(){
  const count=Number($('installmentCount').value||1);
- const total=Number((PR.find(x=>x.id===$('program').value)||{}).price||0);
+ const pr0=PR.find(x=>x.id===$('program').value)||{}; const total=Number(($('paymentType').value==='installment'?pr0.installment_price:pr0.price)||0);
  const initial=Math.min(Math.max(Number($('initial').value||0),0),total);
  const balance=Math.max(total-initial,0);
  if($('paymentType').value!=='installment'){ $('installmentDetails').classList.add('hide'); $('scheduleWrap').classList.add('hide'); return; }
@@ -178,7 +178,7 @@ async function load(){
  $('pc').textContent=P.length;$('bc').textContent=B.length;
  $('paid').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('rem').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
- $('program').innerHTML='<option value="">اختر البرنامج</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+' — '+money(x.price)+'</option>').join('');
+ $('program').innerHTML='<option value="">اختر البرنامج</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+' — نقد: '+money(x.price)+' | قسط: '+money(x.installment_price??x.price)+'</option>').join('');
  $('badgeProgram').innerHTML='<option value="">اختر الرحلة لطباعة الباجات</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  render();
 }
@@ -239,7 +239,7 @@ async function openProfile(id){
 }
 
 async function managePayments(b){
- const box=$('manager');box.classList.remove('hide');box.innerHTML='<h4>إدارة الدفعات</h4><div id="pm"></div><div class="cols"><div><label>مبلغ الدفعة</label><input id="payAmount" type="number" min="1"></div><div><label>تاريخ الدفع</label><input id="payDate" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>طريقة الدفع</label><input id="payMethod" value="نقد"></div><div><label>ملاحظات</label><input id="payNotes"></div></div><button id="savePay" class="btn p noPrint">تسجيل الدفعة</button>';
+ const box=$('manager');box.classList.remove('hide');box.innerHTML='<h4>إدارة الدفعات</h4><div style="background:#f8fafc;border:1px solid #dfe6ea;border-radius:10px;padding:10px;margin-bottom:10px;color:#36566a">كل دفعة تُسجل على حجز هذا المعتمر، ثم يوزعها النظام تلقائيًا على أقدم قسط مستحق أولًا.</div><div id="pm"></div><div class="cols"><div><label>مبلغ الدفعة</label><input id="payAmount" type="number" min="1"></div><div><label>تاريخ الدفع</label><input id="payDate" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>طريقة الدفع</label><input id="payMethod" value="نقد"></div><div><label>ملاحظات</label><input id="payNotes"></div></div><button id="savePay" class="btn p noPrint">تسجيل الدفعة</button>';
  const r=await db.from('installment_plans').select('*').eq('booking_id',b.id).order('installment_number');
  $('pm').innerHTML=r.error?'<div class="msg err">'+esc(r.error.message)+'</div>':(r.data?.length?'<div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+r.data.map(x=>'<tr><td>'+x.installment_number+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join('')+'</tbody></table></div>':'لا توجد أقساط.');
  $('savePay').onclick=()=>savePayment(b);
@@ -323,7 +323,7 @@ document.getElementById('form').addEventListener('submit',function(e){ if(!valid
 $('form').onsubmit=async e=>{
  e.preventDefault();msg('formMsg','جاري التحقق من البيانات...');
  const pr=PR.find(x=>x.id===$('program').value);if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);
- const total=Number(pr.price||0),paymentType=$('paymentType').value,passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date,paid=Math.min(Math.max(Number($('initial').value||0),0),total);
+ const paymentType=$('paymentType').value, total=Number((paymentType==='installment'?pr.installment_price:pr.price)||0),passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date,paid=Math.min(Math.max(Number($('initial').value||0),0),total);
  const remaining=total-paid;
  if(!passportExpiry)return msg('formMsg','أدخل تاريخ انتهاء الجواز.',true);
  const minExpiry=passportMinDate();
