@@ -19,6 +19,8 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 .badge{padding:5px 9px;border-radius:20px;background:#fff2cf;font-size:12px;font-weight:bold}.ok{background:#e7f6ef;color:#176644}.danger{background:#fff0f0;color:#a33}
 .filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 @media(max-width:800px){.stats,.cards,.filters{grid-template-columns:1fr 1fr}}@media(max-width:550px){.stats,.cards,.filters{grid-template-columns:1fr}}
+
+.financeHero{background:linear-gradient(135deg,var(--d),var(--n));color:#fff;border-radius:22px;padding:24px;box-shadow:0 14px 40px #072b4930;margin:18px 0}.financeHero h1{margin:0 0 7px;font-size:25px}.financeHero p{margin:0;color:#dce9f1;font-size:12px}.profitGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}.profitCard{background:#ffffff14;border:1px solid #ffffff20;border-radius:15px;padding:14px}.profitCard small{color:#d8e5ec}.profitCard b{display:block;font-size:20px;margin-top:7px}.tripCard{border:1px solid var(--l);border-radius:17px;padding:17px;margin:10px 0;background:linear-gradient(180deg,#fff,#fbfcfd)}.tripHead{display:flex;justify-content:space-between;gap:12px;align-items:center}.tripHead h4{margin:0;color:var(--n);font-size:16px}.tripNums{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:13px}.tripNum{background:#f5f8fa;border-radius:11px;padding:10px}.tripNum small{display:block;color:#718390;font-size:9px}.tripNum b{display:block;margin-top:4px;font-size:13px;color:var(--n)}.marginGood{color:#176644}.marginBad{color:#a33}@media(max-width:850px){.profitGrid{grid-template-columns:1fr 1fr}.tripNums{grid-template-columns:repeat(2,1fr)}}@media(max-width:550px){.profitGrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body class="auth-pending">
@@ -29,7 +31,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <label>كلمة المرور</label><input id="password" type="password">
 <br><button id="loginBtn" class="p" style="width:100%">دخول</button></div>
 
-<main id="app" class="wrap hide">
+<main id="app" class="wrap hide"><section class="financeHero"><h1>💰 المركز المالي</h1><p>اعرف تكلفة كل رحلة، مبيعاتها، مصروفاتها، وربحها الحقيقي قبل وبعد التحصيل.</p><div class="profitGrid"><div class="profitCard"><small>قيمة المبيعات</small><b id="heroSales">0 د.ع</b></div><div class="profitCard"><small>تكلفة شراء الرحلات</small><b id="heroCost">0 د.ع</b></div><div class="profitCard"><small>المصروفات الإضافية</small><b id="heroExpenses">0 د.ع</b></div><div class="profitCard"><small>صافي الربح المتوقع</small><b id="heroNet">0 د.ع</b></div></div></section>
 <div class="stats">
 <div class="stat">إجمالي المبيعات<b id="sales">0 د.ع</b></div>
 <div class="stat">المقبوض<b id="received">0 د.ع</b></div>
@@ -65,7 +67,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div class="table"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>الرحلة</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
 </section>
 <div class="cards">
-<section class="panel"><h3>ملخص الرحلات</h3><div id="programReport"></div></section>
+<section class="panel"><h3>📊 ربحية الرحلات</h3><div class="hint">الربح هنا يعتمد على قيمة البيع ناقص تكلفة شراء الرحلة والمصروفات المرتبطة بها.</div><div id="programReport"></div></section>
 <section class="panel"><h3>الأقساط المستحقة والمتأخرة</h3><div id="installmentReport"></div></section>
 </div>
 
@@ -114,7 +116,12 @@ async function load(){
  const today=new Date().toISOString().slice(0,10);
  const late=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today).reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0);
  $('late').textContent=money(late);
- $('profit').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0)-E.reduce((s,x)=>s+Number(x.amount||0),0));
+ const salesTotal=B.reduce((s,x)=>s+Number(x.total_amount||0),0);
+  const purchaseTotal=PR.reduce((s,x)=>s+Number(x.purchase_cost||0),0);
+  const expenseTotal=E.reduce((s,x)=>s+Number(x.amount||0),0);
+  const netExpected=salesTotal-purchaseTotal-expenseTotal;
+  $('profit').textContent=money(netExpected);
+  $('heroSales').textContent=money(salesTotal);$('heroCost').textContent=money(purchaseTotal);$('heroExpenses').textContent=money(expenseTotal);$('heroNet').textContent=money(netExpected);
  $('programFilter').innerHTML='<option value="">كل البرامج</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  $('expenseProgram').innerHTML='<option value="">مصروف عام للشركة</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  $('expenseDate').value=new Date().toISOString().slice(0,10);
