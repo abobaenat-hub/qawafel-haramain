@@ -198,10 +198,12 @@ function safeDisplayName(){
  if(!n || /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(n) || /@/.test(n)) return STAFF?.role==='super_admin'?'المدير العام':STAFF?.role==='manager'?'المدير':'المستخدم';
  return n;
 }
+function hasPerm(p){const r=STAFF?.role,ps=STAFF?.permissions||[];return r==='super_admin'||r==='manager'||ps.includes('super_admin')||ps.includes('manager')||ps.includes(p)}
 function setupAccess(){
- const finance=canSeeFinance();
+ const finance=hasPerm('finance'), trips=hasPerm('trips'), booking=hasPerm('booking_staff'), archive=hasPerm('archive'), employees=STAFF?.role==='super_admin'||STAFF?.role==='manager';
+ const map={'./financial.html':finance,'./programs.html':trips,'./pilgrims.html':booking,'./archive.html':archive,'./employees.html':employees};
+ Object.entries(map).forEach(([href,ok])=>document.querySelectorAll('a[href="'+href+'"]').forEach(a=>a.classList.toggle('hide',!ok)));
  $('financeBox').classList.toggle('hide',!finance);
- const finLink=document.querySelector('a[href=\"./financial.html\"]'); if(finLink) finLink.classList.toggle('hide',!finance);
  $('roleNote').classList.remove('hide');
  const label=STAFF?.role==='super_admin'?'المدير العام':STAFF?.role==='manager'?'المدير':'الموظف';
  $('roleNote').textContent='صلاحية الدخول: '+label;

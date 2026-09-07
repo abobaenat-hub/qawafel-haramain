@@ -19,6 +19,9 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 .badge{padding:5px 9px;border-radius:20px;background:#fff2cf;font-size:12px;font-weight:bold}.ok{background:#e7f6ef;color:#176644}.danger{background:#fff0f0;color:#a33}
 .filters{display:grid;grid-template-columns:2fr 1fr 1fr;gap:10px}.cards{display:grid;grid-template-columns:1fr 1fr;gap:15px}
 @media(max-width:800px){.stats,.cards,.filters{grid-template-columns:1fr 1fr}}@media(max-width:550px){.stats,.cards,.filters{grid-template-columns:1fr}}
+
+.financeHero{background:linear-gradient(135deg,var(--d),var(--n));color:#fff;border-radius:22px;padding:24px;box-shadow:0 14px 40px #072b4930;margin:18px 0}.financeHero h1{margin:0 0 7px;font-size:25px}.financeHero p{margin:0;color:#dce9f1;font-size:12px}.profitGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:18px}.profitCard{background:#ffffff14;border:1px solid #ffffff20;border-radius:15px;padding:14px}.profitCard small{color:#d8e5ec}.profitCard b{display:block;font-size:20px;margin-top:7px}.purchaseBox{border:1px solid #d8e3ea;border-radius:20px;padding:18px;background:linear-gradient(135deg,#fffdf8,#f7fafc);position:relative;overflow:hidden}.purchaseBox:before{content:"";position:absolute;right:0;top:0;bottom:0;width:5px;background:linear-gradient(#c79a3b,#0c3b63)}.purchaseTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}.purchaseTitle h2{margin:0;color:var(--n)}.purchaseHint{color:#687984;font-size:12px;line-height:1.8}.purchaseGrid{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:12px;align-items:end}.purchasePreview{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:13px}.purchaseMetric{background:#fff;border:1px solid #e2e9ed;border-radius:13px;padding:11px}.purchaseMetric small{display:block;color:#75848d;font-size:10px}.purchaseMetric b{display:block;color:var(--n);font-size:17px;margin-top:5px}.purchaseMetric.profit b{color:#176644}.purchaseMsg{margin-top:10px}.purchaseLabel{font-weight:900;font-size:12px;margin-bottom:5px;display:block}.purchaseWarn{font-size:11px;color:#9a5a13;margin-top:6px}@media(max-width:850px){.purchaseGrid{grid-template-columns:1fr 1fr}.purchasePreview{grid-template-columns:1fr 1fr}}@media(max-width:550px){.purchaseGrid,.purchasePreview{grid-template-columns:1fr}}
+.tripCard{border:1px solid var(--l);border-radius:17px;padding:17px;margin:10px 0;background:linear-gradient(180deg,#fff,#fbfcfd)}.tripHead{display:flex;justify-content:space-between;gap:12px;align-items:center}.tripHead h4{margin:0;color:var(--n);font-size:16px}.tripNums{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:13px}.tripNum{background:#f5f8fa;border-radius:11px;padding:10px}.tripNum small{display:block;color:#718390;font-size:9px}.tripNum b{display:block;margin-top:4px;font-size:13px;color:var(--n)}.marginGood{color:#176644}.marginBad{color:#a33}@media(max-width:850px){.profitGrid{grid-template-columns:1fr 1fr}.tripNums{grid-template-columns:repeat(2,1fr)}}@media(max-width:550px){.profitGrid{grid-template-columns:1fr}}
 </style>
 </head>
 <body class="auth-pending">
@@ -29,7 +32,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <label>كلمة المرور</label><input id="password" type="password">
 <br><button id="loginBtn" class="p" style="width:100%">دخول</button></div>
 
-<main id="app" class="wrap hide">
+<main id="app" class="wrap hide"><section class="financeHero"><h1>💰 المركز المالي</h1><p>اعرف تكلفة كل رحلة، مبيعاتها، مصروفاتها، وربحها الحقيقي قبل وبعد التحصيل.</p><div class="profitGrid"><div class="profitCard"><small>قيمة المبيعات</small><b id="heroSales">0 د.ع</b></div><div class="profitCard"><small>تكلفة الجملة على المبيعات</small><b id="heroCost">0 د.ع</b></div><div class="profitCard"><small>المصروفات الإضافية</small><b id="heroExpenses">0 د.ع</b></div><div class="profitCard"><small>صافي الربح المتوقع</small><b id="heroNet">0 د.ع</b></div></div></section>
 <div class="stats">
 <div class="stat">إجمالي المبيعات<b id="sales">0 د.ع</b></div>
 <div class="stat">المقبوض<b id="received">0 د.ع</b></div>
@@ -45,6 +48,22 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <select id="statusFilter"><option value="">كل الحالات</option><option value="paid">مسدد</option><option value="pending">غير مكتمل</option><option value="late">متأخر</option></select>
 </div>
 </div>
+
+<section class="panel purchaseBox">
+  <div class="purchaseTitle">
+    <div><h2>🏷️ تسجيل تكلفة شراء الرحلة</h2><div class="purchaseHint">هنا تسجل سعر الجملة الذي تدفعه قوافل الحرمين عن المعتمر الواحد في هذه الرحلة. بعد الحفظ يدخل تلقائيًا في حساب الربح الفعلي لكل معتمر والرحلة.</div></div>
+    <span class="badge" style="background:#fff2cf;color:#8a641c">تكلفة الشراء</span>
+  </div>
+  <div id="purchaseMsg" class="purchaseMsg"></div>
+  <div class="purchaseGrid">
+    <div><label class="purchaseLabel">اختر الرحلة</label><select id="purchaseProgram"><option value="">اختر الرحلة...</option></select></div>
+    <div><label class="purchaseLabel">تكلفة المعتمر علينا (سعر الجملة)</label><input id="purchaseAmount" type="number" min="0" placeholder="مثلاً 625000"></div>
+    <div><label class="purchaseLabel">العملة</label><select id="purchaseCurrency"><option value="IQD">دينار عراقي</option><option value="SAR">ريال سعودي</option><option value="USD">دولار</option></select></div>
+  </div>
+  <div id="purchasePreview" class="purchasePreview"></div>
+  <div class="purchaseWarn">⚠️ أدخل تكلفة <b>المعتمر الواحد</b> علينا من المورّد (سعر الجملة)، وليس إجمالي الرحلة.</div>
+  <button id="savePurchase" class="p" style="margin-top:13px">💾 حفظ تكلفة الرحلة</button>
+</section>
 
 <section class="panel">
 <h2>💸 تسجيل مصروف</h2>
@@ -65,13 +84,13 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div class="table"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>الرحلة</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
 </section>
 <div class="cards">
-<section class="panel"><h3>ملخص الرحلات</h3><div id="programReport"></div></section>
+<section class="panel"><h3>📊 ربحية الرحلات</h3><div class="hint">الربح هنا يعتمد على قيمة البيع ناقص تكلفة شراء الرحلة والمصروفات المرتبطة بها.</div><div id="programReport"></div></section>
 <section class="panel"><h3>الأقساط المستحقة والمتأخرة</h3><div id="installmentReport"></div></section>
 </div>
 
 <section class="panel">
 <h3>كشف الحساب</h3><div id="tableMsg"></div>
-<div class="table"><table><thead><tr><th>المعتمر</th><th>البرنامج</th><th>نوع الدفع</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody id="rows"></tbody></table></div>
+<div class="table"><table><thead><tr><th>المعتمر</th><th>البرنامج</th><th>نوع الدفع</th><th>السعر الأساسي</th><th>الخصم</th><th>البيع الفعلي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody id="rows"></tbody></table></div>
 </section>
 </main>
 
@@ -114,13 +133,40 @@ async function load(){
  const today=new Date().toISOString().slice(0,10);
  const late=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today).reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0);
  $('late').textContent=money(late);
- $('profit').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0)-E.reduce((s,x)=>s+Number(x.amount||0),0));
+ const salesTotal=B.reduce((s,x)=>s+Number(x.total_amount||0),0);
+  const purchaseTotal=B.reduce((s,b)=>{const pr=PR.find(x=>x.id===b.program_id);return s+Number(pr?.purchase_cost||0)*Math.max(Number(b.passengers_count||1),1)},0);
+  const expenseTotal=E.reduce((s,x)=>s+Number(x.amount||0),0);
+  const netExpected=salesTotal-purchaseTotal-expenseTotal;
+  $('profit').textContent=money(netExpected);
+  $('heroSales').textContent=money(salesTotal);$('heroCost').textContent=money(purchaseTotal);$('heroExpenses').textContent=money(expenseTotal);$('heroNet').textContent=money(netExpected);
  $('programFilter').innerHTML='<option value="">كل البرامج</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
+ fillPurchasePrograms();
  $('expenseProgram').innerHTML='<option value="">مصروف عام للشركة</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  $('expenseDate').value=new Date().toISOString().slice(0,10);
  render();
  renderExpenses();
 }
+function fillPurchasePrograms(){
+ $('purchaseProgram').innerHTML='<option value="">اختر الرحلة...</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
+}
+function updatePurchasePreview(){
+ const pr=PR.find(x=>x.id===$('purchaseProgram').value);
+ if(!pr){$('purchaseAmount').value='';$('purchaseCurrency').value='IQD';$('purchasePreview').innerHTML='';return;}
+ $('purchaseAmount').value=Number(pr.purchase_cost||0)||'';
+ $('purchaseCurrency').value=pr.purchase_cost_currency||pr.currency||'IQD';
+ const costSeat=Number(pr.purchase_cost||0); const sold=B.filter(b=>b.program_id===pr.id).reduce((s,b)=>s+Math.max(Number(b.passengers_count||1),1),0); const totalCost=sold*costSeat; const sales=B.filter(b=>b.program_id===pr.id).reduce((s,b)=>s+Number(b.total_amount||0),0); const gross=sales-totalCost; $('purchasePreview').innerHTML='<div class="purchaseMetric"><small>تكلفة المعتمر الواحد</small><b>'+money(costSeat)+'</b></div><div class="purchaseMetric"><small>إجمالي تكلفة المبيعات الحالية</small><b>'+money(totalCost)+'</b></div><div class="purchaseMetric profit"><small>الربح الإجمالي الحالي</small><b>'+money(gross)+'</b></div>';
+}
+$('purchaseProgram').onchange=updatePurchasePreview;
+$('purchaseAmount').oninput=()=>{const pr=PR.find(x=>x.id===$('purchaseProgram').value);if(!pr)return;const cost=Number($('purchaseAmount').value||0),sold=B.filter(b=>b.program_id===pr.id).reduce((s,b)=>s+Math.max(Number(b.passengers_count||1),1),0),totalCost=sold*cost,sales=B.filter(b=>b.program_id===pr.id).reduce((s,b)=>s+Number(b.total_amount||0),0);$('purchasePreview').innerHTML='<div class="purchaseMetric"><small>تكلفة المعتمر الواحد</small><b>'+money(cost)+'</b></div><div class="purchaseMetric"><small>إجمالي تكلفة المبيعات الحالية</small><b>'+money(totalCost)+'</b></div><div class="purchaseMetric profit"><small>الربح الإجمالي الحالي</small><b>'+money(sales-totalCost)+'</b></div>';};
+$('savePurchase').onclick=async()=>{
+ const id=$('purchaseProgram').value, amount=Number($('purchaseAmount').value||0), currency=$('purchaseCurrency').value;
+ if(!id)return msg('purchaseMsg','اختر الرحلة أولًا.',true);
+ if(amount<0)return msg('purchaseMsg','أدخل تكلفة صحيحة.',true);
+ $('savePurchase').disabled=true;msg('purchaseMsg','جاري حفظ تكلفة الشراء...');
+ try{const {error}=await db.rpc('update_program_purchase_cost',{p_program_id:id,p_purchase_cost:amount,p_currency:currency});if(error)throw error;msg('purchaseMsg','تم تسجيل سعر الجملة للمعتمر الواحد بنجاح، وسيُحسب تلقائيًا على كل معتمر في هذه الرحلة.');await load();$('purchaseProgram').value=id;updatePurchasePreview();}
+ catch(e){msg('purchaseMsg',e.message||'تعذر حفظ تكلفة الشراء.',true)}finally{$('savePurchase').disabled=false}
+};
+
 function render(){
  const q=$('search').value.trim().toLowerCase(),pf=$('programFilter').value,sf=$('statusFilter').value;
  let rows=B.filter(b=>{
@@ -135,10 +181,10 @@ function render(){
  $('rows').innerHTML=rows.map(b=>{
   const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);
   const late=I.some(x=>x.booking_id===b.id&&x.status!=='paid'&&x.due_date<new Date().toISOString().slice(0,10));
-  return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+(b.payment_type==='installment'?'قسط':'نقد')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+badge(b.status==='paid'?'paid':late?'late':'pending')+'</td></tr>'
+  return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+(b.payment_type==='installment'?'قسط':'نقد')+'</td><td>'+money(b.base_price||b.total_amount)+'</td><td>'+(Number(b.discount_amount||0)>0?'<span class="badge" style="background:#fff2cf;color:#8a641c">-'+money(b.discount_amount)+'</span>':'—')+'</td><td><b>'+money(b.total_amount)+'</b></td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+badge(b.status==='paid'?'paid':late?'late':'pending')+'</td></tr>'
  }).join('')||'<tr><td colspan="7">لا توجد نتائج.</td></tr>';
  const by={};B.forEach(b=>{by[b.program_id]??={total:0,paid:0,remaining:0,count:0};by[b.program_id].total+=Number(b.total_amount||0);by[b.program_id].paid+=Number(b.paid_amount||0);by[b.program_id].remaining+=Number(b.remaining_amount||0);by[b.program_id].count++});
- $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id);return '<div style="padding:10px 0;border-bottom:1px solid #dfe6ea"><b>'+esc(pr?.title||'—')+'</b><br>حجوزات: '+x.count+' — مبيعات: '+money(x.total)+'<br>مقبوض: '+money(x.paid)+' — متبقي: '+money(x.remaining)+'</div>'}).join('')||'لا توجد بيانات.';
+ $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0);const sold=x.count;const totalCost=sold*costSeat;const linkedExpenses=E.filter(e=>e.program_id===id).reduce((s,e)=>s+Number(e.amount||0),0);const gross=x.total-totalCost;const net=gross-linkedExpenses;const avgSale=sold?x.total/sold:0;const profitSeat=avgSale-costSeat;const cls=net>=0?'marginGood':'marginBad';return '<div class="tripCard"><div class="tripHead"><h4>'+esc(pr.title||'—')+'</h4><span class="badge '+(net>=0?'ok':'')+'">'+(net>=0?'رابحة':'خسارة')+'</span></div><div class="tripNums"><div class="tripNum"><small>المبيعات الفعلية</small><b>'+money(x.total)+'</b></div><div class="tripNum"><small>تكلفة الجملة على المعتمرين</small><b>'+money(totalCost)+'</b></div><div class="tripNum"><small>الربح الإجمالي</small><b>'+money(gross)+'</b></div><div class="tripNum"><small>المصروفات المرتبطة</small><b>'+money(linkedExpenses)+'</b></div><div class="tripNum"><small>صافي الربح</small><b class="'+cls+'">'+money(net)+'</b></div><div class="tripNum"><small>تكلفة المقعد</small><b>'+money(costSeat)+'</b></div><div class="tripNum"><small>متوسط البيع/معتمر</small><b>'+money(avgSale)+'</b></div><div class="tripNum"><small>ربح المقعد التقريبي</small><b class="'+(profitSeat>=0?'marginGood':'marginBad')+'">'+money(profitSeat)+'</b></div><div class="tripNum"><small>المقبوض</small><b>'+money(x.paid)+'</b></div><div class="tripNum"><small>المتبقي</small><b>'+money(x.remaining)+'</b></div></div></div>'}).join('')||'لا توجد بيانات.';
  const today=new Date().toISOString().slice(0,10);
  const due=I.filter(x=>x.status!=='paid'),late=due.filter(x=>x.due_date&&x.due_date<today);
  $('installmentReport').innerHTML='<p>أقساط غير مسددة: <b>'+due.length+'</b></p><p>قيمة غير مسددة: <b>'+money(due.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p><p>أقساط متأخرة: <b>'+late.length+'</b></p><p>قيمة المتأخر: <b>'+money(late.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p>';
