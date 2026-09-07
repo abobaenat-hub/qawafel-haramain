@@ -3,310 +3,146 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>المركز الداخلي | قوافل الحرمين</title>
+<title>قوافل الحرمين للحج والعمرة | رحلتك إلى الحرمين</title>
+<meta name="description" content="قوافل الحرمين للحج والعمرة — برامج عمرة منظمة، حجز ومتابعة وخدمة للمعتمرين.">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root{--navy:#0b3556;--blue:#176b9b;--gold:#c99a32;--bg:#f5f7f9;--card:#fff;--line:#e5ebef;--text:#17384f;--muted:#748693;--green:#198754;--red:#c13c3c;--orange:#d98925;--purple:#7157a6;--shadow:0 8px 28px rgba(11,53,86,.07)}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}body{direction:rtl}button,input{font:inherit}.hide{display:none!important}
-.top{height:76px;background:linear-gradient(135deg,#092d4b,#0d4268);color:#fff;position:sticky;top:0;z-index:60;box-shadow:0 4px 18px #082c4518}.topin{height:100%;max-width:1540px;margin:auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:11px}.mark{width:154px;height:62px;background:#fff;border:1px solid #e0c267;border-radius:11px;display:flex;align-items:center;justify-content:center;overflow:hidden}.mark img{width:100%;height:100%;object-fit:contain}.brand b{display:block;font-size:18px}.brand small{display:block;color:#e6cc83;font-size:10px;margin-top:4px}.actions{display:flex;align-items:center;gap:9px}.status{font-size:10px;color:#bde7d3}.btn{border:0;border-radius:10px;padding:9px 13px;cursor:pointer;font-weight:800}.logout,.menu{background:#ffffff12;color:#fff;border:1px solid #ffffff2e}.menu{display:none;font-size:19px}
-.login{max-width:430px;margin:85px auto;background:var(--card);padding:30px;border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}.login .mark{margin:auto;width:100px;height:100px;border-radius:19px}.login h2{margin:17px 0 6px;color:var(--navy)}.login p{margin:0 0 20px;color:var(--muted);font-size:12px}.login label{display:block;font-size:12px;font-weight:800;margin:12px 0 6px}.login input{width:100%;padding:12px;border:1px solid #ccd8df;border-radius:10px;outline:none}.primary{width:100%;margin-top:15px;background:var(--navy);color:#fff;padding:12px;border-radius:10px;border:0;font-weight:800;cursor:pointer}.msg{padding:10px;border-radius:9px;background:#edf8f3;font-size:12px;margin:10px 0}.err{background:#fff0f0;color:var(--red)}
-.shell{max-width:1540px;margin:auto;display:flex;min-height:calc(100vh - 76px)}.side{width:286px;background:#fff;border-left:1px solid var(--line);position:sticky;top:76px;height:calc(100vh - 76px);padding:13px 12px;z-index:45;display:flex;flex-direction:column;overflow:auto}.side-title{font-size:10px;color:#9aa7af;font-weight:900;padding:11px 11px 6px}.nav{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;text-decoration:none;color:var(--text);margin:2px 0}.nav:hover,.nav.active{background:#edf5f9;color:var(--navy)}.ico{width:35px;height:35px;border-radius:10px;background:#f1f5f7;display:grid;place-items:center;color:var(--blue);font-weight:900;font-size:12px;flex:none}.nav.active .ico{background:var(--navy);color:#fff}.nav b{display:block;font-size:11px}.nav small{display:block;font-size:9px;color:var(--muted);margin-top:3px}.soon{opacity:.5}.sidefoot{margin-top:auto;border-top:1px solid var(--line);padding:13px 10px;font-size:9px;color:var(--muted)}.sidefoot b{display:block;color:var(--navy);font-size:10px;margin-bottom:4px}
-.content{flex:1;padding:24px;min-width:0}.head{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:18px}.eyebrow{font-size:10px;color:var(--gold);font-weight:900;margin-bottom:5px}.head h1{margin:0;color:var(--navy);font-size:25px}.head p{margin:6px 0 0;color:var(--muted);font-size:11px}.today{background:#fff;border:1px solid var(--line);padding:10px 13px;border-radius:11px;color:var(--muted);font-size:10px;white-space:nowrap}
-.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.kpi{border:0;border-radius:16px;padding:16px;color:#fff;display:flex;gap:12px;align-items:center;box-shadow:var(--shadow);min-height:91px}.kpi:nth-child(1){background:linear-gradient(135deg,#2377aa,#155985)}.kpi:nth-child(2){background:linear-gradient(135deg,#2b9b68,#18734e)}.kpi:nth-child(3){background:linear-gradient(135deg,#c84e4e,#a43b3b)}.kpi:nth-child(4){background:linear-gradient(135deg,#df9a32,#c67920)}.kicon{width:43px;height:43px;border-radius:12px;background:#ffffff20;display:grid;place-items:center;font-weight:900;font-size:15px;flex:none}.kpi span{font-size:9px;color:#ffffffd9}.kpi b{display:block;color:#fff;font-size:23px;margin-top:5px}
-.finance{margin:12px 0 16px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:0;display:grid;grid-template-columns:repeat(4,1fr);box-shadow:var(--shadow);overflow:hidden}.finance div{padding:15px 17px;border-left:1px solid var(--line)}.finance div:last-child{border-left:0}.finance span{display:block;color:var(--muted);font-size:9px}.finance b{display:block;margin-top:6px;color:var(--navy);font-size:17px}.finance .negative b{color:var(--red)}
-.grid2{display:grid;grid-template-columns:1.35fr 1fr;gap:14px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow);margin-bottom:14px}.sect{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-bottom:12px}.sect h2{margin:0;color:var(--navy);font-size:15px}.sect p{margin:5px 0 0;color:var(--muted);font-size:9px}.link{color:var(--blue);font-size:9px;font-weight:900;text-decoration:none;white-space:nowrap}.program{padding:11px 0;border-bottom:1px solid var(--line)}.program:last-child{border-bottom:0}.program b{font-size:11px}.program small{display:block;color:var(--muted);font-size:9px;margin-top:4px}.alert{padding:10px;border-radius:10px;background:#fff8e7;border-right:3px solid var(--gold);font-size:10px;margin-bottom:7px;line-height:1.7}.alert.ok{background:#edf8f3;border-right-color:var(--green)}.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:680px}th,td{text-align:right;padding:10px 8px;border-bottom:1px solid var(--line);font-size:9px}th{background:#f5f7f9;color:var(--navy)}td{color:#385367}.empty{padding:25px;text-align:center;color:var(--muted);font-size:10px}.role-note{display:inline-flex;align-items:center;gap:6px;background:#eef5f9;color:var(--navy);padding:7px 10px;border-radius:10px;font-size:9px;font-weight:800;margin-top:9px}
-@media(max-width:1050px){.kpis{grid-template-columns:repeat(2,1fr)}.grid2{grid-template-columns:1fr}}@media(max-width:760px){.top{height:70px}.topin{padding:0 13px}.status{display:none}.menu{display:block}.shell{min-height:calc(100vh - 70px)}.side{position:fixed;right:-303px;top:70px;height:calc(100vh - 70px);transition:right .2s;box-shadow:-8px 0 24px #0002}.side.open{right:0}.overlay{display:none}.overlay.show{display:block;position:fixed;inset:70px 0 0;background:#0005;z-index:40}.content{padding:16px 12px}.head{align-items:flex-start;flex-direction:column}.today{display:none}.finance{grid-template-columns:1fr 1fr}.finance div{border-left:0;border-bottom:1px solid var(--line);padding:11px}.kpis{grid-template-columns:1fr 1fr}.mark{width:132px;height:58px}.brand b{font-size:15px}.brand small{font-size:8px}}
-@media(max-width:470px){.kpi{padding:12px;min-height:82px}.kicon{width:36px;height:36px}.kpi b{font-size:19px}.finance b{font-size:14px}}
-/* V38 executive dashboard */
-.hero-line{display:flex;align-items:center;gap:10px;margin-top:10px;flex-wrap:wrap}.welcome{font-size:11px;color:var(--navy);font-weight:900}.live-pill{display:inline-flex;align-items:center;gap:6px;background:#edf8f3;color:#17724b;border:1px solid #d7eee2;padding:6px 9px;border-radius:999px;font-size:8px;font-weight:900}.live-dot{width:7px;height:7px;border-radius:50%;background:#21a366;box-shadow:0 0 0 3px #21a36620}.kpi-link{text-decoration:none;color:inherit;display:block}.kpi.clickable{cursor:pointer}.metric-strip{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0 0 15px}.metric{background:#fff;border:1px solid var(--line);border-radius:13px;padding:12px 14px;box-shadow:var(--shadow)}.metric span{display:block;color:var(--muted);font-size:8px}.metric b{display:block;color:var(--navy);font-size:16px;margin-top:5px}.metric small{display:block;color:#9aa7af;font-size:8px;margin-top:3px}.trip .trip-top{align-items:center}.trip-badge{font-size:8px;font-weight:900;padding:5px 8px;border-radius:999px;background:#edf5f9;color:var(--blue);white-space:nowrap}.occupancy{font-size:8px;color:var(--muted);margin-top:8px;display:flex;justify-content:space-between}.empty-state{padding:18px;border:1px dashed #dbe4e9;border-radius:12px;text-align:center;color:var(--muted);font-size:9px;background:#fbfcfd}.mini-count{font-size:8px;color:var(--muted);background:#f3f6f8;border-radius:999px;padding:4px 7px;font-weight:900}.section-action{display:flex;align-items:center;gap:8px}.critical{background:#fff1f1!important;border-right-color:var(--red)!important}.warning{background:#fff8e7!important;border-right-color:var(--orange)!important}.success{background:#edf8f3!important;border-right-color:var(--green)!important}
-@media(max-width:760px){.metric-strip{grid-template-columns:1fr 1fr}.hero-line{margin-top:8px}.welcome{font-size:10px}}
-@media(max-width:470px){.metric-strip{grid-template-columns:1fr 1fr}.metric{padding:10px}.metric b{font-size:14px}}
-body.auth-pending #login{display:none!important}
-
-/* V36 dashboard polish */
-.top{backdrop-filter:blur(10px)}
-.brand{min-width:0}.brand-copy{min-width:0}.brand b{letter-spacing:.1px}
-.menu{width:42px;height:42px;padding:0;display:none;place-items:center}
-.side{scrollbar-width:thin}.nav-group{margin-bottom:4px}.side-title.toggle{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none}.side-title.toggle .chev{transition:transform .2s}.nav-group.collapsed .chev{transform:rotate(180deg)}.nav-group.collapsed .group-items{display:none}
-.kpi{position:relative;overflow:hidden;cursor:pointer;transition:transform .15s,box-shadow .15s}.kpi:after{content:'';position:absolute;width:80px;height:80px;border-radius:50%;background:#ffffff0d;left:-20px;bottom:-35px}.kpi:hover{transform:translateY(-2px)}
-.kpi .kmeta{display:block;font-size:8px;color:#ffffffb8;margin-top:4px}
-.section-label{display:flex;align-items:center;gap:8px;margin:18px 0 10px;color:#6d7d88;font-size:10px;font-weight:900}.section-label:after{content:'';height:1px;background:var(--line);flex:1}
-.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 0 14px}.quick a{display:flex;align-items:center;gap:9px;text-decoration:none;background:#fff;border:1px solid var(--line);border-radius:13px;padding:11px 12px;color:var(--navy);box-shadow:var(--shadow);font-size:10px;font-weight:900}.quick i{font-style:normal;width:30px;height:30px;border-radius:9px;background:#eef5f9;display:grid;place-items:center;color:var(--blue);font-size:13px}.quick small{display:block;color:var(--muted);font-size:8px;margin-top:3px;font-weight:400}
-.alert{display:flex;align-items:flex-start;gap:7px}.alert .adot{width:7px;height:7px;border-radius:50%;background:var(--gold);margin-top:5px;flex:none}.alert.ok .adot{background:var(--green)}
-.activity{display:grid;gap:0}.activity-row{display:grid;grid-template-columns:34px 1fr auto;gap:9px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}.activity-row:last-child{border-bottom:0}.activity-icon{width:34px;height:34px;border-radius:10px;background:#eef5f9;display:grid;place-items:center;color:var(--blue);font-size:12px}.activity-row b{font-size:10px}.activity-row small{display:block;color:var(--muted);font-size:8px;margin-top:3px}.activity-time{font-size:8px;color:#9aa7af;white-space:nowrap}
-.trip{border:1px solid var(--line);border-radius:12px;padding:12px;margin-bottom:8px;background:#fbfcfd}.trip:last-child{margin-bottom:0}.trip-top{display:flex;justify-content:space-between;gap:10px}.trip b{font-size:10px}.badge{font-size:8px;padding:4px 7px;border-radius:999px;background:#edf8f3;color:var(--green);font-weight:900}.trip-meta{display:flex;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:8px;margin-top:7px}.bar{height:6px;background:#edf1f3;border-radius:99px;overflow:hidden;margin-top:8px}.bar i{display:block;height:100%;background:var(--blue);border-radius:99px}
-@media(max-width:760px){.menu{display:grid}.quick{grid-template-columns:1fr 1fr}.brand-copy{display:block}.brand b{font-size:14px}.mark{width:118px;height:56px}.content{padding-top:14px}.head h1{font-size:23px}}
-@media(max-width:470px){.quick a{padding:9px}.quick i{width:28px;height:28px}.quick small{font-size:7px}.brand small{font-size:7px}}
-
-/* V37 — premium mobile drawer */
-.drawer-head{display:flex;align-items:center;justify-content:space-between;padding:6px 7px 10px;border-bottom:1px solid var(--line);margin-bottom:4px}
-.drawer-brand{display:flex;align-items:center;gap:9px;min-width:0}.drawer-brand img{width:38px;height:38px;object-fit:contain;border:1px solid #e4d08b;border-radius:10px;background:#fff}.drawer-brand b{display:block;font-size:11px;color:var(--navy)}.drawer-brand small{display:block;color:var(--muted);font-size:8px;margin-top:2px}
-.drawer-close{width:34px;height:34px;border:1px solid var(--line);background:#f7f9fa;color:var(--navy);border-radius:10px;font-size:18px;cursor:pointer;display:grid;place-items:center}
-.nav{min-height:58px}.nav .ico{box-shadow:inset 0 0 0 1px #e7eef2}.nav.active{box-shadow:inset -3px 0 0 var(--gold)}
-.side-title.toggle{padding-top:13px;padding-bottom:7px}.side-title.toggle .chev{font-size:13px;color:#7e8d97}
-.sidefoot{background:#f7fafb;border:1px solid var(--line);border-radius:14px;margin:12px 2px 2px;padding:11px}.sidefoot b{font-size:10px}.sidefoot span{font-size:8px;line-height:1.7}
-.account-card{display:flex;align-items:center;gap:9px;background:linear-gradient(135deg,#0b3556,#176b9b);color:#fff;border-radius:14px;padding:10px;margin:10px 2px 2px}.account-avatar{width:36px;height:36px;border-radius:11px;background:#ffffff18;border:1px solid #ffffff30;display:grid;place-items:center;font-weight:900}.account-card b{display:block;font-size:10px}.account-card small{display:block;font-size:8px;color:#dcecf5;margin-top:3px}.account-card .dot{margin-right:auto;width:7px;height:7px;border-radius:50%;background:#75d39b;box-shadow:0 0 0 4px #ffffff12}
-.overlay{opacity:0;pointer-events:none;transition:opacity .2s}.overlay.show{opacity:1;pointer-events:auto}
-@media(max-width:760px){
- .side{width:282px;right:-292px;top:70px;padding:10px 10px 12px;box-shadow:-14px 0 34px #0003;transition:right .24s cubic-bezier(.2,.8,.2,1)}
- .side.open{right:0}.content{min-height:calc(100vh - 70px)}
- .drawer-head{padding-top:3px}.nav{padding:9px 8px}.nav b{font-size:10px}.nav small{font-size:8px}.ico{width:34px;height:34px}
- .sidefoot{margin-top:10px}.account-card{margin-top:9px}
-}
-@media(max-width:380px){.side{width:268px;right:-278px}.drawer-brand b{font-size:10px}.nav{min-height:55px}}
-
-/* V40 - executive attention center */
-.attention-grid{display:grid;grid-template-columns:1.25fr 1fr;gap:14px;margin:0 0 14px}.attention-list{display:grid;gap:8px}.attention-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;text-decoration:none;color:var(--text);background:#fff;transition:transform .15s,border-color .15s,box-shadow .15s}.attention-item:hover{transform:translateY(-1px);border-color:#c8d9e3;box-shadow:0 7px 18px rgba(11,53,86,.06)}.ai-main{display:flex;align-items:center;gap:9px;min-width:0}.ai-icon{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;font-size:12px;flex:none;background:#fff1f1;color:var(--red)}.attention-item.warning .ai-icon{background:#fff8e7;color:var(--orange)}.attention-item.info .ai-icon{background:#edf5f9;color:var(--blue)}.attention-item.success .ai-icon{background:#edf8f3;color:var(--green)}.attention-item b{display:block;font-size:10px;color:var(--navy)}.attention-item small{display:block;color:var(--muted);font-size:8px;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ai-arrow{color:#9aa7af;font-size:12px}.activity-row{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid var(--line)}.activity-row:last-child{border-bottom:0}.activity-icon{width:32px;height:32px;border-radius:9px;background:#edf5f9;color:var(--blue);display:grid;place-items:center;font-size:9px;font-weight:900;flex:none}.activity-row b{display:block;font-size:9px;color:var(--navy)}.activity-row small{display:block;font-size:8px;color:var(--muted);margin-top:3px}.activity-time{margin-right:auto;color:#9aa7af;font-size:7px;white-space:nowrap}.bar{height:7px;background:#edf2f5;border-radius:999px;overflow:hidden;margin-top:5px}.bar i{display:block;height:100%;background:var(--blue);border-radius:999px}.trip-top{display:flex;justify-content:space-between;gap:8px}.trip-meta{display:flex;gap:12px;flex-wrap:wrap;margin-top:5px;color:var(--muted);font-size:8px}.trip-badge{font-size:8px;font-weight:900;padding:5px 8px;border-radius:999px;background:#edf5f9;color:var(--blue);white-space:nowrap}.compact-card{padding:14px}.compact-card .sect{margin-bottom:8px}
-@media(max-width:760px){.attention-grid{grid-template-columns:1fr;gap:10px}.attention-item{padding:10px}.activity-time{font-size:7px}}
+:root{--navy:#0b3556;--blue:#176b9b;--gold:#c99a32;--bg:#f7f9fb;--card:#fff;--line:#e5ebef;--text:#17384f;--muted:#71818d;--green:#198754;--shadow:0 12px 35px rgba(11,53,86,.10)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}a{text-decoration:none;color:inherit}.wrap{max-width:1180px;margin:auto;padding:0 18px}
+.topbar{background:#082d4b;color:#fff;font-size:11px}.topin{min-height:38px;display:flex;align-items:center;justify-content:space-between;gap:15px}.contact{display:flex;gap:16px;flex-wrap:wrap;color:#e8f0f5}.brand-note{color:#e3c66e}
+.header{background:#fff;position:sticky;top:0;z-index:50;border-bottom:1px solid var(--line);box-shadow:0 3px 18px #0b35560b}.headin{min-height:78px;display:flex;align-items:center;justify-content:space-between;gap:18px}.logo{height:62px;width:145px;object-fit:contain;border:1px solid #e1c66f;border-radius:12px;background:#fff}.nav{display:flex;align-items:center;gap:6px;flex:1;justify-content:center}.nav a{padding:10px 12px;font-size:11px;font-weight:800;color:#365467;border-radius:9px}.nav a:hover{background:#eef5f9;color:var(--navy)}.actions{display:flex;gap:8px}.btn{border:0;border-radius:11px;padding:11px 15px;font:inherit;font-size:11px;font-weight:900;cursor:pointer}.primary{background:var(--navy);color:#fff}.gold{background:var(--gold);color:#fff}.outline{background:#fff;border:1px solid #cfdbe2;color:var(--navy)}.menu{display:none}
+.hero{min-height:560px;display:flex;align-items:center;background:linear-gradient(90deg,#fff 0%,#fff 46%,#eef5f9 100%);position:relative;overflow:hidden}.hero:before{content:"";position:absolute;width:520px;height:520px;border-radius:50%;left:-180px;top:-120px;background:#c99a3210}.hero-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:35px;align-items:center}.eyebrow{display:inline-flex;background:#eef5f9;color:var(--blue);padding:7px 11px;border-radius:999px;font-size:10px;font-weight:900}.hero h1{font-size:44px;line-height:1.35;margin:17px 0 10px;color:var(--navy)}.hero h1 span{color:var(--gold)}.hero p{font-size:15px;line-height:2;color:var(--muted);max-width:600px}.hero-actions{display:flex;gap:10px;margin-top:22px;flex-wrap:wrap}.trust{display:flex;gap:9px;flex-wrap:wrap;margin-top:24px}.trust div{background:#fff;border:1px solid var(--line);padding:10px 12px;border-radius:12px;box-shadow:var(--shadow);font-size:9px;font-weight:800;color:var(--navy)}.hero-art{background:#fff;border:1px solid #e3eaf0;border-radius:28px;padding:28px;box-shadow:var(--shadow);text-align:center}.hero-art img{max-width:270px;width:72%;height:auto}.hero-art h3{margin:14px 0 5px;color:var(--navy);font-size:20px}.hero-art p{font-size:10px;margin:0 auto;line-height:1.8}
+.section{padding:65px 0}.section-head{display:flex;align-items:end;justify-content:space-between;gap:15px;margin-bottom:22px}.section-head h2{margin:0;color:var(--navy);font-size:27px}.section-head p{margin:7px 0 0;color:var(--muted);font-size:11px}.programs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.program{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow)}.program-top{height:120px;background:linear-gradient(135deg,#0b3556,#176b9b);display:flex;align-items:center;justify-content:center;color:#fff;position:relative}.program-top:after{content:"🕋";font-size:48px;opacity:.92}.program-body{padding:17px}.status{display:inline-block;font-size:8px;font-weight:900;color:var(--green);background:#edf8f3;padding:5px 8px;border-radius:999px}.program h3{font-size:15px;color:var(--navy);margin:11px 0}.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px}.meta div{background:#f7f9fb;border-radius:9px;padding:8px}.meta span{display:block;font-size:8px;color:var(--muted)}.meta b{display:block;font-size:9px;margin-top:4px}.price{font-size:18px!important;color:var(--gold)!important}.program-actions{display:flex;gap:8px;margin-top:14px}.program-actions .btn{flex:1;padding:10px 7px}.empty{grid-column:1/-1;background:#fff;border:1px dashed #ccd9e1;border-radius:15px;padding:30px;text-align:center;color:var(--muted);font-size:11px}
+.features{display:grid;grid-template-columns:repeat(4,1fr);gap:13px}.feature{background:#fff;border:1px solid var(--line);border-radius:15px;padding:20px;text-align:center}.feature i{font-style:normal;font-size:25px}.feature b{display:block;margin-top:10px;color:var(--navy);font-size:12px}.feature p{font-size:9px;color:var(--muted);line-height:1.8}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:15px}.step{background:#fff;border:1px solid var(--line);border-radius:16px;padding:20px}.num{width:36px;height:36px;border-radius:10px;background:var(--navy);color:#fff;display:grid;place-items:center;font-weight:900}.step h3{font-size:13px;color:var(--navy);margin:12px 0 6px}.step p{font-size:9px;color:var(--muted);line-height:1.9}
+.portal{background:linear-gradient(135deg,#082d4b,#0d4a73);color:#fff}.portal-box{display:grid;grid-template-columns:1fr 1fr;gap:16px}.portal-card{background:#ffffff12;border:1px solid #ffffff24;border-radius:18px;padding:25px}.portal-card h2{margin:0 0 8px;font-size:19px}.portal-card p{font-size:10px;line-height:1.9;color:#d9e7ef}.portal-card .btn{margin-top:8px}
+.cta{background:#fff;border:1px solid var(--line);border-radius:20px;padding:25px;display:flex;align-items:center;justify-content:space-between;gap:15px;box-shadow:var(--shadow)}.cta h2{margin:0;color:var(--navy);font-size:21px}.cta p{margin:7px 0 0;color:var(--muted);font-size:10px}
+.footer{background:#072a45;color:#dbe8ef;padding:38px 0 15px}.footgrid{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:25px}.footer h3{color:#fff;margin-top:0}.footer b{color:#e3c66e}.footer p{font-size:10px;line-height:1.9}.copy{border-top:1px solid #ffffff18;margin-top:25px;padding-top:13px;font-size:8px;color:#a9c0ce}
+.modal{position:fixed;inset:0;background:#061b2acc;z-index:100;display:none;align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}.modal-box{width:min(560px,100%);background:#fff;border-radius:20px;padding:22px;position:relative}.close{position:absolute;left:14px;top:12px;border:0;background:#eef3f6;width:34px;height:34px;border-radius:50%;font-size:18px;cursor:pointer}.modal h2{margin:0 0 5px;color:var(--navy)}.modal small{color:var(--muted)}.detail{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:18px}.detail div{background:#f7f9fb;border-radius:10px;padding:10px}.detail span{display:block;color:var(--muted);font-size:8px}.detail b{display:block;margin-top:4px;font-size:10px}.modal-actions{display:flex;gap:8px;margin-top:18px}.modal-actions .btn{flex:1}
+@media(max-width:850px){.nav{display:none}.actions .outline{display:none}.menu{display:block;background:#eef5f9;color:var(--navy);padding:10px 12px}.hero{min-height:auto;padding:55px 0}.hero-grid{grid-template-columns:1fr}.hero-art{order:-1}.hero h1{font-size:34px}.programs{grid-template-columns:1fr 1fr}.features{grid-template-columns:1fr 1fr}.steps{grid-template-columns:1fr}.portal-box{grid-template-columns:1fr}.footgrid{grid-template-columns:1fr 1fr}}
+@media(max-width:520px){.topin{align-items:flex-start;padding-top:8px;padding-bottom:8px;flex-direction:column}.headin{min-height:68px}.logo{width:116px;height:53px}.actions .primary{padding:9px}.hero h1{font-size:29px}.hero p{font-size:12px}.programs,.features,.footgrid{grid-template-columns:1fr}.section{padding:48px 0}.section-head{align-items:flex-start;flex-direction:column}.cta{align-items:flex-start;flex-direction:column}.detail{grid-template-columns:1fr}}
 </style>
 </head>
-<body class="auth-pending">
-<header class="top">
-<div class="topin">
-  <div class="brand"><div class="mark"><img src="./logo.png" alt="قوافل الحرمين"></div><div class="brand-copy"><b>قوافل الحرمين</b><small>المركز الإداري الداخلي</small></div></div>
-  <div class="actions"><span class="status">● النظام متصل</span><button id="menu" class="btn menu">☰</button><button id="logout" class="btn logout">تسجيل الخروج</button></div>
+<body>
+<div class="topbar"><div class="wrap topin"><div class="contact"><span>📍 بغداد - العراق</span><span>📞 +964 778 007 7122</span><span>📞 +964 781 479 9623</span></div><div class="brand-note">رحلتك إلى الحرمين... مسؤوليتنا</div></div></div>
+
+<header class="header"><div class="wrap headin">
+<img class="logo" src="logo.png" alt="قوافل الحرمين للحج والعمرة">
+<nav class="nav">
+<a href="#home">الرئيسية</a><a href="#programs">برامج العمرة</a><a href="#how">طريقة الحجز</a><a href="#why">لماذا قوافل الحرمين؟</a><a href="#contact">تواصل معنا</a>
+</nav>
+<div class="actions"><a class="btn outline" href="pilgrim.html">دخول المعتمر</a><a class="btn primary" href="/admin">دخول الإدارة</a><button class="btn menu" onclick="scrollToPrograms()">☰</button></div>
+</div></header>
+
+<main id="home">
+<section class="hero"><div class="wrap hero-grid">
+<div>
+<span class="eyebrow">قوافل الحرمين للحج والعمرة</span>
+<h1>رحلتك إلى الحرمين<br><span>تبدأ من هنا</span></h1>
+<p>برامج عمرة منظمة، متابعة دقيقة، وخدمة تبدأ من لحظة الحجز حتى العودة إلى الوطن. اختر برنامجك ودعنا نهتم بالتفاصيل.</p>
+<div class="hero-actions"><a class="btn gold" href="#programs">استعرض برامج العمرة</a><a class="btn outline" href="#how">كيف أحجز؟</a></div>
+<div class="trust"><div>✓ تنظيم ومتابعة</div><div>✓ سكن ونقل</div><div>✓ ملف معتمر متكامل</div><div>✓ خدمة مستمرة</div></div>
 </div>
-</header>
+<div class="hero-art"><img src="logo.png" alt=""><h3>قوافل الحرمين</h3><p>للحج والعمرة — من العراق إلى الحرمين بخدمة منظمة وموثوقة.</p></div>
+</div></section>
 
-<section id="login" class="login">
-  <div class="mark"><img src="./logo.png" alt="قوافل الحرمين"></div>
-  <h2>تسجيل دخول الإدارة</h2>
-  <p>المركز الداخلي لإدارة عمليات قوافل الحرمين.</p>
-  <div id="loginMsg"></div>
-  <label>البريد الإلكتروني</label><input id="email" type="email" autocomplete="username">
-  <label>كلمة المرور</label><input id="password" type="password" autocomplete="current-password">
-  <button id="loginBtn" class="primary">دخول إلى النظام</button>
-</section>
+<section class="section" id="programs"><div class="wrap">
+<div class="section-head"><div><h2>برامج العمرة القادمة</h2><p>اختر البرنامج المناسب لك، وستظهر لك تفاصيله قبل طلب الحجز.</p></div><span id="programCount" class="status">جاري تحميل البرامج...</span></div>
+<div id="programList" class="programs"><div class="empty">جاري تحميل البرامج...</div></div>
+</div></section>
 
-<div id="app" class="shell hide">
-  <aside id="side" class="side">
-    <div class="drawer-head"><div class="drawer-brand"><img src="./logo.png" alt="قوافل الحرمين"><div><b>المركز الإداري</b><small>قوافل الحرمين للحج والعمرة</small></div></div><button id="drawerClose" class="drawer-close" aria-label="إغلاق القائمة">×</button></div>
-    <div class="side-title">الرئيسية</div>
-    <a class="nav active" href="./index.html"><span class="ico">⌂</span><div><b>لوحة الشركة</b><small>نظرة شاملة على العمل</small></div></a>
+<section class="section" id="why"><div class="wrap">
+<div class="section-head"><div><h2>لماذا قوافل الحرمين؟</h2><p>نحوّل الرحلة من إجراءات متفرقة إلى تجربة منظمة وواضحة.</p></div></div>
+<div class="features">
+<div class="feature"><i>🗂️</i><b>ملف معتمر متكامل</b><p>بيانات ومستمسكات ومتابعة في نظام واحد.</p></div>
+<div class="feature"><i>🚌</i><b>تنظيم الرحلة</b><p>متابعة البرنامج والنقل والتجهيزات التشغيلية.</p></div>
+<div class="feature"><i>🏨</i><b>وضوح الخدمات</b><p>عرض الفندق والبرنامج والتفاصيل قبل الحجز.</p></div>
+<div class="feature"><i>📱</i><b>متابعة مستمرة</b><p>تحديثات وإشعارات للمعتمر مع تطور ملفه.</p></div>
+</div></div></section>
 
-    <div class="nav-group">
-      <div class="side-title toggle" data-group="operations">العمليات <span class="chev">⌃</span></div>
-      <div class="group-items">
-        <a class="nav" href="./programs.html"><span class="ico">▤</span><div><b>إدارة البرامج</b><small>الأسعار والمقاعد وحالة البرنامج</small></div></a>
-        <a class="nav" href="./pilgrims.html"><span class="ico">♙</span><div><b>إدارة المعتمرين</b><small>الملفات والحجوزات والسداد</small></div></a>
-        <a class="nav" href="./archive.html"><span class="ico">▣</span><div><b>أرشيف المعتمرين</b><small>السجل التاريخي لكل معتمر</small></div></a>
-        <a class="nav" href="./programs.html"><span class="ico">◫</span><div><b>إدارة الرحلات</b><small>التجهيز والمتابعة التشغيلية</small></div></a>
-      </div>
-    </div>
+<section class="section" id="how"><div class="wrap">
+<div class="section-head"><div><h2>طريقة الحجز</h2><p>ثلاث خطوات بسيطة، والنظام يتولى ترتيب بقية التفاصيل.</p></div></div>
+<div class="steps">
+<div class="step"><div class="num">1</div><h3>اختر برنامجك</h3><p>استعرض الرحلات المتاحة وتعرّف على موعد السفر والسكن والسعر والخدمات.</p></div>
+<div class="step"><div class="num">2</div><h3>أرسل طلب الحجز</h3><p>ابدأ بيانات الحجز، ثم تتولى الشركة مراجعة الملف واستكمال الإجراءات.</p></div>
+<div class="step"><div class="num">3</div><h3>تابع رحلتك</h3><p>بعد اعتماد الحجز، تتابع بياناتك والمدفوعات والتأشيرة وتجهيز الرحلة.</p></div>
+</div></div></section>
 
-    <div class="nav-group">
-      <div class="side-title toggle" data-group="finance">المالية <span class="chev">⌃</span></div>
-      <div class="group-items">
-        <a class="nav" href="./financial.html"><span class="ico">د.ع</span><div><b>الإدارة المالية</b><small>المقبوضات والمصروفات والأرباح</small></div></a>
-      </div>
-    </div>
+<section class="section portal"><div class="wrap"><div class="portal-box">
+<div class="portal-card"><h2>👤 بوابة المعتمر</h2><p>مساحتك الخاصة لمتابعة الحجز، الدفعات، المستمسكات، التأشيرة وتفاصيل الرحلة.</p><a class="btn gold" href="pilgrim.html">دخول بوابة المعتمر</a></div>
+<div class="portal-card"><h2>🔐 مركز الإدارة</h2><p>منطقة خاصة بموظفي قوافل الحرمين لإدارة البرامج والمعتمرين والمالية والتشغيل.</p><a class="btn outline" href="internal.html">دخول الموظفين</a></div>
+</div></div></section>
 
-    <div class="nav-group">
-      <div class="side-title toggle" data-group="management">الإدارة <span class="chev">⌃</span></div>
-      <div class="group-items">
-        <a class="nav" href="./employees.html"><span class="ico">♟</span><div><b>الموظفون والصلاحيات</b><small>المستخدمون ومستويات الوصول</small></div></a>
-        <div class="nav soon"><span class="ico">▥</span><div><b>التقارير</b><small>قريبًا</small></div></div>
-        <div class="nav soon"><span class="ico">⚙</span><div><b>إعدادات الشركة</b><small>قريبًا</small></div></div>
-      </div>
-    </div>
-    <div id="accountCard" class="account-card"><div class="account-avatar">♙</div><div><b id="accountName">المستخدم</b><small id="accountRole">حساب إداري</small></div><span class="dot"></span></div>
-    <div class="sidefoot"><b>قوافل الحرمين للحج والعمرة</b><span>المركز الإداري الداخلي · الدينار العراقي</span></div>
-  </aside>
-  <div id="overlay" class="overlay"></div>
+<section class="section"><div class="wrap"><div class="cta"><div><h2>جاهز لرحلتك إلى الحرمين؟</h2><p>ابدأ باختيار البرنامج المناسب لك.</p></div><a class="btn gold" href="#programs">ابدأ الآن</a></div></div></section>
+</main>
 
-  <main class="content">
-    <div class="head">
-      <div><div class="eyebrow">المركز الداخلي</div><h1>لوحة الشركة</h1><p>نظرة تنفيذية سريعة على حركة الشركة والرحلات والحجوزات.</p><div class="hero-line"><span class="welcome" id="welcomeName">أهلاً بك</span><span class="live-pill"><i class="live-dot"></i>النظام يعمل</span></div></div>
-      <div><div id="today" class="today"></div><div id="roleNote" class="role-note hide"></div></div>
-    </div>
+<footer id="contact" class="footer"><div class="wrap footgrid">
+<div><h3>قوافل الحرمين للحج والعمرة</h3><p>رحلة منظمة… وخدمة تستحق الثقة.</p></div>
+<div><b>روابط سريعة</b><p><a href="#programs">برامج العمرة</a></p><p><a href="pilgrim.html">بوابة المعتمر</a></p><p><a href="/admin">مركز الإدارة</a></p></div>
+<div><b>الحجز والاستفسار</b><p>+964 778 007 7122</p><p>+964 781 479 9623</p><p>بغداد - العراق</p></div>
+</div><div class="wrap copy">© 2026 قوافل الحرمين للحج والعمرة — جميع الحقوق محفوظة</div></footer>
 
-    <section class="kpis">
-      <a class="kpi-link" href="./programs.html"><div class="kpi clickable"><div class="kicon">▣</div><div><span>الرحلات المنشورة</span><b id="programs">0</b><span class="kmeta">فتح إدارة البرامج</span></div></div></a>
-      <a class="kpi-link" href="./pilgrims.html"><div class="kpi clickable"><div class="kicon">♙</div><div><span>المعتمرون</span><b id="pilgrims">0</b><span class="kmeta">إدارة الملفات والحجوزات</span></div></div></a>
-      <a class="kpi-link" href="./pilgrims.html"><div class="kpi clickable"><div class="kicon">◫</div><div><span>الحجوزات</span><b id="bookings">0</b><span class="kmeta">آخر الحجوزات</span></div></div></a>
-      <a class="kpi-link" href="./programs.html"><div class="kpi clickable"><div class="kicon">○</div><div><span>المقاعد المتاحة</span><b id="seats">0</b><span class="kmeta">الطاقة المتبقية للرحلات</span></div></div></a>
-    </section>
-
-    <section class="metric-strip">
-      <div class="metric"><span>أقرب رحلة</span><b id="nextTrip">—</b><small id="nextTripMeta">لا توجد رحلة قادمة</small></div>
-      <div class="metric"><span>إشغال الرحلات القادمة</span><b id="overallOccupancy">0%</b><small id="occupancyMeta">من المقاعد المحسوبة</small></div>
-      <div class="metric"><span>الأقساط التي تحتاج متابعة</span><b id="dueCount">0</b><small id="dueMeta">مستحق أو متأخر</small></div>
-    </section>
-
-    <div class="section-label">اختصارات سريعة</div>
-    <section class="quick">
-      <a href="./pilgrims.html"><i>♙</i><div>إضافة معتمر<small>فتح ملف وحجز جديد</small></div></a>
-      <a href="./programs.html"><i>＋</i><div>برنامج جديد<small>إدارة البرامج والرحلات</small></div></a>
-      <a href="./financial.html"><i>د.ع</i><div>المالية<small>الدفعات والمصروفات</small></div></a>
-      <a href="./archive.html"><i>▣</i><div>الأرشيف<small>البحث في السجل الدائم</small></div></a>
-    </section>
-
-    <section id="financeBox" class="finance role-finance hide">
-      <div><span>إجمالي المبيعات</span><b id="sales">0 د.ع</b></div>
-      <div><span>المقبوض</span><b id="received">0 د.ع</b></div>
-      <div><span>المتبقي</span><b id="remaining">0 د.ع</b></div>
-      <div><span>المصروفات</span><b id="expenses">0 د.ع</b></div>
-    </section>
-
-    <div class="attention-grid">
-      <section class="card compact-card">
-        <div class="sect"><div><h2>يحتاج انتباهك</h2><p>أهم الأمور التي تحتاج إجراء اليوم</p></div><span id="alertCount" class="mini-count">0</span></div>
-        <div id="attentionList" class="attention-list">جاري التحميل...</div>
-      </section>
-      <section class="card compact-card">
-        <div class="sect"><div><h2>الرحلات القادمة</h2><p>الإشغال والمقاعد وحالة كل رحلة</p></div><a class="link" href="./programs.html">إدارة الرحلات ←</a></div>
-        <div id="programList">جاري التحميل...</div>
-      </section>
-    </div>
-
-    <section class="card">
-      <div class="sect"><div><h2>آخر نشاط في الشركة</h2><p>الحجوزات والدفعات والمصروفات الأخيرة</p></div><a class="link" href="./pilgrims.html">عرض المعتمرين ←</a></div>
-      <div id="activity" class="activity">جاري التحميل...</div>
-    </section>
-
-    <section class="card">
-      <div class="sect"><div><h2>آخر الحجوزات</h2><p>آخر العمليات المسجلة</p></div><a class="link" href="./pilgrims.html">فتح إدارة المعتمرين ←</a></div>
-      <div class="table"><table><thead><tr><th>المعتمر</th><th>البرنامج</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>السداد</th></tr></thead><tbody id="bookingRows"></tbody></table></div>
-    </section>
-  </main>
-</div>
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div class="modal-box">
+<button class="close" onclick="closeModal()">×</button><h2 id="mTitle">تفاصيل البرنامج</h2><small id="mDesc"></small>
+<div id="mDetail" class="detail"></div>
+<div class="modal-actions"><a id="mWhats" class="btn gold" target="_blank" rel="noopener">طلب الحجز عبر واتساب</a><button class="btn outline" onclick="closeModal()">إغلاق</button></div>
+</div></div>
 
 <script>
 const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
 const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-const $=id=>document.getElementById(id);
-let B=[],P=[],PR=[],I=[],E=[],PA=[],STAFF=null;
-function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
-function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
-function showLoginMsg(t,e=false){document.body.classList.remove('auth-pending');$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
-async function getAccess(){
- const r=await db.auth.getUser();
- if(!r.data.user)return null;
- const q=await db.from('staff_profiles').select('full_name,role,permissions,active').eq('user_id',r.data.user.id).maybeSingle();
- if(q.data&&q.data.active!==false)return {user:r.data.user,staff:q.data};
- const a=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();
- return a.data?{user:r.data.user,staff:{full_name:r.data.user.email,role:a.data.role,permissions:[a.data.role],active:true}}:null;
-}
-async function isAdmin(){const x=await getAccess();return x?x.user:null;}
-function canSeeFinance(){
- const r=STAFF?.role, ps=STAFF?.permissions||[];
- return r==='super_admin'||r==='manager'||r==='finance'||ps.includes('super_admin')||ps.includes('manager')||ps.includes('finance');
-}
-function safeDisplayName(){
- const n=String(STAFF?.full_name||'').trim();
- if(!n || /^[0-9a-f]{8}-[0-9a-f-]{27,}$/i.test(n) || /@/.test(n)) return STAFF?.role==='super_admin'?'المدير العام':STAFF?.role==='manager'?'المدير':'المستخدم';
- return n;
-}
-function hasPerm(p){const r=STAFF?.role,ps=STAFF?.permissions||[];return r==='super_admin'||r==='manager'||ps.includes('super_admin')||ps.includes('manager')||ps.includes(p)}
-function setupAccess(){
- const finance=hasPerm('finance'), trips=hasPerm('trips'), booking=hasPerm('booking_staff'), archive=hasPerm('archive'), employees=STAFF?.role==='super_admin'||STAFF?.role==='manager';
- const map={'./financial.html':finance,'./programs.html':trips,'./pilgrims.html':booking,'./archive.html':archive,'./employees.html':employees};
- Object.entries(map).forEach(([href,ok])=>document.querySelectorAll('a[href="'+href+'"]').forEach(a=>a.classList.toggle('hide',!ok)));
- $('financeBox').classList.toggle('hide',!finance);
- $('roleNote').classList.remove('hide');
- const label=STAFF?.role==='super_admin'?'المدير العام':STAFF?.role==='manager'?'المدير':'الموظف';
- $('roleNote').textContent='صلاحية الدخول: '+label;
- const displayName=safeDisplayName();
- $('accountName').textContent=displayName; $('welcomeName').textContent='أهلاً '+displayName;
- $('accountRole').textContent=label+' · الحساب متصل';
-}
-async function signIn(){document.body.classList.remove('auth-pending');
- const email=$('email').value.trim(),password=$('password').value;
- if(!email||!password)return showLoginMsg('أدخل البريد الإلكتروني وكلمة المرور.',true);
- $('loginBtn').disabled=true;showLoginMsg('جاري التحقق...');
- try{
-   const r=await db.auth.signInWithPassword({email,password});
-   if(r.error)throw r.error;
-   const access=await getAccess(); if(!access){await db.auth.signOut();throw Error('هذا الحساب غير مخول للدخول إلى الإدارة.')} STAFF=access.staff; setupAccess();
-   $('login').classList.add('hide');$('app').classList.remove('hide');await load();
- }catch(e){showLoginMsg(e.message||'تعذر تسجيل الدخول.',true)}
- finally{$('loginBtn').disabled=false}
-}
-$('loginBtn').onclick=signIn;
-$('password').onkeydown=e=>{if(e.key==='Enter')signIn()};
-$('logout').onclick=async()=>{await db.auth.signOut();location.reload()};
-function closeDrawer(){document.body.classList.remove('drawer-open');$('side').classList.remove('open');$('overlay').classList.remove('show')}
-function openDrawer(){document.body.classList.add('drawer-open');$('side').classList.add('open');$('overlay').classList.add('show')}
-$('menu').onclick=openDrawer;
-$('drawerClose').onclick=closeDrawer;
-$('overlay').onclick=closeDrawer;
-document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer()});
-document.querySelectorAll('.nav').forEach(a=>a.addEventListener('click',closeDrawer));
-document.querySelectorAll('.side-title.toggle').forEach(t=>t.addEventListener('click',()=>{const g=t.closest('.nav-group');g.classList.toggle('collapsed');localStorage.setItem('qawafel_group_'+t.dataset.group,g.classList.contains('collapsed')?'1':'0')}));
-document.querySelectorAll('.nav-group').forEach(g=>{const t=g.querySelector('.side-title.toggle');if(t&&localStorage.getItem('qawafel_group_'+t.dataset.group)==='1')g.classList.add('collapsed')});
+const fmt=n=>Number(n||0).toLocaleString('ar-IQ');
+const wa='9647780077122';
 
-function setToday(){
- $('today').textContent=new Intl.DateTimeFormat('ar-IQ',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(new Date());
+function scrollToPrograms(){document.querySelector('#programs').scrollIntoView({behavior:'smooth'});}
+function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function dateText(v){if(!v)return '—'; try{return new Intl.DateTimeFormat('ar-IQ',{year:'numeric',month:'long',day:'numeric'}).format(new Date(v+'T00:00:00'));}catch{return v;}}
+function programCard(p){
+ const sold=Math.max(0,(Number(p.seats_total)||0)-(Number(p.seats_available)||0));
+ const available=Number(p.seats_available)||0;
+ return `<article class="program">
+ <div class="program-top"></div><div class="program-body">
+ <span class="status">${available>0?'متاح للحجز':'مكتمل'}</span>
+ <h3>${esc(p.title||'برنامج عمرة')}</h3>
+ <div class="meta">
+ <div><span>الذهاب</span><b>${dateText(p.departure_date)}</b></div>
+ <div><span>العودة</span><b>${dateText(p.return_date)}</b></div>
+ <div><span>المدينة</span><b>${esc(p.city_hotel||'يحدد لاحقًا')}</b></div>
+ <div><span>مكة</span><b>${esc(p.makkah_hotel||'يحدد لاحقًا')}</b></div>
+ <div><span>نوع الرحلة</span><b>${esc(p.travel_type||'—')}</b></div>
+ <div><span>المقاعد</span><b>${available} متاح من ${Number(p.seats_total)||0}</b></div>
+ <div style="grid-column:1/-1"><span>السعر</span><b class="price">${fmt(p.price)} ${esc(p.currency||'د.ع')}</b></div>
+ </div>
+ <div class="program-actions"><button class="btn outline" onclick='showProgram(${JSON.stringify(p).replace(/'/g,"&#39;")})'>عرض التفاصيل</button><a class="btn primary" target="_blank" rel="noopener" href="${waLink(p)}">احجز الآن</a></div>
+ </div></article>`;
 }
-async function load(){
- const [b,p,pr,i,e,pa]=await Promise.all([
-   db.from('bookings').select('*').order('created_at',{ascending:false}),
-   db.from('pilgrims').select('*'),
-   db.from('programs').select('*').order('departure_date'),
-   db.from('installment_plans').select('*').order('due_date'),
-   db.from('expenses').select('*').order('expense_date',{ascending:false}),
-   db.from('payments').select('*').order('payment_date',{ascending:false}).limit(12)
- ]);
- const er=[b,p,pr,i,e,pa].find(x=>x.error);
- if(er){$('alerts').innerHTML='<div class="alert">'+esc(er.error.message)+'</div>';return}
- B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];PA=pa.data||[];
- $('programs').textContent=PR.filter(x=>x.status==='published').length;
- $('pilgrims').textContent=P.length;
- $('bookings').textContent=B.length;
- $('seats').textContent=PR.reduce((s,x)=>s+Number(x.seats_available||0),0);
- $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
- $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
- $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
- $('expenses').textContent=money(E.reduce((s,x)=>s+Number(x.amount||0),0));
- const todayDate=new Date();
- const upcoming=PR.filter(x=>x.departure_date && new Date(x.departure_date+'T00:00:00')>=new Date(todayDate.toDateString())).sort((a,b)=>String(a.departure_date).localeCompare(String(b.departure_date)));
- const next=upcoming[0];
- $('nextTrip').textContent=next?.title||'—';
- if(next){const d=Math.max(0,Math.ceil((new Date(next.departure_date+'T00:00:00')-new Date(todayDate.toDateString()))/86400000));$('nextTripMeta').textContent=next.departure_date+' · بعد '+d+' يوم';} else $('nextTripMeta').textContent='لا توجد رحلة قادمة';
- let totalSeats=0,usedSeats=0; upcoming.forEach(x=>{const avail=Number(x.seats_available||0);const booked=B.filter(b=>b.program_id===x.id).length;totalSeats+=avail+booked;usedSeats+=booked;});
- $('overallOccupancy').textContent=totalSeats?Math.round(usedSeats/totalSeats*100)+'%':'0%'; $('occupancyMeta').textContent=totalSeats?(usedSeats+' مشغولة من '+totalSeats):'لا توجد طاقة محسوبة';
- render();
+function waLink(p){
+ const text=`السلام عليكم، أرغب بطلب حجز في برنامج "${p.title||''}" بتاريخ ${p.departure_date||''}. أرجو التواصل معي لإكمال البيانات.`;
+ return 'https://wa.me/'+wa+'?text='+encodeURIComponent(text);
 }
-function render(){
- const today=new Date().toISOString().slice(0,10);
- const due=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<=today).sort((a,b)=>String(a.due_date).localeCompare(String(b.due_date)));
- const overdue=due.filter(x=>x.due_date<today);
- const dueToday=due.filter(x=>x.due_date===today);
- const visa=P.filter(x=>x.visa_status&&x.visa_status!=='issued');
- const docs=P.filter(x=>!x.passport_number||!x.passport_expiry);
- const upcoming=PR.filter(x=>x.departure_date && x.departure_date>=today).sort((a,b)=>String(a.departure_date).localeCompare(String(b.departure_date)));
- const nearTrips=upcoming.filter(x=>{const d=Math.ceil((new Date(x.departure_date+'T00:00:00')-new Date(today+'T00:00:00'))/86400000);return d<=14;});
- const attention=[];
- if(overdue.length)attention.push({cls:'critical',icon:'🔴',title:'أقساط متأخرة',desc:overdue.length+' قسط متأخر يحتاج متابعة',href:'./financial.html'});
- if(dueToday.length)attention.push({cls:'warning',icon:'🟠',title:'أقساط مستحقة اليوم',desc:dueToday.length+' قسط مستحق اليوم',href:'./financial.html'});
- if(docs.length)attention.push({cls:'warning',icon:'📄',title:'ملفات جواز تحتاج متابعة',desc:docs.length+' ملف يحتاج استكمال البيانات',href:'./pilgrims.html'});
- if(visa.length)attention.push({cls:'info',icon:'🛂',title:'تأشيرات تحتاج متابعة',desc:visa.length+' ملف تأشيرة غير مكتمل',href:'./pilgrims.html'});
- if(nearTrips.length)attention.push({cls:'info',icon:'🚌',title:'رحلات خلال 14 يومًا',desc:nearTrips.length+' رحلة قريبة من موعد الانطلاق',href:'./programs.html'});
- $('dueCount').textContent=due.length; $('dueMeta').textContent=due.length?'يحتاج متابعة الآن':'لا توجد مستحقات اليوم';
- $('alertCount').textContent=attention.length;
- $('attentionList').innerHTML=attention.length?attention.slice(0,7).map(a=>'<a class="attention-item '+a.cls+'" href="'+a.href+'"><span class="ai-main"><span class="ai-icon">'+a.icon+'</span><span><b>'+esc(a.title)+'</b><small>'+esc(a.desc)+'</small></span></span><span class="ai-arrow">←</span></a>').join(''):'<div class="empty-state">✓ لا توجد أمور حرجة تحتاج إجراء حاليًا.</div>';
-
- $('programList').innerHTML=upcoming.slice(0,5).map(x=>{
-   const avail=Number(x.seats_available||0), booked=B.filter(b=>b.program_id===x.id).length, cap=avail+booked, used=cap?Math.max(0,Math.min(100,Math.round(booked/cap*100))):0;
-   return '<div class="trip"><div class="trip-top"><b>'+esc(x.title)+'</b><span class="trip-badge">'+esc(x.status||'مفتوح')+'</span></div><div class="trip-meta"><span>📅 '+esc(x.departure_date||'—')+'</span><span>💺 المتاح: '+avail+'</span><span>👤 المحجوز: '+booked+'</span></div><div class="occupancy"><span>نسبة الإشغال</span><b>'+used+'%</b></div><div class="bar"><i style="width:'+used+'%"></i></div></div>';
- }).join('')||'<div class="empty">لا توجد رحلات قادمة.</div>';
-
- const activity=[];
- B.slice(0,8).forEach(b=>{const p=P.find(x=>x.booking_id===b.id);const pr=PR.find(x=>x.id===b.program_id);activity.push({icon:'♙',title:'حجز جديد',desc:(p?.full_name||b.full_name||'معتمر')+' · '+(pr?.title||'برنامج غير محدد'),time:b.created_at||b.created_at});});
- PA.slice(0,8).forEach(x=>{const b=B.find(z=>z.id===x.booking_id);const p=P.find(z=>z.booking_id===x.booking_id);activity.push({icon:'د.ع',title:'دفعة مسجلة',desc:(p?.full_name||b?.full_name||'معتمر')+' · '+money(x.amount),time:x.payment_date||x.created_at});});
- E.slice(0,5).forEach(e=>activity.push({icon:'د.ع',title:'مصروف مسجل',desc:(e.description||e.title||'مصروف')+' · '+money(e.amount),time:e.created_at||e.expense_date}));
- activity.sort((a,b)=>new Date(b.time||0)-new Date(a.time||0));
- $('activity').innerHTML=activity.slice(0,8).map(a=>'<div class="activity-row"><div class="activity-icon">'+esc(a.icon)+'</div><div><b>'+esc(a.title)+'</b><small>'+esc(a.desc)+'</small></div><span class="activity-time">'+(a.time?new Date(a.time).toLocaleDateString('ar-IQ'):'—')+'</span></div>').join('')||'<div class="empty">لا توجد عمليات مسجلة بعد.</div>';
-
- $('bookingRows').innerHTML=B.slice(0,12).map(b=>{
-   const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);
-   return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+(b.payment_type==='installment'?'أقساط':'نقد')+'</td></tr>'
- }).join('')||'<tr><td colspan="6" class="empty">لا توجد حجوزات.</td></tr>';
+function showProgram(p){
+ document.getElementById('mTitle').textContent=p.title||'تفاصيل البرنامج';
+ document.getElementById('mDesc').textContent=p.description||'برنامج عمرة منظم من قوافل الحرمين.';
+ document.getElementById('mDetail').innerHTML=[
+ ['تاريخ الذهاب',dateText(p.departure_date)],['تاريخ العودة',dateText(p.return_date)],
+ ['فندق المدينة',p.city_hotel||'—'],['فندق مكة',p.makkah_hotel||'—'],
+ ['نوع الرحلة',p.travel_type||'—'],['السعر',fmt(p.price)+' '+(p.currency||'د.ع')],
+ ['المقاعد المتاحة',fmt(p.seats_available)],['الخدمات',p.services||'تجهيز ومتابعة']
+ ].map(x=>`<div><span>${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join('');
+ document.getElementById('mWhats').href=waLink(p);
+ document.getElementById('modal').classList.add('show');
 }
-document.querySelectorAll('.side-title.toggle').forEach(t=>t.onclick=()=>t.parentElement.classList.toggle('collapsed'));
-setToday();
-(async()=>{const s=await db.auth.getSession();if(s.data.session){const access=await getAccess(); if(access){STAFF=access.staff;setupAccess();$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load();}else{document.body.classList.remove('auth-pending')}}else{document.body.classList.remove('auth-pending')}})();
+function closeModal(){document.getElementById('modal').classList.remove('show');}
+async function loadPrograms(){
+ const box=document.getElementById('programList'), count=document.getElementById('programCount');
+ const {data,error}=await db.from('programs').select('*').in('status',['published','active']).order('departure_date',{ascending:true});
+ if(error){box.innerHTML='<div class="empty">تعذر تحميل البرامج حاليًا. يمكنكم التواصل معنا مباشرة عبر أرقام الحجز.</div>';count.textContent='تواصل معنا للحجز';return;}
+ const rows=(data||[]).filter(p=>p.seats_available==null || Number(p.seats_available)>0);
+ count.textContent=rows.length?`${rows.length} برامج متاحة`:'لا توجد رحلات منشورة حاليًا';
+ box.innerHTML=rows.length?rows.map(programCard).join(''):'<div class="empty">لا توجد برامج منشورة حاليًا. ترقبوا الرحلات القادمة أو تواصلوا معنا.</div>';
+}
+loadPrograms();
 </script>
 </body>
 </html>

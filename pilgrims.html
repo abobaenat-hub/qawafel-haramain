@@ -342,7 +342,40 @@ async function printBadges(list,title){
  const w=window.open('about:blank','_blank');
  if(!w){return alert('المتصفح منع نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم اضغط طباعة الباج مرة أخرى.');}
  w.document.open();
- w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باجات — '+esc(title||'قوافل الحرمين')+'</title><style>'+badgePrintCSS()+'</style></head><body><div id="printArea" class="badge-grid"><div style="padding:20px;text-align:center;font-family:Tahoma,Arial">جاري تجهيز الباجات…</div></div></body></html>');
+ w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باجات — '+esc(title||'قوافل الحرمين')+'</title><style>'+badgePrintCSS()+'</style></head><body><div id="printArea" class="badge-grid"><div style="padding:20px;text-align:center;font-family:Tahoma,Arial">جاري تجهيز الباجات…</div></div><script>
+/* V65 Audit Trail */
+(function(){
+  const AUDIT_KEY='qawafel_audit_session_logged_v65';
+  async function audit(action, entity_type=null, entity_id=null, entity_label=null, details={}){
+    try{
+      if(!window.db) return;
+      const {data}=await window.db.auth.getUser(); const u=data?.user; if(!u) return;
+      let sp=await window.db.from('staff_profiles').select('full_name,active').eq('user_id',u.id).maybeSingle();
+      if(sp.error || !sp.data?.active) return;
+      const name=sp.data.full_name||u.email||'موظف';
+      await window.db.from('audit_logs').insert({staff_id:u.id,staff_name:name,action,entity_type,entity_id,entity_label,details:details||{},page:location.pathname.split('/').pop()||'index.html',user_agent:navigator.userAgent});
+    }catch(e){ console.debug('audit',e); }
+  }
+  window.qawafelAudit=audit;
+  window.qawafelAuditPage=async()=>{ await audit('page_view','page',location.pathname,document.title); };
+  document.addEventListener('click',function(e){
+    const el=e.target.closest('button,a,.nav'); if(!el) return;
+    const txt=(el.innerText||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);
+    if(!txt) return;
+    const id=el.id||null;
+    setTimeout(()=>audit('ui_action','ui',id,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null}),0);
+  },true);
+  if(window.db){
+    window.db.auth.onAuthStateChange((event,session)=>{
+      if(event==='SIGNED_IN' && session?.user){
+        if(!sessionStorage.getItem(AUDIT_KEY)){sessionStorage.setItem(AUDIT_KEY,'1');audit('login','auth',session.user.id,'تسجيل دخول');}
+      }
+    });
+    setTimeout(()=>window.qawafelAuditPage(),700);
+  }
+})();
+</script>
+</body></html>');
  w.document.close();
  const cards=[];
  for(const x of list){const b=B.find(z=>z.id===x.booking_id),pr=PR.find(z=>z.id===b?.program_id);cards.push(badgeHtml(await badgeData(x,b,pr)))}
@@ -519,6 +552,39 @@ $('form').onsubmit=async e=>{
 };
 
 (async()=>{try{const{data:{session}}=await db.auth.getSession();if(session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load()}else{document.body.classList.remove('auth-pending')}}catch(e){document.body.classList.remove('auth-pending');msg('loginMsg',e.message||'تعذر فحص الجلسة.',true)}})();
+</script>
+<script>
+/* V65 Audit Trail */
+(function(){
+  const AUDIT_KEY='qawafel_audit_session_logged_v65';
+  async function audit(action, entity_type=null, entity_id=null, entity_label=null, details={}){
+    try{
+      if(!window.db) return;
+      const {data}=await window.db.auth.getUser(); const u=data?.user; if(!u) return;
+      let sp=await window.db.from('staff_profiles').select('full_name,active').eq('user_id',u.id).maybeSingle();
+      if(sp.error || !sp.data?.active) return;
+      const name=sp.data.full_name||u.email||'موظف';
+      await window.db.from('audit_logs').insert({staff_id:u.id,staff_name:name,action,entity_type,entity_id,entity_label,details:details||{},page:location.pathname.split('/').pop()||'index.html',user_agent:navigator.userAgent});
+    }catch(e){ console.debug('audit',e); }
+  }
+  window.qawafelAudit=audit;
+  window.qawafelAuditPage=async()=>{ await audit('page_view','page',location.pathname,document.title); };
+  document.addEventListener('click',function(e){
+    const el=e.target.closest('button,a,.nav'); if(!el) return;
+    const txt=(el.innerText||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);
+    if(!txt) return;
+    const id=el.id||null;
+    setTimeout(()=>audit('ui_action','ui',id,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null}),0);
+  },true);
+  if(window.db){
+    window.db.auth.onAuthStateChange((event,session)=>{
+      if(event==='SIGNED_IN' && session?.user){
+        if(!sessionStorage.getItem(AUDIT_KEY)){sessionStorage.setItem(AUDIT_KEY,'1');audit('login','auth',session.user.id,'تسجيل دخول');}
+      }
+    });
+    setTimeout(()=>window.qawafelAuditPage(),700);
+  }
+})();
 </script>
 </body>
 </html>

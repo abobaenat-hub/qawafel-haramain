@@ -94,6 +94,15 @@
       <div class="sect"><div><h2>آخر الحجوزات</h2><p>آخر العمليات المسجلة</p></div><a class="link" href="./pilgrims.html">فتح إدارة المعتمرين ←</a></div>
       <div class="table"><table><thead><tr><th>المعتمر</th><th>البرنامج</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>السداد</th></tr></thead><tbody id="bookingRows"></tbody></table></div>
     </section>
+
+    <section id="auditCard" class="card hide">
+      <div class="sect"><div><h2>سجل نشاط الموظفين</h2><p>للمدير العام: الدخول، فتح الصفحات، والعمليات التي نفذها الموظفون.</p></div><button id="refreshAudit" class="btn" style="background:#edf4f8;color:var(--navy)">تحديث</button></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+        <select id="auditStaff" style="padding:9px;border:1px solid var(--line);border-radius:9px;min-width:170px"><option value="">كل الموظفين</option></select>
+        <select id="auditAction" style="padding:9px;border:1px solid var(--line);border-radius:9px;min-width:150px"><option value="">كل العمليات</option><option value="login">تسجيل دخول</option><option value="page_view">فتح صفحة</option><option value="ui_action">عملية داخل النظام</option></select>
+      </div>
+      <div class="table"><table><thead><tr><th>التاريخ والوقت</th><th>الموظف</th><th>العملية</th><th>التفاصيل</th><th>الصفحة</th></tr></thead><tbody id="auditRows"><tr><td colspan="5">جاري التحميل...</td></tr></tbody></table></div>
+    </section>
   </main>
 </div>
 
@@ -136,6 +145,22 @@ document.querySelectorAll('.nav').forEach(a=>a.addEventListener('click',()=>{$('
 function setToday(){
  $('today').textContent=new Intl.DateTimeFormat('ar-IQ',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(new Date());
 }
+async function getCurrentStaff(){const r=await db.auth.getUser();if(!r.data.user)return null;const q=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',r.data.user.id).maybeSingle();return q.data||null}
+async function loadAudit(){
+ const me=await getCurrentStaff(); if(!me||me.role!=='super_admin'||!me.active){$('auditCard').classList.add('hide');return;}
+ $('auditCard').classList.remove('hide');
+ const st=await db.from('staff_profiles').select('user_id,full_name').eq('active',true).order('full_name');
+ if(!st.error) $('auditStaff').innerHTML='<option value="">كل الموظفين</option>'+st.data.map(x=>'<option value="'+esc(x.user_id)+'">'+esc(x.full_name||'موظف')+'</option>').join('');
+ await renderAudit();
+}
+async function renderAudit(){
+ let q=db.from('audit_logs').select('created_at,staff_id,staff_name,action,entity_label,page,details').order('created_at',{ascending:false}).limit(150);
+ const staff=$('auditStaff').value, act=$('auditAction').value; if(staff) q=q.eq('staff_id',staff); if(act) q=q.eq('action',act);
+ const r=await q; if(r.error){$('auditRows').innerHTML='<tr><td colspan="5">تعذر تحميل سجل النشاط.</td></tr>';return;}
+ const labels={login:'دخول',page_view:'فتح صفحة',ui_action:'عملية'};
+ $('auditRows').innerHTML=(r.data||[]).map(x=>{const d=x.details||{};const detail=x.entity_label||d.href||'—';return '<tr><td>'+new Date(x.created_at).toLocaleString('ar-IQ')+'</td><td><b>'+esc(x.staff_name||'—')+'</b></td><td>'+esc(labels[x.action]||x.action)+'</td><td>'+esc(detail)+'</td><td>'+esc(x.page||'—')+'</td></tr>'}).join('')||'<tr><td colspan="5">لا توجد نشاطات مسجلة.</td></tr>';
+}
+$('auditStaff').onchange=renderAudit;$('auditAction').onchange=renderAudit;$('refreshAudit').onclick=renderAudit;
 async function load(){
  const [b,p,pr,i,e]=await Promise.all([
    db.from('bookings').select('*').order('created_at',{ascending:false}),
@@ -177,6 +202,39 @@ function render(){
 }
 setToday();
 (async()=>{const s=await db.auth.getSession();if(s.data.session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');await load()}})();
+</script>
+<script>
+/* V65 Audit Trail */
+(function(){
+  const AUDIT_KEY='qawafel_audit_session_logged_v65';
+  async function audit(action, entity_type=null, entity_id=null, entity_label=null, details={}){
+    try{
+      if(!window.db) return;
+      const {data}=await window.db.auth.getUser(); const u=data?.user; if(!u) return;
+      let sp=await window.db.from('staff_profiles').select('full_name,active').eq('user_id',u.id).maybeSingle();
+      if(sp.error || !sp.data?.active) return;
+      const name=sp.data.full_name||u.email||'موظف';
+      await window.db.from('audit_logs').insert({staff_id:u.id,staff_name:name,action,entity_type,entity_id,entity_label,details:details||{},page:location.pathname.split('/').pop()||'index.html',user_agent:navigator.userAgent});
+    }catch(e){ console.debug('audit',e); }
+  }
+  window.qawafelAudit=audit;
+  window.qawafelAuditPage=async()=>{ await audit('page_view','page',location.pathname,document.title); };
+  document.addEventListener('click',function(e){
+    const el=e.target.closest('button,a,.nav'); if(!el) return;
+    const txt=(el.innerText||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);
+    if(!txt) return;
+    const id=el.id||null;
+    setTimeout(()=>audit('ui_action','ui',id,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null}),0);
+  },true);
+  if(window.db){
+    window.db.auth.onAuthStateChange((event,session)=>{
+      if(event==='SIGNED_IN' && session?.user){
+        if(!sessionStorage.getItem(AUDIT_KEY)){sessionStorage.setItem(AUDIT_KEY,'1');audit('login','auth',session.user.id,'تسجيل دخول');}
+      }
+    });
+    setTimeout(()=>window.qawafelAuditPage(),700);
+  }
+})();
 </script>
 </body>
 </html>

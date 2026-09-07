@@ -9,4 +9,37 @@ function render(){const q=(document.getElementById('q').value||'').trim().toLowe
 async function deleteArchive(id){const a=archives.find(x=>x.id===id);if(!a)return;const ok=confirm(`⚠️ حذف ملف «${a.full_name||'المعتمر'}» من الأرشيف؟\n\nسيُحذف ملف الأرشيف فقط، وستبقى سجلات الرحلات والدفعات محفوظة.`);if(!ok)return;try{const {error}=await sb.rpc('delete_pilgrim_archive',{p_archive_id:id});if(error)throw error;archives=archives.filter(x=>x.id!==id);document.getElementById('modal').style.display='none';render();alert('تم حذف ملف المعتمر من الأرشيف بنجاح.');}catch(e){alert('تعذر الحذف: '+(e?.message||e));}}
 function detail(id){const a=archives.find(x=>x.id===id);if(!a)return;document.getElementById('mtitle').textContent='ملف: '+(a.full_name||'معتمر');document.getElementById('detail').innerHTML=`${window.__superAdmin?`<div style="display:flex;justify-content:flex-start;margin-bottom:14px"><button class="btn danger" onclick="deleteArchive('${a.id}')">🗑️ حذف ملف المعتمر من الأرشيف</button></div>`:''}<div class="grid"><div class="card"><small>الاسم</small><br><b>${esc(a.full_name||'—')}</b></div><div class="card"><small>الهاتف</small><br><b>${esc(a.phone||'—')}</b></div><div class="card"><small>الجواز</small><br><b>${esc(a.passport_number||'—')}</b></div><div class="card"><small>انتهاء الجواز</small><br><b>${esc(a.passport_expiry||'—')}</b></div><div class="card"><small>الجنسية</small><br><b>${esc(a.nationality||'—')}</b></div><div class="card"><small>المحافظة</small><br><b>${esc(a.governorate||'—')}</b></div><div class="card"><small>عدد مرات السفر</small><br><b>${a._bookings.length}</b></div><div class="card"><small>إجمالي المدفوع</small><br><b>${money(a._paid)}</b></div></div><div class="history"><h3>سجل الرحلات</h3>${a._bookings.length?a._bookings.map(b=>`<div class="card" style="margin:8px 0"><b>${esc(b.booking_number||'حجز')}</b> — ${new Date(b.created_at).toLocaleDateString('ar-IQ')}<br><small>قيمة الحجز: ${money(b.total_amount)} · المدفوع: ${money(b.paid_amount)} · المتبقي: ${money(b.remaining_amount)} · ${esc(b.payment_type||'')}</small></div>`).join(''):'<div class="empty">لا توجد رحلات مسجلة</div>'}</div>`;document.getElementById('modal').style.display='block'}
 document.getElementById('close').onclick=()=>document.getElementById('modal').style.display='none';document.getElementById('q').oninput=render;document.getElementById('sort').onchange=render;document.getElementById('refresh').onclick=loadArchive;loadArchive();
-</script></body></html>
+</script><script>
+/* V65 Audit Trail */
+(function(){
+  const AUDIT_KEY='qawafel_audit_session_logged_v65';
+  async function audit(action, entity_type=null, entity_id=null, entity_label=null, details={}){
+    try{
+      if(!window.db) return;
+      const {data}=await window.db.auth.getUser(); const u=data?.user; if(!u) return;
+      let sp=await window.db.from('staff_profiles').select('full_name,active').eq('user_id',u.id).maybeSingle();
+      if(sp.error || !sp.data?.active) return;
+      const name=sp.data.full_name||u.email||'موظف';
+      await window.db.from('audit_logs').insert({staff_id:u.id,staff_name:name,action,entity_type,entity_id,entity_label,details:details||{},page:location.pathname.split('/').pop()||'index.html',user_agent:navigator.userAgent});
+    }catch(e){ console.debug('audit',e); }
+  }
+  window.qawafelAudit=audit;
+  window.qawafelAuditPage=async()=>{ await audit('page_view','page',location.pathname,document.title); };
+  document.addEventListener('click',function(e){
+    const el=e.target.closest('button,a,.nav'); if(!el) return;
+    const txt=(el.innerText||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);
+    if(!txt) return;
+    const id=el.id||null;
+    setTimeout(()=>audit('ui_action','ui',id,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null}),0);
+  },true);
+  if(window.db){
+    window.db.auth.onAuthStateChange((event,session)=>{
+      if(event==='SIGNED_IN' && session?.user){
+        if(!sessionStorage.getItem(AUDIT_KEY)){sessionStorage.setItem(AUDIT_KEY,'1');audit('login','auth',session.user.id,'تسجيل دخول');}
+      }
+    });
+    setTimeout(()=>window.qawafelAuditPage(),700);
+  }
+})();
+</script>
+</body></html>
