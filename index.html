@@ -17,7 +17,7 @@
 
 .searchbar{margin-top:-18px;position:relative;z-index:5}.searchbox{background:#fff;border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:13px;display:grid;grid-template-columns:1.2fr 1fr 1fr auto;gap:9px}.searchbox label{background:#f7f9fa;border:1px solid #edf1f3;border-radius:11px;padding:9px 12px}.searchbox small{display:block;color:var(--muted);font-size:8px}.searchbox select,.searchbox input{border:0;background:transparent;outline:0;width:100%;font:inherit;font-size:10px;font-weight:800;color:var(--navy);padding-top:5px}
 
-.section{padding:62px 0}.headrow{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:22px}.headrow h2{margin:0;color:var(--navy);font-size:27px}.headrow p{margin:7px 0 0;color:var(--muted);font-size:10px}.count{font-size:9px;color:var(--green);background:#eaf7f1;padding:8px 10px;border-radius:999px;font-weight:900}.programs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.program{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px #082f5009}.program-banner{height:118px;background:linear-gradient(135deg,#092f50,#1a729f);display:flex;align-items:center;justify-content:center;color:#fff;font-size:45px}.program-body{padding:16px}.tag{display:inline-block;background:#edf8f3;color:var(--green);font-size:8px;font-weight:900;padding:5px 8px;border-radius:999px}.program h3{margin:10px 0;font-size:14px;color:var(--navy)}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:7px}.info{background:#f7f9fa;border-radius:9px;padding:8px}.info small{display:block;color:var(--muted);font-size:7px}.info b{display:block;margin-top:3px;font-size:9px;color:var(--navy)}.info .price{font-size:16px;color:var(--gold)}.card-actions{display:flex;gap:7px;margin-top:12px}.card-actions .btn{flex:1;padding:10px 6px;font-size:9px}.empty{grid-column:1/-1;background:#fff;border:1px dashed #ccd9e1;border-radius:15px;padding:28px;text-align:center;color:var(--muted);font-size:10px}
+.section{padding:62px 0}.headrow{display:flex;justify-content:space-between;align-items:end;gap:20px;margin-bottom:22px}.headrow h2{margin:0;color:var(--navy);font-size:27px}.headrow p{margin:7px 0 0;color:var(--muted);font-size:10px}.count{font-size:9px;color:var(--green);background:#eaf7f1;padding:8px 10px;border-radius:999px;font-weight:900}.programs{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.program{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 10px 30px #082f5009}.program-top{height:118px;background:linear-gradient(135deg,#092f50,#1a729f);display:flex;align-items:center;justify-content:center;color:#fff;font-size:45px;position:relative}.program-top:after{content:"🕋  🕌";font-size:42px;opacity:.92}.program-body{padding:16px}.status{display:inline-block;background:#edf8f3;color:var(--green);font-size:8px;font-weight:900;padding:5px 8px;border-radius:999px}.program h3{margin:10px 0;font-size:14px;color:var(--navy)}.meta{display:grid;grid-template-columns:1fr 1fr;gap:7px}.meta>div{background:#f7f9fa;border-radius:9px;padding:8px}.meta span{display:block;color:var(--muted);font-size:7px}.meta b{display:block;margin-top:3px;font-size:9px;color:var(--navy)}.meta .price{font-size:16px;color:var(--gold)}.program-actions{display:flex;gap:7px;margin-top:12px}.program-actions .btn{flex:1;padding:10px 6px;font-size:9px}.empty{grid-column:1/-1;background:#fff;border:1px dashed #ccd9e1;border-radius:15px;padding:28px;text-align:center;color:var(--muted);font-size:10px}
 
 .trustband{background:#fff;border-top:1px solid var(--line);border-bottom:1px solid var(--line);padding:25px 0}.trustgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.trustitem{text-align:center;padding:8px}.trustitem i{font-style:normal;font-size:25px}.trustitem b{display:block;font-size:11px;margin-top:7px;color:var(--navy)}.trustitem span{display:block;font-size:8px;color:var(--muted);margin-top:4px}
 .tracking{background:linear-gradient(135deg,#082f50,#0d4b73);color:#fff;padding:55px 0}.tracking-grid{display:grid;grid-template-columns:.9fr 1.1fr;gap:35px;align-items:center}.tracking h2{font-size:28px;margin:0 0 10px}.tracking p{font-size:11px;color:#d6e5ed;line-height:2}.track-card{background:#fff;color:var(--text);border-radius:20px;padding:20px}.track-input{display:flex;gap:8px}.track-input input{flex:1;border:1px solid var(--line);border-radius:11px;padding:12px;font:inherit;font-size:10px;outline:0}.track-result{margin-top:12px;background:#f6f9fa;border-radius:12px;padding:12px;display:none;font-size:9px}.track-result.show{display:block}.track-result b{color:var(--navy)}
@@ -32,6 +32,8 @@
 
 @media(max-width:900px){.nav{display:none}.menu{display:inline-flex}.hero-grid{grid-template-columns:1fr}.hero-card{order:-1}.hero{padding-top:42px}.searchbox{grid-template-columns:1fr 1fr}.searchbox .search-btn{grid-column:1/-1}.programs{grid-template-columns:1fr 1fr}.trustgrid,.features{grid-template-columns:1fr 1fr}.tracking-grid{grid-template-columns:1fr}.portal-grid{grid-template-columns:1fr}.footgrid{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.wrap{width:min(100% - 22px,1180px)}.topin{height:auto;padding:8px 0;align-items:flex-start;flex-direction:column}.toplinks{gap:8px}.header{height:70px}.logo{width:106px;height:53px}.head-actions .outline{display:none}.hero{padding:38px 0 45px}.hero h1{font-size:34px}.hero .lead{font-size:11px}.hero-card{padding:18px}.logo-large{width:175px;height:175px}.searchbar{margin-top:-10px}.searchbox{grid-template-columns:1fr}.searchbox .search-btn{grid-column:auto}.section{padding:45px 0}.headrow{align-items:flex-start;flex-direction:column}.programs,.features,.trustgrid,.steps{grid-template-columns:1fr}.hero-actions .btn{width:100%}.track-input{flex-direction:column}.portal-grid{grid-template-columns:1fr}.cta{align-items:flex-start;flex-direction:column}.cta .btn{width:100%}.footgrid{grid-template-columns:1fr}.detail{grid-template-columns:1fr}}
+.program-top{background:linear-gradient(135deg,#0a3557 0%,#2d86a9 100%)}
+@media(max-width:560px){.top{font-size:10px}.topin{justify-content:center;align-items:center}.topnote{display:none}.headin{justify-content:space-between;gap:8px}.head-actions{order:-1}.head-actions .primary{padding:11px 13px}.logo{margin-right:auto}.hero-card{display:none}.hero-grid{display:block}.hero h1{font-size:31px;text-align:center}.hero .lead{text-align:center}.hero-actions{justify-content:center}.mini-trust{justify-content:center}.searchbox{padding:14px;border-radius:20px}.section#programs{padding-top:38px}.headrow h2{font-size:25px}.programs{gap:13px}.program-top{height:125px}.program-body{padding:14px}.program h3{font-size:14px}.meta b{font-size:8px}.program-actions .btn{font-size:8px}.tracking{padding:42px 0}}
 </style>
 </head>
 <body>
@@ -125,74 +127,70 @@ const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const fmt=n=>Number(n||0).toLocaleString('ar-IQ');
 const wa='9647780077122';
-
-function scrollToPrograms(){document.querySelector('#programs').scrollIntoView({behavior:'smooth'});}
+let allPrograms=[];
 function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
-function dateText(v){if(!v)return '—'; try{return new Intl.DateTimeFormat('ar-IQ',{year:'numeric',month:'long',day:'numeric'}).format(new Date(v+'T00:00:00'));}catch{return v;}}
+function dateText(v){if(!v)return '—';try{return new Intl.DateTimeFormat('ar-IQ',{year:'numeric',month:'numeric',day:'numeric'}).format(new Date(v+'T00:00:00'));}catch{return v;}}
+function waLink(p){const text=`السلام عليكم، أرغب بطلب حجز في برنامج "${p.title||''}" بتاريخ ${p.departure_date||''}. أرجو التواصل معي لإكمال البيانات.`;return 'https://wa.me/'+wa+'?text='+encodeURIComponent(text);}
 function programCard(p){
- const sold=Math.max(0,(Number(p.seats_total)||0)-(Number(p.seats_available)||0));
  const available=Number(p.seats_available)||0;
  return `<article class="program">
- <div class="program-top"></div><div class="program-body">
- <span class="status">${available>0?'متاح للحجز':'مكتمل'}</span>
- <h3>${esc(p.title||'برنامج عمرة')}</h3>
- <div class="meta">
- <div><span>الذهاب</span><b>${dateText(p.departure_date)}</b></div>
- <div><span>العودة</span><b>${dateText(p.return_date)}</b></div>
- <div><span>المدينة</span><b>${esc(p.city_hotel||'يحدد لاحقًا')}</b></div>
- <div><span>مكة</span><b>${esc(p.makkah_hotel||'يحدد لاحقًا')}</b></div>
- <div><span>نوع الرحلة</span><b>${esc(p.travel_type||'—')}</b></div>
- <div><span>المقاعد</span><b>${available} متاح من ${Number(p.seats_total)||0}</b></div>
- <div style="grid-column:1/-1"><span>السعر</span><b class="price">${fmt(p.price)} ${esc(p.currency||'د.ع')}</b></div>
- </div>
- <div class="program-actions"><button class="btn outline" onclick='showProgram(${JSON.stringify(p).replace(/'/g,"&#39;")})'>عرض التفاصيل</button><a class="btn primary" target="_blank" rel="noopener" href="${waLink(p)}">احجز الآن</a></div>
- </div></article>`;
+  <div class="program-top"></div>
+  <div class="program-body">
+   <span class="status">${available>0?'متاح للحجز':'مكتمل'}</span>
+   <h3>${esc(p.title||'برنامج عمرة')}</h3>
+   <div class="meta">
+    <div><span>الذهاب</span><b>${dateText(p.departure_date)}</b></div>
+    <div><span>العودة</span><b>${dateText(p.return_date)}</b></div>
+    <div><span>المدينة</span><b>${esc(p.city_hotel||'يحدد لاحقًا')}</b></div>
+    <div><span>مكة</span><b>${esc(p.makkah_hotel||'يحدد لاحقًا')}</b></div>
+    <div><span>نوع الرحلة</span><b>${esc(p.travel_type||'—')}</b></div>
+    <div><span>المقاعد</span><b>${fmt(available)} متاح</b></div>
+    <div style="grid-column:1/-1"><span>السعر للشخص</span><b class="price">${fmt(p.price)} ${esc(p.currency||'د.ع')}</b></div>
+   </div>
+   <div class="program-actions"><button class="btn outline" onclick="showProgramById('${p.id}')">تفاصيل البرنامج</button><a class="btn gold" target="_blank" rel="noopener" href="${waLink(p)}">احجز الآن</a></div>
+  </div>
+ </article>`;
 }
-function waLink(p){
- const text=`السلام عليكم، أرغب بطلب حجز في برنامج "${p.title||''}" بتاريخ ${p.departure_date||''}. أرجو التواصل معي لإكمال البيانات.`;
- return 'https://wa.me/'+wa+'?text='+encodeURIComponent(text);
+function renderPrograms(rows){
+ const box=document.getElementById('programList'),count=document.getElementById('programCount');
+ const q=(document.getElementById('programSearch')?.value||'').trim().toLowerCase();
+ const type=(document.getElementById('typeFilter')?.value||'').trim().toLowerCase();
+ const city=(document.getElementById('cityFilter')?.value||'').trim().toLowerCase();
+ const filtered=rows.filter(p=>{
+  const text=[p.title,p.city_hotel,p.makkah_hotel,p.travel_type,p.description,p.services].filter(Boolean).join(' ').toLowerCase();
+  const okQ=!q||text.includes(q);
+  const okT=!type||String(p.travel_type||'').toLowerCase().includes(type);
+  const okC=!city||city==='مكة والمدينة'||text.includes(city);
+  return okQ&&okT&&okC;
+ });
+ count.textContent=filtered.length?`${filtered.length} برامج متاحة`:'لا توجد نتائج';
+ box.innerHTML=filtered.length?filtered.map(programCard).join(''):'<div class="empty">لا توجد برامج مطابقة للبحث حاليًا.</div>';
 }
+function filterPrograms(){renderPrograms(allPrograms);document.getElementById('programs')?.scrollIntoView({behavior:'smooth',block:'start'});}
+function showProgramById(id){const p=allPrograms.find(x=>String(x.id)===String(id));if(!p)return;showProgram(p);}
 function showProgram(p){
  document.getElementById('mTitle').textContent=p.title||'تفاصيل البرنامج';
  document.getElementById('mDesc').textContent=p.description||'برنامج عمرة منظم من قوافل الحرمين.';
- document.getElementById('mDetail').innerHTML=[
- ['تاريخ الذهاب',dateText(p.departure_date)],['تاريخ العودة',dateText(p.return_date)],
- ['فندق المدينة',p.city_hotel||'—'],['فندق مكة',p.makkah_hotel||'—'],
- ['نوع الرحلة',p.travel_type||'—'],['السعر',fmt(p.price)+' '+(p.currency||'د.ع')],
- ['المقاعد المتاحة',fmt(p.seats_available)],['الخدمات',p.services||'تجهيز ومتابعة']
- ].map(x=>`<div><span>${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join('');
- document.getElementById('mWhats').href=waLink(p);
- document.getElementById('modal').classList.add('show');
+ document.getElementById('mDetail').innerHTML=[['تاريخ الذهاب',dateText(p.departure_date)],['تاريخ العودة',dateText(p.return_date)],['فندق المدينة',p.city_hotel||'—'],['فندق مكة',p.makkah_hotel||'—'],['نوع الرحلة',p.travel_type||'—'],['السعر',fmt(p.price)+' '+(p.currency||'د.ع')],['المقاعد المتاحة',fmt(p.seats_available)],['الخدمات',p.services||'تجهيز ومتابعة']].map(x=>`<div><span>${esc(x[0])}</span><b>${esc(x[1])}</b></div>`).join('');
+ document.getElementById('mWhats').href=waLink(p);document.getElementById('modal').classList.add('show');
 }
 function closeModal(){document.getElementById('modal').classList.remove('show');}
 async function loadPrograms(){
- const box=document.getElementById('programList'), count=document.getElementById('programCount');
- const {data,error}=await db.from('programs').select('*').in('status',['published','active']).order('departure_date',{ascending:true});
- if(error){box.innerHTML='<div class="empty">تعذر تحميل البرامج حاليًا. يمكنكم التواصل معنا مباشرة عبر أرقام الحجز.</div>';count.textContent='تواصل معنا للحجز';return;}
- const rows=(data||[]).filter(p=>p.seats_available==null || Number(p.seats_available)>0);
- count.textContent=rows.length?`${rows.length} برامج متاحة`:'لا توجد رحلات منشورة حاليًا';
- box.innerHTML=rows.length?rows.map(programCard).join(''):'<div class="empty">لا توجد برامج منشورة حاليًا. ترقبوا الرحلات القادمة أو تواصلوا معنا.</div>';
+ const box=document.getElementById('programList'),count=document.getElementById('programCount');
+ try{
+  // Public RLS permits published programs. Query only that status so the public page never waits on restricted rows.
+  const {data,error}=await db.from('programs').select('*').eq('status','published').order('departure_date',{ascending:true});
+  if(error) throw error;
+  allPrograms=(data||[]).filter(p=>p.seats_available==null||Number(p.seats_available)>0);
+  renderPrograms(allPrograms);
+ }catch(error){
+  console.error('Qawafel programs load error:',error);
+  count.textContent='تعذر التحميل';
+  box.innerHTML='<div class="empty"><b style="color:var(--navy)">تعذر تحميل البرامج الآن</b><br><span>تأكد من اتصال الإنترنت ثم أعد المحاولة.</span><br><button class="btn primary" style="margin-top:12px" onclick="loadPrograms()">إعادة المحاولة</button></div>';
+ }
 }
+function trackDemo(){const code=(document.getElementById('trackCode').value||'').trim();const r=document.getElementById('trackResult');if(!code){r.innerHTML='<b>أدخل رمز الملف أولاً.</b>';r.classList.add('show');return;}r.innerHTML='<b>سيتم تفعيل التتبع الآمن قريبًا.</b><br><span style="color:var(--muted)">حاليًا استخدم بوابة المعتمر أو تواصل مع قوافل الحرمين للتحقق من حالة الطلب.</span>';r.classList.add('show');}
 loadPrograms();
-
+</script>
 </body>
 </html>
-<script>
-function filterPrograms(){
- const q=(document.getElementById('programSearch')?.value||'').trim().toLowerCase();
- const type=document.getElementById('typeFilter')?.value||'';
- document.querySelectorAll('.program').forEach(card=>{
-   const txt=card.textContent.toLowerCase();
-   const okQ=!q||txt.includes(q), okT=!type||txt.includes(type);
-   card.style.display=okQ&&okT?'':'none';
- });
-}
-function trackDemo(){
- const code=(document.getElementById('trackCode').value||'').trim();
- const r=document.getElementById('trackResult');
- if(!code){r.innerHTML='<b>أدخل رمز الملف أولاً.</b>';r.classList.add('show');return;}
- r.innerHTML='<b>سيتم تفعيل التتبع الآمن قريبًا.</b><br><span style="color:var(--muted)">حاليًا استخدم بوابة المعتمر أو تواصل مع قوافل الحرمين للتحقق من حالة الطلب.</span>';
- r.classList.add('show');
-}
-</script>
-</body></html>
