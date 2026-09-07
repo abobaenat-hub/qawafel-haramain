@@ -25,6 +25,9 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 
 .payModal{position:fixed;inset:0;background:#072b4966;display:flex;align-items:center;justify-content:center;padding:18px;z-index:1000}.payModal.hide{display:none}.payBox{width:min(760px,100%);max-height:92vh;overflow:auto;background:#fff;border-radius:22px;box-shadow:0 25px 70px #0004;padding:22px}.payHead{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}.payHead h2{margin:0;color:var(--n)}.paySummary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:15px 0}.payMetric{background:#f5f8fa;border:1px solid #dfe6ea;border-radius:13px;padding:12px}.payMetric small{display:block;color:#70818c}.payMetric b{display:block;font-size:18px;color:var(--n);margin-top:5px}.payForm{display:grid;grid-template-columns:1fr 1fr;gap:10px}.payHistory{margin-top:16px}.payClose{background:#f2f5f7;color:#17364e}.payAction{white-space:nowrap}.payReceipt{font-weight:900;color:#8b6b25}@media(max-width:600px){.paySummary,.payForm{grid-template-columns:1fr}.payBox{padding:16px}}
 
+
+.expenseSummary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px}.expenseMetric{background:linear-gradient(180deg,#fff,#f7fafc);border:1px solid #dfe6ea;border-radius:15px;padding:13px}.expenseMetric small{display:block;color:#72838d}.expenseMetric b{display:block;font-size:19px;color:var(--n);margin-top:6px}.expenseMetric.good b{color:#176644}.expenseMeta{font-size:11px;color:#718390;line-height:1.7}.filePick{border:1px dashed #b9c9d3;border-radius:12px;padding:12px;background:#fbfdfe}.filePick input{padding:8px;background:#fff}.attachLink{display:inline-block;margin-top:4px;color:#0c5fa8;font-weight:bold;text-decoration:none}.attachLink:hover{text-decoration:underline}.expenseCategoryGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}.expenseCat{background:#f5f8fa;border-radius:11px;padding:9px}.expenseCat small{display:block;color:#74848e}.expenseCat b{display:block;color:var(--n);margin-top:4px}
+@media(max-width:800px){.expenseSummary{grid-template-columns:1fr 1fr}}@media(max-width:550px){.expenseSummary{grid-template-columns:1fr}.expenseCategoryGrid{grid-template-columns:1fr}}
 .supplierGrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.supplierPayGrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.supplierCard{border:1px solid #dfe6ea;border-radius:16px;padding:15px;background:linear-gradient(180deg,#fff,#fafcfd);margin:10px 0}.supplierCard h4{margin:0;color:var(--n)}.supplierMeta{color:#718390;font-size:12px;margin-top:5px}.supplierKpi{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-top:12px}.supplierKpi>div{background:#f5f8fa;border-radius:12px;padding:10px}.supplierKpi small{display:block;color:#74848e}.supplierKpi b{display:block;margin-top:5px;color:var(--n)}
 @media(max-width:800px){.supplierPayGrid{grid-template-columns:1fr 1fr}.supplierGrid{grid-template-columns:1fr}.supplierKpi{grid-template-columns:1fr 1fr}}@media(max-width:550px){.supplierPayGrid{grid-template-columns:1fr}.supplierKpi{grid-template-columns:1fr 1fr}}
 
@@ -117,22 +120,29 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <section class="panel"><h2>📒 التزامات المورّدين</h2><div class="hint">المستحق المتوقع يُحسب من عدد المقاعد المباعة × سعر الجملة للمقعد، ثم نطرح ما دُفع للمورّد.</div><div class="table"><table><thead><tr><th>المورّد</th><th>الرحلة</th><th>عدد المعتمرين</th><th>المستحق المتوقع</th><th>المدفوع للمورّد</th><th>المتبقي</th></tr></thead><tbody id="supplierObligationRows"></tbody></table></div></section>
 
 <section class="panel">
-<h2>💸 تسجيل مصروف</h2>
+<h2>💸 إدارة المصروفات</h2>
 <div id="expenseMsg"></div>
+<div id="expenseSummary" class="expenseSummary"></div>
 <div class="filters" style="grid-template-columns:1fr 1fr 1fr">
 <div><label>نوع المصروف</label><select id="expenseCategory"><option>فنادق</option><option>نقل وباصات</option><option>تأشيرات</option><option>وجبات</option><option>تسويق وإعلانات</option><option>رواتب وأجور</option><option>مكاتب وعمولات</option><option>مصاريف إدارية</option><option>أخرى</option></select></div>
 <div><label>المبلغ</label><input id="expenseAmount" type="number" min="0" placeholder="مثلاً 500000"></div>
 <div><label>التاريخ</label><input id="expenseDate" type="date"></div>
 </div>
 <label>الرحلة المرتبطة (اختياري)</label><select id="expenseProgram"><option value="">مصروف عام للشركة</option></select>
+<div class="filters" style="grid-template-columns:1fr 1fr;margin-top:4px">
+<div><label>رقم الفاتورة / المستند</label><input id="expenseInvoice" placeholder="مثلاً INV-2026-001"></div>
+<div class="filePick"><label>صورة الفاتورة أو المستند</label><input id="expenseAttachment" type="file" accept="image/*,.pdf"></div>
+</div>
 <label>البيان</label><input id="expenseDescription" placeholder="مثلاً دفعة فندق مكة">
 <label>ملاحظات</label><input id="expenseNotes" placeholder="ملاحظات إضافية">
-<br><button id="addExpense" class="p">حفظ المصروف</button>
+<div class="expenseMeta" style="margin-top:8px">📎 يمكن رفع صورة أو ملف PDF للفواتير والمستندات. تحفظ الملفات بشكل خاص داخل المنصة ولا تظهر للعامة.</div>
+<br><button id="addExpense" class="p">💾 حفظ المصروف</button>
 </section>
 
 <section class="panel">
 <h2>📋 سجل المصروفات</h2>
-<div class="table"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>النوع</th><th>الرحلة</th><th>المبلغ</th><th>ملاحظات</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
+<div id="expenseCategoryBreakdown" class="expenseCategoryGrid"></div>
+<div class="table"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفاتورة</th><th>النوع</th><th>الرحلة</th><th>المبلغ</th><th>المستند</th><th>ملاحظات</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
 </section>
 <div class="cards">
 <section class="panel"><h3>📊 ربحية الرحلات</h3><div class="hint">الربح هنا يعتمد على قيمة البيع ناقص تكلفة شراء الرحلة والمصروفات المرتبطة بها.</div><div id="programReport"></div></section>
@@ -200,7 +210,7 @@ async function load(){
  $('expenseProgram').innerHTML='<option value="">مصروف عام للشركة</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  $('expenseDate').value=new Date().toISOString().slice(0,10); $('supplierPayDate').value=new Date().toISOString().slice(0,10);
  render();
- renderExpenses();
+ await renderExpenses();
  initReport();
 }
 function fillPurchasePrograms(){
@@ -336,30 +346,58 @@ function renderAdvancedReport(){
 $('runReport').onclick=renderAdvancedReport;
 $('printReport').onclick=()=>{renderAdvancedReport();window.print()};
 
-function renderExpenses(){
+async function renderExpenses(){
  const q=$('search').value.trim().toLowerCase(), pf=$('programFilter').value;
  const list=E.filter(x=>{
    const pr=PR.find(z=>z.id===x.program_id);
-   const matchQ=!q||[x.description,x.category,x.notes,pr?.title].some(v=>String(v||'').toLowerCase().includes(q));
+   const matchQ=!q||[x.description,x.category,x.notes,x.invoice_number,pr?.title].some(v=>String(v||'').toLowerCase().includes(q));
    const matchP=!pf||x.program_id===pf;
    return matchQ&&matchP;
  });
- $('expenseRows').innerHTML=list.map(x=>{
+ const total=list.reduce((s,x)=>s+Number(x.amount||0),0);
+ const trip=list.filter(x=>x.program_id).reduce((s,x)=>s+Number(x.amount||0),0);
+ const general=total-trip;
+ $('expenseSummary').innerHTML=[
+  ['إجمالي المصروفات',total,''],
+  ['مصروفات الرحلات',trip,'good'],
+  ['مصروفات عامة',general,''],
+  ['عدد المستندات',list.filter(x=>x.attachment_path).length,'']
+ ].map(x=>'<div class="expenseMetric '+x[2]+'"><small>'+x[0]+'</small><b>'+((x[0]==='عدد المستندات')?Number(x[1]).toLocaleString('ar-IQ'):money(x[1]))+'</b></div>').join('');
+ const cats={};list.forEach(x=>cats[x.category]=(cats[x.category]||0)+Number(x.amount||0));
+ $('expenseCategoryBreakdown').innerHTML=Object.entries(cats).sort((a,b)=>b[1]-a[1]).map(([k,v])=>'<div class="expenseCat"><small>'+esc(k)+'</small><b>'+money(v)+'</b></div>').join('')||'';
+ const rendered=await Promise.all(list.map(async x=>{
    const pr=PR.find(z=>z.id===x.program_id);
-   return '<tr><td>'+esc(x.expense_date)+'</td><td><b>'+esc(x.description)+'</b></td><td>'+esc(x.category)+'</td><td>'+esc(pr?.title||'عام')+'</td><td>'+money(x.amount)+'</td><td>'+esc(x.notes||'—')+'</td></tr>';
- }).join('')||'<tr><td colspan="6">لا توجد مصروفات مسجلة.</td></tr>';
+   let link='—';
+   if(x.attachment_path){
+     const {data}=await db.storage.from('pilgrim-photos').createSignedUrl(x.attachment_path,3600);
+     if(data?.signedUrl) link='<a class="attachLink" target="_blank" rel="noopener" href="'+esc(data.signedUrl)+'">📎 فتح المستند</a>';
+   }
+   return '<tr><td>'+esc(x.expense_date)+'</td><td><b>'+esc(x.description)+'</b></td><td>'+esc(x.invoice_number||'—')+'</td><td>'+esc(x.category)+'</td><td>'+esc(pr?.title||'عام')+'</td><td>'+money(x.amount)+'</td><td>'+link+'</td><td>'+esc(x.notes||'—')+'</td></tr>';
+ }));
+ $('expenseRows').innerHTML=rendered.join('')||'<tr><td colspan="8">لا توجد مصروفات مسجلة.</td></tr>';
 }
 $('addExpense').onclick=async()=>{
  const category=$('expenseCategory').value, amount=Number($('expenseAmount').value), date=$('expenseDate').value;
  const description=$('expenseDescription').value.trim(), notes=$('expenseNotes').value.trim(), program_id=$('expenseProgram').value||null;
- if(!amount||amount<0||!date||!description)return msg('expenseMsg','أكمل نوع المصروف والمبلغ والتاريخ والبيان.',true);
- $('addExpense').disabled=true;msg('expenseMsg','جاري حفظ المصروف...');
+ const invoice_number=$('expenseInvoice').value.trim()||null, file=$('expenseAttachment').files?.[0]||null;
+ if(!amount||amount<=0||!date||!description)return msg('expenseMsg','أكمل نوع المصروف والمبلغ والتاريخ والبيان.',true);
+ if(file && file.size>8*1024*1024)return msg('expenseMsg','حجم المستند يجب ألا يتجاوز 8 ميغابايت.',true);
+ const allowed=/^image\/(jpeg|png|webp|heic|heif|gif)$|^application\/pdf$/i;
+ if(file && !allowed.test(file.type))return msg('expenseMsg','الملف المرفوع يجب أن يكون صورة أو PDF.',true);
+ $('addExpense').disabled=true;msg('expenseMsg','جاري حفظ المصروف والمستند...');
+ let uploadedPath=null;
  try{
    const {data:{user}}=await db.auth.getUser();
-   const {error}=await db.from('expenses').insert({category,amount,expense_date:date,description,notes,program_id,created_by:user?.id||null});
-   if(error)throw error;
-   $('expenseAmount').value='';$('expenseDescription').value='';$('expenseNotes').value='';
-   msg('expenseMsg','تم حفظ المصروف بنجاح.');
+   if(file){
+     const clean=file.name.replace(/[^a-zA-Z0-9._-]+/g,'_').slice(-100);
+     uploadedPath='expenses/'+new Date().toISOString().slice(0,10)+'/'+crypto.randomUUID()+'-'+clean;
+     const {error:upErr}=await db.storage.from('pilgrim-photos').upload(uploadedPath,file,{upsert:false,contentType:file.type||undefined});
+     if(upErr)throw upErr;
+   }
+   const {error}=await db.from('expenses').insert({category,amount,expense_date:date,description,notes,program_id,invoice_number,attachment_path:uploadedPath,attachment_name:file?.name||null,attachment_type:file?.type||null,created_by:user?.id||null});
+   if(error){if(uploadedPath)await db.storage.from('pilgrim-photos').remove([uploadedPath]);throw error;}
+   $('expenseAmount').value='';$('expenseDescription').value='';$('expenseNotes').value='';$('expenseInvoice').value='';$('expenseAttachment').value='';
+   msg('expenseMsg',file?'تم حفظ المصروف وإرفاق المستند بنجاح.':'تم حفظ المصروف بنجاح.');
    await load();
  }catch(e){msg('expenseMsg',e.message||'تعذر حفظ المصروف.',true)}
  finally{$('addExpense').disabled=false}
