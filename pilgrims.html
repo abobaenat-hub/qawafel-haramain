@@ -342,8 +342,7 @@ async function printBadges(list,title){
  const w=window.open('about:blank','_blank');
  if(!w){return alert('المتصفح منع نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم اضغط طباعة الباج مرة أخرى.');}
  w.document.open();
- w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باجات — '+esc(title||'قوافل الحرمين')+'</title><style>'+badgePrintCSS()+'</style></head><body><div id="printArea" class="badge-grid"><div style="padding:20px;text-align:center;font-family:Tahoma,Arial">جاري تجهيز الباجات…</div></div><script>window.__printReady=true;</script>
-</body></html>');
+ w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باجات — '+esc(title||'قوافل الحرمين')+'</title><style>'+badgePrintCSS()+'</style></head><body><div id="printArea" class="badge-grid"><div style="padding:20px;text-align:center;font-family:Tahoma,Arial">جاري تجهيز الباجات…</div></div><script>window.__printReady=true;<\/script></body></html>');
  w.document.close();
  const cards=[];
  for(const x of list){const b=B.find(z=>z.id===x.booking_id),pr=PR.find(z=>z.id===b?.program_id);cards.push(badgeHtml(await badgeData(x,b,pr)))}
