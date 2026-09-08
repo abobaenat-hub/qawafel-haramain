@@ -61,6 +61,29 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
  #qawafelGlobalAdminBar .qga-home{padding:7px 7px}
  #qawafelGlobalAdminBar .qga-logout{padding:7px 7px}
 }
+
+/* V94: global administration drawer */
+#qawafelAdminDrawerOverlay{display:none;position:fixed;inset:68px 0 0;background:rgba(0,0,0,.42);z-index:99990}
+#qawafelAdminDrawerOverlay.show{display:block}
+#qawafelAdminDrawer{position:fixed;right:-330px;top:68px;width:310px;height:calc(100vh - 68px);background:#fff;z-index:99991;box-shadow:-12px 0 35px rgba(0,0,0,.18);transition:right .22s ease;direction:rtl;overflow:auto}
+#qawafelAdminDrawer.open{right:0}
+#qawafelAdminDrawer .qad-head{padding:18px 16px 13px;background:#082f50;color:#fff;border-bottom:2px solid #c99a32}
+#qawafelAdminDrawer .qad-head b{display:block;font-size:14px}
+#qawafelAdminDrawer .qad-head small{display:block;color:#e4c878;font-size:9px;margin-top:5px}
+#qawafelAdminDrawer .qad-section{padding:13px 13px 4px;color:#8a98a1;font-size:10px;font-weight:900}
+#qawafelAdminDrawer .qad-link{display:flex;align-items:center;gap:11px;margin:3px 9px;padding:11px 10px;border-radius:11px;color:#18384f;text-decoration:none;font-size:11px;font-weight:900}
+#qawafelAdminDrawer .qad-link:hover,#qawafelAdminDrawer .qad-link.active{background:#edf4f8;color:#082f50}
+#qawafelAdminDrawer .qad-ico{width:32px;height:32px;border-radius:9px;background:#f1f5f7;display:grid;place-items:center;color:#155985;font-size:12px;flex:0 0 auto}
+#qawafelAdminDrawer .qad-link.active .qad-ico{background:#082f50;color:#fff}
+#qawafelAdminDrawer .qad-foot{margin:15px 14px;padding:13px 10px;border-top:1px solid #e3e9ee;color:#718390;font-size:9px;line-height:1.7}
+#qawafelGlobalAdminBar .qga-menu{display:inline-flex!important}
+/* The old page sidebars are replaced by the global drawer */
+.side{display:none!important}
+.overlay{display:none!important}
+@media(max-width:800px){
+ #qawafelAdminDrawerOverlay{inset:62px 0 0}
+ #qawafelAdminDrawer{top:62px;height:calc(100vh - 62px);width:min(310px,88vw)}
+}
 </style>
 </head>
 <!-- V91 Global Admin Header: persistent public-site button and current user/role -->
@@ -84,6 +107,7 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
@@ -93,7 +117,10 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
     const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
-    document.getElementById('qgaMenu').onclick=()=>{const m=document.getElementById('menu'); if(m) m.click();};
+    const qad=document.getElementById('qawafelAdminDrawer'),qao=document.getElementById('qawafelAdminDrawerOverlay');
+    document.querySelectorAll('#qawafelAdminDrawer .qad-link').forEach(a=>{if(a.dataset.page===location.pathname.split('/').pop())a.classList.add('active');a.addEventListener('click',()=>{qad.classList.remove('open');qao.classList.remove('show');});});
+    qao.addEventListener('click',()=>{qad.classList.remove('open');qao.classList.remove('show');});
+    document.getElementById('qgaMenu').onclick=()=>{const d=document.getElementById('qawafelAdminDrawer'),o=document.getElementById('qawafelAdminDrawerOverlay'); if(d&&o){d.classList.toggle('open');o.classList.toggle('show');}};
     async function load(session){
       if(!session?.user){bar.style.display='none';return;}
       try{
