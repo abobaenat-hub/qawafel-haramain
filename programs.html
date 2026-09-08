@@ -23,8 +23,65 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
 .visa-panel{margin:0 16px 16px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px}.visa-head{display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap}.visa-title{font-weight:900;color:var(--navy);font-size:18px}.visa-stats{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}.visa-stat{border:1px solid #e1e8ec;border-radius:12px;padding:10px;background:#f9fbfc}.visa-stat span{display:block;font-size:10px;color:#73818b}.visa-stat b{display:block;font-size:20px;color:var(--navy);margin-top:3px}.visa-table{width:100%;border-collapse:collapse;font-size:11px}.visa-table th{background:#0c3b63;color:#fff;padding:9px}.visa-table td{padding:8px;border-bottom:1px solid #edf1f3}.visa-table select,.visa-table input{width:100%;padding:7px;border:1px solid #d7e0e6;border-radius:8px;background:#fff;font-size:11px}.visa-actions{display:flex;gap:8px;flex-wrap:wrap}.visa-ready{background:#eaf3ff;color:#15558a}.visa-sent{background:#eef0ff;color:#51459a}.visa-processing{background:#fff2cf;color:#8a641c}.visa-follow{background:#fff0dc;color:#9a5a13}.visa-edit{background:#ffe8e8;color:#a03434}.visa-issued{background:#e7f6ef;color:#176644}.visa-rejected{background:#ffe1e1;color:#a03434}.visa-cancelled{background:#eceff1;color:#58666f}@media(max-width:850px){.visa-stats{grid-template-columns:repeat(3,1fr)}.visa-table{min-width:900px}.visa-scroll{overflow:auto}}@media(max-width:560px){.visa-panel{margin:0 10px 12px}.visa-stats{grid-template-columns:repeat(2,1fr)}}
 @media(max-width:850px){.pilgrim-grid{grid-template-columns:1fr}.trip-summary{grid-template-columns:repeat(2,1fr)}}@media(max-width:560px){.trip-modal{padding:0}.trip-modal-card{max-height:100vh;border-radius:0}.trip-modal-head{padding:17px}.trip-modal-title{font-size:19px}.trip-pilgrim-area{padding:0 10px 15px}.pilgrim-card{grid-template-columns:68px 1fr;padding:12px}.pilgrim-photo{width:68px;height:82px}.pilgrim-name{font-size:14px}.trip-summary{grid-template-columns:1fr 1fr;padding:10px}}
 </style>
+
+<style id="qawafel-global-admin-css">
+#qawafelGlobalAdminBar{display:none;position:sticky;top:0;z-index:99999;background:#082f50;color:#fff;border-bottom:2px solid #c99a32;box-shadow:0 3px 12px rgba(0,0,0,.12);font-family:Tahoma,Arial,sans-serif;direction:rtl}
+#qawafelGlobalAdminBar .qga-inner{max-width:1400px;margin:auto;min-height:52px;padding:7px 14px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:12px}
+#qawafelGlobalAdminBar .qga-user{display:flex;align-items:center;gap:9px;min-width:0}
+#qawafelGlobalAdminBar .qga-avatar{width:34px;height:34px;border-radius:50%;background:#c99a32;color:#082f50;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex:0 0 auto}
+#qawafelGlobalAdminBar .qga-text{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+#qawafelGlobalAdminBar .qga-name{font-weight:900;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+#qawafelGlobalAdminBar .qga-role{font-size:10px;opacity:.82;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+#qawafelGlobalAdminBar .qga-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+#qawafelGlobalAdminBar .qga-home{display:inline-flex;align-items:center;justify-content:center;gap:5px;background:#c99a32;color:#082f50;text-decoration:none;border-radius:9px;padding:8px 11px;font-weight:900;font-size:11px;white-space:nowrap}
+#qawafelGlobalAdminBar .qga-home:hover{filter:brightness(.96)}
+@media(max-width:600px){#qawafelGlobalAdminBar .qga-inner{padding:6px 9px;gap:7px}.qga-name{max-width:145px!important}.qga-role{max-width:170px!important}.qga-avatar{width:31px!important;height:31px!important}.qga-home{padding:7px 9px!important;font-size:10px!important}}
+</style>
 </head>
+<!-- V91 Global Admin Header: persistent public-site button and current user/role -->
 <body class="auth-pending">
+<script id="qawafel-global-admin-js">
+(function(){
+  if(document.getElementById('qawafelGlobalAdminBar')) return;
+  const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+  const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  function boot(){
+    const bar=document.createElement('div'); bar.id='qawafelGlobalAdminBar';
+    bar.innerHTML='<div class="qga-inner"><div class="qga-user"><div class="qga-avatar" id="qgaAvatar">ق</div><div class="qga-text"><div class="qga-name" id="qgaName">جاري التحميل...</div><div class="qga-role" id="qgaRole"></div></div></div><div class="qga-actions"><a class="qga-home" href="./index.html">⌂ الموقع العام</a></div></div>';
+    document.body.insertBefore(bar,document.body.firstChild);
+    return bar;
+  }
+  async function init(){
+    if(!window.supabase) return;
+    const bar=boot();
+    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف'};
+    function hide(){bar.style.display='none'}
+    function show(name,role){
+      const n=name||'المستخدم'; const r=labels[role]||role||'';
+      document.getElementById('qgaName').textContent=n;
+      document.getElementById('qgaRole').textContent=r;
+      document.getElementById('qgaAvatar').textContent=(n.trim()[0]||'ق');
+      bar.style.display='block';
+    }
+    async function load(session){
+      if(!session?.user){hide();return}
+      try{
+        const u=session.user;
+        let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',u.id).maybeSingle();
+        if(!s.error && s.data && s.data.active!==false){show(s.data.full_name||u.email||'موظف',s.data.role);return}
+        let a=await db.from('admin_users').select('role').eq('user_id',u.id).maybeSingle();
+        if(!a.error && a.data){show(u.email||'مدير',a.data.role);return}
+        show(u.email||'المستخدم','');
+      }catch(e){show(session.user.email||'المستخدم','')}
+    }
+    try{const s=await db.auth.getSession(); await load(s.data?.session)}catch(e){hide()}
+    db.auth.onAuthStateChange(function(event,session){setTimeout(function(){load(session)},0)});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+
 <header class="top"><div class="brand"><img src="./logo.png" alt="قوافل الحرمين"> <span>قوافل الحرمين<small>إدارة البرامج والرحلات</small></span></div><div style="display:flex;align-items:center;gap:8px"><a href="./internal.html" class="btn ghost" style="text-decoration:none">← لوحة الشركة</a><button id="logout" class="btn ghost hidden">تسجيل الخروج</button></div></header>
 <div id="loginView" class="wrap"><div class="login"><h1>دخول الإدارة</h1><p>هذه الصفحة مخصصة لفريق إدارة قوافل الحرمين.</p><div id="loginMsg"></div><label>البريد الإلكتروني</label><input id="email" type="email"><label>كلمة المرور</label><input id="password" type="password"><button id="loginBtn" class="btn primary" style="width:100%;margin-top:18px">دخول</button></div></div>
 

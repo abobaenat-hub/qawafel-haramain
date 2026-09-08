@@ -20,8 +20,65 @@
 @media(max-width:760px){.top{height:68px}.topin{padding:0 14px}.status{display:none}.menu{display:block}.shell{min-height:calc(100vh - 68px)}.side{position:fixed;right:-295px;top:68px;height:calc(100vh - 68px);transition:right .2s;box-shadow:-8px 0 24px #0002}.side.open{right:0}.overlay{display:none}.overlay.show{display:block;position:fixed;inset:68px 0 0;background:#0005;z-index:40}.content{padding:18px 14px}.head{align-items:flex-start;flex-direction:column}.today{display:none}.finance{grid-template-columns:1fr 1fr}.finance div{border-left:0;border-bottom:1px solid #ffffff20;padding:8px}.kpis{grid-template-columns:1fr 1fr}}
 @media(max-width:470px){.brand b{font-size:16px}.brand small{font-size:9px}.kpi{padding:12px}.kpi b{font-size:20px}.finance b{font-size:14px}}
 </style>
+
+<style id="qawafel-global-admin-css">
+#qawafelGlobalAdminBar{display:none;position:sticky;top:0;z-index:99999;background:#082f50;color:#fff;border-bottom:2px solid #c99a32;box-shadow:0 3px 12px rgba(0,0,0,.12);font-family:Tahoma,Arial,sans-serif;direction:rtl}
+#qawafelGlobalAdminBar .qga-inner{max-width:1400px;margin:auto;min-height:52px;padding:7px 14px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:12px}
+#qawafelGlobalAdminBar .qga-user{display:flex;align-items:center;gap:9px;min-width:0}
+#qawafelGlobalAdminBar .qga-avatar{width:34px;height:34px;border-radius:50%;background:#c99a32;color:#082f50;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex:0 0 auto}
+#qawafelGlobalAdminBar .qga-text{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+#qawafelGlobalAdminBar .qga-name{font-weight:900;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+#qawafelGlobalAdminBar .qga-role{font-size:10px;opacity:.82;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+#qawafelGlobalAdminBar .qga-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+#qawafelGlobalAdminBar .qga-home{display:inline-flex;align-items:center;justify-content:center;gap:5px;background:#c99a32;color:#082f50;text-decoration:none;border-radius:9px;padding:8px 11px;font-weight:900;font-size:11px;white-space:nowrap}
+#qawafelGlobalAdminBar .qga-home:hover{filter:brightness(.96)}
+@media(max-width:600px){#qawafelGlobalAdminBar .qga-inner{padding:6px 9px;gap:7px}.qga-name{max-width:145px!important}.qga-role{max-width:170px!important}.qga-avatar{width:31px!important;height:31px!important}.qga-home{padding:7px 9px!important;font-size:10px!important}}
+</style>
 </head>
+<!-- V91 Global Admin Header: persistent public-site button and current user/role -->
 <body>
+<script id="qawafel-global-admin-js">
+(function(){
+  if(document.getElementById('qawafelGlobalAdminBar')) return;
+  const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+  const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  function boot(){
+    const bar=document.createElement('div'); bar.id='qawafelGlobalAdminBar';
+    bar.innerHTML='<div class="qga-inner"><div class="qga-user"><div class="qga-avatar" id="qgaAvatar">ق</div><div class="qga-text"><div class="qga-name" id="qgaName">جاري التحميل...</div><div class="qga-role" id="qgaRole"></div></div></div><div class="qga-actions"><a class="qga-home" href="./index.html">⌂ الموقع العام</a></div></div>';
+    document.body.insertBefore(bar,document.body.firstChild);
+    return bar;
+  }
+  async function init(){
+    if(!window.supabase) return;
+    const bar=boot();
+    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف'};
+    function hide(){bar.style.display='none'}
+    function show(name,role){
+      const n=name||'المستخدم'; const r=labels[role]||role||'';
+      document.getElementById('qgaName').textContent=n;
+      document.getElementById('qgaRole').textContent=r;
+      document.getElementById('qgaAvatar').textContent=(n.trim()[0]||'ق');
+      bar.style.display='block';
+    }
+    async function load(session){
+      if(!session?.user){hide();return}
+      try{
+        const u=session.user;
+        let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',u.id).maybeSingle();
+        if(!s.error && s.data && s.data.active!==false){show(s.data.full_name||u.email||'موظف',s.data.role);return}
+        let a=await db.from('admin_users').select('role').eq('user_id',u.id).maybeSingle();
+        if(!a.error && a.data){show(u.email||'مدير',a.data.role);return}
+        show(u.email||'المستخدم','');
+      }catch(e){show(session.user.email||'المستخدم','')}
+    }
+    try{const s=await db.auth.getSession(); await load(s.data?.session)}catch(e){hide()}
+    db.auth.onAuthStateChange(function(event,session){setTimeout(function(){load(session)},0)});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+
 <header class="top">
 <div class="topin">
   <div class="brand"><div class="mark"><img src="./logo.png" alt="قوافل الحرمين"></div><div><b>قوافل الحرمين</b><small>المركز الإداري الداخلي</small></div></div>

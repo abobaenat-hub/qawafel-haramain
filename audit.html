@@ -11,8 +11,65 @@
 .top{height:74px;background:linear-gradient(135deg,#092d4b,#0d4268);color:#fff;position:sticky;top:0;z-index:10}.topin{height:100%;max-width:1450px;margin:auto;padding:0 20px;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:11px}.mark{width:132px;height:58px;background:#fff;border:1px solid #e0c267;border-radius:11px;display:flex;align-items:center;justify-content:center;overflow:hidden}.mark img{width:100%;height:100%;object-fit:contain}.brand b{display:block;font-size:18px}.brand small{display:block;color:#e6cc83;font-size:10px;margin-top:4px}.actions{display:flex;gap:8px;align-items:center}.btn{border:0;border-radius:10px;padding:10px 13px;cursor:pointer;font-weight:800}.ghost{background:#ffffff12;color:#fff;border:1px solid #ffffff30}.wrap{max-width:1450px;margin:auto;padding:24px}.back{display:inline-block;color:var(--blue);font-size:11px;font-weight:900;margin-bottom:14px}.head{display:flex;align-items:flex-end;justify-content:space-between;gap:15px;margin-bottom:18px}.eyebrow{font-size:10px;color:var(--gold);font-weight:900;margin-bottom:5px}.head h1{margin:0;color:var(--navy);font-size:25px}.head p{margin:6px 0 0;color:var(--muted);font-size:11px}.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow);margin-bottom:14px}.filters{display:grid;grid-template-columns:1fr 1fr auto;gap:10px;align-items:end}.field label{display:block;font-size:10px;font-weight:900;color:var(--navy);margin-bottom:6px}.field select,.field input{width:100%;padding:10px;border:1px solid #ccd8df;border-radius:10px;background:#fff;outline:none}.primary{background:var(--navy);color:#fff}.msg{padding:11px;border-radius:10px;background:#edf8f3;color:var(--green);font-size:11px;margin-bottom:12px}.msg.err{background:#fff0f0;color:var(--red)}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}.stat{background:#fff;border:1px solid var(--line);border-radius:13px;padding:13px}.stat span{display:block;color:var(--muted);font-size:9px}.stat b{display:block;color:var(--navy);font-size:19px;margin-top:5px}.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:760px}th,td{text-align:right;padding:11px 9px;border-bottom:1px solid var(--line);font-size:9px}th{background:#f5f7f9;color:var(--navy);font-size:9px}td{color:#385367}.pill{display:inline-block;padding:4px 7px;border-radius:999px;background:#edf5f9;color:var(--blue);font-weight:900;font-size:8px}.empty{text-align:center;padding:28px;color:var(--muted)}.details{max-width:320px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 @media(max-width:700px){.top{height:68px}.topin{padding:0 12px}.mark{width:108px;height:54px}.brand b{font-size:14px}.brand small{font-size:8px}.wrap{padding:15px 11px}.head{align-items:flex-start;flex-direction:column}.filters{grid-template-columns:1fr 1fr}.filters .btn{grid-column:1/-1}.stats{grid-template-columns:1fr 1fr}.stats .stat:last-child{grid-column:1/-1}.card{padding:13px}.actions .backbtn{display:none}}
 </style>
+
+<style id="qawafel-global-admin-css">
+#qawafelGlobalAdminBar{display:none;position:sticky;top:0;z-index:99999;background:#082f50;color:#fff;border-bottom:2px solid #c99a32;box-shadow:0 3px 12px rgba(0,0,0,.12);font-family:Tahoma,Arial,sans-serif;direction:rtl}
+#qawafelGlobalAdminBar .qga-inner{max-width:1400px;margin:auto;min-height:52px;padding:7px 14px;box-sizing:border-box;display:flex;align-items:center;justify-content:space-between;gap:12px}
+#qawafelGlobalAdminBar .qga-user{display:flex;align-items:center;gap:9px;min-width:0}
+#qawafelGlobalAdminBar .qga-avatar{width:34px;height:34px;border-radius:50%;background:#c99a32;color:#082f50;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:15px;flex:0 0 auto}
+#qawafelGlobalAdminBar .qga-text{display:flex;flex-direction:column;line-height:1.15;min-width:0}
+#qawafelGlobalAdminBar .qga-name{font-weight:900;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px}
+#qawafelGlobalAdminBar .qga-role{font-size:10px;opacity:.82;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px}
+#qawafelGlobalAdminBar .qga-actions{display:flex;align-items:center;gap:7px;flex:0 0 auto}
+#qawafelGlobalAdminBar .qga-home{display:inline-flex;align-items:center;justify-content:center;gap:5px;background:#c99a32;color:#082f50;text-decoration:none;border-radius:9px;padding:8px 11px;font-weight:900;font-size:11px;white-space:nowrap}
+#qawafelGlobalAdminBar .qga-home:hover{filter:brightness(.96)}
+@media(max-width:600px){#qawafelGlobalAdminBar .qga-inner{padding:6px 9px;gap:7px}.qga-name{max-width:145px!important}.qga-role{max-width:170px!important}.qga-avatar{width:31px!important;height:31px!important}.qga-home{padding:7px 9px!important;font-size:10px!important}}
+</style>
 </head>
+<!-- V91 Global Admin Header: persistent public-site button and current user/role -->
 <body>
+<script id="qawafel-global-admin-js">
+(function(){
+  if(document.getElementById('qawafelGlobalAdminBar')) return;
+  const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+  const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  function boot(){
+    const bar=document.createElement('div'); bar.id='qawafelGlobalAdminBar';
+    bar.innerHTML='<div class="qga-inner"><div class="qga-user"><div class="qga-avatar" id="qgaAvatar">ق</div><div class="qga-text"><div class="qga-name" id="qgaName">جاري التحميل...</div><div class="qga-role" id="qgaRole"></div></div></div><div class="qga-actions"><a class="qga-home" href="./index.html">⌂ الموقع العام</a></div></div>';
+    document.body.insertBefore(bar,document.body.firstChild);
+    return bar;
+  }
+  async function init(){
+    if(!window.supabase) return;
+    const bar=boot();
+    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف'};
+    function hide(){bar.style.display='none'}
+    function show(name,role){
+      const n=name||'المستخدم'; const r=labels[role]||role||'';
+      document.getElementById('qgaName').textContent=n;
+      document.getElementById('qgaRole').textContent=r;
+      document.getElementById('qgaAvatar').textContent=(n.trim()[0]||'ق');
+      bar.style.display='block';
+    }
+    async function load(session){
+      if(!session?.user){hide();return}
+      try{
+        const u=session.user;
+        let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',u.id).maybeSingle();
+        if(!s.error && s.data && s.data.active!==false){show(s.data.full_name||u.email||'موظف',s.data.role);return}
+        let a=await db.from('admin_users').select('role').eq('user_id',u.id).maybeSingle();
+        if(!a.error && a.data){show(u.email||'مدير',a.data.role);return}
+        show(u.email||'المستخدم','');
+      }catch(e){show(session.user.email||'المستخدم','')}
+    }
+    try{const s=await db.auth.getSession(); await load(s.data?.session)}catch(e){hide()}
+    db.auth.onAuthStateChange(function(event,session){setTimeout(function(){load(session)},0)});
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
+})();
+</script>
+
 <header class="top"><div class="topin"><div class="brand"><div class="mark"><img src="./logo.png" alt="قوافل الحرمين"></div><div><b>قوافل الحرمين</b><small>سجل نشاط الموظفين</small></div></div><div class="actions"><a class="btn ghost backbtn" href="./internal.html">← لوحة الشركة</a><button id="logout" class="btn ghost">تسجيل الخروج</button></div></div></header>
 <main id="app" class="wrap hide">
 <a class="back" href="./internal.html">← العودة إلى لوحة الشركة</a>
