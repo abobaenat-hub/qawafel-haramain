@@ -71,6 +71,7 @@
       <div class="kpi"><div class="kicon">♙</div><div><span>المعتمرون</span><b id="pilgrims">0</b></div></div>
       <div class="kpi"><div class="kicon">◫</div><div><span>الحجوزات</span><b id="bookings">0</b></div></div>
       <div class="kpi"><div class="kicon">○</div><div><span>المقاعد المتاحة</span><b id="seats">0</b></div></div>
+      <div class="kpi"><div class="kicon">👥</div><div><span>المتعهدون الفعالون</span><b id="agentsCount">0</b></div></div>
     </section>
 
     <section class="finance">
@@ -90,6 +91,15 @@
         <div id="alerts">جاري التحميل...</div>
       </section>
     </div>
+
+    <section class="card">
+      <div class="sect"><div><h2>شبكة المتعهدين</h2><p>إدارة المتعهدين في المحافظات والحجوزات التابعة لهم.</p></div><a class="link" href="./agents.html">فتح إدارة المتعهدين ←</a></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px">
+        <div style="background:#edf4f8;border-radius:12px;padding:13px"><small style="color:var(--muted)">المتعهدون الفعالون</small><b id="agentActiveCard" style="display:block;color:var(--navy);font-size:20px;margin-top:5px">0</b></div>
+        <div style="background:#edf4f8;border-radius:12px;padding:13px"><small style="color:var(--muted)">طلبات الانضمام</small><b id="agentAppsCard" style="display:block;color:var(--navy);font-size:20px;margin-top:5px">0</b></div>
+        <div style="background:#edf4f8;border-radius:12px;padding:13px"><small style="color:var(--muted)">معتمرون عبر المتعهدين</small><b id="agentPilgrimsCard" style="display:block;color:var(--navy);font-size:20px;margin-top:5px">0</b></div>
+      </div>
+    </section>
 
     <section class="card">
       <div class="sect"><div><h2>آخر الحجوزات</h2><p>آخر العمليات المسجلة</p></div><a class="link" href="./pilgrims.html">فتح إدارة المعتمرين ←</a></div>
@@ -162,6 +172,22 @@ async function renderAudit(){
  $('auditRows').innerHTML=(r.data||[]).map(x=>{const d=x.details||{};const detail=x.entity_label||d.href||'—';return '<tr><td>'+new Date(x.created_at).toLocaleString('ar-IQ')+'</td><td><b>'+esc(x.staff_name||'—')+'</b></td><td>'+esc(labels[x.action]||x.action)+'</td><td>'+esc(detail)+'</td><td>'+esc(x.page||'—')+'</td></tr>'}).join('')||'<tr><td colspan="5">لا توجد نشاطات مسجلة.</td></tr>';
 }
 $('auditStaff').onchange=renderAudit;$('auditAction').onchange=renderAudit;$('refreshAudit').onclick=renderAudit;
+async function loadAgents(){
+  try{
+    const a=await db.from('agents').select('id,status').eq('status','active');
+    const active=(a.data||[]).length;
+    const ap=await db.from('agent_applications').select('id,status').eq('status','pending');
+    const pending=(ap.data||[]).length;
+    const b=await db.from('bookings').select('id,agent_id').not('agent_id','is',null);
+    const ids=(b.data||[]).map(x=>x.id);
+    let pc=0;
+    if(ids.length){ const pp=await db.from('pilgrims').select('id,booking_id').in('booking_id',ids); pc=(pp.data||[]).length; }
+    ['agentsCount','agentActiveCard'].forEach(id=>{const e=document.getElementById(id);if(e)e.textContent=active.toLocaleString('ar-IQ')});
+    const e1=document.getElementById('agentAppsCard');if(e1)e1.textContent=pending.toLocaleString('ar-IQ');
+    const e2=document.getElementById('agentPilgrimsCard');if(e2)e2.textContent=pc.toLocaleString('ar-IQ');
+  }catch(e){console.debug('agents dashboard',e)}
+}
+
 async function load(){
  const [b,p,pr,i,e]=await Promise.all([
    db.from('bookings').select('*').order('created_at',{ascending:false}),

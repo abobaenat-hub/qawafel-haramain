@@ -1,5 +1,7 @@
 {
   "rewrites": [
+    {"source":"/admin/agents","destination":"/agents.html"},
+    {"source":"/admin/agents/","destination":"/agents.html"},
     {
       "source": "/visa",
       "destination": "/visa.html"
