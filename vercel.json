@@ -1,7 +1,21 @@
 {
   "rewrites": [
-    {"source":"/admin/agents","destination":"/agents.html"},
-    {"source":"/admin/agents/","destination":"/agents.html"},
+    {
+      "source": "/agent",
+      "destination": "/agent.html"
+    },
+    {
+      "source": "/agent/",
+      "destination": "/agent.html"
+    },
+    {
+      "source": "/admin/agents",
+      "destination": "/agents.html"
+    },
+    {
+      "source": "/admin/agents/",
+      "destination": "/agents.html"
+    },
     {
       "source": "/visa",
       "destination": "/visa.html"
