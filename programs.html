@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>إدارة البرامج | قوافل الحرمين</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <style>body.auth-pending #loginView{display:none!important}
 :root{--navy:#0c3b63;--gold:#c79a3b;--cream:#f7f5ef;--line:#e3e7ea;--muted:#6b7780;--danger:#b43d3d;--green:#16805c}
 *{box-sizing:border-box}body{margin:0;background:var(--cream);color:#17364e;font-family:Tahoma,Arial,sans-serif}
@@ -302,5 +302,7 @@ db.auth.onAuthStateChange((_e,session)=>session?showAdmin():showLogin());
   }
 })();
 </script>
+<div data-qawafel-fallback style="display:none;position:fixed;inset:auto 12px 18px 12px;z-index:9999;background:#fff8e7;border:1px solid #d7b65f;border-radius:12px;padding:12px;text-align:center;font-family:Tahoma,Arial;color:#18384f;box-shadow:0 8px 30px #0002">تعذر تحميل مكونات النظام. حدّث الصفحة وحاول مرة أخرى.</div>
+<script>setTimeout(function(){var a=document.getElementById('app'),f=document.querySelector('[data-qawafel-fallback]');if(a&&a.classList.contains('hide')&&f)f.style.display='block';},5000);</script>
 </body>
 </html>
