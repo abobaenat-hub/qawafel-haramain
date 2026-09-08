@@ -27,7 +27,7 @@
 #qawafelGlobalAdminBar .qga-dashboard{background:#ffffff12;color:#fff}
 #qawafelGlobalAdminBar .qga-home{background:#c99a32;color:#082f50;border-color:#c99a32}
 #qawafelGlobalAdminBar .qga-logout{background:#ffffff12;color:#fff}
-#qawafelGlobalAdminBar .qga-menu{display:none;background:#ffffff12;color:#fff}
+#qawafelGlobalAdminBar .qga-menu{display:inline-flex;background:#ffffff12;color:#fff}
 .top{display:none!important}
 @media(max-width:800px){
  #qawafelGlobalAdminBar{height:62px}
@@ -69,6 +69,10 @@
  #qawafelAdminDrawerOverlay{inset:62px 0 0}
  #qawafelAdminDrawer{top:62px;height:calc(100vh - 62px);width:min(310px,88vw)}
 }
+/* V95: unified admin drawer menu visible on all screen sizes */
+#qawafelGlobalAdminBar .qga-menu{display:inline-flex!important;min-width:42px;min-height:38px;font-size:20px;line-height:1}
+#qawafelAdminDrawer{z-index:100001}
+#qawafelAdminDrawerOverlay{z-index:100000}
 </style>
 </head>
 <!-- V91 Global Admin Header: persistent public-site button and current user/role -->

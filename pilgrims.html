@@ -62,7 +62,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 #qawafelGlobalAdminBar .qga-dashboard{background:#ffffff12;color:#fff}
 #qawafelGlobalAdminBar .qga-home{background:#c99a32;color:#082f50;border-color:#c99a32}
 #qawafelGlobalAdminBar .qga-logout{background:#ffffff12;color:#fff}
-#qawafelGlobalAdminBar .qga-menu{display:none;background:#ffffff12;color:#fff}
+#qawafelGlobalAdminBar .qga-menu{display:inline-flex;background:#ffffff12;color:#fff}
 .top{display:none!important}
 @media(max-width:800px){
  #qawafelGlobalAdminBar{height:62px}
@@ -104,6 +104,10 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
  #qawafelAdminDrawerOverlay{inset:62px 0 0}
  #qawafelAdminDrawer{top:62px;height:calc(100vh - 62px);width:min(310px,88vw)}
 }
+/* V95: unified admin drawer menu visible on all screen sizes */
+#qawafelGlobalAdminBar .qga-menu{display:inline-flex!important;min-width:42px;min-height:38px;font-size:20px;line-height:1}
+#qawafelAdminDrawer{z-index:100001}
+#qawafelAdminDrawerOverlay{z-index:100000}
 </style>
 </head>
 <!-- V91 Global Admin Header: persistent public-site button and current user/role -->
@@ -161,55 +165,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
 </script>
-<script id="qawafel-global-admin-js">
-(function(){
-  const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
-  const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
-  const PAGE_TITLE='إدارة المعتمرين';
-  function boot(){
-    if(document.getElementById('qawafelGlobalAdminBar')) return document.getElementById('qawafelGlobalAdminBar');
-    const bar=document.createElement('div'); bar.id='qawafelGlobalAdminBar';
-    bar.innerHTML=`<div class="qga-inner">
-      <div class="qga-brand"><img class="qga-logo" src="./logo.png" alt="قوافل الحرمين"><div class="qga-brand-text"><b>قوافل الحرمين</b><small id="qgaPageTitle">${PAGE_TITLE}</small></div></div>
-      <div class="qga-user"><div class="qga-avatar" id="qgaAvatar">ق</div><div class="qga-text"><div class="qga-name" id="qgaName">جاري التحميل...</div><div class="qga-role" id="qgaRole"></div></div></div>
-      <div class="qga-actions">
-        <button type="button" class="qga-btn qga-menu" id="qgaMenu">☰</button>
-        <a class="qga-btn qga-dashboard" id="qgaDashboard" href="./internal.html">⌂ لوحة الإدارة</a>
-        <a class="qga-btn qga-home" href="./index.html">🌐 الموقع العام</a>
-        <button type="button" class="qga-btn qga-logout" id="qgaLogout">تسجيل الخروج</button>
-      </div>
-    </div>`;
-    document.body.insertBefore(bar,document.body.firstChild);
-    return bar;
-  }
-  async function init(){
-    if(!window.supabase) return;
-    const bar=boot();
-    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف'};
-    const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
-    document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
-    document.getElementById('qgaMenu').onclick=()=>{const m=document.getElementById('menu'); if(m) m.click();};
-    async function load(session){
-      if(!session?.user){bar.style.display='none';return;}
-      try{
-        const u=session.user;
-        let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',u.id).maybeSingle();
-        if(!s.error && s.data && s.data.active!==false){show(s.data.full_name||u.email||'موظف',s.data.role);return;}
-        let a=await db.from('admin_users').select('role').eq('user_id',u.id).maybeSingle();
-        if(!a.error && a.data){show(u.email||'مدير',a.data.role);return;}
-        show(u.email||'المستخدم','');
-      }catch(e){show(session.user.email||'المستخدم','');}
-    }
-    function show(name,role){
-      const n=name||'المستخدم'; document.getElementById('qgaName').textContent=n; document.getElementById('qgaRole').textContent=labels[role]||role||''; document.getElementById('qgaAvatar').textContent=(n.trim()[0]||'ق'); bar.style.display='block';
-    }
-    try{const s=await db.auth.getSession(); await load(s.data?.session);}catch(e){bar.style.display='none';}
-    db.auth.onAuthStateChange(function(event,session){setTimeout(()=>load(session),0);});
-  }
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
-})();
-</script>
+
 
 <div class="top">
 <div style="display:flex;align-items:center;gap:12px"><div style="width:180px;height:82px;background:#fff;border:1px solid var(--g);border-radius:10px;display:flex;align-items:center;justify-content:center;overflow:hidden"><img src="./logo.png" alt="قوافل الحرمين" style="width:100%;height:100%;object-fit:contain"></div><div><b>قوافل الحرمين</b><small>إدارة ملفات المعتمرين</small></div></div>
