@@ -13,26 +13,26 @@
 </style>
 </head>
 <body>
-<header class="top"><div class="topin"><div class="brand"><div class="mark"><img src="./logo.png" alt="قوافل الحرمين"></div><div><b>قوافل الحرمين</b><small>سجل نشاط الموظفين</small></div></div><div class="actions"><a class="btn ghost backbtn" href="./index.html">← لوحة الشركة</a><button id="logout" class="btn ghost">تسجيل الخروج</button></div></div></header>
+<header class="top"><div class="topin"><div class="brand"><div class="mark"><img src="./logo.png" alt="قوافل الحرمين"></div><div><b>قوافل الحرمين</b><small>سجل نشاط الموظفين</small></div></div><div class="actions"><a class="btn ghost backbtn" href="./internal.html">← لوحة الشركة</a><button id="logout" class="btn ghost">تسجيل الخروج</button></div></div></header>
 <main id="app" class="wrap hide">
-<a class="back" href="./index.html">← العودة إلى لوحة الشركة</a>
+<a class="back" href="./internal.html">← العودة إلى لوحة الشركة</a>
 <div class="head"><div><div class="eyebrow">الأمان والرقابة</div><h1>سجل نشاط الموظفين</h1><p>سجل مركزي للعمليات التي تتم داخل المركز الإداري، مع حفظ اسم الموظف والوقت والصفحة.</p></div></div>
 <div id="msg" class="msg hide"></div>
 <section class="stats"><div class="stat"><span>إجمالي السجلات المعروضة</span><b id="count">0</b></div><div class="stat"><span>دخول</span><b id="logins">0</b></div><div class="stat"><span>عمليات داخل النظام</span><b id="actions">0</b></div></section>
 <section class="card"><div class="filters"><div class="field"><label>الموظف</label><select id="staff"><option value="">كل الموظفين</option></select></div><div class="field"><label>نوع النشاط</label><select id="action"><option value="">كل الأنشطة</option><option value="login">تسجيل دخول</option><option value="page_view">فتح صفحة</option><option value="ui_action">عملية داخل النظام</option></select></div><button id="refresh" class="btn primary">تحديث السجل</button></div></section>
 <section class="card"><div class="table"><table><thead><tr><th>التاريخ والوقت</th><th>الموظف</th><th>النشاط</th><th>التفاصيل</th><th>الصفحة</th></tr></thead><tbody id="rows"><tr><td colspan="5" class="empty">جاري التحميل...</td></tr></tbody></table></div></section>
 </main>
-<section id="denied" class="card" style="max-width:650px;margin:70px auto;display:none;text-align:center"><h2 style="color:var(--navy);margin-top:0">غير مصرح</h2><p style="color:var(--muted);font-size:12px">هذه الصفحة متاحة للمدير العام فقط.</p><a class="btn primary" href="./index.html">العودة إلى لوحة الشركة</a></section>
+<section id="denied" class="card" style="max-width:650px;margin:70px auto;display:none;text-align:center"><h2 style="color:var(--navy);margin-top:0">غير مصرح</h2><p style="color:var(--muted);font-size:12px">هذه الصفحة متاحة للمدير العام فقط.</p><a class="btn primary" href="./internal.html">العودة إلى لوحة الشركة</a></section>
 <script>
 const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
 const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const $=id=>document.getElementById(id);
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function showMsg(t,e=false){$('msg').textContent=t;$('msg').className='msg'+(e?' err':'')}
-async function guard(){const r=await db.auth.getUser();if(r.error||!r.data.user){location.href='index.html';return false}const q=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',r.data.user.id).maybeSingle();if(!q.error&&q.data?.active&&q.data.role==='super_admin')return true;$('denied').style.display='block';return false}
+async function guard(){const r=await db.auth.getUser();if(r.error||!r.data.user){location.href='internal.html';return false}const q=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',r.data.user.id).maybeSingle();if(!q.error&&q.data?.active&&q.data.role==='super_admin')return true;$('denied').style.display='block';return false}
 async function loadStaff(){const r=await db.from('staff_profiles').select('user_id,full_name').eq('active',true).order('full_name');if(!r.error)$('staff').innerHTML='<option value="">كل الموظفين</option>'+(r.data||[]).map(x=>'<option value="'+esc(x.user_id)+'">'+esc(x.full_name||'موظف')+'</option>').join('')}
 async function render(){const staff=$('staff').value,action=$('action').value;let q=db.from('audit_logs').select('created_at,staff_id,staff_name,action,entity_label,page,details').order('created_at',{ascending:false}).limit(300);if(staff)q=q.eq('staff_id',staff);if(action)q=q.eq('action',action);const r=await q;if(r.error){$('rows').innerHTML='<tr><td colspan="5" class="empty">تعذر تحميل السجل.</td></tr>';showMsg(r.error.message,true);return}const data=r.data||[];const labels={login:'تسجيل دخول',page_view:'فتح صفحة',ui_action:'عملية داخل النظام'};$('count').textContent=data.length;$('logins').textContent=data.filter(x=>x.action==='login').length;$('actions').textContent=data.filter(x=>x.action==='ui_action').length;$('rows').innerHTML=data.map(x=>{const d=x.details||{};const detail=x.entity_label||d.href||'—';return '<tr><td>'+esc(new Date(x.created_at).toLocaleString('ar-IQ'))+'</td><td><b>'+esc(x.staff_name||'—')+'</b></td><td><span class="pill">'+esc(labels[x.action]||x.action)+'</span></td><td class="details" title="'+esc(detail)+'">'+esc(detail)+'</td><td>'+esc(x.page||'—')+'</td></tr>'}).join('')||'<tr><td colspan="5" class="empty">لا توجد نشاطات مسجلة.</td></tr>'}
-$('staff').onchange=render;$('action').onchange=render;$('refresh').onclick=render;$('logout').onclick=async()=>{await db.auth.signOut();location.href='index.html'};
+$('staff').onchange=render;$('action').onchange=render;$('refresh').onclick=render;$('logout').onclick=async()=>{await db.auth.signOut();location.href='internal.html'};
 (async()=>{if(await guard()){$('app').classList.remove('hide');await loadStaff();await render()}})();
 </script>
 </body></html>
