@@ -1,12 +1,44 @@
 {
   "rewrites": [
-    { "source": "/visa", "destination": "/visa.html" },
-    { "source": "/admin", "destination": "/internal.html" },
-    { "source": "/admin/", "destination": "/internal.html" },
-    { "source": "/programs", "destination": "/programs.html" },
-    { "source": "/pilgrims", "destination": "/pilgrims.html" },
-    { "source": "/financial", "destination": "/financial.html" },
-    { "source": "/employees", "destination": "/employees.html" },
-    { "source": "/audit", "destination": "/audit.html" }
+    {
+      "source": "/visa",
+      "destination": "/visa.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/internal.html"
+    },
+    {
+      "source": "/admin/",
+      "destination": "/internal.html"
+    },
+    {
+      "source": "/programs",
+      "destination": "/programs.html"
+    },
+    {
+      "source": "/agents",
+      "destination": "/agents.html"
+    },
+    {
+      "source": "/agents/",
+      "destination": "/agents.html"
+    },
+    {
+      "source": "/pilgrims",
+      "destination": "/pilgrims.html"
+    },
+    {
+      "source": "/financial",
+      "destination": "/financial.html"
+    },
+    {
+      "source": "/employees",
+      "destination": "/employees.html"
+    },
+    {
+      "source": "/audit",
+      "destination": "/audit.html"
+    }
   ]
 }
