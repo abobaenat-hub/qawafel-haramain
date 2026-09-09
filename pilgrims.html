@@ -915,18 +915,27 @@ $('form').onsubmit=async e=>{
       const {im,W,H,x0,x1,y0,y1}=a;
       // MRZ is normally at the bottom of the data page. Estimate the full page rectangle from its position.
       const mrzW=Math.max(120,x1-x0), mrzH=Math.max(35,y1-y0);
-      let pageW=Math.max(mrzW*1.55,W*.52), pageH=pageW/0.72;
-      pageH=Math.min(pageH,H*.94); pageW=Math.min(pageW,W*.94);
-      let left=((x0+x1)/2)-pageW*.5;
+      // ICAO passport data pages are close to a 0.70 width/height ratio and
+      // the two MRZ rows normally occupy about 78–90% of the page width.
+      // Use the MRZ width as the anchor instead of a fixed screen-size crop.
+      let pageW=Math.max(mrzW/0.86, W*0.28);
+      let pageH=pageW/0.70;
+      // Keep the detected page inside the source image and allow for photos of an
+      // open passport where the data page may be slightly tilted or off-center.
+      pageW=Math.min(pageW,W*.94);
+      pageH=Math.min(pageH,H*.94);
+      const mrzCx=(x0+x1)/2;
+      let left=mrzCx-pageW*.50;
+      // MRZ is normally around 86–93% down the data page.
       let top=y1-pageH*.90;
-      // If the image is a full open passport, bias toward the page containing the MRZ.
-      left=Math.max(0,Math.min(W-pageW,left)); top=Math.max(0,Math.min(H-pageH,top));
+      left=Math.max(0,Math.min(W-pageW,left));
+      top=Math.max(0,Math.min(H-pageH,top));
       const c=document.createElement('canvas');c.width=Math.round(pageW);c.height=Math.round(pageH);
       const ctx=c.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(im,left,top,pageW,pageH,0,0,c.width,c.height);
       const blob=await new Promise(res=>c.toBlob(res,'image/jpeg',.95));
       if(!blob)throw new Error('crop_failed');
       const f=new File([blob],'passport-smart-crop.jpg',{type:'image/jpeg'});
-      showFile(f);
+      showFile(f,false);
       st.textContent='✅ تم تحديد صفحة بيانات الجواز وقصها ذكيًا. يمكنك مراجعة القص أو تعديله يدويًا.';
       $('passportCropBtn').classList.remove('hide'); $('passportOcrBtn').classList.remove('hide');
       await extractPassportPhoto(f);
