@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>المعتمرون | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
-<script src="https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js"></script>
 <style>body.auth-pending #login{display:none!important}
 :root{--n:#0c3b63;--d:#072b49;--g:#c79a3b;--c:#f7f5ef;--l:#dfe6ea;--r:#a33}
 *{box-sizing:border-box}body{margin:0;background:var(--c);color:#17364e;font-family:Tahoma,Arial}
@@ -557,6 +556,19 @@ bindFilePair('guardianCamera','guardianUpload','guardianHint',null);
 
 let passportOcrWorker=null;
 let passportOcrBusy=false;
+let tesseractLoadPromise=null;
+function loadTesseract(){
+  if(window.Tesseract)return Promise.resolve();
+  if(tesseractLoadPromise)return tesseractLoadPromise;
+  tesseractLoadPromise=new Promise((resolve,reject)=>{
+    const sc=document.createElement('script');
+    sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5.0.4/dist/tesseract.min.js';
+    sc.onload=()=>resolve();
+    sc.onerror=()=>{tesseractLoadPromise=null;reject(new Error('تعذر تحميل محرك قراءة الجواز. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.'));};
+    document.head.appendChild(sc);
+  });
+  return tesseractLoadPromise;
+}
 
 function setPassportOcrStatus(text,ok){
   const el=$('passportOcrStatus'); if(!el)return;
@@ -617,6 +629,10 @@ async function runPassportOCR(file){
   passportOcrBusy=true; const btn=$('passportOcrBtn'); if(btn){btn.disabled=true;btn.textContent='⏳ جاري القراءة…';}
   clearPassportOcr(); setPassportOcrStatus('جاري تجهيز صورة الجواز وقراءة منطقة MRZ…',false);
   try{
+    if(!window.Tesseract){
+      setPassportOcrStatus('جاري تحميل محرك قراءة الجواز لأول مرة…',false);
+      await loadTesseract();
+    }
     if(!window.Tesseract)throw new Error('تعذر تحميل محرك قراءة الجواز. تحقق من الاتصال بالإنترنت ثم أعد المحاولة.');
     if(!passportOcrWorker) passportOcrWorker=await Tesseract.createWorker('eng',1,{logger:m=>{if(m.status&&m.progress!=null)setPassportOcrStatus('جاري قراءة الجواز: '+m.status+' '+Math.round(m.progress*100)+'%',false);}});
     const mrzImg=await imageToCanvas(file,true); let r=await passportOcrWorker.recognize(mrzImg); let parsed=parseMrz(findMrz(r.data.text));
