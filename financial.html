@@ -297,7 +297,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <section class="panel">
 <h2>📋 سجل المصروفات</h2>
 <div id="expenseCategoryBreakdown" class="expenseCategoryGrid"></div>
-<div class="table"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفاتورة</th><th>النوع</th><th>الرحلة</th><th>المبلغ</th><th>المستند</th><th>ملاحظات</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
+<div class="table"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفاتورة</th><th>النوع</th><th>الرحلة</th><th>المبلغ</th><th>المستند</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
 </section>
 </div>
 
@@ -607,10 +607,28 @@ async function renderExpenses(){
      const {data}=await db.storage.from('pilgrim-photos').createSignedUrl(x.attachment_path,3600);
      if(data?.signedUrl) link='<a class="attachLink" target="_blank" rel="noopener" href="'+esc(data.signedUrl)+'">📎 فتح المستند</a>';
    }
-   return '<tr><td>'+esc(x.expense_date)+'</td><td><b>'+esc(x.description)+'</b></td><td>'+esc(x.invoice_number||'—')+'</td><td>'+esc(x.category)+'</td><td>'+esc(pr?.title||'عام')+'</td><td>'+money(x.amount)+'</td><td>'+link+'</td><td>'+esc(x.notes||'—')+'</td></tr>';
+   return '<tr><td>'+esc(x.expense_date)+'</td><td><div style="display:flex;align-items:center;gap:8px;justify-content:space-between"><b>'+esc(x.description)+'</b><button class="danger expenseDeleteBtn" type="button" onclick="deleteExpense(\''+x.id+'\')">🗑️ حذف</button></div></td><td>'+esc(x.invoice_number||'—')+'</td><td>'+esc(x.category)+'</td><td>'+esc(pr?.title||'عام')+'</td><td>'+money(x.amount)+'</td><td>'+link+'</td><td>'+esc(x.notes||'—')+'</td><td><button class="danger expenseDeleteBtn" type="button" onclick="deleteExpense(\''+x.id+'\')">🗑️ حذف</button></td></tr>';
  }));
- $('expenseRows').innerHTML=rendered.join('')||'<tr><td colspan="8">لا توجد مصروفات مسجلة.</td></tr>';
+ $('expenseRows').innerHTML=rendered.join('')||'<tr><td colspan="9">لا توجد مصروفات مسجلة.</td></tr>';
 }
+async function deleteExpense(id){
+ const item=E.find(x=>x.id===id);
+ if(!item)return;
+ const ok=confirm('هل أنت متأكد من حذف هذا المصروف؟\n\n'+(item.description||'مصروف')+' — '+money(item.amount)+'\n\nسيتم حذفه من السجل، ولن يدخل ضمن إجمالي المصروفات والربح.');
+ if(!ok)return;
+ try{
+   const {error}=await db.from('expenses').delete().eq('id',id);
+   if(error)throw error;
+   if(item.attachment_path){
+     const {error:storageErr}=await db.storage.from('pilgrim-photos').remove([item.attachment_path]);
+     if(storageErr)console.warn('تعذر حذف المستند المرفق من التخزين:',storageErr.message);
+   }
+   msg('expenseMsg','تم حذف المصروف بنجاح.');
+   await load();
+ }catch(e){msg('expenseMsg',e.message||'تعذر حذف المصروف.',true)}
+}
+window.deleteExpense=deleteExpense;
+
 $('addExpense').onclick=async()=>{
  const category=$('expenseCategory').value, amount=Number($('expenseAmount').value), date=$('expenseDate').value;
  const description=$('expenseDescription').value.trim(), notes=$('expenseNotes').value.trim(), program_id=$('expenseProgram').value||null;
@@ -738,6 +756,7 @@ input,select,textarea{border:1px solid #dce5eb!important;border-radius:12px!impo
 .financeTile b{font-size:15px!important}
 @media(max-width:1100px){.financeKpis{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){.compactHero{padding:20px!important}.financeKpis{grid-template-columns:repeat(2,1fr);gap:8px;margin-top:16px}.financeKpi{padding:12px 10px}.financeKpi b{font-size:14px}.financeKpi small{font-size:9px}.financeMenu{margin-top:12px!important}}
+.expenseDeleteBtn{display:inline-flex!important;align-items:center;justify-content:center;padding:6px 9px!important;border-radius:9px!important;font-size:11px!important;white-space:nowrap}.expenseDeleteBtn:hover{transform:translateY(-1px)}
 </style>
 
 <style id="finance-v141-final-report">
@@ -753,7 +772,7 @@ input,select,textarea{border:1px solid #dce5eb!important;border-radius:12px!impo
  .reportToolbar,.reportPresets,.reportNote,#runReport,#printReport{display:none!important}
  .reportKpis{grid-template-columns:repeat(6,1fr)!important;gap:6px!important}.reportKpi{padding:8px!important;border:1px solid #ddd!important;box-shadow:none!important}.reportKpi small{font-size:8px!important}.reportKpi b{font-size:11px!important}
  .visualGrid{grid-template-columns:1fr 1fr!important;gap:8px!important}.visualCard{box-shadow:none!important;border:1px solid #ddd!important;padding:9px!important}.visualCard h3{font-size:10px!important}.barItem{grid-template-columns:70px 1fr 80px!important;gap:5px!important}.barLabel,.barValue{font-size:8px!important}.barTrack{height:7px!important}.donut{width:90px!important;height:90px!important}.donut:after{width:52px!important;height:52px!important}.donutCenter b{font-size:10px!important}.donutCenter small{font-size:7px!important}.legend{font-size:8px!important}
- .reportCollectionNote{font-size:9px!important;padding:7px!important}.reportTable{margin-top:8px!important}.reportTable table{min-width:0!important;font-size:8px!important}.reportTable th,.reportTable td{padding:5px!important}.reportTable th{background:#eef3f6!important}
+ .reportCollectionNote{font-size:9px!important;padding:7px!important}.reportTable{margin-top:8px!important}.reportTable table{min-width:0!important;font-size:8px!important}.reportTable th,.reportTable td{padding:5px!important}.reportTable th{background:#eef3f6!important}.expenseDeleteBtn{display:none!important}
  @page{size:A4 landscape;margin:8mm}
 }
 </style>
