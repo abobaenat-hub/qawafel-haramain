@@ -1,6 +1,7 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
+<!-- V130: cash payment RLS compatibility fix applied in Supabase -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>المعتمرون | قوافل الحرمين</title>
@@ -711,26 +712,23 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
   let photoPath=archiveConfirmed?(archiveMatch?.photo_path||null):null; if(photoFile){const ext=(photoFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; photoPath='pilgrim-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; const upPhoto=await db.storage.from('pilgrim-photos').upload(photoPath,photoFile,{upsert:false,contentType:photoFile.type||'image/jpeg'}); if(upPhoto.error)throw upPhoto.error;}
   let passportImagePath=archiveConfirmed?(archiveMatch?.passport_image_path||null):null; if(passportFile){const pext=(passportFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; passportImagePath='passport-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+pext; const upPassport=await db.storage.from('pilgrim-photos').upload(passportImagePath,passportFile,{upsert:false,contentType:passportFile.type||'image/jpeg'}); if(upPassport.error)throw upPassport.error;}
   let guardianPath=archiveConfirmed?(archiveMatch?.guardian_authorization_path||null):null; if(guardianFile){const gext=(guardianFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; guardianPath='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+gext; const ug=await db.storage.from('pilgrim-photos').upload(guardianPath,guardianFile,{upsert:false,contentType:guardianFile.type||'application/octet-stream'}); if(ug.error)throw ug.error;}
-  const br=await db.from('bookings').insert(booking).select('id').single();if(br.error)throw br.error;
-  const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,gender:($('gender').value==='ذكر'?'male':$('gender').value==='أنثى'?'female':null),passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,current_residence:$('currentResidence').value.trim()||null,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8)};
-  const pp=await db.from('pilgrims').insert(payload).select('id,archive_id').single();if(pp.error){await db.from('bookings').delete().eq('id',br.data.id);throw pp.error}
-  if(pp.data?.archive_id){const au={phone:$('phone').value.trim()||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,gender:$('gender').value||null,birth_date:$('birthDate').value,guardian_accompanied:accompanied};if(photoPath)au.photo_path=photoPath;if(passportImagePath)au.passport_image_path=passportImagePath;if(guardianPath)au.guardian_authorization_path=guardianPath;await db.from('pilgrim_archive').update(au).eq('id',pp.data.archive_id);}
-  if(paid>0){const payr=await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),payment_method:'نقد',notes:paymentType==='cash'?(cashStatus==='paid'?'دفع كامل':'دفعة مقدمة — المتبقي قبل السفر'):'دفعة أولى'});if(payr.error){await db.from('pilgrims').delete().eq('id',pp.data.id);await db.from('bookings').delete().eq('id',br.data.id);throw payr.error;}}
+  const payload={full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,gender:($('gender').value==='ذكر'?'male':$('gender').value==='أنثى'?'female':null),gender_ar:$('gender').value||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,current_residence:$('currentResidence').value.trim()||null,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8),nationality:'عراقي'};
+  const installmentRows=[];
   if(paymentType==='cash'&&cashStatus==='partial'&&remaining>0){
-   const cr=await db.from('installment_plans').insert({booking_id:br.data.id,installment_number:1,due_date:$('cashDueDate').value,amount:remaining,paid_amount:0,status:'pending',notes:'متبقي برنامج نقدي — يستحق قبل السفر'});
-   if(cr.error){await db.from('pilgrims').delete().eq('id',pp.data.id);await db.from('bookings').delete().eq('id',br.data.id);throw cr.error;}
+    installmentRows.push({installment_number:1,due_date:$('cashDueDate').value,amount:remaining,paid_amount:0,status:'pending',notes:'متبقي برنامج نقدي — يستحق قبل السفر'});
   }
   if(paymentType==='installment'&&remaining>0){
-   const amounts=[...document.querySelectorAll('.instAmount')].map(x=>Number(x.value||0));
-   const dates=[...document.querySelectorAll('.instDate')].map(x=>x.value||null);
-   if(amounts.length===0)throw Error('حدد جدول الأقساط أولًا.');
-   const sum=amounts.reduce((a,b)=>a+b,0);
-   if(Math.abs(sum-remaining)>0.01)throw Error('مجموع الأقساط يجب أن يساوي المتبقي: '+money(remaining));
-   if(dates.some(x=>!x))throw Error('حدد تاريخ أول قسط، وسيحسب النظام بقية المواعيد تلقائيًا كل 30 يومًا.');
-   const rows=amounts.map((amount,i)=>({booking_id:br.data.id,installment_number:i+1,due_date:dates[i],amount,paid_amount:0,status:'pending'}));
-   const ir=await db.from('installment_plans').insert(rows);
-   if(ir.error)throw ir.error;
+    const amounts=[...document.querySelectorAll('.instAmount')].map(x=>Number(x.value||0));
+    const dates=[...document.querySelectorAll('.instDate')].map(x=>x.value||null);
+    if(amounts.length===0)throw Error('حدد جدول الأقساط أولًا.');
+    const sum=amounts.reduce((a,b)=>a+b,0);
+    if(Math.abs(sum-remaining)>0.01)throw Error('مجموع الأقساط يجب أن يساوي المتبقي: '+money(remaining));
+    if(dates.some(x=>!x))throw Error('حدد تاريخ أول قسط، وسيحسب النظام بقية المواعيد تلقائيًا كل 30 يومًا.');
+    amounts.forEach((amount,i)=>installmentRows.push({installment_number:i+1,due_date:dates[i],amount,paid_amount:0,status:'pending',notes:null}));
   }
+  const payment=paid>0?{amount:paid,currency:'IQD',payment_method:'نقد',payment_date:new Date().toISOString().slice(0,10),notes:paymentType==='cash'?(cashStatus==='paid'?'دفع كامل':'دفعة مقدمة — المتبقي قبل السفر'):'دفعة أولى'}:null;
+  const rpc=await db.rpc('create_pilgrim_booking_atomic',{p_booking:booking,p_pilgrim:payload,p_payment:payment,p_installments:installmentRows});
+  if(rpc.error)throw rpc.error;
   msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');formDirty=false;e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('gender').value='';$('currentResidence').value='';$('englishName').value='';$('initial').value=0;$('discountAmount').value=0;$('discountReason').value='';$('basePriceBox').textContent='اختر البرنامج';$('finalPrice').textContent='—';$('paymentType').value='cash';$('cashPaymentStatus').value='paid';$('cashInitial').value=0;$('cashDueDate').value='';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('usePassportPhotoBtn').style.display='none';$('passportPhotoStatus').textContent='';passportPhotoFile=null;usePassportPhoto=false;editedPhotoFile=null;originalPassportFile=null;$('photoCropBtn').style.display='none';$('passportSmartCancelBtn')?.classList.add('hide');validatePassportExpiry(false);await load();
  }catch(err){console.error('save pilgrim',err);const detail=[err?.message,err?.details,err?.hint,err?.code?('code '+err.code):''].filter(Boolean).join(' — ');msg('formMsg','❌ تعذر حفظ المعتمر: '+(detail||'خطأ غير معروف')+'. لم يتم مسح البيانات، ويمكنك المحاولة مرة أخرى.',true)} finally { saveInProgress=false; if(submitBtn)submitBtn.disabled=!validatePassportExpiry(false); }
 };
