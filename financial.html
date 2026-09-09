@@ -209,8 +209,8 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div><label>نوع الخدمة</label><input id="supplierCategory" placeholder="فنادق، نقل، خدمات..." ></div>
 <div><label>ملاحظات</label><input id="supplierNotes" placeholder="اختياري"></div>
 </div>
-<div id="supplierMsg"></div><button id="addSupplier" class="p" style="margin-top:12px">➕ إضافة المورّد</button>
-<div class="table" style="margin-top:15px"><table><thead><tr><th>المورّد</th><th>الهاتف</th><th>الخدمة</th><th>الحالة</th></tr></thead><tbody id="supplierRows"></tbody></table></div>
+<input id="supplierEditId" type="hidden"><div id="supplierMsg"></div><div class="actions" style="margin-top:12px"><button id="addSupplier" class="p">➕ إضافة المورّد</button><button id="cancelSupplierEdit" class="w hidden">✖️ إلغاء التعديل</button></div>
+<div class="table" style="margin-top:15px"><table><thead><tr><th>المورّد</th><th>الهاتف</th><th>الخدمة</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="supplierRows"></tbody></table></div>
 </section>
 <section class="panel">
 <h2>💳 دفعة للمورّد</h2><div id="supplierPayMsg"></div>
@@ -310,7 +310,7 @@ async function load(){
   db.from('programs').select('*').order('departure_date'),
   db.from('installment_plans').select('*').order('due_date'),
   db.from('expenses').select('*').order('expense_date',{ascending:false}),
-  db.from('suppliers').select('*').eq('active',true).order('name'),
+  db.from('suppliers').select('*').order('active',{ascending:false}).order('name'),
   db.from('supplier_payments').select('*').order('payment_date',{ascending:false})
  ]);
  const er=[b,p,pr,i,e,sup,sp].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
@@ -340,10 +340,17 @@ function fillPurchasePrograms(){
  $('purchaseProgram').innerHTML='<option value="">اختر الرحلة...</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
 }
 function fillSuppliers(){
- const opts='<option value="">اختر المورّد (اختياري)...</option>'+S.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
+ const active=S.filter(x=>x.active);
+ const opts='<option value="">اختر المورّد (اختياري)...</option>'+S.map(x=>'<option value="'+x.id+'">'+esc(x.name)+(x.active?'':' — معطّل')+'</option>').join('');
  $('purchaseSupplier').innerHTML=opts;
- $('supplierPaySupplier').innerHTML='<option value="">اختر المورّد...</option>'+S.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
- $('supplierRows').innerHTML=S.map(x=>'<tr><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.category||'—')+'</td><td><span class="badge ok">نشط</span></td></tr>').join('')||'<tr><td colspan="4">لا يوجد مورّدون.</td></tr>';
+ $('supplierPaySupplier').innerHTML='<option value="">اختر المورّد...</option>'+active.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
+ $('supplierRows').innerHTML=S.map(x=>{
+   const status=x.active?'<span class="badge ok">نشط</span>':'<span class="badge">معطّل</span>';
+   return '<tr><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.category||'—')+'</td><td>'+status+'</td><td class="actions"><button class="btn w supplierEdit" data-id="'+x.id+'">✏️ تعديل</button><button class="btn '+(x.active?'danger':'p')+' supplierToggle" data-id="'+x.id+'">'+(x.active?'⛔ تعطيل':'✅ تفعيل')+'</button><button class="btn danger supplierDelete" data-id="'+x.id+'">🗑️ حذف</button></td></tr>';
+ }).join('')||'<tr><td colspan="5">لا يوجد مورّدون.</td></tr>';
+ document.querySelectorAll('.supplierEdit').forEach(b=>b.onclick=()=>editSupplier(b.dataset.id));
+ document.querySelectorAll('.supplierToggle').forEach(b=>b.onclick=()=>toggleSupplier(b.dataset.id));
+ document.querySelectorAll('.supplierDelete').forEach(b=>b.onclick=()=>deleteSupplier(b.dataset.id));
  $('supplierPayProgram').innerHTML='<option value="">اختر الرحلة...</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  renderSupplierObligations();
 }
@@ -421,11 +428,39 @@ async function renderSupplierObligations(){
  });
  $('supplierObligationRows').innerHTML=rows.join('')||'<tr><td colspan="6">لا توجد التزامات مورّدين مرتبطة برحلات بعد.</td></tr>';
 }
+function clearSupplierForm(){ $('supplierEditId').value='';$('supplierName').value='';$('supplierPhone').value='';$('supplierCategory').value='';$('supplierNotes').value='';$('addSupplier').textContent='➕ إضافة المورّد';$('cancelSupplierEdit').classList.add('hidden'); }
+function editSupplier(id){ const x=S.find(z=>z.id===id); if(!x)return; $('supplierEditId').value=x.id;$('supplierName').value=x.name||'';$('supplierPhone').value=x.phone||'';$('supplierCategory').value=x.category||'';$('supplierNotes').value=x.notes||'';$('addSupplier').textContent='💾 حفظ تعديل المورّد';$('cancelSupplierEdit').classList.remove('hidden');$('supplierName').focus();msg('supplierMsg','وضع التعديل مفعّل: عدّل البيانات ثم احفظ.'); }
+$('cancelSupplierEdit').onclick=()=>{clearSupplierForm();msg('supplierMsg','تم إلغاء التعديل.');};
 $('addSupplier').onclick=async()=>{
- const name=$('supplierName').value.trim(),phone=$('supplierPhone').value.trim()||null,category=$('supplierCategory').value.trim()||null,notes=$('supplierNotes').value.trim()||null;
+ const editId=$('supplierEditId').value||null,name=$('supplierName').value.trim(),phone=$('supplierPhone').value.trim()||null,category=$('supplierCategory').value.trim()||null,notes=$('supplierNotes').value.trim()||null;
  if(!name)return msg('supplierMsg','أدخل اسم المورّد.',true); $('addSupplier').disabled=true;
- try{const {error}=await db.from('suppliers').insert({name,phone,category,notes});if(error)throw error; $('supplierName').value='';$('supplierPhone').value='';$('supplierCategory').value='';$('supplierNotes').value='';msg('supplierMsg','تمت إضافة المورّد بنجاح.');await load();}catch(e){msg('supplierMsg',e.message||'تعذر إضافة المورّد.',true)}finally{$('addSupplier').disabled=false}
+ try{
+   const duplicate=S.find(x=>x.id!==editId&&x.active&&String(x.name||'').trim().toLowerCase()===name.toLowerCase());
+   if(duplicate) throw Error('هذا المورّد موجود مسبقًا باسم «'+duplicate.name+'». استخدم تعديل المورد الموجود بدل تسجيله مرة أخرى.');
+   if(editId){ const {error}=await db.from('suppliers').update({name,phone,category,notes,updated_at:new Date().toISOString()}).eq('id',editId);if(error)throw error;clearSupplierForm();msg('supplierMsg','تم تعديل المورّد بنجاح.'); }
+   else { const {error}=await db.from('suppliers').insert({name,phone,category,notes});if(error)throw error;clearSupplierForm();msg('supplierMsg','تمت إضافة المورّد بنجاح.'); }
+   await load();
+ }catch(e){msg('supplierMsg',e.message||'تعذر حفظ المورّد.',true)}finally{$('addSupplier').disabled=false}
 };
+async function toggleSupplier(id){
+ const x=S.find(z=>z.id===id);if(!x)return;
+ const action=x.active?'تعطيل':'تفعيل';
+ if(!confirm('هل تريد '+action+' المورد «'+x.name+'»؟'))return;
+ try{const {error}=await db.from('suppliers').update({active:!x.active,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;msg('supplierMsg','تم '+action+' المورّد بنجاح.');await load();}catch(e){msg('supplierMsg',e.message||'تعذر تغيير حالة المورّد.',true)}
+}
+async function deleteSupplier(id){
+ const x=S.find(z=>z.id===id);if(!x)return;
+ if(!confirm('حذف المورد «'+x.name+'» نهائيًا؟ سيتم فحص ارتباطاته أولًا.'))return;
+ try{
+   const [pay,prog]=await Promise.all([db.from('supplier_payments').select('id').eq('supplier_id',id).limit(1),db.from('programs').select('id').eq('supplier_id',id).limit(1)]);
+   if(pay.error)throw pay.error;if(prog.error)throw prog.error;
+   if((pay.data||[]).length||(prog.data||[]).length){
+     const reasons=[];if((pay.data||[]).length)reasons.push('دفعات مسجلة');if((prog.data||[]).length)reasons.push('رحلات مرتبطة');
+     throw Error('لا يمكن الحذف النهائي لأن المورد مرتبط بـ '+reasons.join(' و ')+'. استخدم «تعطيل» بدل الحذف.');
+   }
+   const {error}=await db.from('suppliers').delete().eq('id',id);if(error)throw error;msg('supplierMsg','تم حذف المورّد نهائيًا.');await load();
+ }catch(e){msg('supplierMsg',e.message||'تعذر حذف المورّد.',true)}
+}
 $('saveSupplierPayment').onclick=async()=>{
  const supplier_id=$('supplierPaySupplier').value,program_id=$('supplierPayProgram').value||null,amount=Number($('supplierPayAmount').value||0),payment_date=$('supplierPayDate').value, payment_method=$('supplierPayMethod').value,reference=$('supplierPayReference').value.trim()||null,notes=$('supplierPayNotes').value.trim()||null;
  if(!supplier_id||!amount||amount<=0||!payment_date)return msg('supplierPayMsg','أكمل المورّد والمبلغ والتاريخ.',true);
