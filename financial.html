@@ -38,6 +38,20 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 @media(max-width:550px){.profitSummary{grid-template-columns:1fr}.barItem{grid-template-columns:85px 1fr 85px}.donutWrap{flex-direction:column}.profitChartRow{grid-template-columns:90px 1fr 78px}}
 @media(max-width:1000px){.reportKpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){.reportToolbar{grid-template-columns:1fr 1fr}.reportKpis{grid-template-columns:1fr 1fr}}
 @media print{body{background:#fff}.top,.financeHero,.stats,.filters,.purchaseBox,.cards,.supplierGrid,.supplierPayGrid,.reportToolbar,.reportActions,.visualGrid{display:none!important}.panel{box-shadow:none;border:0}.reportPrintHeader{display:block;text-align:center;margin-bottom:15px}.reportPrintHeader h1{margin:0;color:#0c3b63}.reportPrintHeader p{margin:5px 0;color:#666}.reportKpis{grid-template-columns:repeat(3,1fr)}.reportTable{font-size:11px}button{display:none!important}}
+
+/* V144 Shared Cost System */
+.sharedCostBox{margin-top:14px;border:1px solid #dfe7ec;border-radius:18px;padding:16px;background:linear-gradient(135deg,#fbfdff,#f7fafc)}
+.sharedToggle{display:flex;align-items:center;gap:10px;font-weight:900;cursor:pointer}
+.sharedToggle input{width:20px;height:20px;accent-color:#0c3b63}
+.sharedHint{font-size:11px;color:#6e7f89;line-height:1.8;margin-top:6px}
+.sharedControls{display:none;margin-top:13px}.sharedControls.active{display:block}
+.sharedProgramGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.sharedProgramRow{display:grid;grid-template-columns:28px 1fr 105px;align-items:center;gap:8px;border:1px solid #e2e9ed;border-radius:12px;padding:9px;background:#fff}
+.sharedProgramRow small{display:block;color:#778790;font-size:10px;margin-top:2px}
+.sharedProgramRow input[type=number]{margin:0}
+.sharedPreview{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.sharedPreview .purchaseMetric{margin:0}
+.sharedAllocTag{display:inline-flex;align-items:center;gap:4px;background:#edf5fb;color:#0c3b63;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800}
+@media(max-width:700px){.sharedProgramGrid{grid-template-columns:1fr}.sharedPreview{grid-template-columns:1fr 1fr}.sharedProgramRow{grid-template-columns:28px 1fr 90px}}
 </style>
 
 <style id="qawafel-global-admin-css">
@@ -284,6 +298,22 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div><label>التاريخ</label><input id="expenseDate" type="date"></div>
 </div>
 <label>الرحلة المرتبطة (اختياري)</label><select id="expenseProgram"><option value="">مصروف عام للشركة</option></select>
+<div class="sharedCostBox">
+  <label class="sharedToggle"><input id="expenseIsShared" type="checkbox"> 🔗 هذه تكلفة مشتركة بين أكثر من رحلة</label>
+  <div class="sharedHint">مثال: الحقائب أو فندق يخدم رحلة البر والجو. يسجل المبلغ مرة واحدة، ثم يوزعه النظام على الرحلات ولا يكرر المصروف في إجمالي الشركة.</div>
+  <div id="sharedControls" class="sharedControls">
+    <label>طريقة توزيع التكلفة</label>
+    <select id="sharedMethod">
+      <option value="passengers">حسب عدد المعتمرين</option>
+      <option value="units">حسب الكمية / الوحدات</option>
+      <option value="percent">حسب النسب المئوية</option>
+      <option value="manual">توزيع يدوي بالمبالغ</option>
+    </select>
+    <div id="sharedMethodHint" class="sharedHint"></div>
+    <div id="sharedProgramGrid" class="sharedProgramGrid"></div>
+    <div id="sharedPreview" class="sharedPreview"></div>
+  </div>
+</div>
 <div class="filters" style="grid-template-columns:1fr 1fr;margin-top:4px">
 <div><label>رقم الفاتورة / المستند</label><input id="expenseInvoice" placeholder="مثلاً INV-2026-001"></div>
 <div class="filePick"><label>صورة الفاتورة أو المستند</label><input id="expenseAttachment" type="file" accept="image/*,.pdf"></div>
@@ -327,7 +357,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);
-let B=[],P=[],PR=[],I=[],E=[],S=[],SP=[];
+let B=[],P=[],PR=[],I=[],E=[],S=[],SP=[],A=[];
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function msg(id,t,e=false){$(id).className='msg'+(e?' err':'');$(id).textContent=t||''}
@@ -348,17 +378,18 @@ async function login(){
 $('loginBtn').onclick=login;$('password').onkeydown=e=>{if(e.key==='Enter')login()};
 
 async function load(){
- const [b,p,pr,i,e,sup,sp]=await Promise.all([
+ const [b,p,pr,i,e,sup,sp,a]=await Promise.all([
   db.from('bookings').select('*').order('created_at',{ascending:false}),
   db.from('pilgrims').select('*'),
   db.from('programs').select('*').order('departure_date'),
   db.from('installment_plans').select('*').order('due_date'),
   db.from('expenses').select('*').order('expense_date',{ascending:false}),
   db.from('suppliers').select('*').order('active',{ascending:false}).order('name'),
-  db.from('supplier_payments').select('*').order('payment_date',{ascending:false})
+  db.from('supplier_payments').select('*').order('payment_date',{ascending:false}),
+  db.from('expense_allocations').select('*')
  ]);
- const er=[b,p,pr,i,e,sup,sp].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
- B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];S=sup.data||[];SP=sp.data||[];
+ const er=[b,p,pr,i,e,sup,sp,a].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
+ B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];S=sup.data||[];SP=sp.data||[];A=a.data||[];
  $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
  $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
@@ -378,6 +409,7 @@ async function load(){
  $('expenseDate').value=new Date().toISOString().slice(0,10); $('supplierPayDate').value=new Date().toISOString().slice(0,10);
  render();
  await renderExpenses();
+ initSharedCostUI();
  initReport();
 }
 function fillPurchasePrograms(){
@@ -449,7 +481,7 @@ function renderReportVisuals(sales,cost,tripExp,generalExp,net,rows){
 function renderProfitabilityVisuals(){
  const data=[];
  const by={}; B.forEach(b=>{by[b.program_id]??={total:0,paid:0,remaining:0,count:0};by[b.program_id].total+=Number(b.total_amount||0);by[b.program_id].paid+=Number(b.paid_amount||0);by[b.program_id].remaining+=Number(b.remaining_amount||0);by[b.program_id].count++;});
- Object.entries(by).forEach(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0),cost=x.count*costSeat,ex=E.filter(e=>e.program_id===id).reduce((s,e)=>s+Number(e.amount||0),0),net=x.total-cost-ex;data.push({title:pr.title||'—',sales:x.total,cost,expense:ex,net,count:x.count});});
+ Object.entries(by).forEach(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0),cost=x.count*costSeat,ex=linkedExpenseForProgram(id),net=x.total-cost-ex;data.push({title:pr.title||'—',sales:x.total,cost,expense:ex,net,count:x.count});});
  data.sort((a,b)=>b.net-a.net);
  const totalSales=data.reduce((s,x)=>s+x.sales,0),totalCost=data.reduce((s,x)=>s+x.cost,0),totalExp=data.reduce((s,x)=>s+x.expense,0),totalNet=totalSales-totalCost-totalExp;
  $('profitabilitySummary').innerHTML=[['إجمالي المبيعات',totalSales,''],['تكلفة الجملة',totalCost,''],['مصروفات الرحلات',totalExp,''],['صافي الربح',totalNet,totalNet>=0?'good':'bad']].map(x=>'<div class="profitMini '+x[2]+'"><small>'+x[0]+'</small><b>'+money(x[1])+'</b></div>').join('');
@@ -476,7 +508,7 @@ function render(){
  }).join('')||'<tr><td colspan="11">لا توجد نتائج.</td></tr>';
  document.querySelectorAll('[data-pay-booking]').forEach(btn=>btn.onclick=()=>openPaymentModal(btn.dataset.payBooking));
  const by={};B.forEach(b=>{by[b.program_id]??={total:0,paid:0,remaining:0,count:0};by[b.program_id].total+=Number(b.total_amount||0);by[b.program_id].paid+=Number(b.paid_amount||0);by[b.program_id].remaining+=Number(b.remaining_amount||0);by[b.program_id].count++});
- $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0);const sold=x.count;const totalCost=sold*costSeat;const linkedExpenses=E.filter(e=>e.program_id===id).reduce((s,e)=>s+Number(e.amount||0),0);const gross=x.total-totalCost;const net=gross-linkedExpenses;const avgSale=sold?x.total/sold:0;const profitSeat=avgSale-costSeat;const cls=net>=0?'marginGood':'marginBad';return '<div class="tripCard"><div class="tripHead"><h4>'+esc(pr.title||'—')+'</h4><span class="badge '+(net>=0?'ok':'')+'">'+(net>=0?'رابحة':'خسارة')+'</span></div><div class="tripNums"><div class="tripNum"><small>المبيعات الفعلية</small><b>'+money(x.total)+'</b></div><div class="tripNum"><small>تكلفة الجملة على المعتمرين</small><b>'+money(totalCost)+'</b></div><div class="tripNum"><small>الربح الإجمالي</small><b>'+money(gross)+'</b></div><div class="tripNum"><small>المصروفات المرتبطة</small><b>'+money(linkedExpenses)+'</b></div><div class="tripNum"><small>صافي الربح</small><b class="'+cls+'">'+money(net)+'</b></div><div class="tripNum"><small>تكلفة المقعد</small><b>'+money(costSeat)+'</b></div><div class="tripNum"><small>متوسط البيع/معتمر</small><b>'+money(avgSale)+'</b></div><div class="tripNum"><small>ربح المقعد التقريبي</small><b class="'+(profitSeat>=0?'marginGood':'marginBad')+'">'+money(profitSeat)+'</b></div><div class="tripNum"><small>المقبوض</small><b>'+money(x.paid)+'</b></div><div class="tripNum"><small>المتبقي</small><b>'+money(x.remaining)+'</b></div></div></div>'}).join('')||'لا توجد بيانات.';
+ $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0);const sold=x.count;const totalCost=sold*costSeat;const linkedExpenses=linkedExpenseForProgram(id);const gross=x.total-totalCost;const net=gross-linkedExpenses;const avgSale=sold?x.total/sold:0;const profitSeat=avgSale-costSeat;const cls=net>=0?'marginGood':'marginBad';return '<div class="tripCard"><div class="tripHead"><h4>'+esc(pr.title||'—')+'</h4><span class="badge '+(net>=0?'ok':'')+'">'+(net>=0?'رابحة':'خسارة')+'</span></div><div class="tripNums"><div class="tripNum"><small>المبيعات الفعلية</small><b>'+money(x.total)+'</b></div><div class="tripNum"><small>تكلفة الجملة على المعتمرين</small><b>'+money(totalCost)+'</b></div><div class="tripNum"><small>الربح الإجمالي</small><b>'+money(gross)+'</b></div><div class="tripNum"><small>المصروفات المرتبطة</small><b>'+money(linkedExpenses)+'</b></div><div class="tripNum"><small>صافي الربح</small><b class="'+cls+'">'+money(net)+'</b></div><div class="tripNum"><small>تكلفة المقعد</small><b>'+money(costSeat)+'</b></div><div class="tripNum"><small>متوسط البيع/معتمر</small><b>'+money(avgSale)+'</b></div><div class="tripNum"><small>ربح المقعد التقريبي</small><b class="'+(profitSeat>=0?'marginGood':'marginBad')+'">'+money(profitSeat)+'</b></div><div class="tripNum"><small>المقبوض</small><b>'+money(x.paid)+'</b></div><div class="tripNum"><small>المتبقي</small><b>'+money(x.remaining)+'</b></div></div></div>'}).join('')||'لا توجد بيانات.';
  const today=new Date().toISOString().slice(0,10);
  const due=I.filter(x=>x.status!=='paid'),late=due.filter(x=>x.due_date&&x.due_date<today);
  $('installmentReport').innerHTML='<p>أقساط غير مسددة: <b>'+due.length+'</b></p><p>قيمة غير مسددة: <b>'+money(due.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p><p>أقساط متأخرة: <b>'+late.length+'</b></p><p>قيمة المتأخر: <b>'+money(late.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p>';
@@ -534,6 +566,55 @@ $('saveSupplierPayment').onclick=async()=>{
 };
 
 function dateOnly(v){return v?String(v).slice(0,10):''}
+function sharedAmountForProgram(programId, from='', to=''){
+ return A.filter(a=>a.program_id===programId).reduce((sum,a)=>{const e=E.find(x=>x.id===a.expense_id);if(!e||!e.is_shared)return sum;const d=dateOnly(e.expense_date);if(from&&d<from)return sum;if(to&&d>to)return sum;return sum+Number(a.allocated_amount||0)},0);
+}
+function linkedExpenseForProgram(programId, from='', to=''){
+ const direct=E.filter(e=>e.program_id===programId&&!e.is_shared&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((s,e)=>s+Number(e.amount||0),0);
+ return direct+sharedAmountForProgram(programId,from,to);
+}
+function renderSharedPrograms(){
+ const method=$('sharedMethod')?.value||'passengers', amount=Number($('expenseAmount')?.value||0);
+ const checked=[...document.querySelectorAll('.sharedProgramCheck:checked')].map(x=>x.value);
+ const grid=$('sharedProgramGrid'); if(!grid)return;
+ const selected=new Set(checked);
+ const rows=PR.map(pr=>{
+   const bs=B.filter(b=>b.program_id===pr.id);
+   const pax=bs.reduce((n,b)=>n+Math.max(Number(b.passengers_count||1),1),0);
+   const old=document.querySelector('.sharedBasis[data-id="'+pr.id+'"]')?.value||'';
+   const label=method==='passengers'?('المعتمرون: '+pax):method==='units'?'أدخل الكمية':method==='percent'?'النسبة %':'المبلغ';
+   const val=old!==''?old:(method==='passengers'?pax:'');
+   return '<div class="sharedProgramRow"><input class="sharedProgramCheck" type="checkbox" value="'+pr.id+'" '+(selected.has(pr.id)?'checked':'')+'><div><b>'+esc(pr.title)+'</b><small>'+label+'</small></div><input class="sharedBasis" data-id="'+pr.id+'" type="number" min="0" step="0.01" value="'+esc(val)+'" placeholder="'+(method==='percent'?'مثلاً 40':method==='manual'?'المبلغ':'الكمية')+'" '+(method==='passengers'?'readonly':'')+'></div>';
+ }).join('');
+ grid.innerHTML=rows||'<div class="sharedHint">لا توجد رحلات مسجلة.</div>';
+ $('sharedMethodHint').textContent=method==='passengers'?'يحسب النظام نصيب كل رحلة تلقائيًا حسب عدد المعتمرين المسجلين فيها.':method==='units'?'أدخل كمية الخدمة لكل رحلة (مثلاً عدد الغرف أو الليالي)، وسيتم توزيع المبلغ بنسبة الكميات.':method==='percent'?'أدخل نسبة كل رحلة. يجب أن يكون مجموع النسب 100%.':'أدخل المبلغ الذي تريد تحميله على كل رحلة. يجب أن يساوي مجموع المبالغ إجمالي التكلفة.';
+ updateSharedPreview();
+ document.querySelectorAll('.sharedProgramCheck,.sharedBasis').forEach(el=>el.oninput=updateSharedPreview);
+}
+function getSharedAllocations(){
+ const amount=Number($('expenseAmount')?.value||0), method=$('sharedMethod')?.value||'passengers';
+ const ids=[...document.querySelectorAll('.sharedProgramCheck:checked')].map(x=>x.value); if(!ids.length)return [];
+ const vals=ids.map(id=>({program_id:id,basis:Number(document.querySelector('.sharedBasis[data-id="'+id+'"]')?.value||0)}));
+ if(method==='passengers') vals.forEach(v=>{const bs=B.filter(b=>b.program_id===v.program_id);v.basis=bs.reduce((n,b)=>n+Math.max(Number(b.passengers_count||1),1),0)});
+ if(method==='percent') return vals.map(v=>({...v,allocated_amount:amount*v.basis/100}));
+ if(method==='manual') return vals.map(v=>({...v,allocated_amount:v.basis}));
+ const total=vals.reduce((s,v)=>s+v.basis,0); if(!total)return vals.map(v=>({...v,allocated_amount:0}));
+ return vals.map(v=>({...v,allocated_amount:amount*v.basis/total}));
+}
+function updateSharedPreview(){
+ const box=$('sharedPreview');if(!box)return;const amount=Number($('expenseAmount')?.value||0), method=$('sharedMethod')?.value||'passengers', arr=getSharedAllocations(), total=arr.reduce((s,x)=>s+Number(x.allocated_amount||0),0), diff=amount-total;
+ box.innerHTML=[['التكلفة الكلية',money(amount),''],['الموزع على الرحلات',money(total),Math.abs(diff)<0.01?'':'warn'],['الفرق',money(Math.abs(diff)),Math.abs(diff)<0.01?'good':'warn']].map(x=>'<div class="purchaseMetric '+x[2]+'"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('');
+}
+function validateShared(){
+ if(!$('expenseIsShared').checked)return {ok:true,allocations:[]};
+ const arr=getSharedAllocations(), amount=Number($('expenseAmount').value||0); if(!arr.length)return {ok:false,msg:'اختر رحلة واحدة على الأقل للتكلفة المشتركة.'};
+ const total=arr.reduce((s,x)=>s+Number(x.allocated_amount||0),0); if(Math.abs(total-amount)>0.01)return {ok:false,msg:'توزيع التكلفة غير مكتمل. يجب أن يساوي مجموع التوزيع '+money(amount)+' تمامًا.'};
+ return {ok:true,allocations:arr};
+}
+function initSharedCostUI(){
+ $('expenseIsShared').onchange=()=>{const on=$('expenseIsShared').checked;$('sharedControls').classList.toggle('active',on);$('expenseProgram').disabled=on;if(on){$('expenseProgram').value='';renderSharedPrograms();}else updateSharedPreview();};
+ $('sharedMethod').onchange=renderSharedPrograms; $('expenseAmount').oninput=()=>{if($('expenseIsShared').checked){renderSharedPrograms();updateSharedPreview();}};
+}
 function initReport(){
  const now=new Date(), y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0');
  $('reportFrom').value=`${y}-${m}-01`; $('reportTo').value=now.toISOString().slice(0,10);
@@ -554,12 +635,12 @@ function renderAdvancedReport(){
    const n=bs.reduce((s,b)=>s+Math.max(Number(b.passengers_count||1),1),0);
    const s=bs.reduce((x,b)=>x+Number(b.total_amount||0),0), r=bs.reduce((x,b)=>x+Number(b.paid_amount||0),0);
    const c=n*Number(pr.purchase_cost||0);
-   const ex=E.filter(e=>e.program_id===pr.id&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((x,e)=>x+Number(e.amount||0),0);
+   const ex=linkedExpenseForProgram(pr.id,from,to);
    const g=s-c, net=g-ex, margin=s?(net/s*100):0;
    sales+=s;received+=r;cost+=c;tripExp+=ex;people+=n;
    rows.push({pr,n,s,r,c,g,ex,net,margin});
  });
- const generalExp=E.filter(e=>!e.program_id&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((x,e)=>x+Number(e.amount||0),0);
+ const generalExp=E.filter(e=>!e.program_id&&!e.is_shared&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((x,e)=>x+Number(e.amount||0),0);
  const gross=sales-cost, net=gross-tripExp-generalExp, remaining=sales-received, margin=sales?(net/s*100):0;
  const supplierPaid=SP.filter(x=>(!from||dateOnly(x.payment_date)>=from)&&(!to||dateOnly(x.payment_date)<=to)&&(!pid||x.program_id===pid)).reduce((x,e)=>x+Number(e.amount||0),0);
  const supplierObligation=Math.max(cost-supplierPaid,0);
@@ -590,7 +671,9 @@ async function renderExpenses(){
    return matchQ&&matchP;
  });
  const total=list.reduce((s,x)=>s+Number(x.amount||0),0);
- const trip=list.filter(x=>x.program_id).reduce((s,x)=>s+Number(x.amount||0),0);
+ const tripDirect=list.filter(x=>x.program_id&&!x.is_shared).reduce((s,x)=>s+Number(x.amount||0),0);
+ const shared=list.filter(x=>x.is_shared).reduce((s,x)=>s+Number(x.amount||0),0);
+ const trip=tripDirect+shared;
  const general=total-trip;
  $('expenseSummary').innerHTML=[
   ['إجمالي المصروفات',total,''],
@@ -607,7 +690,8 @@ async function renderExpenses(){
      const {data}=await db.storage.from('pilgrim-photos').createSignedUrl(x.attachment_path,3600);
      if(data?.signedUrl) link='<a class="attachLink" target="_blank" rel="noopener" href="'+esc(data.signedUrl)+'">📎 فتح المستند</a>';
    }
-   return '<tr><td>'+esc(x.expense_date)+'</td><td><div style="display:flex;align-items:center;gap:8px;justify-content:space-between"><b>'+esc(x.description)+'</b><button class="danger expenseDeleteBtn" type="button" onclick="deleteExpense(\''+x.id+'\')">🗑️ حذف</button></div></td><td>'+esc(x.invoice_number||'—')+'</td><td>'+esc(x.category)+'</td><td>'+esc(pr?.title||'عام')+'</td><td>'+money(x.amount)+'</td><td>'+link+'</td><td>'+esc(x.notes||'—')+'</td><td><button class="danger expenseDeleteBtn" type="button" onclick="deleteExpense(\''+x.id+'\')">🗑️ حذف</button></td></tr>';
+   const tag=x.is_shared?'<span class="sharedAllocTag">🔗 مشترك</span>':'';
+   return '<tr><td>'+esc(x.expense_date)+'</td><td><div style="display:flex;align-items:center;gap:8px;justify-content:space-between"><b>'+esc(x.description)+'</b> '+tag+'<button class="danger expenseDeleteBtn" type="button" onclick="deleteExpense(\''+x.id+'\')">🗑️ حذف</button></div></td><td>'+esc(x.invoice_number||'—')+'</td><td>'+esc(x.category)+'</td><td>'+esc(pr?.title||'عام')+'</td><td>'+money(x.amount)+'</td><td>'+link+'</td><td>'+esc(x.notes||'—')+(x.is_shared?' <br><span class="sharedHint">توزيع مشترك محفوظ</span>':'')+'</td><td><button class="danger expenseDeleteBtn" type="button" onclick="deleteExpense(\''+x.id+'\')">🗑️ حذف</button></td></tr>';
  }));
  $('expenseRows').innerHTML=rendered.join('')||'<tr><td colspan="9">لا توجد مصروفات مسجلة.</td></tr>';
 }
@@ -631,14 +715,16 @@ window.deleteExpense=deleteExpense;
 
 $('addExpense').onclick=async()=>{
  const category=$('expenseCategory').value, amount=Number($('expenseAmount').value), date=$('expenseDate').value;
- const description=$('expenseDescription').value.trim(), notes=$('expenseNotes').value.trim(), program_id=$('expenseProgram').value||null;
+ const description=$('expenseDescription').value.trim(), notes=$('expenseNotes').value.trim(), is_shared=$('expenseIsShared').checked;
+ const program_id=is_shared?null:($('expenseProgram').value||null);
  const invoice_number=$('expenseInvoice').value.trim()||null, file=$('expenseAttachment').files?.[0]||null;
  if(!amount||amount<=0||!date||!description)return msg('expenseMsg','أكمل نوع المصروف والمبلغ والتاريخ والبيان.',true);
  if(file && file.size>8*1024*1024)return msg('expenseMsg','حجم المستند يجب ألا يتجاوز 8 ميغابايت.',true);
  const allowed=/^image\/(jpeg|png|webp|heic|heif|gif)$|^application\/pdf$/i;
  if(file && !allowed.test(file.type))return msg('expenseMsg','الملف المرفوع يجب أن يكون صورة أو PDF.',true);
- $('addExpense').disabled=true;msg('expenseMsg','جاري حفظ المصروف والمستند...');
- let uploadedPath=null;
+ const validation=validateShared(); if(!validation.ok)return msg('expenseMsg',validation.msg,true);
+ $('addExpense').disabled=true;msg('expenseMsg','جاري حفظ المصروف والتوزيع...');
+ let uploadedPath=null, expenseId=null;
  try{
    const {data:{user}}=await db.auth.getUser();
    if(file){
@@ -647,12 +733,17 @@ $('addExpense').onclick=async()=>{
      const {error:upErr}=await db.storage.from('pilgrim-photos').upload(uploadedPath,file,{upsert:false,contentType:file.type||undefined});
      if(upErr)throw upErr;
    }
-   const {error}=await db.from('expenses').insert({category,amount,expense_date:date,description,notes,program_id,invoice_number,attachment_path:uploadedPath,attachment_name:file?.name||null,attachment_type:file?.type||null,created_by:user?.id||null});
-   if(error){if(uploadedPath)await db.storage.from('pilgrim-photos').remove([uploadedPath]);throw error;}
-   $('expenseAmount').value='';$('expenseDescription').value='';$('expenseNotes').value='';$('expenseInvoice').value='';$('expenseAttachment').value='';
-   msg('expenseMsg',file?'تم حفظ المصروف وإرفاق المستند بنجاح.':'تم حفظ المصروف بنجاح.');
+   const {data:inserted,error}=await db.from('expenses').insert({category,amount,expense_date:date,description,notes,program_id,invoice_number,attachment_path:uploadedPath,attachment_name:file?.name||null,attachment_type:file?.type||null,created_by:user?.id||null,is_shared,allocation_method:is_shared?$('sharedMethod').value:null}).select('id').single();
+   if(error)throw error; expenseId=inserted.id;
+   if(is_shared){
+     const allocations=validation.allocations.map(x=>({expense_id:expenseId,program_id:x.program_id,basis_value:x.basis,allocated_amount:x.allocated_amount}));
+     const {error:aErr}=await db.from('expense_allocations').insert(allocations);
+     if(aErr){await db.from('expenses').delete().eq('id',expenseId);throw aErr;}
+   }
+   $('expenseAmount').value='';$('expenseDescription').value='';$('expenseNotes').value='';$('expenseInvoice').value='';$('expenseAttachment').value='';$('expenseIsShared').checked=false;$('sharedControls').classList.remove('active');$('expenseProgram').disabled=false;$('expenseProgram').value='';
+   msg('expenseMsg',file?'تم حفظ المصروف وتوزيعه وإرفاق المستند بنجاح.':is_shared?'تم حفظ التكلفة المشتركة وتوزيعها على الرحلات بنجاح.':'تم حفظ المصروف بنجاح.');
    await load();
- }catch(e){msg('expenseMsg',e.message||'تعذر حفظ المصروف.',true)}
+ }catch(e){if(uploadedPath && !expenseId)await db.storage.from('pilgrim-photos').remove([uploadedPath]);msg('expenseMsg',e.message||'تعذر حفظ المصروف.',true)}
  finally{$('addExpense').disabled=false}
 };
 (async()=>{const{data:{session}}=await db.auth.getSession();if(session&&await admin()){$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load()}else{document.body.classList.remove('auth-pending')}})();
