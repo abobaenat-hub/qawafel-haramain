@@ -705,7 +705,7 @@ $('form').onsubmit=async e=>{
     $('passportPreviewWrap').classList.remove('hide');
     $('passportCropBtn').classList.remove('hide');
     $('passportOcrBtn').classList.remove('hide');
-    $('passportHint').textContent='تم اختيار الجواز — قص الصورة بحيث تبقى صفحة البيانات كاملة ثم اقرأ البيانات.';
+    $('passportHint').textContent='تم اختيار الجواز — يمكنك قص الصورة وتدويرها، ثم قراءة البيانات آليًا.';
     $('passportOcrStatus').textContent='';
   }
 
@@ -883,7 +883,7 @@ $('form').onsubmit=async e=>{
       if(best && best.passport && best.name){
         const arabicName='';
         apply(best);
-        st.textContent=best.valid?'تمت قراءة الجواز والتحقق من MRZ. وتمت محاولة استخراج الاسم بالعربي. راجع الحقول قبل الحفظ.':'تمت قراءة الجواز. وتمت محاولة استخراج الاسم بالعربي. راجع الحقول قبل الحفظ.';
+        st.textContent=best.valid?'تمت قراءة بيانات الجواز والتحقق من MRZ. راجع الاسم الإنكليزي والبيانات قبل الحفظ، ثم اعتمد الاسم بالعربي.':'تمت قراءة بيانات الجواز. راجع الاسم الإنكليزي والبيانات قبل الحفظ، ثم اعتمد الاسم بالعربي.';
       }else{
         st.textContent='لم تتم قراءة الجواز بشكل موثوق. استخدم «قص وتعديل» وحدد صفحة البيانات كاملة مع إبقاء سطرَي MRZ ثم أعد القراءة.';
       }
@@ -893,7 +893,7 @@ $('form').onsubmit=async e=>{
   }
   function englishToArabicName(input){
     const dict={
-      HANAN:'حنان', HUSSEIN:'حسين', HASSAN:'حسن', HASAN:'حسن', MOHAMMED:'محمد', MUHAMMAD:'محمد', MOHAMMED:'محمد', AHMED:'أحمد', AHMAD:'أحمد', ALI:'علي', OMAR:'عمر', UMAR:'عمر', OTHMAN:'عثمان', OSMAN:'عثمان', KHALID:'خالد', MAHMOUD:'محمود', MAHMOOD:'محمود', MUSTAFA:'مصطفى', ABDULLAH:'عبدالله', ABDULRAHMAN:'عبدالرحمن', ABDUL RAHMAN:'عبدالرحمن', ABDULKARIM:'عبدالكريم', KARIM:'كريم', YASER:'ياسر', YASSER:'ياسر', HAMZA:'حمزة', IBRAHIM:'إبراهيم', ISMAIL:'إسماعيل', ISMAEL:'إسماعيل', ISHAQ:'إسحاق', ISA:'عيسى', MUSA:'موسى', MARYAM:'مريم', ZAINAB:'زينب', FATIMA:'فاطمة', FATIMAH:'فاطمة', RANA:'رنا', SARA:'سارة', SARAH:'سارة', NOOR:'نور', NUR:'نور', DUA:'دعاء', DOAA:'دعاء', RAHMA:'رحمة', AMAL:'أمل', BUSHRA:'بشرى', SUMAYA:'سمية', SUMAYAH:'سمية', KETAB:'كتاب', KITAB:'كتاب', KADHIM:'كاظم', KAZEM:'كاظم', JABER:'جابر', JABIR:'جابر', JASIM:'جاسم', JASSIM:'جاسم', QASIM:'قاسم', QASSEM:'قاسم', ABBAS:'عباس', FADHIL:'فاضل', FADHEL:'فاضل', FADIL:'فاضل', SAAD:'سعد', SALIM:'سليم', SALEEM:'سليم', SAMIR:'سمير', SADIQ:'صادق', HADI:'هادي', HAIDER:'حيدر', HAYDER:'حيدر', MAJID:'ماجد', Majeed:'ماجد', RAED:'رائد', RAED:'رائد', WAEL:'وائل', WAIL:'وائل', WISSAM:'وسام', WISAM:'وسام', ALAA:'علاء', ALA:'علاء', LAITH:'ليث', QUTAIBA:'قتيبة', QUTAYBA:'قتيبة', AMMAR:'عمار', BASSAM:'بسام', BASSEM:'باسم', BASIM:'باسم', RASHEED:'رشيد', RASHID:'رشيد', SHAKER:'شاكر', SHAKIR:'شاكر', TAREQ:'طارق', TARIQ:'طارق', MUNTHER:'منذر', MUNTADHER:'منتظر', MUNTATHIR:'منتظر', AHMED:'أحمد', FALAH:'فلاح', FADY:'فادي', NABIL:'نبيل', NAJIB:'نجيب', NASSER:'ناصر', NASIR:'ناصر', JAMIL:'جميل', JAMAL:'جمال', JAMAL:'جمال', KHALIL:'خليل', HILAL:'هلال', HUSAM:'حسام', HOSSAM:'حسام', RASHAD:'رشاد', SABAH:'صباح', SALAH:'صلاح', SALIH:'صالح', TALIB:'طالب', ADNAN:'عدنان', AMIR:'أمير', AMEER:'أمير', FAEQ:'فائق', FAIQ:'فائق', BASRA:'البصرة', BAGHDAD:'بغداد', ALBASRA:'البصرة'
+      HANAN:'حنان', HUSSEIN:'حسين', HASSAN:'حسن', HASAN:'حسن', MOHAMMED:'محمد', MUHAMMAD:'محمد', MOHAMMED:'محمد', AHMED:'أحمد', AHMAD:'أحمد', ALI:'علي', OMAR:'عمر', UMAR:'عمر', OTHMAN:'عثمان', OSMAN:'عثمان', KHALID:'خالد', MAHMOUD:'محمود', MAHMOOD:'محمود', MUSTAFA:'مصطفى', ABDULLAH:'عبدالله', ABDULRAHMAN:'عبدالرحمن', 'ABDUL RAHMAN':'عبدالرحمن', ABDULKARIM:'عبدالكريم', KARIM:'كريم', YASER:'ياسر', YASSER:'ياسر', HAMZA:'حمزة', IBRAHIM:'إبراهيم', ISMAIL:'إسماعيل', ISMAEL:'إسماعيل', ISHAQ:'إسحاق', ISA:'عيسى', MUSA:'موسى', MARYAM:'مريم', ZAINAB:'زينب', FATIMA:'فاطمة', FATIMAH:'فاطمة', RANA:'رنا', SARA:'سارة', SARAH:'سارة', NOOR:'نور', NUR:'نور', DUA:'دعاء', DOAA:'دعاء', RAHMA:'رحمة', AMAL:'أمل', BUSHRA:'بشرى', SUMAYA:'سمية', SUMAYAH:'سمية', KETAB:'كتاب', KITAB:'كتاب', KADHIM:'كاظم', KAZEM:'كاظم', JABER:'جابر', JABIR:'جابر', JASIM:'جاسم', JASSIM:'جاسم', QASIM:'قاسم', QASSEM:'قاسم', ABBAS:'عباس', FADHIL:'فاضل', FADHEL:'فاضل', FADIL:'فاضل', SAAD:'سعد', SALIM:'سليم', SALEEM:'سليم', SAMIR:'سمير', SADIQ:'صادق', HADI:'هادي', HAIDER:'حيدر', HAYDER:'حيدر', MAJID:'ماجد', Majeed:'ماجد', RAED:'رائد', RAED:'رائد', WAEL:'وائل', WAIL:'وائل', WISSAM:'وسام', WISAM:'وسام', ALAA:'علاء', ALA:'علاء', LAITH:'ليث', QUTAIBA:'قتيبة', QUTAYBA:'قتيبة', AMMAR:'عمار', BASSAM:'بسام', BASSEM:'باسم', BASIM:'باسم', RASHEED:'رشيد', RASHID:'رشيد', SHAKER:'شاكر', SHAKIR:'شاكر', TAREQ:'طارق', TARIQ:'طارق', MUNTHER:'منذر', MUNTADHER:'منتظر', MUNTATHIR:'منتظر', AHMED:'أحمد', FALAH:'فلاح', FADY:'فادي', NABIL:'نبيل', NAJIB:'نجيب', NASSER:'ناصر', NASIR:'ناصر', JAMIL:'جميل', JAMAL:'جمال', JAMAL:'جمال', KHALIL:'خليل', HILAL:'هلال', HUSAM:'حسام', HOSSAM:'حسام', RASHAD:'رشاد', SABAH:'صباح', SALAH:'صلاح', SALIH:'صالح', TALIB:'طالب', ADNAN:'عدنان', AMIR:'أمير', AMEER:'أمير', FAEQ:'فائق', FAIQ:'فائق', BASRA:'البصرة', BAGHDAD:'بغداد', ALBASRA:'البصرة'
     };
     const words=String(input||'').toUpperCase().replace(/[^A-Z ]+/g,' ').split(/\s+/).filter(Boolean);
     return words.map(w=>dict[w]||phoneticWord(w)).join(' ').trim();
