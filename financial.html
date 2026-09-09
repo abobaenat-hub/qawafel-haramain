@@ -166,8 +166,15 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <label>كلمة المرور</label><input id="password" type="password">
 <br><button id="loginBtn" class="p" style="width:100%">دخول</button></div>
 
-<main id="app" class="wrap hide"><section class="financeHero compactHero"><div class="heroHead"><div><h1>💰 الإدارة المالية</h1><p>اختر القسم الذي تريد العمل عليه</p></div><span class="heroBadge">قوافل الحرمين</span></div><div class="profitGrid"><div class="profitCard"><small>قيمة المبيعات</small><b id="heroSales">0 د.ع</b></div><div class="profitCard"><small>المقبوض</small><b id="heroReceived">0 د.ع</b></div><div class="profitCard"><small>المصروفات</small><b id="heroExpenses">0 د.ع</b></div><div class="profitCard"><small>صافي الربح المتوقع</small><b id="heroNet">0 د.ع</b></div></div></section>
-<div class="stats compactStats">
+<main id="app" class="wrap hide"><section class="financeHero compactHero"><div class="heroHead"><div><h1>💰 الإدارة المالية</h1><p>لوحة تحكم مالية مختصرة — اختر القسم الذي تريد العمل عليه</p></div><span class="heroBadge">قوافل الحرمين</span></div><div class="financeKpis">
+<div class="financeKpi"><small>إجمالي المبيعات</small><b id="heroSales">0 د.ع</b></div>
+<div class="financeKpi"><small>المقبوض</small><b id="heroReceived">0 د.ع</b></div>
+<div class="financeKpi"><small>المتبقي</small><b id="heroRemaining">0 د.ع</b></div>
+<div class="financeKpi"><small>المتأخر</small><b id="heroLate">0 د.ع</b></div>
+<div class="financeKpi"><small>المصروفات</small><b id="heroExpenses">0 د.ع</b></div>
+<div class="financeKpi highlight"><small>صافي الربح المتوقع</small><b id="heroNet">0 د.ع</b></div>
+</div></section>
+<div class="stats compactStats" aria-hidden="true" style="display:none!important">
 <div class="stat">إجمالي المبيعات<b id="sales">0 د.ع</b></div>
 <div class="stat">المقبوض<b id="received">0 د.ع</b></div>
 <div class="stat">المتبقي<b id="remaining">0 د.ع</b></div>
@@ -347,7 +354,7 @@ async function load(){
   const expenseTotal=E.reduce((s,x)=>s+Number(x.amount||0),0);
   const netExpected=salesTotal-purchaseTotal-expenseTotal;
   $('profit').textContent=money(netExpected);
-  $('heroSales').textContent=money(salesTotal);$('heroCost').textContent=money(purchaseTotal);$('heroExpenses').textContent=money(expenseTotal);$('heroNet').textContent=money(netExpected);
+  $('heroSales').textContent=money(salesTotal);$('heroReceived').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));$('heroRemaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));$('heroLate').textContent=money(late);$('heroExpenses').textContent=money(expenseTotal);$('heroNet').textContent=money(netExpected);
  $('programFilter').innerHTML='<option value="">كل البرامج</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  fillPurchasePrograms();
  fillSuppliers();
@@ -664,4 +671,22 @@ input,select,textarea{border:1px solid #dce5eb!important;border-radius:12px!impo
 @keyframes fadeIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
 @media(max-width:1000px){.financeMenu{grid-template-columns:repeat(2,1fr)!important}}
 @media(max-width:600px){.wrap{padding:14px}.compactHero{padding:22px!important;border-radius:22px!important}.heroHead h1{font-size:21px!important}.compactStats{grid-template-columns:repeat(2,1fr)!important}.compactStats .stat{padding:15px 13px!important}.compactStats .stat b{font-size:18px!important}.financeMenu{grid-template-columns:1fr!important;gap:12px!important}.financeTile{min-height:94px;padding:16px!important;border-radius:20px!important}.financeTile>span{width:48px!important;height:48px!important}.sectionTop{padding:14px!important}}
+</style>
+
+<style id="finance-v139-dashboard">
+/* V139 — compact modern financial dashboard */
+.compactHero{padding:24px 26px!important;margin:18px 0 14px!important;border-radius:26px!important}
+.financeKpis{position:relative;z-index:2;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:20px}
+.financeKpi{min-width:0;padding:13px 12px;border:1px solid #ffffff1f;border-radius:16px;background:#ffffff0d;backdrop-filter:blur(7px);box-shadow:inset 0 1px #ffffff12;transition:.2s}
+.financeKpi:hover{transform:translateY(-2px);background:#ffffff14}
+.financeKpi small{display:block;color:#cfe0eb;font-size:10px;margin-bottom:6px;white-space:nowrap}
+.financeKpi b{display:block;color:#fff;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.financeKpi.highlight{background:linear-gradient(135deg,#ffffff18,#ffffff0b);border-color:#d8b96b55}
+.financeKpi.highlight b{color:#ffe5a0}
+.financeMenu{margin-top:16px!important;gap:14px!important}
+.financeTile{min-height:104px!important;border-radius:22px!important}
+.financeTile>span{box-shadow:0 6px 15px #0b355015!important}
+.financeTile b{font-size:15px!important}
+@media(max-width:1100px){.financeKpis{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:650px){.compactHero{padding:20px!important}.financeKpis{grid-template-columns:repeat(2,1fr);gap:8px;margin-top:16px}.financeKpi{padding:12px 10px}.financeKpi b{font-size:14px}.financeKpi small{font-size:9px}.financeMenu{margin-top:12px!important}}
 </style>
