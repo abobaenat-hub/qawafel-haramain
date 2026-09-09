@@ -213,8 +213,11 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div><label>الرحلة</label><select id="reportProgram"><option value="">كل الرحلات</option></select></div>
 <div class="reportActions"><button id="runReport" class="p">🔎 عرض التقرير</button><button id="printReport" class="w">🖨️ طباعة / PDF</button></div>
 </div>
+<div class="reportPresets"><span>فترة سريعة:</span><button type="button" class="presetBtn" data-preset="month">هذا الشهر</button><button type="button" class="presetBtn" data-preset="lastmonth">الشهر السابق</button><button type="button" class="presetBtn" data-preset="year">هذه السنة</button><button type="button" class="presetBtn" data-preset="all">كل الفترة</button>
+</div>
 <div class="reportNote">التقرير يعتمد على <b>سعر البيع الفعلي بعد الخصم</b>، ويخصم منه <b>سعر الجملة للمقعد</b> ثم مصروفات الرحلة للوصول إلى صافي الربح. المصروفات العامة تظهر منفصلة ولا تُحمّل على الرحلات.</div>
 <div class="reportKpis" id="reportKpis"></div>
+<div id="reportCollectionNote" class="reportCollectionNote"></div>
 <div class="visualGrid" id="reportVisuals">
   <div class="visualCard"><h3>📊 توزيع الأرقام المالية</h3><div id="reportBars" class="barList"></div></div>
   <div class="visualCard"><h3>💰 قراءة سريعة للنتيجة</h3><div id="reportDonut" class="donutWrap"></div></div>
@@ -559,11 +562,22 @@ function renderAdvancedReport(){
  const generalExp=E.filter(e=>!e.program_id&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((x,e)=>x+Number(e.amount||0),0);
  const gross=sales-cost, net=gross-tripExp-generalExp, remaining=sales-received, margin=sales?(net/s*100):0;
  const supplierPaid=SP.filter(x=>(!from||dateOnly(x.payment_date)>=from)&&(!to||dateOnly(x.payment_date)<=to)&&(!pid||x.program_id===pid)).reduce((x,e)=>x+Number(e.amount||0),0);
- $('reportKpis').innerHTML=[['المبيعات الفعلية',sales,''],['المقبوض',received,''],['المتبقي',remaining,''],['تكلفة الجملة',cost,''],['الربح الإجمالي',gross,'profit'],['مصروفات الرحلات',tripExp,''],['مصروفات عامة',generalExp,''],['صافي الربح',net,net>=0?'profit':'loss'],['هامش صافي الربح',margin.toFixed(1)+' %',net>=0?'profit':'loss']].map(x=>'<div class="reportKpi '+x[2]+'"><small>'+x[0]+'</small><b>'+((typeof x[1]==='number')?money(x[1]):x[1])+'</b></div>').join('');
+ const supplierObligation=Math.max(cost-supplierPaid,0);
+ const collectionRate=sales?Math.min(Math.max(received/sales*100,0),100):0;
+ $('reportKpis').innerHTML=[['المبيعات الفعلية',sales,''],['المقبوض',received,''],['نسبة التحصيل',collectionRate.toFixed(1)+' %',collectionRate>=80?'profit':''],['المتبقي',remaining,''],['تكلفة الجملة',cost,''],['المدفوع للمورّد',supplierPaid,''],['التزامات المورّدين',supplierObligation,supplierObligation?'':'profit'],['الربح الإجمالي',gross,'profit'],['مصروفات الرحلات',tripExp,''],['مصروفات عامة',generalExp,''],['صافي الربح',net,net>=0?'profit':'loss'],['هامش صافي الربح',margin.toFixed(1)+' %',net>=0?'profit':'loss']].map(x=>'<div class="reportKpi '+x[2]+'"><small>'+x[0]+'</small><b>'+((typeof x[1]==='number')?money(x[1]):x[1])+'</b></div>').join('');
+ $('reportCollectionNote').innerHTML='<b>قراءة إدارية:</b> تم تحصيل <strong>'+collectionRate.toFixed(1)+'%</strong> من المبيعات خلال الفترة. التزام المورّدين المتبقي حسب تكلفة الجملة المسجلة هو <strong>'+money(supplierObligation)+'</strong>.';
  $('advancedReportRows').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.pr.title)+'</b></td><td>'+x.n+'</td><td>'+money(x.s)+'</td><td>'+money(x.r)+'</td><td>'+money(x.c)+'</td><td>'+money(x.g)+'</td><td>'+money(x.ex)+'</td><td><b class="'+(x.net>=0?'marginGood':'marginBad')+'">'+money(x.net)+'</b></td><td>'+x.margin.toFixed(1)+'%</td></tr>').join('')||'<tr><td colspan="9" class="reportEmpty">لا توجد رحلات ضمن الفترة المحددة.</td></tr>';
  $('printReportPeriod').textContent='الفترة: '+(from||'—')+' إلى '+(to||'—')+(pid?' — '+(PR.find(x=>x.id===pid)?.title||''):'');
  renderReportVisuals(sales,cost,tripExp,generalExp,net,rows);
 }
+document.querySelectorAll('.presetBtn').forEach(btn=>btn.onclick=()=>{
+ const now=new Date(), y=now.getFullYear(), m=now.getMonth(); let from='',to='';
+ const fmt=d=>{const yy=d.getFullYear(),mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return yy+'-'+mm+'-'+dd};
+ if(btn.dataset.preset==='month'){from=fmt(new Date(y,m,1));to=fmt(new Date(y,m+1,0));}
+ if(btn.dataset.preset==='lastmonth'){from=fmt(new Date(y,m-1,1));to=fmt(new Date(y,m,0));}
+ if(btn.dataset.preset==='year'){from=y+'-01-01';to=y+'-12-31';}
+ $('reportFrom').value=from;$('reportTo').value=to;renderAdvancedReport();
+});
 $('runReport').onclick=renderAdvancedReport;
 $('printReport').onclick=()=>{renderAdvancedReport();window.print()};
 
@@ -724,4 +738,22 @@ input,select,textarea{border:1px solid #dce5eb!important;border-radius:12px!impo
 .financeTile b{font-size:15px!important}
 @media(max-width:1100px){.financeKpis{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:650px){.compactHero{padding:20px!important}.financeKpis{grid-template-columns:repeat(2,1fr);gap:8px;margin-top:16px}.financeKpi{padding:12px 10px}.financeKpi b{font-size:14px}.financeKpi small{font-size:9px}.financeMenu{margin-top:12px!important}}
+</style>
+
+<style id="finance-v141-final-report">
+.reportPresets{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px;color:#718390;font-size:11px}.presetBtn{padding:7px 11px!important;border:1px solid #d9e4ea!important;background:#fff!important;color:#31556d!important;border-radius:999px!important;font-size:11px!important}.presetBtn:hover{background:#f2f7fa!important;border-color:#b9cfdb!important}.reportCollectionNote{margin-top:12px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,#f7fbfd,#fffaf0);border:1px solid #e1e9ed;color:#526875;font-size:12px}.reportCollectionNote strong{color:#0c3b63}.reportKpis{grid-template-columns:repeat(6,1fr)!important}
+@media(max-width:1050px){.reportKpis{grid-template-columns:repeat(4,1fr)!important}}
+@media(max-width:700px){.reportKpis{grid-template-columns:repeat(2,1fr)!important}.reportPresets{align-items:flex-start}}
+@media print{
+ body{background:#fff!important;color:#111!important;font-family:Tahoma,Arial,sans-serif!important}
+ body *{visibility:hidden!important} 
+ #advancedReportPanel,#advancedReportPanel *{visibility:visible!important}
+ #advancedReportPanel{position:absolute!important;left:0!important;top:0!important;width:100%!important;margin:0!important;padding:10mm!important;border:0!important;box-shadow:none!important;border-radius:0!important;background:#fff!important}
+ .reportPrintHeader{display:block!important;text-align:center!important;margin-bottom:12px!important;border-bottom:2px solid #123b59!important;padding-bottom:9px!important}.reportPrintHeader h1{margin:0!important;font-size:22px!important;color:#123b59!important}.reportPrintHeader p{margin:4px 0!important;color:#666!important}.reportPrintHeader #printReportPeriod{font-size:11px!important;color:#555!important}
+ .reportToolbar,.reportPresets,.reportNote,#runReport,#printReport{display:none!important}
+ .reportKpis{grid-template-columns:repeat(6,1fr)!important;gap:6px!important}.reportKpi{padding:8px!important;border:1px solid #ddd!important;box-shadow:none!important}.reportKpi small{font-size:8px!important}.reportKpi b{font-size:11px!important}
+ .visualGrid{grid-template-columns:1fr 1fr!important;gap:8px!important}.visualCard{box-shadow:none!important;border:1px solid #ddd!important;padding:9px!important}.visualCard h3{font-size:10px!important}.barItem{grid-template-columns:70px 1fr 80px!important;gap:5px!important}.barLabel,.barValue{font-size:8px!important}.barTrack{height:7px!important}.donut{width:90px!important;height:90px!important}.donut:after{width:52px!important;height:52px!important}.donutCenter b{font-size:10px!important}.donutCenter small{font-size:7px!important}.legend{font-size:8px!important}
+ .reportCollectionNote{font-size:9px!important;padding:7px!important}.reportTable{margin-top:8px!important}.reportTable table{min-width:0!important;font-size:8px!important}.reportTable th,.reportTable td{padding:5px!important}.reportTable th{background:#eef3f6!important}
+ @page{size:A4 landscape;margin:8mm}
+}
 </style>
