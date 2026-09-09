@@ -110,7 +110,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 #qawafelAdminDrawerOverlay{z-index:100000}
 </style>
 <style id="v111-passport-ui">
-.passport-first-box{border:2px solid #d7e4eb;border-radius:16px;padding:16px;background:linear-gradient(135deg,#f8fbfd,#fff);margin-bottom:18px}.step-title,.form-section-title{display:flex;align-items:center;gap:10px}.step-title>span,.form-section-title>span{width:32px;height:32px;border-radius:50%;background:#0c3b63;color:#fff;display:grid;place-items:center;font-weight:900;flex:0 0 auto}.step-title b{font-size:17px;color:#072b49}.step-title small{display:block;color:#6b7780;font-size:11px;margin-top:3px}.passport-actions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0 8px}.passport-status{display:block;color:#687984;font-weight:700}.passport-preview-wrap{margin-top:12px;border:1px solid #d8e2e8;border-radius:13px;padding:10px;background:#f7fafb}.passport-preview{display:block;width:100%;max-height:420px;object-fit:contain;border-radius:9px;background:#eef2f4}.passport-ocr-status{margin-top:8px;font-size:12px;font-weight:800;color:#0c3b63}.form-section-title{border-top:1px solid #dfe6ea;padding-top:16px;margin-top:18px;margin-bottom:10px;color:#072b49}.form-section-title b{font-size:16px}.crop-modal{position:fixed;inset:0;background:#000b;z-index:100005;display:flex;align-items:center;justify-content:center;padding:14px}.crop-card{width:min(900px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:18px;padding:16px}.crop-stage{position:relative;background:#101820;border-radius:12px;overflow:hidden;text-align:center}.crop-canvas{max-width:100%;max-height:60vh;display:block;margin:auto;touch-action:none}.crop-stage img{max-width:100%;display:block}.crop-card .cropper-container{direction:ltr}.crop-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.crop-help{font-size:11px;color:#687984;margin-top:8px}.crop-range{width:180px}.ocr-spin{display:inline-block;width:12px;height:12px;border:2px solid #c9d7df;border-top-color:#0c3b63;border-radius:50%;animation:v110spin .8s linear infinite;vertical-align:-2px;margin-left:5px}@keyframes v110spin{to{transform:rotate(360deg)}}
+.passport-first-box{border:2px solid #d7e4eb;border-radius:16px;padding:16px;background:linear-gradient(135deg,#f8fbfd,#fff);margin-bottom:18px}.step-title,.form-section-title{display:flex;align-items:center;gap:10px}.step-title>span,.form-section-title>span{width:32px;height:32px;border-radius:50%;background:#0c3b63;color:#fff;display:grid;place-items:center;font-weight:900;flex:0 0 auto}.step-title b{font-size:17px;color:#072b49}.step-title small{display:block;color:#6b7780;font-size:11px;margin-top:3px}.passport-actions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0 8px}.passport-status{display:block;color:#687984;font-weight:700}.passport-preview-wrap{margin-top:12px;border:1px solid #d8e2e8;border-radius:13px;padding:10px;background:#f7fafb}.passport-preview{display:block;width:100%;max-height:420px;object-fit:contain;border-radius:9px;background:#eef2f4}.passport-ocr-status{margin-top:8px;font-size:12px;font-weight:800;color:#0c3b63}.form-section-title{border-top:1px solid #dfe6ea;padding-top:16px;margin-top:18px;margin-bottom:10px;color:#072b49}.form-section-title b{font-size:16px}.crop-modal{position:fixed;inset:0;background:#000b;z-index:100005;display:flex;align-items:center;justify-content:center;padding:14px}.crop-card{width:min(900px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:18px;padding:16px}.crop-stage{position:relative;background:#101820;border-radius:12px;overflow:hidden;text-align:center}.crop-canvas{max-width:100%;max-height:60vh;display:block;margin:auto;touch-action:none}.crop-stage img{max-width:100%;display:block}.crop-card .cropper-container{direction:ltr}.crop-card .cropper-view-box{outline:2px solid #c79a3b}.crop-card .cropper-face{background:transparent}.crop-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.crop-help{font-size:11px;color:#687984;margin-top:8px}.crop-range{width:180px}.ocr-spin{display:inline-block;width:12px;height:12px;border:2px solid #c9d7df;border-top-color:#0c3b63;border-radius:50%;animation:v110spin .8s linear infinite;vertical-align:-2px;margin-left:5px}@keyframes v110spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <!-- V91 Global Admin Header: persistent public-site button and current user/role -->
@@ -732,15 +732,19 @@ $('form').onsubmit=async e=>{
       '<button type="button" class="btn w" id="v111RotL">↶ تدوير يسار</button>'+
       '<button type="button" class="btn w" id="v111RotR">↷ تدوير يمين</button>'+
       '<button type="button" class="btn w" id="v111Reset">إعادة ضبط</button>'+
+      '<button type="button" class="btn w" id="v111FullPage">📐 تحديد الصفحة كاملة</button>'+
+      '<button type="button" class="btn w" id="v111Fit">🔍 ملاءمة الصورة</button>'+
       '<button type="button" class="btn p" id="v111Apply">✓ اعتماد القص</button>'+
       '<button type="button" class="btn w" id="v111Close">إلغاء</button></div></div>';
     document.body.appendChild(modal);
     const image=modal.querySelector('#v111CropImage');
     image.src=originalUrl||URL.createObjectURL(passportFile);
-    image.onload=()=>{cropper=new Cropper(image,{viewMode:1,dragMode:'move',autoCropArea:.92,aspectRatio:4/5,background:false,responsive:true,restore:false,checkOrientation:true});};
+    image.onload=()=>{cropper=new Cropper(image,{viewMode:1,dragMode:'move',autoCropArea:.92,aspectRatio:NaN,background:false,responsive:true,restore:false,checkOrientation:true});};
     modal.querySelector('#v111RotL').onclick=()=>cropper?.rotate(-90);
     modal.querySelector('#v111RotR').onclick=()=>cropper?.rotate(90);
     modal.querySelector('#v111Reset').onclick=()=>cropper?.reset();
+    modal.querySelector('#v111FullPage').onclick=()=>{ if(!cropper)return; cropper.setCropBoxData({left:0,top:0,width:cropper.getContainerData().width,height:cropper.getContainerData().height}); };
+    modal.querySelector('#v111Fit').onclick=()=>{ if(!cropper)return; cropper.reset(); cropper.zoomTo(0); };
     modal.querySelector('#v111Close').onclick=()=>{cropper?.destroy();cropper=null;modal.remove();};
     modal.querySelector('#v111Apply').onclick=()=>{
       if(!cropper)return;
@@ -755,59 +759,102 @@ $('form').onsubmit=async e=>{
     };
   }
 
-  function preprocessForMrz(file){
+  function imageToCanvas(file, mode){
     return new Promise((resolve,reject)=>{
       const url=URL.createObjectURL(file), im=new Image();
       im.onload=()=>{
-        URL.revokeObjectURL(url);
-        const W=1800, ratio=W/im.naturalWidth, H=Math.round(im.naturalHeight*ratio);
-        const c=document.createElement('canvas');c.width=W;c.height=H;const ctx=c.getContext('2d',{willReadFrequently:true});
-        ctx.drawImage(im,0,0,W,H);
-        // MRZ is normally the bottom ~22% of the passport data page.
-        const y=Math.max(0,Math.floor(H*.73)), h=H-y;
-        const crop=document.createElement('canvas');crop.width=W;crop.height=h*2;const cc=crop.getContext('2d',{willReadFrequently:true});
-        cc.imageSmoothingEnabled=true;cc.drawImage(c,0,y,W,h,0,0,W,h*2);
-        const data=cc.getImageData(0,0,crop.width,crop.height);const d=data.data;
-        for(let i=0;i<d.length;i+=4){const g=.299*d[i]+.587*d[i+1]+.114*d[i+2];const v=Math.max(0,Math.min(255,(g-128)*1.7+128));d[i]=d[i+1]=d[i+2]=v;}
-        cc.putImageData(data,0,0);resolve(crop);
-      };im.onerror=reject;im.src=URL.createObjectURL(file);
+        try{
+          URL.revokeObjectURL(url);
+          const maxW=2200, ratio=Math.min(1,maxW/im.naturalWidth), W=Math.max(1200,Math.round(im.naturalWidth*ratio)), H=Math.round(im.naturalHeight*(W/im.naturalWidth));
+          const c=document.createElement('canvas'); c.width=W; c.height=H;
+          const ctx=c.getContext('2d',{willReadFrequently:true}); ctx.imageSmoothingEnabled=true; ctx.imageSmoothingQuality='high'; ctx.drawImage(im,0,0,W,H);
+          let y=mode==='bottom18'?Math.floor(H*.78):mode==='bottom28'?Math.floor(H*.70):Math.floor(H*.58);
+          const h=H-y;
+          const crop=document.createElement('canvas'); crop.width=W*2; crop.height=Math.max(240,h*2);
+          const cc=crop.getContext('2d',{willReadFrequently:true}); cc.imageSmoothingEnabled=true; cc.imageSmoothingQuality='high';
+          cc.drawImage(c,0,y,W,h,0,0,crop.width,crop.height);
+          const data=cc.getImageData(0,0,crop.width,crop.height), d=data.data;
+          for(let i=0;i<d.length;i+=4){
+            const g=.299*d[i]+.587*d[i+1]+.114*d[i+2];
+            let v=(g-128)*1.9+128; v=Math.max(0,Math.min(255,v));
+            d[i]=d[i+1]=d[i+2]=v;
+          }
+          cc.putImageData(data,0,0); resolve(crop);
+        }catch(e){reject(e)}
+      }; im.onerror=reject; im.src=url;
     });
   }
 
   function normalizeMrzText(text){
-    return (text||'').toUpperCase().replace(/\r/g,'').split('\n').map(x=>x.replace(/[^A-Z0-9<]/g,'')).filter(x=>x.length>=25);
+    return (text||'').toUpperCase().replace(/[\u200B-\u200D\uFEFF]/g,'').split(/\n+/).map(x=>x.replace(/[^A-Z0-9<]/g,'')).filter(x=>x.length>=25);
   }
-  function checkDigit(str){let sum=0,weights=[7,3,1];for(let i=0;i<str.length;i++){let ch=str[i],v=ch==='<'?0:(ch>='0'&&ch<='9'?+ch:ch.charCodeAt(0)-55);sum+=v*weights[i%3];}return String(sum%10)}
-  function validMRZPair(a,b){return /^P[A-Z<]{1,3}/.test(a)&&b.length>=40;}
+  function checkDigit(str){const weights=[7,3,1];let sum=0;for(let i=0;i<str.length;i++){const ch=str[i],v=ch==='<'?0:(ch>='0'&&ch<='9'?Number(ch):ch>='A'&&ch<='Z'?ch.charCodeAt(0)-55:0);sum+=v*weights[i%3]}return String(sum%10)}
+  function line2LooksValid(l){
+    if(!/^[A-Z0-9<]{40,44}$/.test(l))return false;
+    const x=l.padEnd(44,'<').slice(0,44);
+    const p=x.slice(0,9), pc=x[9], b=x.slice(13,19), bc=x[19], e=x.slice(21,27), ec=x[27];
+    const core=/^[A-Z0-9<]{9}$/.test(p)&&/^\d{6}$/.test(b)&&/^\d{6}$/.test(e);
+    if(!core)return false;
+    let score=0;
+    if(checkDigit(p)===pc)score++;
+    if(checkDigit(b)===bc)score++;
+    if(checkDigit(e)===ec)score++;
+    if(/^[A-Z<]{3}$/.test(x.slice(10,13)))score++;
+    if(/^[MF<]$/.test(x[20]))score++;
+    return score>=4;
+  }
   function parseMRZ(lines){
     const xs=lines.map(x=>x.padEnd(44,'<').slice(0,44));
-    let l1=xs.find(x=>/^P[A-Z<]{1,3}/.test(x))||xs[0]||'';
-    let idx=xs.indexOf(l1), l2=xs.slice(idx+1).find(x=>/^([A-Z0-9<]{44})$/.test(x)&&/\d/.test(x))||xs.find(x=>/\d{6}[MF<]\d{6}/.test(x))||'';
-    if(!l2 && xs.length>1)l2=xs[1]; l2=l2.padEnd(44,'<').slice(0,44);
-    let surname='', given=''; const sep=l1.indexOf('<<');
+    let l1=xs.find(x=>/^P[A-Z<]{1,3}/.test(x))||'';
+    let idx=xs.indexOf(l1);
+    let candidates=xs.filter((x,i)=>i!==idx && x.length>=40 && /\d{6}[MF<]\d{6}/.test(x));
+    candidates.sort((a,b)=>Number(line2LooksValid(b))-Number(line2LooksValid(a)));
+    let l2=candidates[0]||'';
+    if(!l2 && idx>=0)l2=xs[idx+1]||'';
+    if(!l1||!l2)return {name:'',passport:'',nat:'',birth:'',exp:'',gender:'',valid:false};
+    l1=l1.padEnd(44,'<').slice(0,44); l2=l2.padEnd(44,'<').slice(0,44);
+    const sep=l1.indexOf('<<');
+    let surname='',given='';
     if(sep>=0){surname=l1.slice(5,sep).replace(/</g,' ').trim();given=l1.slice(sep+2).replace(/</g,' ').trim();}
     const pass=l2.slice(0,9).replace(/</g,'').trim();
     const nat=l2.slice(10,13).replace(/</g,'').trim();
     const birth=l2.slice(13,19), gender=l2.slice(20,21), exp=l2.slice(21,27);
-    function date6(x){if(!/^\d{6}$/.test(x))return '';const yy=+x.slice(0,2),mm=x.slice(2,4),dd=x.slice(4,6);const year=yy>=40?1900+yy:2000+yy;return year+'-'+mm+'-'+dd;}
-    return {name:[given,surname].filter(Boolean).join(' '),surname,given,passport:pass,nat,birth:date6(birth),exp:date6(exp),gender:gender==='M'?'ذكر':gender==='F'?'أنثى':'' ,mrzLine1:l1,mrzLine2:l2};
+    function date6(x){if(!/^\d{6}$/.test(x))return '';const yy=+x.slice(0,2),mm=x.slice(2,4),dd=x.slice(4,6);if(+mm<1||+mm>12||+dd<1||+dd>31)return '';const year=yy>=40?1900+yy:2000+yy;return year+'-'+mm+'-'+dd;}
+    const valid=line2LooksValid(l2);
+    return {name:[given,surname].filter(Boolean).join(' '),surname,given,passport:pass,nat,birth:date6(birth),exp:date6(exp),gender:gender==='M'?'ذكر':gender==='F'?'أنثى':'',mrzLine1:l1,mrzLine2:l2,valid};
+  }
+
+  async function recognizeCanvas(canvas, psm){
+    const worker=await Tesseract.createWorker('eng');
+    try{
+      await worker.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',tessedit_pageseg_mode:String(psm),preserve_interword_spaces:'1'});
+      const result=await worker.recognize(canvas); return result.data.text||'';
+    }finally{await worker.terminate();}
   }
 
   async function ocr(){
     if(!passportFile)return alert('ارفع صورة الجواز أولًا.');
     if(!passportFile.type.startsWith('image/'))return alert('قراءة الجواز تحتاج صورة.');
-    const st=$('passportOcrStatus');st.innerHTML='<span class="ocr-spin"></span> جارٍ تجهيز الصورة وقراءة منطقة MRZ بدقة...';$('passportOcrBtn').disabled=true;
+    const st=$('passportOcrStatus');st.innerHTML='<span class="ocr-spin"></span> جارٍ تحسين الصورة وقراءة سطرَي MRZ والتحقق من البيانات...';$('passportOcrBtn').disabled=true;
     try{
       if(!window.Tesseract){await new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
-      const mrzCanvas=await preprocessForMrz(passportFile);
-      const worker=await Tesseract.createWorker('eng');
-      await worker.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'});
-      const result=await worker.recognize(mrzCanvas); await worker.terminate();
-      const lines=normalizeMrzText(result.data.text);
-      const parsed=parseMRZ(lines);
-      if(parsed.passport && parsed.name){apply(parsed);st.textContent='تمت قراءة MRZ — راجع البيانات قبل الحفظ.';}
-      else {st.textContent='لم تتم قراءة MRZ بشكل موثوق. قص صفحة البيانات كاملة مع إبقاء سطرَي MRZ ثم أعد المحاولة.';}
-      console.log('MRZ OCR',lines,parsed);
+      const modes=['bottom18','bottom28','bottom42']; let best=null, all=[];
+      for(const mode of modes){
+        const canvas=await imageToCanvas(passportFile,mode);
+        for(const psm of [6,11]){
+          const text=await recognizeCanvas(canvas,psm); const lines=normalizeMrzText(text); all.push(...lines);
+          const parsed=parseMRZ(lines); if(parsed.valid && parsed.passport && parsed.name){best=parsed;break;}
+          if(!best && parsed.passport && parsed.name)best=parsed;
+        }
+        if(best?.valid)break;
+      }
+      if(best && best.passport && best.name){
+        apply(best);
+        st.textContent=best.valid?'تمت قراءة الجواز والتحقق من بيانات MRZ. راجع الحقول قبل الحفظ.':'تمت قراءة الجواز. راجع الحقول قبل الحفظ لأن التحقق الكامل من MRZ لم يكتمل.';
+      }else{
+        st.textContent='لم تتم قراءة الجواز بشكل موثوق. استخدم «قص وتعديل» وحدد صفحة البيانات كاملة مع إبقاء سطرَي MRZ ثم أعد القراءة.';
+      }
+      console.log('MRZ OCR candidates',all, best);
     }catch(e){console.error(e);st.textContent='تعذر تشغيل قارئ الجواز. يمكنك إدخال البيانات يدويًا.';}
     finally{$('passportOcrBtn').disabled=false;}
   }
