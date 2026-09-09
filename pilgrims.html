@@ -256,6 +256,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 
 <!-- 6. Payment -->
 <div class="form-section-title"><span>6</span><b>تفاصيل الدفع والتقسيط</b></div>
+<div id="cashDetails" style="grid-column:1/-1;border:1px solid #d9e3e8;border-radius:14px;padding:14px;background:#fffdf5;margin-top:2px"><div style="font-weight:900;color:#0c3b63;margin-bottom:10px">تفاصيل الدفع النقدي</div><div class="cols"><div><label>حالة الدفع *</label><select id="cashPaymentStatus"><option value="paid">تم دفع المبلغ كاملًا</option><option value="partial">دُفعت دفعة مقدمة والباقي قبل السفر</option></select></div><div><label>المبلغ المدفوع الآن *</label><input id="cashInitial" type="number" min="0" value="0"></div><div id="cashDueWrap" class="hide"><label>موعد دفع المتبقي *</label><input id="cashDueDate" type="date"><small style="display:block;color:#6b7788;margin-top:5px">يجب أن يكون الموعد قبل أو في يوم السفر.</small></div><div><label>المتبقي</label><div id="cashRemaining" class="moneyBox">—</div></div></div><small style="display:block;color:#6b7788;margin-top:9px">حتى في البرنامج النقدي نسجل هل المبلغ مدفوع كاملًا أم توجد دفعة مقدمة والباقي قبل السفر.</small></div>
 <div id="installmentDetails" class="hide" style="grid-column:1/-1;border:1px solid #d9e3e8;border-radius:14px;padding:14px;background:#f8fafc;margin-top:2px"><div style="font-weight:900;color:#0c3b63;margin-bottom:10px">تفاصيل التقسيط</div><div id="installmentPriceHint" style="font-size:13px;color:#8b6b25;margin-bottom:10px;font-weight:700"></div><div class="cols"><div><label>إجمالي البرنامج</label><div id="installmentTotal" class="moneyBox">—</div></div><div><label>المبلغ المدفوع الآن</label><input id="initial" type="number" min="0" value="0"></div><div><label>المبلغ المتبقي</label><div id="installmentRemaining" class="moneyBox">—</div></div><div><label>عدد الأقساط</label><select id="installmentCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div><div><label>القسط الشهري التقريبي</label><div id="monthlyAmount" class="moneyBox">—</div></div><div><label>آخر قسط</label><div id="lastInstallment" class="moneyBox">—</div></div></div><small style="display:block;color:#6b7780;margin-top:9px">يتحدث المبلغ المتبقي والقسط الشهري تلقائيًا عند تغيير الدفعة الأولى أو عدد الأقساط.</small></div>
 <div id="scheduleWrap" class="hide section"><h3>جدول الأقساط</h3><div style="background:#f8fafc;border:1px solid #d9e3e8;border-radius:12px;padding:12px;margin-bottom:12px"><label>تاريخ أول قسط *</label><input id="firstInstallmentDate" type="date" required><small style="display:block;color:#6b7780;margin-top:6px">بعد تحديد تاريخ أول قسط، يحسب النظام تلقائيًا موعد كل قسط بعده كل 30 يومًا.</small></div><div id="schedule"></div></div>
 
@@ -436,9 +437,10 @@ function updateInstallmentSummary(total,balance,count){
  $('monthlyAmount').textContent=money(monthly);
  $('lastInstallment').textContent=money(balance-monthly*Math.max(count-1,0));
 }
-$('paymentType').onchange=()=>{updateSaleBox();const i=$('paymentType').value==='installment';$('installmentDetails').classList.toggle('hide',!i);$('scheduleWrap').classList.toggle('hide',!i);if(i)buildSchedule()};
+$('paymentType').onchange=()=>{updateSaleBox();const i=$('paymentType').value==='installment';$('installmentDetails').classList.toggle('hide',!i);$('scheduleWrap').classList.toggle('hide',!i);$('cashDetails').classList.toggle('hide',i);if(i)buildSchedule();else updateCashPaymentBox()};
 $('paymentType').onchange();
-$('discountAmount').oninput=()=>{updateSaleBox();if($('paymentType').value==='installment')buildSchedule();};
+updateCashPaymentBox();
+$('discountAmount').oninput=()=>{updateSaleBox();if($('paymentType').value==='installment')buildSchedule();else updateCashPaymentBox();};
 $('discountReason').oninput=()=>{};
 
 function addDaysISO(dateStr,days){
@@ -468,8 +470,22 @@ function buildSchedule(){
  }
  $('schedule').innerHTML=rows;
 }
+function updateCashPaymentBox(){
+ const pr=PR.find(x=>x.id===$('program').value); if(!pr)return;
+ const total=Math.max(Number(pr?.price||0)-Math.max(Number($('discountAmount').value||0),0),0);
+ const status=$('cashPaymentStatus')?.value||'paid'; const wrap=$('cashDueWrap');
+ wrap?.classList.toggle('hide',status!=='partial');
+ const inp=$('cashInitial');
+ if(status==='paid'){inp.value=total;inp.readOnly=true;$('cashDueDate').value='';}
+ else {inp.readOnly=false;if(Number(inp.value)>=total)inp.value=Math.max(total-1,0);}
+ const rem=Math.max(total-Number(inp.value||0),0);$('cashRemaining').textContent=money(rem);
+ if(wrap&&!wrap.classList.contains('hide')){const trip=pr.departure_date||pr.departure||pr.start_date;const d=$('cashDueDate');if(trip)d.max=trip;}
+}
+$('cashPaymentStatus')?.addEventListener('change',updateCashPaymentBox);
+$('cashInitial')?.addEventListener('input',updateCashPaymentBox);
+$('cashDueDate')?.addEventListener('change',updateCashPaymentBox);
 $('installmentCount').onchange=buildSchedule;
-$('program').onchange=()=>{updateSaleBox(); if($('paymentType').value==='installment')buildSchedule()};
+$('program').onchange=()=>{updateSaleBox(); if($('paymentType').value==='installment')buildSchedule(); else updateCashPaymentBox()};
 $('initial').oninput=()=>{if($('paymentType').value==='installment')buildSchedule()};
 $('firstInstallmentDate').onchange=()=>{if($('paymentType').value==='installment')buildSchedule()};
 
@@ -540,10 +556,10 @@ async function openProfile(id){
  $('profile').classList.remove('hide');
  $('profile').innerHTML='<h2>ملف المعتمر: '+esc(p.full_name)+'</h2>'+
  '<div class="cols"><div>رمز الملف<br><b>'+esc(p.profile_code||'—')+'</b></div><div>الهاتف<br>'+esc(p.phone||'—')+'</div><div>محل السكن الحالي<br>'+esc(p.current_residence||'—')+'</div><div>الجواز<br>'+esc(p.passport_number||'—')+'</div><div>انتهاء الجواز<br>'+esc(p.passport_expiry||'—')+'</div><div>الفيزا<br>'+badge(p.visa_status)+' '+esc(p.visa_number||'')+'</div></div>'+
- '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج<br><b>'+esc(pr?.title||'—')+'</b></div><div>نوع البرنامج<br><b>'+(b?.payment_type==='installment'?'قسط':'نقد')+'</b></div><div>الإجمالي<br><span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع<br><span class="money">'+money(b?.paid_amount)+'</span></div><div>المتبقي<br><span class="money">'+money(b?.remaining_amount)+'</span></div><div>الحالة<br>'+badge(b?.status)+'</div></div></div>'+
- (b?.payment_type==='installment'?'<div class="section"><h3>الأقساط</h3><div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+((ins.length?ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join(''):'<tr><td colspan="5">لا توجد أقساط.</td></tr>'))+'</tbody></table></div><button id="manageBtn" class="btn p noPrint">💰 إدارة الدفعات والأقساط</button><div id="manager" class="section hide"></div></div>':'<div class="section"><span class="badge ok">برنامج نقدي — لا توجد أقساط</span></div>')+
+ '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج<br><b>'+esc(pr?.title||'—')+'</b></div><div>نوع البرنامج<br><b>'+(b?.payment_type==='installment'?'قسط':'نقد')+'</b></div>'+(b?.payment_type==='cash'?'<div>حالة الدفع<br><b>'+(b?.cash_payment_status==='partial'?'دفعة مقدمة — المتبقي قبل السفر':'تم دفع المبلغ كاملًا')+'</b>'+(b?.cash_payment_status==='partial'&&b?.cash_due_date?'<br><small>موعد المتبقي: '+esc(b.cash_due_date)+'</small>':'')+'</div>':'')+'<div>الإجمالي<br><span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع<br><span class="money">'+money(b?.paid_amount)+'</span></div><div>المتبقي<br><span class="money">'+money(b?.remaining_amount)+'</span></div><div>الحالة<br>'+badge(b?.status)+'</div></div></div>'+
+ ((b?.payment_type==='installment'||(b?.payment_type==='cash'&&b?.cash_payment_status==='partial'))?'<div class="section"><h3>'+(b?.payment_type==='cash'?'المبلغ المتبقي قبل السفر':'الأقساط')+'</h3><div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+((ins.length?ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join(''):'<tr><td colspan="5">لا توجد أقساط.</td></tr>'))+'</tbody></table></div><button id="manageBtn" class="btn p noPrint">💰 إدارة الدفعات والأقساط</button><div id="manager" class="section hide"></div></div>':'<div class="section"><span class="badge ok">برنامج نقدي — لا توجد أقساط</span></div>')+
  '<div class="section"><button class="btn w noPrint" onclick="window.print()">طباعة الملف</button> <button class="btn p noPrint" id="printOneBadge">🎫 طباعة الباج</button> <button class="btn danger noPrint" id="deleteTripBtn">حذف المعتمر من الرحلة</button></div>';
- if(b?.payment_type==='installment')$('manageBtn').onclick=()=>managePayments(b);
+ if(b?.payment_type==='installment'||(b?.payment_type==='cash'&&b?.cash_payment_status==='partial'))$('manageBtn').onclick=()=>managePayments(b);
  $('printOneBadge').onclick=()=>printBadges([p],pr?.title);
  $('deleteTripBtn').onclick=()=>deletePilgrimFromTrip(p.id);
  $('profile').scrollIntoView({behavior:'smooth'});
@@ -663,9 +679,17 @@ $('form').onsubmit=async e=>{
  e.preventDefault(); if(saveInProgress)return;
 await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('formMsg','⚠️ هذا الاسم مسجل كعميل سابق. اختر: نعم، أضفه للرحلة الحالية، أو لا، إلغاء.',true);}if(nameDuplicate)return msg('formMsg','❌ لا يمكن المتابعة بهذا الاسم.',true);msg('formMsg','جاري التحقق من البيانات...');
  const pr=PR.find(x=>x.id===$('program').value);if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);if(archiveConfirmed&&archiveMatch&&archiveAlreadyInProgram(archiveMatch.id,pr.id))return msg('formMsg','❌ هذا العميل مضاف بالفعل إلى الرحلة الحالية.',true);
- const paymentType=$('paymentType').value, basePrice=Number((paymentType==='installment'?pr.installment_price:pr.price)||0), discountAmount=Math.max(Number($('discountAmount').value||0),0), total=Math.max(basePrice-discountAmount,0), discountReason=$('discountReason').value.trim()||null, passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date,paid=Math.min(Math.max(Number($('initial').value||0),0),total);
+ const paymentType=$('paymentType').value, basePrice=Number((paymentType==='installment'?pr.installment_price:pr.price)||0), discountAmount=Math.max(Number($('discountAmount').value||0),0), total=Math.max(basePrice-discountAmount,0), discountReason=$('discountReason').value.trim()||null, passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date, cashStatus=$('cashPaymentStatus')?.value||'paid', cashInitial=Math.max(Number($('cashInitial')?.value||0),0), paid=Math.min(Math.max(paymentType==='cash'?cashInitial:Number($('initial').value||0),0),total);
  if(discountAmount>basePrice)return msg('formMsg','❌ قيمة الخصم أكبر من سعر البرنامج.',true);
  const remaining=total-paid;
+ if(paymentType==='cash'){
+   if(cashStatus==='paid'){ if(Math.abs(paid-total)>0.01)return msg('formMsg','❌ اختر حالة الدفع الصحيحة: تم دفع المبلغ كاملًا، ويجب تسجيل كامل السعر كمدفوع.',true); }
+   else {
+     if(!(paid>0 && paid<total))return msg('formMsg','❌ في حالة الدفعة المقدمة يجب أن يكون المبلغ المدفوع أكبر من صفر وأقل من السعر النهائي.',true);
+     const due=$('cashDueDate').value; if(!due)return msg('formMsg','❌ حدد موعد دفع المبلغ المتبقي قبل السفر.',true);
+     if(tripDate && due>tripDate)return msg('formMsg','❌ موعد دفع المتبقي يجب أن يكون قبل أو في يوم السفر.',true);
+   }
+ }
  if(paymentType==='installment'&&remaining>0){
    const preAmounts=[...document.querySelectorAll('.instAmount')].map(x=>Number(x.value||0));
    const preDates=[...document.querySelectorAll('.instDate')].map(x=>x.value||null);
@@ -683,7 +707,7 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
  const manualPhotoFile=$('photoCamera').files?.[0] || $('photoUpload').files?.[0]; const photoFile=editedPhotoFile || manualPhotoFile || (usePassportPhoto?passportPhotoFile:null); if(!photoFile)return msg('formMsg','أرفق الصورة الشخصية أو استخدم الصورة المستخرجة من الجواز.',true);
  saveInProgress=true; const submitBtn=$('form').querySelector('button[type=submit]'); if(submitBtn)submitBtn.disabled=true;
  try{
-  const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,base_price:basePrice,discount_amount:discountAmount,discount_reason:discountReason,total_amount:total,paid_amount:paid,status:remaining?'pending':'confirmed',notes:'حجز من إدارة المعتمرين',payment_type:paymentType};
+  const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,base_price:basePrice,discount_amount:discountAmount,discount_reason:discountReason,total_amount:total,paid_amount:paid,status:remaining?'pending':'confirmed',notes:'حجز من إدارة المعتمرين',payment_type:paymentType,cash_payment_status:paymentType==='cash'?cashStatus:null,cash_due_date:paymentType==='cash'&&cashStatus==='partial'?($('cashDueDate').value||null):null};
   let photoPath=archiveConfirmed?(archiveMatch?.photo_path||null):null; if(photoFile){const ext=(photoFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; photoPath='pilgrim-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; const upPhoto=await db.storage.from('pilgrim-photos').upload(photoPath,photoFile,{upsert:false,contentType:photoFile.type||'image/jpeg'}); if(upPhoto.error)throw upPhoto.error;}
   let passportImagePath=archiveConfirmed?(archiveMatch?.passport_image_path||null):null; if(passportFile){const pext=(passportFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; passportImagePath='passport-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+pext; const upPassport=await db.storage.from('pilgrim-photos').upload(passportImagePath,passportFile,{upsert:false,contentType:passportFile.type||'image/jpeg'}); if(upPassport.error)throw upPassport.error;}
   let guardianPath=archiveConfirmed?(archiveMatch?.guardian_authorization_path||null):null; if(guardianFile){const gext=(guardianFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; guardianPath='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+gext; const ug=await db.storage.from('pilgrim-photos').upload(guardianPath,guardianFile,{upsert:false,contentType:guardianFile.type||'application/octet-stream'}); if(ug.error)throw ug.error;}
@@ -691,7 +715,11 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
   const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,gender:($('gender').value==='ذكر'?'male':$('gender').value==='أنثى'?'female':null),passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,current_residence:$('currentResidence').value.trim()||null,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8)};
   const pp=await db.from('pilgrims').insert(payload).select('id,archive_id').single();if(pp.error){await db.from('bookings').delete().eq('id',br.data.id);throw pp.error}
   if(pp.data?.archive_id){const au={phone:$('phone').value.trim()||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,gender:$('gender').value||null,birth_date:$('birthDate').value,guardian_accompanied:accompanied};if(photoPath)au.photo_path=photoPath;if(passportImagePath)au.passport_image_path=passportImagePath;if(guardianPath)au.guardian_authorization_path=guardianPath;await db.from('pilgrim_archive').update(au).eq('id',pp.data.archive_id);}
-  if(paid>0)await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),payment_method:'نقد',notes:'دفعة أولى'});
+  if(paid>0){const payr=await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),payment_method:'نقد',notes:paymentType==='cash'?(cashStatus==='paid'?'دفع كامل':'دفعة مقدمة — المتبقي قبل السفر'):'دفعة أولى'});if(payr.error){await db.from('pilgrims').delete().eq('id',pp.data.id);await db.from('bookings').delete().eq('id',br.data.id);throw payr.error;}}
+  if(paymentType==='cash'&&cashStatus==='partial'&&remaining>0){
+   const cr=await db.from('installment_plans').insert({booking_id:br.data.id,installment_number:1,due_date:$('cashDueDate').value,amount:remaining,paid_amount:0,status:'pending',notes:'متبقي برنامج نقدي — يستحق قبل السفر'});
+   if(cr.error){await db.from('pilgrims').delete().eq('id',pp.data.id);await db.from('bookings').delete().eq('id',br.data.id);throw cr.error;}
+  }
   if(paymentType==='installment'&&remaining>0){
    const amounts=[...document.querySelectorAll('.instAmount')].map(x=>Number(x.value||0));
    const dates=[...document.querySelectorAll('.instDate')].map(x=>x.value||null);
@@ -703,7 +731,7 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
    const ir=await db.from('installment_plans').insert(rows);
    if(ir.error)throw ir.error;
   }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');formDirty=false;e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('gender').value='';$('currentResidence').value='';$('englishName').value='';$('initial').value=0;$('discountAmount').value=0;$('discountReason').value='';$('basePriceBox').textContent='اختر البرنامج';$('finalPrice').textContent='—';$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('usePassportPhotoBtn').style.display='none';$('passportPhotoStatus').textContent='';passportPhotoFile=null;usePassportPhoto=false;editedPhotoFile=null;originalPassportFile=null;$('photoCropBtn').style.display='none';$('passportSmartCancelBtn')?.classList.add('hide');validatePassportExpiry(false);await load();
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');formDirty=false;e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('gender').value='';$('currentResidence').value='';$('englishName').value='';$('initial').value=0;$('discountAmount').value=0;$('discountReason').value='';$('basePriceBox').textContent='اختر البرنامج';$('finalPrice').textContent='—';$('paymentType').value='cash';$('cashPaymentStatus').value='paid';$('cashInitial').value=0;$('cashDueDate').value='';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('usePassportPhotoBtn').style.display='none';$('passportPhotoStatus').textContent='';passportPhotoFile=null;usePassportPhoto=false;editedPhotoFile=null;originalPassportFile=null;$('photoCropBtn').style.display='none';$('passportSmartCancelBtn')?.classList.add('hide');validatePassportExpiry(false);await load();
  }catch(err){console.error('save pilgrim',err);const detail=[err?.message,err?.details,err?.hint,err?.code?('code '+err.code):''].filter(Boolean).join(' — ');msg('formMsg','❌ تعذر حفظ المعتمر: '+(detail||'خطأ غير معروف')+'. لم يتم مسح البيانات، ويمكنك المحاولة مرة أخرى.',true)} finally { saveInProgress=false; if(submitBtn)submitBtn.disabled=!validatePassportExpiry(false); }
 };
 
