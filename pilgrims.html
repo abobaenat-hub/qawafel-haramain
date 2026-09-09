@@ -269,7 +269,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <!-- 8. Documents and photo -->
 <div class="form-section-title"><span>8</span><b>الصور والمستندات</b></div>
 <div class="cols">
-  <div><label>صورة المعتمر *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="usePassportPhotoBtn" type="button" class="btn p" style="display:none;margin:0">👤 استخدام صورة الجواز</button><label class="btn w" style="display:inline-block;margin:0">📷 تصوير صورة أخرى<input id="photoCamera" type="file" accept="image/*" capture="user" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 رفع صورة أخرى<input id="photoUpload" type="file" accept="image/*" style="display:none"></label></div><small id="photoHint" style="display:block;color:#6b7b88;margin-top:5px">بعد قراءة الجواز يحاول النظام استخراج صورة المعتمر تلقائيًا. إذا كانت غير واضحة، ارفع أو صوّر صورة أخرى.</small><div id="photoPreviewWrap" class="passport-preview-wrap hide" style="max-width:240px;margin-top:10px"><div style="font-weight:900;color:#072b49;margin-bottom:7px">👤 معاينة صورة المعتمر</div><img id="photoPreview" class="photo-preview" style="width:180px;height:220px;margin-top:0;object-fit:cover" alt="معاينة صورة المعتمر"></div><div id="passportPhotoStatus" style="font-size:12px;font-weight:800;color:#176644;margin-top:6px"></div></div>
+  <div><label>صورة المعتمر *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="usePassportPhotoBtn" type="button" class="btn p" style="display:none;margin:0">👤 استخدام صورة الجواز</button><button id="photoCropBtn" type="button" class="btn w" style="display:none;margin:0">✂️ تعديل وقص الصورة</button><label class="btn w" style="display:inline-block;margin:0">📷 تصوير صورة أخرى<input id="photoCamera" type="file" accept="image/*" capture="user" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 رفع صورة أخرى<input id="photoUpload" type="file" accept="image/*" style="display:none"></label></div><small id="photoHint" style="display:block;color:#6b7b88;margin-top:5px">بعد قراءة الجواز يحاول النظام استخراج صورة المعتمر تلقائيًا. إذا كانت غير واضحة، ارفع أو صوّر صورة أخرى.</small><div id="photoPreviewWrap" class="passport-preview-wrap hide" style="max-width:240px;margin-top:10px"><div style="font-weight:900;color:#072b49;margin-bottom:7px">👤 معاينة صورة المعتمر</div><img id="photoPreview" class="photo-preview" style="width:180px;height:220px;margin-top:0;object-fit:cover" alt="معاينة صورة المعتمر"></div><div id="passportPhotoStatus" style="font-size:12px;font-weight:800;color:#176644;margin-top:6px"></div></div>
   <div id="minorWrap" class="hide" style="grid-column:1/-1;border:1px solid #ead9b5;border-radius:12px;padding:12px;background:#fffaf0"><label>المعتمر دون 18 سنة</label><div style="display:flex;gap:14px;flex-wrap:wrap;margin:8px 0"><label><input type="radio" name="guardianAccompanied" value="yes"> نعم، الوالد/ولي الأمر مرافق</label><label><input type="radio" name="guardianAccompanied" value="no" checked> لا، غير مرافق</label></div><small id="minorHint" style="display:block;color:#a33">إذا كان ولي الأمر مرافقًا فلا نطلب وكالة.</small><div id="guardianWrap"><label>وكالة ولي الأمر *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير الوكالة<input id="guardianCamera" type="file" accept="image/*,application/pdf" capture="environment" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل الوكالة<input id="guardianUpload" type="file" accept="image/*,application/pdf" style="display:none"></label></div><small id="guardianHint" style="display:block;color:#a33;margin-top:5px">مطلوبة لأن ولي الأمر غير مرافق.</small></div></div>
 </div>
 
@@ -629,6 +629,8 @@ function passportMinDate(){
  d=Math.min(d,lastDay);
  return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
 }
+let passportPhotoFile=null, usePassportPhoto=false, editedPhotoFile=null;
+let formDirty=false, saveInProgress=false;
 function validatePassportExpiry(show=true){
  const input=$('pex'); const d=input.value; const min=passportMinDate();
  const saveBtn=$('form').querySelector('button[type=submit]');
@@ -657,7 +659,8 @@ validatePassportExpiry(false);
 $('program').addEventListener('change',()=>validatePassportExpiry(true));
 document.getElementById('form').addEventListener('submit',function(e){ if(!validatePassportExpiry(true)){ e.preventDefault(); e.stopImmediatePropagation(); return false; } }, true);
 $('form').onsubmit=async e=>{
- e.preventDefault();await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('formMsg','⚠️ هذا الاسم مسجل كعميل سابق. اختر: نعم، أضفه للرحلة الحالية، أو لا، إلغاء.',true);}if(nameDuplicate)return msg('formMsg','❌ لا يمكن المتابعة بهذا الاسم.',true);msg('formMsg','جاري التحقق من البيانات...');
+ e.preventDefault(); if(saveInProgress)return;
+await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('formMsg','⚠️ هذا الاسم مسجل كعميل سابق. اختر: نعم، أضفه للرحلة الحالية، أو لا، إلغاء.',true);}if(nameDuplicate)return msg('formMsg','❌ لا يمكن المتابعة بهذا الاسم.',true);msg('formMsg','جاري التحقق من البيانات...');
  const pr=PR.find(x=>x.id===$('program').value);if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);if(archiveConfirmed&&archiveMatch&&archiveAlreadyInProgram(archiveMatch.id,pr.id))return msg('formMsg','❌ هذا العميل مضاف بالفعل إلى الرحلة الحالية.',true);
  const paymentType=$('paymentType').value, basePrice=Number((paymentType==='installment'?pr.installment_price:pr.price)||0), discountAmount=Math.max(Number($('discountAmount').value||0),0), total=Math.max(basePrice-discountAmount,0), discountReason=$('discountReason').value.trim()||null, passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date,paid=Math.min(Math.max(Number($('initial').value||0),0),total);
  if(discountAmount>basePrice)return msg('formMsg','❌ قيمة الخصم أكبر من سعر البرنامج.',true);
@@ -668,7 +671,8 @@ $('form').onsubmit=async e=>{
  const age=calcAge($('birthDate').value); if(age===null)return msg('formMsg','أدخل تاريخ ميلاد المعتمر.',true);
  const accompanied=age<18 && guardianAccompanied(); const guardianFile=$('guardianCamera').files?.[0] || $('guardianUpload').files?.[0]; if(age<18 && !accompanied && !guardianFile)return msg('formMsg','المعتمر دون 18 سنة وولي الأمر غير مرافق: يجب إرفاق الوكالة.',true);
  const passportFile=$('passportCamera').files?.[0] || $('passportUpload').files?.[0]; if(!passportFile)return msg('formMsg','أرفق صورة الجواز: صوّر بالكاميرا أو حمّل ملفًا من الهاتف.',true);
- const manualPhotoFile=$('photoCamera').files?.[0] || $('photoUpload').files?.[0]; const photoFile=manualPhotoFile || (usePassportPhoto?passportPhotoFile:null); if(!photoFile)return msg('formMsg','أرفق الصورة الشخصية أو استخدم الصورة المستخرجة من الجواز.',true);
+ const manualPhotoFile=$('photoCamera').files?.[0] || $('photoUpload').files?.[0]; const photoFile=editedPhotoFile || manualPhotoFile || (usePassportPhoto?passportPhotoFile:null); if(!photoFile)return msg('formMsg','أرفق الصورة الشخصية أو استخدم الصورة المستخرجة من الجواز.',true);
+ saveInProgress=true; const submitBtn=$('form').querySelector('button[type=submit]'); if(submitBtn)submitBtn.disabled=true;
  try{
   const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,base_price:basePrice,discount_amount:discountAmount,discount_reason:discountReason,total_amount:total,paid_amount:paid,status:remaining?'pending':'paid',notes:'حجز من إدارة المعتمرين',payment_type:paymentType};
   let photoPath=archiveConfirmed?(archiveMatch?.photo_path||null):null; if(photoFile){const ext=(photoFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; photoPath='pilgrim-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; const upPhoto=await db.storage.from('pilgrim-photos').upload(photoPath,photoFile,{upsert:false,contentType:photoFile.type||'image/jpeg'}); if(upPhoto.error)throw upPhoto.error;}
@@ -690,8 +694,8 @@ $('form').onsubmit=async e=>{
    const ir=await db.from('installment_plans').insert(rows);
    if(ir.error)throw ir.error;
   }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('gender').value='';$('currentResidence').value='';$('englishName').value='';$('initial').value=0;$('discountAmount').value=0;$('discountReason').value='';$('basePriceBox').textContent='اختر البرنامج';$('finalPrice').textContent='—';$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('usePassportPhotoBtn').style.display='none';$('passportPhotoStatus').textContent='';passportPhotoFile=null;usePassportPhoto=false;validatePassportExpiry(false);await load();
- }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');formDirty=false;e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('gender').value='';$('currentResidence').value='';$('englishName').value='';$('initial').value=0;$('discountAmount').value=0;$('discountReason').value='';$('basePriceBox').textContent='اختر البرنامج';$('finalPrice').textContent='—';$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('usePassportPhotoBtn').style.display='none';$('passportPhotoStatus').textContent='';passportPhotoFile=null;usePassportPhoto=false;editedPhotoFile=null;$('photoCropBtn').style.display='none';validatePassportExpiry(false);await load();
+ }catch(err){console.error('save pilgrim',err);msg('formMsg','❌ تعذر حفظ المعتمر: '+(err?.message||err||'خطأ غير معروف'),true)} finally { saveInProgress=false; if(submitBtn)submitBtn.disabled=!validatePassportExpiry(false); }
 };
 
 (async()=>{try{const{data:{session}}=await db.auth.getSession();if(session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load()}else{document.body.classList.remove('auth-pending')}}catch(e){document.body.classList.remove('auth-pending');msg('loginMsg',e.message||'تعذر فحص الجلسة.',true)}})();
@@ -938,7 +942,46 @@ $('form').onsubmit=async e=>{
     }catch(e){console.error('photo extract',e);$('passportPhotoStatus').textContent='تعذر استخراج الصورة تلقائيًا — يمكنك رفع صورة المعتمر يدويًا.';}
   }
 
-  let passportPhotoFile=null, usePassportPhoto=false;
+
+  async function openPhotoCrop(){
+    const sourceFile=editedPhotoFile || $('photoCamera').files?.[0] || $('photoUpload').files?.[0] || (usePassportPhoto?passportPhotoFile:null);
+    const src=$('photoPreview')?.src;
+    if(!sourceFile && !src)return alert('اختر أو استخرج صورة المعتمر أولًا.');
+    try{await loadCropper();}catch(e){return alert('تعذر تحميل أداة القص. تأكد من اتصال الإنترنت ثم حاول مرة أخرى.');}
+    const modal=document.createElement('div'); modal.className='crop-modal';
+    modal.innerHTML='<div class="crop-card">'+
+      '<h3 style="margin:0 0 8px;color:#072b49">✂️ قص وتعديل صورة المعتمر</h3>'+ 
+      '<p style="margin:0 0 12px;color:#687984;font-size:12px">اضبط الصورة بحيث يظهر وجه المعتمر بوضوح، ثم اضغط اعتماد القص.</p>'+ 
+      '<div class="crop-stage" style="max-height:68vh"><img id="vPhotoCropImage" style="display:block;max-width:100%;max-height:68vh;margin:auto"></div>'+ 
+      '<div class="crop-controls">'+
+      '<button type="button" class="btn w" id="photoRotL">↶ تدوير يسار</button>'+ 
+      '<button type="button" class="btn w" id="photoRotR">↷ تدوير يمين</button>'+ 
+      '<button type="button" class="btn w" id="photoReset">إعادة ضبط</button>'+ 
+      '<button type="button" class="btn p" id="photoApply">✓ اعتماد القص</button>'+ 
+      '<button type="button" class="btn w" id="photoClose">إلغاء</button></div></div>';
+    document.body.appendChild(modal);
+    const image=modal.querySelector('#vPhotoCropImage');
+    image.src=src || URL.createObjectURL(sourceFile);
+    let pcrop=null;
+    image.onload=()=>{pcrop=new Cropper(image,{viewMode:1,dragMode:'move',autoCropArea:.86,aspectRatio:3/4,background:false,responsive:true,restore:false,checkOrientation:true});};
+    modal.querySelector('#photoRotL').onclick=()=>pcrop?.rotate(-90);
+    modal.querySelector('#photoRotR').onclick=()=>pcrop?.rotate(90);
+    modal.querySelector('#photoReset').onclick=()=>pcrop?.reset();
+    modal.querySelector('#photoClose').onclick=()=>{pcrop?.destroy();modal.remove();};
+    modal.querySelector('#photoApply').onclick=()=>{
+      if(!pcrop)return;
+      const canvas=pcrop.getCroppedCanvas({maxWidth:1200,maxHeight:1600,imageSmoothingEnabled:true,imageSmoothingQuality:'high'});
+      canvas.toBlob(blob=>{
+        if(!blob)return;
+        editedPhotoFile=new File([blob],'pilgrim-photo-edited.jpg',{type:'image/jpeg'});
+        usePassportPhoto=false;
+        const u=URL.createObjectURL(editedPhotoFile);
+        $('photoPreview').src=u;$('photoPreviewWrap').classList.remove('hide');$('photoPreview').classList.remove('hide');$('photoCropBtn').style.display='inline-block';
+        $('passportPhotoStatus').textContent='✅ تم تعديل وقص صورة المعتمر. سيتم حفظ الصورة المعدلة.';
+        formDirty=true; pcrop.destroy();modal.remove();
+      },'image/jpeg',.95);
+    };
+  }
 
   function openImagePreview(src,title){
     if(!src)return;
@@ -955,10 +998,23 @@ $('form').onsubmit=async e=>{
   window.openImagePreview=openImagePreview;
   $('passportPreview')?.addEventListener('click',()=>{const src=$('passportPreview').currentSrc||$('passportPreview').src;if(src)openImagePreview(src,'معاينة صفحة الجواز');});
   $('photoPreview')?.addEventListener('click',()=>{const src=$('photoPreview').currentSrc||$('photoPreview').src;if(src)openImagePreview(src,'معاينة صورة المعتمر');});
+  // Protect unfinished pilgrim entry from accidental navigation/refresh.
+  const formEl=$('form');
+  formEl?.addEventListener('input',()=>{if(!saveInProgress)formDirty=true});
+  formEl?.addEventListener('change',()=>{if(!saveInProgress)formDirty=true});
+  window.addEventListener('beforeunload',e=>{if(formDirty && !saveInProgress){e.preventDefault();e.returnValue='';}});
+  document.addEventListener('click',e=>{
+    if(!formDirty || saveInProgress)return;
+    const a=e.target.closest?.('a[href]'); if(!a)return;
+    const href=a.getAttribute('href'); if(!href || href.startsWith('#') || href.startsWith('javascript:') || a.target==='_blank')return;
+    const ok=confirm('لديك بيانات غير محفوظة للمعتمر. هل تريد مغادرة الصفحة؟');
+    if(!ok){e.preventDefault();e.stopPropagation();}
+  },true);
 
   $('passportSmartCropBtn').addEventListener('click',smartCropPassport);
-  $('usePassportPhotoBtn').addEventListener('click',()=>{if(passportPhotoFile){usePassportPhoto=true;$('photoPreview').src=URL.createObjectURL(passportPhotoFile);$('photoPreviewWrap').classList.remove('hide');$('photoPreview').classList.remove('hide');$('passportPhotoStatus').textContent='✅ سيتم استخدام صورة المعتمر المستخرجة من الجواز.';}});
-  ['photoCamera','photoUpload'].forEach(id=>$(id).addEventListener('change',()=>{if($(id).files?.[0]){usePassportPhoto=false;$('usePassportPhotoBtn').style.display='inline-block';$('photoPreviewWrap').classList.remove('hide'); $('photoPreview').classList.remove('hide'); const f=$(id).files?.[0]; if(f) $('photoPreview').src=URL.createObjectURL(f); $('passportPhotoStatus').textContent='تم اختيار صورة يدوية للمعتمر وستُستخدم بدل صورة الجواز.';}}));
+  $('usePassportPhotoBtn').addEventListener('click',()=>{if(passportPhotoFile){usePassportPhoto=true;editedPhotoFile=null;$('photoPreview').src=URL.createObjectURL(passportPhotoFile);$('photoPreviewWrap').classList.remove('hide');$('photoPreview').classList.remove('hide');$('photoCropBtn').style.display='inline-block';$('passportPhotoStatus').textContent='✅ سيتم استخدام صورة المعتمر المستخرجة من الجواز.';formDirty=true;}});
+  $('photoCropBtn').addEventListener('click',openPhotoCrop);
+  ['photoCamera','photoUpload'].forEach(id=>$(id).addEventListener('change',()=>{if($(id).files?.[0]){usePassportPhoto=false;editedPhotoFile=null;$('usePassportPhotoBtn').style.display='inline-block';$('photoCropBtn').style.display='inline-block';$('photoPreviewWrap').classList.remove('hide'); $('photoPreview').classList.remove('hide'); const f=$(id).files?.[0]; if(f) $('photoPreview').src=URL.createObjectURL(f); $('passportPhotoStatus').textContent='تم اختيار صورة يدوية للمعتمر وستُستخدم بدل صورة الجواز.';formDirty=true;}}));
 
   async function ocr(){
     if(!passportFile)return alert('ارفع صورة الجواز أولًا.');
