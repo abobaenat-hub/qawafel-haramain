@@ -166,14 +166,25 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <label>كلمة المرور</label><input id="password" type="password">
 <br><button id="loginBtn" class="p" style="width:100%">دخول</button></div>
 
-<main id="app" class="wrap hide"><section class="financeHero"><h1>💰 المركز المالي</h1><p>اعرف تكلفة كل رحلة، مبيعاتها، مصروفاتها، وربحها الحقيقي قبل وبعد التحصيل.</p><div class="profitGrid"><div class="profitCard"><small>قيمة المبيعات</small><b id="heroSales">0 د.ع</b></div><div class="profitCard"><small>تكلفة الجملة على المبيعات</small><b id="heroCost">0 د.ع</b></div><div class="profitCard"><small>المصروفات الإضافية</small><b id="heroExpenses">0 د.ع</b></div><div class="profitCard"><small>صافي الربح المتوقع</small><b id="heroNet">0 د.ع</b></div></div></section>
-<div class="stats">
+<main id="app" class="wrap hide"><section class="financeHero compactHero"><div class="heroHead"><div><h1>💰 الإدارة المالية</h1><p>اختر القسم الذي تريد العمل عليه</p></div><span class="heroBadge">قوافل الحرمين</span></div><div class="profitGrid"><div class="profitCard"><small>قيمة المبيعات</small><b id="heroSales">0 د.ع</b></div><div class="profitCard"><small>المقبوض</small><b id="heroReceived">0 د.ع</b></div><div class="profitCard"><small>المصروفات</small><b id="heroExpenses">0 د.ع</b></div><div class="profitCard"><small>صافي الربح المتوقع</small><b id="heroNet">0 د.ع</b></div></div></section>
+<div class="stats compactStats">
 <div class="stat">إجمالي المبيعات<b id="sales">0 د.ع</b></div>
 <div class="stat">المقبوض<b id="received">0 د.ع</b></div>
 <div class="stat">المتبقي<b id="remaining">0 د.ع</b></div>
 <div class="stat">المتأخر<b id="late">0 د.ع</b></div><div class="stat">صافي الربح<b id="profit">0 د.ع</b></div>
 </div>
 
+<section class="financeMenu" id="financeMenu">
+  <button class="financeTile" data-section="reports"><span>📊</span><div><b>التقارير المالية</b><small>الإيرادات والمصروفات والربح وتقارير الرحلات</small></div><i>←</i></button>
+  <button class="financeTile" data-section="purchase"><span>🚌</span><div><b>تسجيل تكلفة شراء الرحلة</b><small>تكلفة الجملة والمورّد والتزامات الرحلات</small></div><i>←</i></button>
+  <button class="financeTile" data-section="suppliers"><span>🏢</span><div><b>المورّدون</b><small>إضافة وتعديل وتعطيل ومتابعة دفعات المورّدين</small></div><i>←</i></button>
+  <button class="financeTile" data-section="expenses"><span>💸</span><div><b>إدارة المصروفات</b><small>تسجيل المصروفات والفواتير والمستندات</small></div><i>←</i></button>
+  <button class="financeTile" data-section="pilgrimAccounts"><span>💳</span><div><b>دفعات المعتمرين والأقساط</b><small>كشف الحساب والدفعات والأقساط المستحقة</small></div><i>←</i></button>
+  <button class="financeTile" data-section="profitability"><span>📈</span><div><b>ربحية الرحلات</b><small>مقارنة المبيعات بالتكلفة والمصروفات</small></div><i>←</i></button>
+</section>
+
+<div id="financeSections">
+<div class="financeSection" data-section-id="reports"><div class="sectionTop"><div><h2>📊 التقارير المالية</h2><small>التقارير التفصيلية والتحليل المالي</small></div><button class="w backFinance">← القائمة المالية</button></div>
 <div class="panel">
 <h2>التقارير المالية <small style="font-size:13px;color:#a77b22">— العملة: الدينار العراقي فقط</small></h2>
 <div class="filters">
@@ -182,7 +193,22 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <select id="statusFilter"><option value="">كل الحالات</option><option value="paid">مسدد</option><option value="pending">غير مكتمل</option><option value="late">متأخر</option></select>
 </div>
 </div>
+<section class="panel" id="advancedReportPanel">
+<div class="reportPrintHeader"><h1>قوافل الحرمين للحج والعمرة</h1><p>التقرير المالي الإداري</p><div id="printReportPeriod"></div></div>
+<h2>📊 التقرير المالي الاحترافي</h2>
+<div class="reportToolbar">
+<div><label>من تاريخ</label><input id="reportFrom" type="date"></div>
+<div><label>إلى تاريخ</label><input id="reportTo" type="date"></div>
+<div><label>الرحلة</label><select id="reportProgram"><option value="">كل الرحلات</option></select></div>
+<div class="reportActions"><button id="runReport" class="p">🔎 عرض التقرير</button><button id="printReport" class="w">🖨️ طباعة / PDF</button></div>
+</div>
+<div class="reportNote">التقرير يعتمد على <b>سعر البيع الفعلي بعد الخصم</b>، ويخصم منه <b>سعر الجملة للمقعد</b> ثم مصروفات الرحلة للوصول إلى صافي الربح. المصروفات العامة تظهر منفصلة ولا تُحمّل على الرحلات.</div>
+<div class="reportKpis" id="reportKpis"></div>
+<div class="table reportTable"><table><thead><tr><th>الرحلة</th><th>المعتمرون</th><th>المبيعات</th><th>المقبوض</th><th>الجملة</th><th>الربح الإجمالي</th><th>مصروفات الرحلة</th><th>صافي الربح</th><th>هامش الربح</th></tr></thead><tbody id="advancedReportRows"></tbody></table></div>
+</section>
+</div>
 
+<div class="financeSection" data-section-id="purchase"><div class="sectionTop"><div><h2>🚌 تكلفة شراء الرحلة</h2><small>تسجيل تكلفة الجملة لكل رحلة</small></div><button class="w backFinance">← القائمة المالية</button></div>
 <section class="panel purchaseBox">
   <div class="purchaseTitle">
     <div><h2>🏷️ تسجيل تكلفة شراء الرحلة</h2><div class="purchaseHint">هنا تسجل سعر الجملة الذي تدفعه قوافل الحرمين عن المعتمر الواحد في هذه الرحلة. بعد الحفظ يدخل تلقائيًا في حساب الربح الفعلي لكل معتمر والرحلة.</div></div>
@@ -199,8 +225,9 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
   <div class="purchaseWarn">⚠️ أدخل تكلفة <b>المعتمر الواحد</b> علينا من المورّد (سعر الجملة)، وليس إجمالي الرحلة.</div>
   <button id="savePurchase" class="p" style="margin-top:13px">💾 حفظ تكلفة الرحلة</button>
 </section>
+</div>
 
-<div class="cards">
+<div class="financeSection" data-section-id="suppliers"><div class="sectionTop"><div><h2>🏢 المورّدون</h2><small>إدارة الموردين والدفعات</small></div><button class="w backFinance">← القائمة المالية</button></div>
 <section class="panel">
 <h2>🏢 المورّدون</h2>
 <div class="supplierGrid">
@@ -224,24 +251,11 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 </div>
 <label>ملاحظات</label><input id="supplierPayNotes" placeholder="مثلاً دفعة أولى للمورّد">
 <button id="saveSupplierPayment" class="p" style="margin-top:12px">💾 حفظ دفعة المورّد</button>
-</section></div>
-
-<section class="panel" id="advancedReportPanel">
-<div class="reportPrintHeader"><h1>قوافل الحرمين للحج والعمرة</h1><p>التقرير المالي الإداري</p><div id="printReportPeriod"></div></div>
-<h2>📊 التقرير المالي الاحترافي</h2>
-<div class="reportToolbar">
-<div><label>من تاريخ</label><input id="reportFrom" type="date"></div>
-<div><label>إلى تاريخ</label><input id="reportTo" type="date"></div>
-<div><label>الرحلة</label><select id="reportProgram"><option value="">كل الرحلات</option></select></div>
-<div class="reportActions"><button id="runReport" class="p">🔎 عرض التقرير</button><button id="printReport" class="w">🖨️ طباعة / PDF</button></div>
-</div>
-<div class="reportNote">التقرير يعتمد على <b>سعر البيع الفعلي بعد الخصم</b>، ويخصم منه <b>سعر الجملة للمقعد</b> ثم مصروفات الرحلة للوصول إلى صافي الربح. المصروفات العامة تظهر منفصلة ولا تُحمّل على الرحلات.</div>
-<div class="reportKpis" id="reportKpis"></div>
-<div class="table reportTable"><table><thead><tr><th>الرحلة</th><th>المعتمرون</th><th>المبيعات</th><th>المقبوض</th><th>الجملة</th><th>الربح الإجمالي</th><th>مصروفات الرحلة</th><th>صافي الربح</th><th>هامش الربح</th></tr></thead><tbody id="advancedReportRows"></tbody></table></div>
 </section>
-
 <section class="panel"><h2>📒 التزامات المورّدين</h2><div class="hint">المستحق المتوقع يُحسب من عدد المقاعد المباعة × سعر الجملة للمقعد، ثم نطرح ما دُفع للمورّد.</div><div class="table"><table><thead><tr><th>المورّد</th><th>الرحلة</th><th>عدد المعتمرين</th><th>المستحق المتوقع</th><th>المدفوع للمورّد</th><th>المتبقي</th></tr></thead><tbody id="supplierObligationRows"></tbody></table></div></section>
+</div>
 
+<div class="financeSection" data-section-id="expenses"><div class="sectionTop"><div><h2>💸 إدارة المصروفات</h2><small>المصروفات والفواتير والمستندات</small></div><button class="w backFinance">← القائمة المالية</button></div>
 <section class="panel">
 <h2>💸 إدارة المصروفات</h2>
 <div id="expenseMsg"></div>
@@ -267,15 +281,22 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div id="expenseCategoryBreakdown" class="expenseCategoryGrid"></div>
 <div class="table"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفاتورة</th><th>النوع</th><th>الرحلة</th><th>المبلغ</th><th>المستند</th><th>ملاحظات</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
 </section>
+</div>
+
+<div class="financeSection" data-section-id="profitability"><div class="sectionTop"><div><h2>📈 ربحية الرحلات</h2><small>تحليل ربحية البرامج</small></div><button class="w backFinance">← القائمة المالية</button></div>
 <div class="cards">
 <section class="panel"><h3>📊 ربحية الرحلات</h3><div class="hint">الربح هنا يعتمد على قيمة البيع ناقص تكلفة شراء الرحلة والمصروفات المرتبطة بها.</div><div id="programReport"></div></section>
 <section class="panel"><h3>الأقساط المستحقة والمتأخرة</h3><div id="installmentReport"></div></section>
 </div>
+</div>
 
+<div class="financeSection" data-section-id="pilgrimAccounts"><div class="sectionTop"><div><h2>💳 دفعات المعتمرين والأقساط</h2><small>كشف الحساب والمتابعة المالية</small></div><button class="w backFinance">← القائمة المالية</button></div>
 <section class="panel">
 <h3>كشف الحساب</h3><div id="tableMsg"></div>
 <div class="table"><table><thead><tr><th>المعتمر</th><th>البرنامج</th><th>نوع الدفع</th><th>السعر الأساسي</th><th>الخصم</th><th>البيع الفعلي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>الدفعات</th></tr></thead><tbody id="rows"></tbody></table></div>
 </section>
+</div>
+</div>
 </main>
 
 
@@ -595,4 +616,30 @@ $('addExpense').onclick=async()=>{
   }
 })();
 </script>
+
+<style id="finance-v137-css">
+.compactHero{padding:18px 20px;margin:16px 0 12px}.heroHead{display:flex;justify-content:space-between;align-items:center;gap:12px}.heroHead h1{margin:0 0 4px;font-size:22px}.heroHead p{margin:0;color:#dce9f1;font-size:12px}.heroBadge{border:1px solid #ffffff30;border-radius:20px;padding:7px 12px;font-size:11px}.compactStats{grid-template-columns:repeat(5,1fr);margin-bottom:14px}.financeMenu{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:14px 0 20px}.financeTile{border:1px solid #dfe6ea;background:#fff;border-radius:18px;padding:17px;text-align:right;display:flex;align-items:center;gap:13px;box-shadow:0 6px 18px #0000000a;transition:.18s}.financeTile:hover{transform:translateY(-2px);box-shadow:0 10px 25px #00000012}.financeTile>span{width:46px;height:46px;border-radius:14px;background:#eef4f7;display:flex;align-items:center;justify-content:center;font-size:23px;flex:0 0 46px}.financeTile div{flex:1}.financeTile b{display:block;color:var(--n);font-size:15px}.financeTile small{display:block;color:#718390;font-size:11px;line-height:1.7;margin-top:4px}.financeTile i{font-style:normal;color:#9a7b2c;font-size:18px}.financeSection{display:none}.financeSection.active{display:block}.sectionTop{background:#fff;border:1px solid var(--l);border-radius:17px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:15px 0}.sectionTop h2{margin:0;color:var(--n);font-size:19px}.sectionTop small{color:#718390;font-size:11px}.sectionTop .w{white-space:nowrap}.financeSection>.panel{margin:12px 0}.financeSection .purchaseBox{margin:12px 0}.financeSection .cards{margin:0}.financeSection .cards .panel{margin:0 0 15px}.financeSection .hint{color:#718390;font-size:12px;line-height:1.7}.financeSection .cards{grid-template-columns:1fr 1fr}
+@media(max-width:800px){.financeMenu{grid-template-columns:1fr}.compactStats{grid-template-columns:1fr 1fr}.sectionTop{align-items:flex-start}.sectionTop .w{font-size:11px;padding:9px 10px}}
+@media(max-width:550px){.compactStats{grid-template-columns:1fr 1fr}.financeTile{padding:14px}.financeTile b{font-size:14px}.sectionTop{flex-direction:column}.sectionTop .w{width:100%}.financeSection .cards{grid-template-columns:1fr}}
+</style>
+<script id="finance-v137-js">
+(function(){
+  function showSection(name){
+    document.querySelectorAll('.financeSection').forEach(x=>x.classList.toggle('active',x.dataset.sectionId===name));
+    const menu=document.getElementById('financeMenu'); if(menu) menu.style.display='none';
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+  function showMenu(){
+    document.querySelectorAll('.financeSection').forEach(x=>x.classList.remove('active'));
+    const menu=document.getElementById('financeMenu'); if(menu){menu.style.display='grid';window.scrollTo({top:0,behavior:'smooth'});}
+  }
+  document.addEventListener('click',function(e){
+    const tile=e.target.closest('.financeTile'); if(tile){showSection(tile.dataset.section);return;}
+    const back=e.target.closest('.backFinance'); if(back){showMenu();return;}
+  });
+  const received=document.getElementById('received'), hero=document.getElementById('heroReceived');
+  if(received&&hero){new MutationObserver(()=>hero.textContent=received.textContent).observe(received,{childList:true,characterData:true,subtree:true});hero.textContent=received.textContent;}
+})();
+</script>
+
 </body></html>
