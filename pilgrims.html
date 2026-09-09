@@ -210,7 +210,8 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <!-- 2. Personal information -->
 <div class="form-section-title"><span>2</span><b>معلومات المعتمر الشخصية</b></div>
 <div class="cols">
-  <div style="grid-column:1/-1"><label>الاسم الرباعي بالعربي *</label><input id="name" required autocomplete="off" dir="rtl" placeholder="يُدخل بالعربي أو يُستخرج من الجواز"><div id="nameDuplicate" style="display:none;margin-top:6px;padding:11px 12px;border-radius:11px;font-weight:800"></div><div id="archiveMatchBox" class="hide" style="margin-top:8px;padding:12px;border:1px solid #d9b35b;background:#fffaf0;border-radius:12px"><div id="archiveMatchText" style="color:#7a5a14;font-weight:800"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button id="useArchiveBtn" type="button" class="btn p">نعم، أضفه للرحلة الحالية</button><button id="newClientBtn" type="button" class="btn w">لا، إلغاء</button></div></div></div>
+  <div style="grid-column:1/-1"><label>الاسم بالعربي المعتمد *</label><input id="name" required autocomplete="off" dir="rtl" placeholder="الاسم الذي سيعتمد في المنصة"><small style="display:block;color:#6b7780;margin-top:5px">راجع الاسم بالعربي واعتمده قبل الحفظ.</small><div id="nameDuplicate" style="display:none;margin-top:6px;padding:11px 12px;border-radius:11px;font-weight:800"></div><div id="archiveMatchBox" class="hide" style="margin-top:8px;padding:12px;border:1px solid #d9b35b;background:#fffaf0;border-radius:12px"><div id="archiveMatchText" style="color:#7a5a14;font-weight:800"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button id="useArchiveBtn" type="button" class="btn p">نعم، أضفه للرحلة الحالية</button><button id="newClientBtn" type="button" class="btn w">لا، إلغاء</button></div></div></div>
+  <div style="grid-column:1/-1"><label>الاسم بالإنكليزي <span style="font-weight:500;color:#8b9297">(للأرشيف فقط)</span></label><input id="englishName" autocomplete="off" dir="ltr" placeholder="مثال: HANAN HUSSEIN KETAB"><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:7px"><button id="arabicFromEnglishBtn" type="button" class="btn w">🔤 تحويل الاسم للعربي</button></div><small style="display:block;color:#6b7780;margin-top:5px">يُقرأ من الجواز ويُحفظ في الأرشيف فقط، ولا يُستخدم كاسم المعتمر في المنصة.</small></div>
   <div><label>الهاتف</label><input id="phone"></div>
   <div><label>الجنس *</label><select id="gender" required><option value="">اختر الجنس</option><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select></div>
   <div><label>تاريخ الميلاد *</label><input id="birthDate" type="date" required><small id="ageHint" style="display:block;color:#6b7788;margin-top:5px"></small></div>
@@ -668,7 +669,7 @@ $('form').onsubmit=async e=>{
   const br=await db.from('bookings').insert(booking).select('id').single();if(br.error)throw br.error;
   const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,gender:$('gender').value||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,current_residence:$('currentResidence').value.trim()||null,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8)};
   const pp=await db.from('pilgrims').insert(payload).select('id,archive_id').single();if(pp.error){await db.from('bookings').delete().eq('id',br.data.id);throw pp.error}
-  if(pp.data?.archive_id){const au={phone:$('phone').value.trim()||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,gender:$('gender').value||null,birth_date:$('birthDate').value,guardian_accompanied:accompanied};if(photoPath)au.photo_path=photoPath;if(passportImagePath)au.passport_image_path=passportImagePath;if(guardianPath)au.guardian_authorization_path=guardianPath;await db.from('pilgrim_archive').update(au).eq('id',pp.data.archive_id);}
+  if(pp.data?.archive_id){const au={phone:$('phone').value.trim()||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,gender:$('gender').value||null,birth_date:$('birthDate').value,guardian_accompanied:accompanied,english_name:$('englishName').value.trim()||null};if(photoPath)au.photo_path=photoPath;if(passportImagePath)au.passport_image_path=passportImagePath;if(guardianPath)au.guardian_authorization_path=guardianPath;await db.from('pilgrim_archive').update(au).eq('id',pp.data.archive_id);}
   if(paid>0)await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),method:'دفعة أولى',notes:'دفعة أولى'});
   if(paymentType==='installment'&&remaining>0){
    const amounts=[...document.querySelectorAll('.instAmount')].map(x=>Number(x.value||0));
@@ -681,7 +682,7 @@ $('form').onsubmit=async e=>{
    const ir=await db.from('installment_plans').insert(rows);
    if(ir.error)throw ir.error;
   }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('gender').value='';$('currentResidence').value='';$('initial').value=0;$('discountAmount').value=0;$('discountReason').value='';$('basePriceBox').textContent='اختر البرنامج';$('finalPrice').textContent='—';$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('gender').value='';$('currentResidence').value='';$('englishName').value='';$('initial').value=0;$('discountAmount').value=0;$('discountReason').value='';$('basePriceBox').textContent='اختر البرنامج';$('finalPrice').textContent='—';$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 
@@ -868,7 +869,7 @@ $('form').onsubmit=async e=>{
     const st=$('passportOcrStatus');st.innerHTML='<span class="ocr-spin"></span> جارٍ تحسين الصورة وقراءة سطرَي MRZ والتحقق من البيانات...';$('passportOcrBtn').disabled=true;
     try{
       if(!window.Tesseract){await new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
-      const arabicNamePromise=recognizeArabicName(passportFile).catch(e=>{console.debug('Arabic OCR',e);return '';});
+      const arabicNamePromise=Promise.resolve('');
       const modes=['bottom18','bottom28','bottom42']; let best=null, all=[];
       for(const mode of modes){
         const canvas=await imageToCanvas(passportFile,mode);
@@ -880,8 +881,7 @@ $('form').onsubmit=async e=>{
         if(best?.valid)break;
       }
       if(best && best.passport && best.name){
-        const arabicName=await arabicNamePromise;
-        if(arabicName) best.arabicName=arabicName;
+        const arabicName='';
         apply(best);
         st.textContent=best.valid?'تمت قراءة الجواز والتحقق من MRZ. وتمت محاولة استخراج الاسم بالعربي. راجع الحقول قبل الحفظ.':'تمت قراءة الجواز. وتمت محاولة استخراج الاسم بالعربي. راجع الحقول قبل الحفظ.';
       }else{
@@ -891,8 +891,18 @@ $('form').onsubmit=async e=>{
     }catch(e){console.error(e);st.textContent='تعذر تشغيل قارئ الجواز. يمكنك إدخال البيانات يدويًا.';}
     finally{$('passportOcrBtn').disabled=false;}
   }
-  function apply(d){if(d.arabicName&&hasArabic(d.arabicName))$('name').value=d.arabicName;if(d.passport)$('pass').value=d.passport;if(d.birth)$('birthDate').value=d.birth;if(d.exp)$('pex').value=d.exp;if(d.gender)$('gender').value=d.gender;if(window.updateMinor)updateMinor();if(window.validatePassportExpiry)validatePassportExpiry(false);}
-  $('passportCropBtn').addEventListener('click',openCrop);$('passportOcrBtn').addEventListener('click',ocr);
+  function englishToArabicName(input){
+    const dict={
+      HANAN:'حنان', HUSSEIN:'حسين', HASSAN:'حسن', HASAN:'حسن', MOHAMMED:'محمد', MUHAMMAD:'محمد', MOHAMMED:'محمد', AHMED:'أحمد', AHMAD:'أحمد', ALI:'علي', OMAR:'عمر', UMAR:'عمر', OTHMAN:'عثمان', OSMAN:'عثمان', KHALID:'خالد', MAHMOUD:'محمود', MAHMOOD:'محمود', MUSTAFA:'مصطفى', ABDULLAH:'عبدالله', ABDULRAHMAN:'عبدالرحمن', ABDUL RAHMAN:'عبدالرحمن', ABDULKARIM:'عبدالكريم', KARIM:'كريم', YASER:'ياسر', YASSER:'ياسر', HAMZA:'حمزة', IBRAHIM:'إبراهيم', ISMAIL:'إسماعيل', ISMAEL:'إسماعيل', ISHAQ:'إسحاق', ISA:'عيسى', MUSA:'موسى', MARYAM:'مريم', ZAINAB:'زينب', FATIMA:'فاطمة', FATIMAH:'فاطمة', RANA:'رنا', SARA:'سارة', SARAH:'سارة', NOOR:'نور', NUR:'نور', DUA:'دعاء', DOAA:'دعاء', RAHMA:'رحمة', AMAL:'أمل', BUSHRA:'بشرى', SUMAYA:'سمية', SUMAYAH:'سمية', KETAB:'كتاب', KITAB:'كتاب', KADHIM:'كاظم', KAZEM:'كاظم', JABER:'جابر', JABIR:'جابر', JASIM:'جاسم', JASSIM:'جاسم', QASIM:'قاسم', QASSEM:'قاسم', ABBAS:'عباس', FADHIL:'فاضل', FADHEL:'فاضل', FADIL:'فاضل', SAAD:'سعد', SALIM:'سليم', SALEEM:'سليم', SAMIR:'سمير', SADIQ:'صادق', HADI:'هادي', HAIDER:'حيدر', HAYDER:'حيدر', MAJID:'ماجد', Majeed:'ماجد', RAED:'رائد', RAED:'رائد', WAEL:'وائل', WAIL:'وائل', WISSAM:'وسام', WISAM:'وسام', ALAA:'علاء', ALA:'علاء', LAITH:'ليث', QUTAIBA:'قتيبة', QUTAYBA:'قتيبة', AMMAR:'عمار', BASSAM:'بسام', BASSEM:'باسم', BASIM:'باسم', RASHEED:'رشيد', RASHID:'رشيد', SHAKER:'شاكر', SHAKIR:'شاكر', TAREQ:'طارق', TARIQ:'طارق', MUNTHER:'منذر', MUNTADHER:'منتظر', MUNTATHIR:'منتظر', AHMED:'أحمد', FALAH:'فلاح', FADY:'فادي', NABIL:'نبيل', NAJIB:'نجيب', NASSER:'ناصر', NASIR:'ناصر', JAMIL:'جميل', JAMAL:'جمال', JAMAL:'جمال', KHALIL:'خليل', HILAL:'هلال', HUSAM:'حسام', HOSSAM:'حسام', RASHAD:'رشاد', SABAH:'صباح', SALAH:'صلاح', SALIH:'صالح', TALIB:'طالب', ADNAN:'عدنان', AMIR:'أمير', AMEER:'أمير', FAEQ:'فائق', FAIQ:'فائق', BASRA:'البصرة', BAGHDAD:'بغداد', ALBASRA:'البصرة'
+    };
+    const words=String(input||'').toUpperCase().replace(/[^A-Z ]+/g,' ').split(/\s+/).filter(Boolean);
+    return words.map(w=>dict[w]||phoneticWord(w)).join(' ').trim();
+  }
+  function phoneticWord(w){
+    const map=[['TH','ث'],['SH','ش'],['CH','تش'],['KH','خ'],['GH','غ'],['DH','ذ'],['PH','ف'],['AA','ا'],['EE','ي'],['OO','و'],['OU','و'],['OW','و'],['QU','ق'],['CK','ك'],['Q','ق'],['K','ك'],['G','ج'],['J','ج'],['H','ه'],['A','ا'],['B','ب'],['C','ك'],['D','د'],['E','ي'],['F','ف'],['I','ي'],['L','ل'],['M','م'],['N','ن'],['O','و'],['P','ب'],['R','ر'],['S','س'],['T','ت'],['U','و'],['V','ف'],['W','و'],['X','كس'],['Y','ي'],['Z','ز']]; let out=w; for(const [a,b] of map)out=out.replaceAll(a,b); return out;
+  }
+  function apply(d){if(d.name)$('englishName').value=d.name;if(d.passport)$('pass').value=d.passport;if(d.birth)$('birthDate').value=d.birth;if(d.exp)$('pex').value=d.exp;if(d.gender)$('gender').value=d.gender;if(window.updateMinor)updateMinor();if(window.validatePassportExpiry)validatePassportExpiry(false);}
+  $('passportCropBtn').addEventListener('click',openCrop);$('passportOcrBtn').addEventListener('click',ocr); $('arabicFromEnglishBtn')?.addEventListener('click',()=>{const en=$('englishName').value.trim(); if(!en)return alert('أدخل الاسم بالإنكليزي أولًا.'); const ar=englishToArabicName(en); if(ar)$('name').value=ar; else alert('تعذر تحويل الاسم. أدخله بالعربي يدويًا ثم راجعه.');});
 })();
 </script>
 <script>
