@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>المالية | قوافل الحرمين</title>
+<title>المالية | قوافل الحرمين — V140</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <style>body.auth-pending #login{display:none!important}
 :root{--n:#0c3b63;--d:#072b49;--c:#f7f5ef;--l:#dfe6ea;--r:#a33}
@@ -32,8 +32,12 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 @media(max-width:800px){.supplierPayGrid{grid-template-columns:1fr 1fr}.supplierGrid{grid-template-columns:1fr}.supplierKpi{grid-template-columns:1fr 1fr}}@media(max-width:550px){.supplierPayGrid{grid-template-columns:1fr}.supplierKpi{grid-template-columns:1fr 1fr}}
 
 .reportToolbar{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end}.reportKpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:15px}.reportKpi{background:linear-gradient(180deg,#fff,#f7fafc);border:1px solid #dfe6ea;border-radius:15px;padding:13px}.reportKpi small{display:block;color:#72838d}.reportKpi b{display:block;font-size:18px;color:var(--n);margin-top:6px}.reportKpi.profit b{color:#176644}.reportKpi.loss b{color:#a33}.reportNote{background:#f7f3e8;border-right:4px solid #c79a3b;padding:11px;border-radius:10px;color:#6d5a31;font-size:12px;margin-top:12px}.reportActions{display:flex;gap:8px;flex-wrap:wrap}.reportTable{margin-top:14px}.reportEmpty{text-align:center;padding:25px;color:#718390}.reportPrintHeader{display:none}
+
+.visualGrid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:15px}.visualCard{background:linear-gradient(180deg,#fff,#f8fafb);border:1px solid #dfe6ea;border-radius:18px;padding:16px}.visualCard h3{margin:0 0 12px;color:var(--n);font-size:15px}.barList{display:flex;flex-direction:column;gap:12px}.barItem{display:grid;grid-template-columns:125px 1fr 105px;gap:10px;align-items:center}.barLabel{font-size:11px;color:#536875;font-weight:bold}.barTrack{height:11px;background:#eaf0f3;border-radius:99px;overflow:hidden}.barFill{height:100%;border-radius:99px;background:linear-gradient(90deg,#0c3b63,#c79a3b);transition:width .5s ease}.barValue{text-align:left;font-weight:900;color:var(--n);font-size:11px;white-space:nowrap}.donutWrap{display:flex;align-items:center;justify-content:center;gap:18px;min-height:150px}.donut{width:132px;height:132px;border-radius:50%;position:relative;background:conic-gradient(#0c3b63 0 50%,#c79a3b 50% 75%,#dfe6ea 75% 100%);display:flex;align-items:center;justify-content:center}.donut:after{content:'';width:78px;height:78px;background:#fff;border-radius:50%;position:absolute}.donutCenter{position:absolute;z-index:2;text-align:center}.donutCenter b{display:block;color:var(--n);font-size:17px}.donutCenter small{color:#718390;font-size:9px}.legend{display:flex;flex-direction:column;gap:9px;font-size:11px}.legend span{display:flex;align-items:center;gap:7px}.dot{width:9px;height:9px;border-radius:50%;display:inline-block}.dotSales{background:#0c3b63}.dotCost{background:#c79a3b}.dotExp{background:#dfe6ea}.profitSummary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px}.profitMini{background:linear-gradient(180deg,#fff,#f7fafc);border:1px solid #dfe6ea;border-radius:15px;padding:13px}.profitMini small{display:block;color:#72838d}.profitMini b{display:block;margin-top:6px;font-size:18px;color:var(--n)}.profitMini.good b{color:#176644}.profitMini.bad b{color:#a33}.rankList{display:flex;flex-direction:column;gap:8px}.rankRow{display:grid;grid-template-columns:28px 1fr 105px;gap:8px;align-items:center;background:#f6f9fa;border-radius:12px;padding:9px}.rankNo{width:25px;height:25px;border-radius:50%;background:#e9eef1;color:var(--n);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px}.rankTitle{font-weight:bold;color:#29485c;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rankValue{text-align:left;font-weight:900;font-size:11px}.rankValue.good{color:#176644}.rankValue.bad{color:#a33}.profitChart{margin-top:14px}.profitChartRow{display:grid;grid-template-columns:150px 1fr 100px;gap:9px;align-items:center;margin:10px 0}.profitChartTrack{height:18px;background:#edf2f4;border-radius:8px;overflow:hidden;display:flex}.profitChartSales{height:100%;background:#0c3b63}.profitChartCost{height:100%;background:#c79a3b}.profitChartLabel{font-size:10px;font-weight:bold;color:#526a78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.profitChartValue{text-align:left;font-size:10px;font-weight:900}.chartLegend{display:flex;gap:15px;flex-wrap:wrap;font-size:10px;color:#6d7d86;margin-top:8px}.chartLegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:4px}.chartSales{background:#0c3b63}.chartCost{background:#c79a3b}.chartProfit{background:#176644}.sectionFade{animation:sectionFade .22s ease}@keyframes sectionFade{from{opacity:.2;transform:translateY(5px)}to{opacity:1;transform:none}}
+@media(max-width:900px){.visualGrid{grid-template-columns:1fr}.profitSummary{grid-template-columns:1fr 1fr}.barItem{grid-template-columns:100px 1fr 95px}.profitChartRow{grid-template-columns:115px 1fr 90px}}
+@media(max-width:550px){.profitSummary{grid-template-columns:1fr}.barItem{grid-template-columns:85px 1fr 85px}.donutWrap{flex-direction:column}.profitChartRow{grid-template-columns:90px 1fr 78px}}
 @media(max-width:1000px){.reportKpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){.reportToolbar{grid-template-columns:1fr 1fr}.reportKpis{grid-template-columns:1fr 1fr}}
-@media print{body{background:#fff}.top,.financeHero,.stats,.filters,.purchaseBox,.cards,.supplierGrid,.supplierPayGrid,.reportToolbar,.reportActions{display:none!important}.panel{box-shadow:none;border:0}.reportPrintHeader{display:block;text-align:center;margin-bottom:15px}.reportPrintHeader h1{margin:0;color:#0c3b63}.reportPrintHeader p{margin:5px 0;color:#666}.reportKpis{grid-template-columns:repeat(3,1fr)}.reportTable{font-size:11px}button{display:none!important}}
+@media print{body{background:#fff}.top,.financeHero,.stats,.filters,.purchaseBox,.cards,.supplierGrid,.supplierPayGrid,.reportToolbar,.reportActions,.visualGrid{display:none!important}.panel{box-shadow:none;border:0}.reportPrintHeader{display:block;text-align:center;margin-bottom:15px}.reportPrintHeader h1{margin:0;color:#0c3b63}.reportPrintHeader p{margin:5px 0;color:#666}.reportKpis{grid-template-columns:repeat(3,1fr)}.reportTable{font-size:11px}button{display:none!important}}
 </style>
 
 <style id="qawafel-global-admin-css">
@@ -211,6 +215,10 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 </div>
 <div class="reportNote">التقرير يعتمد على <b>سعر البيع الفعلي بعد الخصم</b>، ويخصم منه <b>سعر الجملة للمقعد</b> ثم مصروفات الرحلة للوصول إلى صافي الربح. المصروفات العامة تظهر منفصلة ولا تُحمّل على الرحلات.</div>
 <div class="reportKpis" id="reportKpis"></div>
+<div class="visualGrid" id="reportVisuals">
+  <div class="visualCard"><h3>📊 توزيع الأرقام المالية</h3><div id="reportBars" class="barList"></div></div>
+  <div class="visualCard"><h3>💰 قراءة سريعة للنتيجة</h3><div id="reportDonut" class="donutWrap"></div></div>
+</div>
 <div class="table reportTable"><table><thead><tr><th>الرحلة</th><th>المعتمرون</th><th>المبيعات</th><th>المقبوض</th><th>الجملة</th><th>الربح الإجمالي</th><th>مصروفات الرحلة</th><th>صافي الربح</th><th>هامش الربح</th></tr></thead><tbody id="advancedReportRows"></tbody></table></div>
 </section>
 </div>
@@ -291,6 +299,11 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 </div>
 
 <div class="financeSection" data-section-id="profitability"><div class="sectionTop"><div><h2>📈 ربحية الرحلات</h2><small>تحليل ربحية البرامج</small></div><button class="w backFinance">← القائمة المالية</button></div>
+<div id="profitabilitySummary" class="profitSummary"></div>
+<div class="visualGrid">
+<section class="visualCard"><h3>🏆 أفضل الرحلات حسب صافي الربح</h3><div id="profitRankings" class="rankList"></div></section>
+<section class="visualCard"><h3>📈 المبيعات مقابل التكلفة</h3><div id="profitChart" class="profitChart"></div><div class="chartLegend"><span><i class="chartSales"></i>المبيعات</span><span><i class="chartCost"></i>الجملة</span><span><i class="chartProfit"></i>صافي الربح</span></div></section>
+</div>
 <div class="cards">
 <section class="panel"><h3>📊 ربحية الرحلات</h3><div class="hint">الربح هنا يعتمد على قيمة البيع ناقص تكلفة شراء الرحلة والمصروفات المرتبطة بها.</div><div id="programReport"></div></section>
 <section class="panel"><h3>الأقساط المستحقة والمتأخرة</h3><div id="installmentReport"></div></section>
@@ -422,6 +435,26 @@ async function saveBookingPayment(bookingId){
 }
 $('payClose').onclick=()=>$('payModal').classList.add('hide');$('payModal').addEventListener('click',e=>{if(e.target.id==='payModal')$('payModal').classList.add('hide')});
 
+
+function renderReportVisuals(sales,cost,tripExp,generalExp,net,rows){
+ const vals=[['المبيعات',sales],['تكلفة الجملة',cost],['مصروفات الرحلات',tripExp],['المصروفات العامة',generalExp],['صافي الربح',Math.max(net,0)]];
+ const max=Math.max(...vals.map(x=>Number(x[1])||0),1);
+ $('reportBars').innerHTML=vals.map(x=>'<div class="barItem"><span class="barLabel">'+x[0]+'</span><div class="barTrack"><div class="barFill" style="width:'+Math.min((Number(x[1])||0)/max*100,100)+'%"></div></div><span class="barValue">'+money(x[1])+'</span></div>').join('');
+ const expenseShare=sales?Math.min(((cost+tripExp+generalExp)/sales)*100,100):0, profitShare=sales?Math.max(Math.min((net/sales)*100,100),0):0, remainingShare=sales?Math.max(100-expenseShare-profitShare,0):0;
+ $('reportDonut').innerHTML='<div class="donut" style="background:conic-gradient(#0c3b63 0 '+expenseShare+'%,#176644 '+expenseShare+'% '+(expenseShare+profitShare)+'%,#dfe6ea '+(expenseShare+profitShare)+'% 100%)"><div class="donutCenter"><b>'+net.toLocaleString('ar-IQ')+'</b><small>صافي الربح</small></div></div><div class="legend"><span><i class="dot dotSales"></i>تكاليف ومصروفات '+expenseShare.toFixed(1)+'%</span><span><i class="dot" style="background:#176644"></i>صافي الربح '+profitShare.toFixed(1)+'%</span><span><i class="dot dotExp"></i>متبقٍ '+remainingShare.toFixed(1)+'%</span></div>';
+}
+function renderProfitabilityVisuals(){
+ const data=[];
+ const by={}; B.forEach(b=>{by[b.program_id]??={total:0,paid:0,remaining:0,count:0};by[b.program_id].total+=Number(b.total_amount||0);by[b.program_id].paid+=Number(b.paid_amount||0);by[b.program_id].remaining+=Number(b.remaining_amount||0);by[b.program_id].count++;});
+ Object.entries(by).forEach(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0),cost=x.count*costSeat,ex=E.filter(e=>e.program_id===id).reduce((s,e)=>s+Number(e.amount||0),0),net=x.total-cost-ex;data.push({title:pr.title||'—',sales:x.total,cost,expense:ex,net,count:x.count});});
+ data.sort((a,b)=>b.net-a.net);
+ const totalSales=data.reduce((s,x)=>s+x.sales,0),totalCost=data.reduce((s,x)=>s+x.cost,0),totalExp=data.reduce((s,x)=>s+x.expense,0),totalNet=totalSales-totalCost-totalExp;
+ $('profitabilitySummary').innerHTML=[['إجمالي المبيعات',totalSales,''],['تكلفة الجملة',totalCost,''],['مصروفات الرحلات',totalExp,''],['صافي الربح',totalNet,totalNet>=0?'good':'bad']].map(x=>'<div class="profitMini '+x[2]+'"><small>'+x[0]+'</small><b>'+money(x[1])+'</b></div>').join('');
+ $('profitRankings').innerHTML=data.slice(0,6).map((x,i)=>'<div class="rankRow"><span class="rankNo">'+(i+1)+'</span><span class="rankTitle">'+esc(x.title)+' <small>('+x.count+' معتمر)</small></span><span class="rankValue '+(x.net>=0?'good':'bad')+'">'+money(x.net)+'</span></div>').join('')||'<div class="reportEmpty">لا توجد بيانات رحلات.</div>';
+ const max=Math.max(...data.map(x=>x.sales),1);
+ $('profitChart').innerHTML=data.slice(0,7).map(x=>{const sw=Math.max(2,x.sales/max*100),cw=Math.min(x.cost/max*100,100),nw=Math.max(0,x.net/max*100);return '<div class="profitChartRow"><span class="profitChartLabel">'+esc(x.title)+'</span><div class="profitChartTrack"><span class="profitChartSales" style="width:'+sw+'%"></span><span class="profitChartCost" style="width:'+cw+'%"></span></div><span class="profitChartValue '+(x.net>=0?'marginGood':'marginBad')+'">'+money(x.net)+'</span></div>';}).join('')||'<div class="reportEmpty">لا توجد بيانات.</div>';
+}
+
 function render(){
  const q=$('search').value.trim().toLowerCase(),pf=$('programFilter').value,sf=$('statusFilter').value;
  let rows=B.filter(b=>{
@@ -444,6 +477,7 @@ function render(){
  const today=new Date().toISOString().slice(0,10);
  const due=I.filter(x=>x.status!=='paid'),late=due.filter(x=>x.due_date&&x.due_date<today);
  $('installmentReport').innerHTML='<p>أقساط غير مسددة: <b>'+due.length+'</b></p><p>قيمة غير مسددة: <b>'+money(due.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p><p>أقساط متأخرة: <b>'+late.length+'</b></p><p>قيمة المتأخر: <b>'+money(late.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p>';
+ renderProfitabilityVisuals();
 }
 $('search').oninput=()=>{render();renderExpenses()};$('programFilter').onchange=()=>{render();renderExpenses()};$('statusFilter').onchange=render;
 async function renderSupplierObligations(){
@@ -528,6 +562,7 @@ function renderAdvancedReport(){
  $('reportKpis').innerHTML=[['المبيعات الفعلية',sales,''],['المقبوض',received,''],['المتبقي',remaining,''],['تكلفة الجملة',cost,''],['الربح الإجمالي',gross,'profit'],['مصروفات الرحلات',tripExp,''],['مصروفات عامة',generalExp,''],['صافي الربح',net,net>=0?'profit':'loss'],['هامش صافي الربح',margin.toFixed(1)+' %',net>=0?'profit':'loss']].map(x=>'<div class="reportKpi '+x[2]+'"><small>'+x[0]+'</small><b>'+((typeof x[1]==='number')?money(x[1]):x[1])+'</b></div>').join('');
  $('advancedReportRows').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.pr.title)+'</b></td><td>'+x.n+'</td><td>'+money(x.s)+'</td><td>'+money(x.r)+'</td><td>'+money(x.c)+'</td><td>'+money(x.g)+'</td><td>'+money(x.ex)+'</td><td><b class="'+(x.net>=0?'marginGood':'marginBad')+'">'+money(x.net)+'</b></td><td>'+x.margin.toFixed(1)+'%</td></tr>').join('')||'<tr><td colspan="9" class="reportEmpty">لا توجد رحلات ضمن الفترة المحددة.</td></tr>';
  $('printReportPeriod').textContent='الفترة: '+(from||'—')+' إلى '+(to||'—')+(pid?' — '+(PR.find(x=>x.id===pid)?.title||''):'');
+ renderReportVisuals(sales,cost,tripExp,generalExp,net,rows);
 }
 $('runReport').onclick=renderAdvancedReport;
 $('printReport').onclick=()=>{renderAdvancedReport();window.print()};
