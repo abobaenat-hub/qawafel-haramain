@@ -824,6 +824,46 @@ $('form').onsubmit=async e=>{
     return {name:[given,surname].filter(Boolean).join(' '),surname,given,passport:pass,nat,birth:date6(birth),exp:date6(exp),gender:gender==='M'?'ذكر':gender==='F'?'أنثى':'',mrzLine1:l1,mrzLine2:l2,valid};
   }
 
+  function hasArabic(t){ return /[\u0600-\u06FF]/.test(t||''); }
+  function cleanArabic(t){
+    return (t||'').replace(/[ـ]/g,'').replace(/[ًٌٍَُِّْـ]/g,'').replace(/[^\u0600-\u06FF\s]/g,' ').replace(/\s+/g,' ').trim();
+  }
+  async function recognizeArabicName(file){
+    if(!window.Tesseract) return '';
+    const url=URL.createObjectURL(file), im=new Image();
+    try{
+      await new Promise((res,rej)=>{im.onload=res;im.onerror=rej;im.src=url;});
+      const maxW=2200, ratio=Math.min(1,maxW/im.naturalWidth), W=Math.max(1200,Math.round(im.naturalWidth*ratio)), H=Math.round(im.naturalHeight*(W/im.naturalWidth));
+      const c=document.createElement('canvas'); c.width=W; c.height=H; const ctx=c.getContext('2d',{willReadFrequently:true});
+      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(im,0,0,W,H);
+      const worker=await Tesseract.createWorker('ara');
+      try{
+        await worker.setParameters({tessedit_pageseg_mode:'11',preserve_interword_spaces:'1'});
+        const result=await worker.recognize(c); const words=(result.data.words||[]).filter(w=>hasArabic(w.text)&&Number(w.conf||0)>=35);
+        // Group Arabic words into lines and prefer the name field region on Iraqi passports.
+        const rows=[];
+        words.forEach(w=>{
+          const cy=(w.bbox?.y0+w.bbox?.y1)/2, cx=(w.bbox?.x0+w.bbox?.x1)/2;
+          let row=rows.find(r=>Math.abs(r.cy-cy)<Math.max(14,(w.bbox?.y1-w.bbox?.y0)*.7));
+          if(!row){row={cy,items:[]};rows.push(row);} row.items.push({w,cx,cy});
+        });
+        rows.sort((a,b)=>a.cy-b.cy);
+        const bad=/^(جمهورية|العراق|جواز|سفر|الاسم|الكامل|اللقب|الجنسية|عراقي|العراقية|الجنس|أنثى|ذكر|تاريخ|الميلاد|الإصدار|الانتهاء|بغداد|مكان|الأم|اسم|جهة|الاصدار|سلطة|الولادة)$/;
+        const candidates=[];
+        for(const r of rows){
+          const xs=r.items.filter(i=>i.cx/W>.55 && r.cy/H>.50 && r.cy/H<.72).sort((a,b)=>b.cx-a.cx);
+          const vals=xs.map(i=>cleanArabic(i.w.text)).filter(x=>x && !bad.test(x));
+          if(vals.length>=2 && vals.length<=5){
+            const text=vals.join(' ');
+            if(text.length>=6) candidates.push({text,score:vals.length*10+(r.cy/H>.58&&r.cy/H<.68?15:0)});
+          }
+        }
+        candidates.sort((a,b)=>b.score-a.score);
+        return candidates[0]?.text||'';
+      }finally{await worker.terminate();}
+    }finally{URL.revokeObjectURL(url);}
+  }
+
   async function recognizeCanvas(canvas, psm){
     const worker=await Tesseract.createWorker('eng');
     try{
@@ -838,6 +878,7 @@ $('form').onsubmit=async e=>{
     const st=$('passportOcrStatus');st.innerHTML='<span class="ocr-spin"></span> جارٍ تحسين الصورة وقراءة سطرَي MRZ والتحقق من البيانات...';$('passportOcrBtn').disabled=true;
     try{
       if(!window.Tesseract){await new Promise((res,rej)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';sc.onload=res;sc.onerror=rej;document.head.appendChild(sc);});}
+      const arabicNamePromise=recognizeArabicName(passportFile).catch(e=>{console.debug('Arabic OCR',e);return '';});
       const modes=['bottom18','bottom28','bottom42']; let best=null, all=[];
       for(const mode of modes){
         const canvas=await imageToCanvas(passportFile,mode);
@@ -849,8 +890,10 @@ $('form').onsubmit=async e=>{
         if(best?.valid)break;
       }
       if(best && best.passport && best.name){
+        const arabicName=await arabicNamePromise;
+        if(arabicName) best.arabicName=arabicName;
         apply(best);
-        st.textContent=best.valid?'تمت قراءة الجواز والتحقق من بيانات MRZ. راجع الحقول قبل الحفظ.':'تمت قراءة الجواز. راجع الحقول قبل الحفظ لأن التحقق الكامل من MRZ لم يكتمل.';
+        st.textContent=best.valid?'تمت قراءة الجواز والتحقق من MRZ. وتمت محاولة استخراج الاسم بالعربي. راجع الحقول قبل الحفظ.':'تمت قراءة الجواز. وتمت محاولة استخراج الاسم بالعربي. راجع الحقول قبل الحفظ.';
       }else{
         st.textContent='لم تتم قراءة الجواز بشكل موثوق. استخدم «قص وتعديل» وحدد صفحة البيانات كاملة مع إبقاء سطرَي MRZ ثم أعد القراءة.';
       }
@@ -858,7 +901,7 @@ $('form').onsubmit=async e=>{
     }catch(e){console.error(e);st.textContent='تعذر تشغيل قارئ الجواز. يمكنك إدخال البيانات يدويًا.';}
     finally{$('passportOcrBtn').disabled=false;}
   }
-  function apply(d){if(d.name)$('name').value=d.name;if(d.passport)$('pass').value=d.passport;if(d.nat)$('nat').value=d.nat;if(d.birth)$('birthDate').value=d.birth;if(d.exp)$('pex').value=d.exp;if(d.gender)$('gender').value=d.gender;if(window.updateMinor)updateMinor();if(window.validatePassportExpiry)validatePassportExpiry(false);}
+  function apply(d){if(d.arabicName)$('name').value=d.arabicName;else if(d.name)$('name').value=d.name;if(d.passport)$('pass').value=d.passport;if(d.nat)$('nat').value=d.nat;if(d.birth)$('birthDate').value=d.birth;if(d.exp)$('pex').value=d.exp;if(d.gender)$('gender').value=d.gender;if(window.updateMinor)updateMinor();if(window.validatePassportExpiry)validatePassportExpiry(false);}
   $('passportCropBtn').addEventListener('click',openCrop);$('passportOcrBtn').addEventListener('click',ocr);
 })();
 </script>
