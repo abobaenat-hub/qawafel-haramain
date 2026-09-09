@@ -210,11 +210,11 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <!-- 2. Personal information -->
 <div class="form-section-title"><span>2</span><b>معلومات المعتمر الشخصية</b></div>
 <div class="cols">
-  <div style="grid-column:1/-1"><label>الاسم الرباعي *</label><input id="name" required autocomplete="off"><div id="nameDuplicate" style="display:none;margin-top:6px;padding:11px 12px;border-radius:11px;font-weight:800"></div><div id="archiveMatchBox" class="hide" style="margin-top:8px;padding:12px;border:1px solid #d9b35b;background:#fffaf0;border-radius:12px"><div id="archiveMatchText" style="color:#7a5a14;font-weight:800"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button id="useArchiveBtn" type="button" class="btn p">نعم، أضفه للرحلة الحالية</button><button id="newClientBtn" type="button" class="btn w">لا، إلغاء</button></div></div></div>
+  <div style="grid-column:1/-1"><label>الاسم الرباعي بالعربي *</label><input id="name" required autocomplete="off" dir="rtl" placeholder="يُدخل بالعربي أو يُستخرج من الجواز"><div id="nameDuplicate" style="display:none;margin-top:6px;padding:11px 12px;border-radius:11px;font-weight:800"></div><div id="archiveMatchBox" class="hide" style="margin-top:8px;padding:12px;border:1px solid #d9b35b;background:#fffaf0;border-radius:12px"><div id="archiveMatchText" style="color:#7a5a14;font-weight:800"></div><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button id="useArchiveBtn" type="button" class="btn p">نعم، أضفه للرحلة الحالية</button><button id="newClientBtn" type="button" class="btn w">لا، إلغاء</button></div></div></div>
   <div><label>الهاتف</label><input id="phone"></div>
-  <div><label>الجنسية</label><input id="nat" value="عراقي"></div>
   <div><label>الجنس *</label><select id="gender" required><option value="">اختر الجنس</option><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select></div>
-  <div><label>تاريخ الميلاد *</label><input id="birthDate" type="date" required><small id="ageHint" style="display:block;color:#6b7b88;margin-top:5px"></small></div>
+  <div><label>تاريخ الميلاد *</label><input id="birthDate" type="date" required><small id="ageHint" style="display:block;color:#6b7788;margin-top:5px"></small></div>
+  <div style="grid-column:1/-1"><label>محل السكن الحالي</label><input id="currentResidence" autocomplete="street-address" placeholder="المحافظة – القضاء/الناحية – المنطقة – العنوان"></div>
 </div>
 
 <!-- 3. Passport information -->
@@ -330,7 +330,6 @@ function applyArchiveData(a){
  if(!a)return;
  archiveConfirmed=true; archiveMatch=a;
  if($('phone'))$('phone').value=a.phone||'';
- if($('nat'))$('nat').value=a.nationality||'عراقي';
  if($('gender'))$('gender').value=a.gender||'';
  if($('pass'))$('pass').value=a.passport_number||'';
  if($('pex'))$('pex').value=a.passport_expiry||'';
@@ -530,7 +529,7 @@ async function openProfile(id){
  const b=B.find(x=>x.id===p.booking_id),pr=PR.find(x=>x.id===b?.program_id),ins=I.filter(x=>x.booking_id===b?.id);
  $('profile').classList.remove('hide');
  $('profile').innerHTML='<h2>ملف المعتمر: '+esc(p.full_name)+'</h2>'+
- '<div class="cols"><div>رمز الملف<br><b>'+esc(p.profile_code||'—')+'</b></div><div>الهاتف<br>'+esc(p.phone||'—')+'</div><div>الجنسية<br>'+esc(p.nationality||'—')+'</div><div>الجواز<br>'+esc(p.passport_number||'—')+'</div><div>انتهاء الجواز<br>'+esc(p.passport_expiry||'—')+'</div><div>الفيزا<br>'+badge(p.visa_status)+' '+esc(p.visa_number||'')+'</div></div>'+
+ '<div class="cols"><div>رمز الملف<br><b>'+esc(p.profile_code||'—')+'</b></div><div>الهاتف<br>'+esc(p.phone||'—')+'</div><div>محل السكن الحالي<br>'+esc(p.current_residence||'—')+'</div><div>الجواز<br>'+esc(p.passport_number||'—')+'</div><div>انتهاء الجواز<br>'+esc(p.passport_expiry||'—')+'</div><div>الفيزا<br>'+badge(p.visa_status)+' '+esc(p.visa_number||'')+'</div></div>'+
  '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج<br><b>'+esc(pr?.title||'—')+'</b></div><div>نوع البرنامج<br><b>'+(b?.payment_type==='installment'?'قسط':'نقد')+'</b></div><div>الإجمالي<br><span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع<br><span class="money">'+money(b?.paid_amount)+'</span></div><div>المتبقي<br><span class="money">'+money(b?.remaining_amount)+'</span></div><div>الحالة<br>'+badge(b?.status)+'</div></div></div>'+
  (b?.payment_type==='installment'?'<div class="section"><h3>الأقساط</h3><div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+((ins.length?ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join(''):'<tr><td colspan="5">لا توجد أقساط.</td></tr>'))+'</tbody></table></div><button id="manageBtn" class="btn p noPrint">💰 إدارة الدفعات والأقساط</button><div id="manager" class="section hide"></div></div>':'<div class="section"><span class="badge ok">برنامج نقدي — لا توجد أقساط</span></div>')+
  '<div class="section"><button class="btn w noPrint" onclick="window.print()">طباعة الملف</button> <button class="btn p noPrint" id="printOneBadge">🎫 طباعة الباج</button> <button class="btn danger noPrint" id="deleteTripBtn">حذف المعتمر من الرحلة</button></div>';
@@ -667,9 +666,9 @@ $('form').onsubmit=async e=>{
   let passportImagePath=archiveConfirmed?(archiveMatch?.passport_image_path||null):null; if(passportFile){const pext=(passportFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; passportImagePath='passport-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+pext; const upPassport=await db.storage.from('pilgrim-photos').upload(passportImagePath,passportFile,{upsert:false,contentType:passportFile.type||'image/jpeg'}); if(upPassport.error)throw upPassport.error;}
   let guardianPath=archiveConfirmed?(archiveMatch?.guardian_authorization_path||null):null; if(guardianFile){const gext=(guardianFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; guardianPath='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+gext; const ug=await db.storage.from('pilgrim-photos').upload(guardianPath,guardianFile,{upsert:false,contentType:guardianFile.type||'application/octet-stream'}); if(ug.error)throw ug.error;}
   const br=await db.from('bookings').insert(booking).select('id').single();if(br.error)throw br.error;
-  const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,nationality:$('nat').value.trim()||'عراقي',gender:$('gender').value||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8)};
+  const payload={booking_id:br.data.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,gender:$('gender').value||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,current_residence:$('currentResidence').value.trim()||null,visa_status:$('visa').value,visa_number:$('vnum').value.trim()||null,visa_issued_at:$('vdate').value||null,document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8)};
   const pp=await db.from('pilgrims').insert(payload).select('id,archive_id').single();if(pp.error){await db.from('bookings').delete().eq('id',br.data.id);throw pp.error}
-  if(pp.data?.archive_id){const au={phone:$('phone').value.trim()||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,nationality:$('nat').value.trim()||'عراقي',gender:$('gender').value||null,birth_date:$('birthDate').value,guardian_accompanied:accompanied};if(photoPath)au.photo_path=photoPath;if(passportImagePath)au.passport_image_path=passportImagePath;if(guardianPath)au.guardian_authorization_path=guardianPath;await db.from('pilgrim_archive').update(au).eq('id',pp.data.archive_id);}
+  if(pp.data?.archive_id){const au={phone:$('phone').value.trim()||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,gender:$('gender').value||null,birth_date:$('birthDate').value,guardian_accompanied:accompanied};if(photoPath)au.photo_path=photoPath;if(passportImagePath)au.passport_image_path=passportImagePath;if(guardianPath)au.guardian_authorization_path=guardianPath;await db.from('pilgrim_archive').update(au).eq('id',pp.data.archive_id);}
   if(paid>0)await db.from('payments').insert({booking_id:br.data.id,amount:paid,payment_date:new Date().toISOString().slice(0,10),method:'دفعة أولى',notes:'دفعة أولى'});
   if(paymentType==='installment'&&remaining>0){
    const amounts=[...document.querySelectorAll('.instAmount')].map(x=>Number(x.value||0));
@@ -682,7 +681,7 @@ $('form').onsubmit=async e=>{
    const ir=await db.from('installment_plans').insert(rows);
    if(ir.error)throw ir.error;
   }
-  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('nat').value='عراقي';$('gender').value='';$('initial').value=0;$('discountAmount').value=0;$('discountReason').value='';$('basePriceBox').textContent='اختر البرنامج';$('finalPrice').textContent='—';$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
+  msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('gender').value='';$('currentResidence').value='';$('initial').value=0;$('discountAmount').value=0;$('discountReason').value='';$('basePriceBox').textContent='اختر البرنامج';$('finalPrice').textContent='—';$('paymentType').value='cash';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');validatePassportExpiry(false);await load();
  }catch(err){msg('formMsg',err.message||'تعذر الحفظ.',true)}
 };
 
@@ -833,33 +832,24 @@ $('form').onsubmit=async e=>{
     const url=URL.createObjectURL(file), im=new Image();
     try{
       await new Promise((res,rej)=>{im.onload=res;im.onerror=rej;im.src=url;});
-      const maxW=2200, ratio=Math.min(1,maxW/im.naturalWidth), W=Math.max(1200,Math.round(im.naturalWidth*ratio)), H=Math.round(im.naturalHeight*(W/im.naturalWidth));
-      const c=document.createElement('canvas'); c.width=W; c.height=H; const ctx=c.getContext('2d',{willReadFrequently:true});
-      ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(im,0,0,W,H);
+      const W0=im.naturalWidth,H0=im.naturalHeight;
+      const makeCrop=(x0,y0,x1,y1,scale)=>{const w=Math.max(1,Math.round((x1-x0)*W0)),h=Math.max(1,Math.round((y1-y0)*H0));const c=document.createElement('canvas');c.width=w*scale;c.height=h*scale;const ctx=c.getContext('2d',{willReadFrequently:true});ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';ctx.drawImage(im,Math.round(x0*W0),Math.round(y0*H0),w,h,0,0,c.width,c.height);return c;};
       const worker=await Tesseract.createWorker('ara');
       try{
-        await worker.setParameters({tessedit_pageseg_mode:'11',preserve_interword_spaces:'1'});
-        const result=await worker.recognize(c); const words=(result.data.words||[]).filter(w=>hasArabic(w.text)&&Number(w.conf||0)>=35);
-        // Group Arabic words into lines and prefer the name field region on Iraqi passports.
-        const rows=[];
-        words.forEach(w=>{
-          const cy=(w.bbox?.y0+w.bbox?.y1)/2, cx=(w.bbox?.x0+w.bbox?.x1)/2;
-          let row=rows.find(r=>Math.abs(r.cy-cy)<Math.max(14,(w.bbox?.y1-w.bbox?.y0)*.7));
-          if(!row){row={cy,items:[]};rows.push(row);} row.items.push({w,cx,cy});
-        });
-        rows.sort((a,b)=>a.cy-b.cy);
-        const bad=/^(جمهورية|العراق|جواز|سفر|الاسم|الكامل|اللقب|الجنسية|عراقي|العراقية|الجنس|أنثى|ذكر|تاريخ|الميلاد|الإصدار|الانتهاء|بغداد|مكان|الأم|اسم|جهة|الاصدار|سلطة|الولادة)$/;
+        await worker.setParameters({tessedit_pageseg_mode:'3',preserve_interword_spaces:'1'});
+        const crops=[makeCrop(.50,.52,.99,.74,5),makeCrop(.55,.56,.99,.72,6),makeCrop(.60,.60,.99,.72,7),makeCrop(.45,.48,.99,.78,4)];
+        const bad=/^(جمهورية|العراق|جواز|سفر|الاسم|الثلاثي|الكامل|اللقب|الجنسية|عراقي|العراقية|الجنس|أنثى|ذكر|تاريخ|الميلاد|الإصدار|الانتهاء|بغداد|مكان|الأم|اسم|جهة|الاصدار|سلطة|الولادة|ناوى|ناوي|ناو)$/;
         const candidates=[];
-        for(const r of rows){
-          const xs=r.items.filter(i=>i.cx/W>.55 && r.cy/H>.50 && r.cy/H<.72).sort((a,b)=>b.cx-a.cx);
-          const vals=xs.map(i=>cleanArabic(i.w.text)).filter(x=>x && !bad.test(x));
-          if(vals.length>=2 && vals.length<=5){
-            const text=vals.join(' ');
-            if(text.length>=6) candidates.push({text,score:vals.length*10+(r.cy/H>.58&&r.cy/H<.68?15:0)});
-          }
+        for(const c of crops){
+          const r=await worker.recognize(c);
+          for(const line of (r.data.text||'').split(/\n+/).map(x=>cleanArabic(x)).filter(Boolean)){const vals=line.split(/\s+/).filter(x=>x&&!bad.test(x));if(vals.length>=2&&vals.length<=5&&vals.join(' ').length>=7)candidates.push({text:vals.join(' '),score:vals.length*15+5});}
+          const words=(r.data.words||[]).filter(w=>hasArabic(w.text)&&Number(w.conf||0)>=45).map(w=>({t:cleanArabic(w.text),c:Number(w.conf||0),x:(w.bbox?.x0+w.bbox?.x1)/2,y:(w.bbox?.y0+w.bbox?.y1)/2})).filter(w=>w.t&&!bad.test(w.t));
+          const rows=[];for(const w of words){let row=rows.find(a=>Math.abs(a.y-w.y)<55);if(!row){row={y:w.y,items:[]};rows.push(row)}row.items.push(w)}
+          for(const row of rows){const vals=row.items.sort((a,b)=>a.x-b.x).map(w=>w.t).filter(Boolean);if(vals.length>=2&&vals.length<=5)candidates.push({text:vals.join(' '),score:vals.length*20+row.items.reduce((a,w)=>a+w.c,0)/vals.length});}
         }
-        candidates.sort((a,b)=>b.score-a.score);
-        return candidates[0]?.text||'';
+        const unique=[...new Map(candidates.map(x=>[x.text,x])).values()];
+        unique.sort((a,b)=>{const wa=a.text.split(/\s+/).length,wb=b.text.split(/\s+/).length;return ((wb>=3&&wb<=4)?12:0)-((wa>=3&&wa<=4)?12:0)||b.score-a.score});
+        return unique[0]?.text||'';
       }finally{await worker.terminate();}
     }finally{URL.revokeObjectURL(url);}
   }
@@ -901,7 +891,7 @@ $('form').onsubmit=async e=>{
     }catch(e){console.error(e);st.textContent='تعذر تشغيل قارئ الجواز. يمكنك إدخال البيانات يدويًا.';}
     finally{$('passportOcrBtn').disabled=false;}
   }
-  function apply(d){if(d.arabicName)$('name').value=d.arabicName;else if(d.name)$('name').value=d.name;if(d.passport)$('pass').value=d.passport;if(d.nat)$('nat').value=d.nat;if(d.birth)$('birthDate').value=d.birth;if(d.exp)$('pex').value=d.exp;if(d.gender)$('gender').value=d.gender;if(window.updateMinor)updateMinor();if(window.validatePassportExpiry)validatePassportExpiry(false);}
+  function apply(d){if(d.arabicName&&hasArabic(d.arabicName))$('name').value=d.arabicName;if(d.passport)$('pass').value=d.passport;if(d.birth)$('birthDate').value=d.birth;if(d.exp)$('pex').value=d.exp;if(d.gender)$('gender').value=d.gender;if(window.updateMinor)updateMinor();if(window.validatePassportExpiry)validatePassportExpiry(false);}
   $('passportCropBtn').addEventListener('click',openCrop);$('passportOcrBtn').addEventListener('click',ocr);
 })();
 </script>
