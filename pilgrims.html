@@ -111,6 +111,8 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 </style>
 <style id="v111-passport-ui">
 .passport-first-box{border:2px solid #d7e4eb;border-radius:16px;padding:16px;background:linear-gradient(135deg,#f8fbfd,#fff);margin-bottom:18px}.step-title,.form-section-title{display:flex;align-items:center;gap:10px}.step-title>span,.form-section-title>span{width:32px;height:32px;border-radius:50%;background:#0c3b63;color:#fff;display:grid;place-items:center;font-weight:900;flex:0 0 auto}.step-title b{font-size:17px;color:#072b49}.step-title small{display:block;color:#6b7780;font-size:11px;margin-top:3px}.passport-actions{display:flex;gap:8px;flex-wrap:wrap;margin:15px 0 8px}.passport-status{display:block;color:#687984;font-weight:700}.passport-preview-wrap{margin-top:12px;border:1px solid #d8e2e8;border-radius:13px;padding:10px;background:#f7fafb}.passport-preview{display:block;width:100%;max-height:420px;object-fit:contain;border-radius:9px;background:#eef2f4}.passport-ocr-status{margin-top:8px;font-size:12px;font-weight:800;color:#0c3b63}.smart-crop-status{margin-top:8px;font-size:12px;font-weight:800;color:#0c3b63}.photo-choice{display:flex;gap:8px;flex-wrap:wrap}.form-section-title{border-top:1px solid #dfe6ea;padding-top:16px;margin-top:18px;margin-bottom:10px;color:#072b49}.form-section-title b{font-size:16px}.crop-modal{position:fixed;inset:0;background:#000b;z-index:100005;display:flex;align-items:center;justify-content:center;padding:14px}.crop-card{width:min(900px,100%);max-height:94vh;overflow:auto;background:#fff;border-radius:18px;padding:16px}.crop-stage{position:relative;background:#101820;border-radius:12px;overflow:hidden;text-align:center}.crop-canvas{max-width:100%;max-height:60vh;display:block;margin:auto;touch-action:none}.crop-stage img{max-width:100%;display:block}.crop-card .cropper-container{direction:ltr}.crop-card .cropper-view-box{outline:2px solid #c79a3b}.crop-card .cropper-face{background:transparent}.crop-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}.crop-help{font-size:11px;color:#687984;margin-top:8px}.crop-range{width:180px}.ocr-spin{display:inline-block;width:12px;height:12px;border:2px solid #c9d7df;border-top-color:#0c3b63;border-radius:50%;animation:v110spin .8s linear infinite;vertical-align:-2px;margin-left:5px}@keyframes v110spin{to{transform:rotate(360deg)}}
+/* V122 clickable image preview */
+.passport-preview,.photo-preview{cursor:zoom-in;transition:transform .15s ease,box-shadow .15s ease}.passport-preview:hover,.photo-preview:hover{transform:scale(1.01);box-shadow:0 8px 24px #0002}.image-lightbox{position:fixed;inset:0;background:#000d;display:flex;align-items:center;justify-content:center;padding:18px;z-index:200000}.image-lightbox-card{position:relative;max-width:min(1100px,96vw);max-height:94vh;background:#111;border-radius:16px;padding:12px;box-shadow:0 24px 80px #0008;display:flex;flex-direction:column;align-items:center;gap:8px}.image-lightbox img{display:block;max-width:92vw;max-height:82vh;width:auto;height:auto;object-fit:contain;border-radius:10px}.image-lightbox-title{color:#fff;font-weight:900;font-size:14px;text-align:center}.image-lightbox-close{position:absolute;top:8px;left:8px;width:38px;height:38px;border:0;border-radius:50%;background:#fff;color:#111;font-size:22px;font-weight:900;cursor:pointer;z-index:2}.image-lightbox-hint{color:#ddd;font-size:11px}
 </style>
 </head>
 <!-- V91 Global Admin Header: persistent public-site button and current user/role -->
@@ -937,6 +939,22 @@ $('form').onsubmit=async e=>{
   }
 
   let passportPhotoFile=null, usePassportPhoto=false;
+
+  function openImagePreview(src,title){
+    if(!src)return;
+    const old=document.getElementById('qawafelImageLightbox'); if(old)old.remove();
+    const modal=document.createElement('div'); modal.id='qawafelImageLightbox'; modal.className='image-lightbox';
+    modal.innerHTML='<div class="image-lightbox-card"><button type="button" class="image-lightbox-close" aria-label="إغلاق">×</button><div class="image-lightbox-title">'+esc(title||'معاينة الصورة')+'</div><img alt="'+esc(title||'معاينة الصورة')+'"><div class="image-lightbox-hint">اضغط خارج الصورة أو × للإغلاق</div></div>';
+    const img=modal.querySelector('img'); img.src=src;
+    modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('.image-lightbox-close'))modal.remove();});
+    document.body.appendChild(modal);
+    const close=modal.querySelector('.image-lightbox-close'); close.focus();
+    const onKey=e=>{if(e.key==='Escape'){modal.remove();document.removeEventListener('keydown',onKey);}};
+    document.addEventListener('keydown',onKey);
+  }
+  window.openImagePreview=openImagePreview;
+  $('passportPreview')?.addEventListener('click',()=>{const src=$('passportPreview').currentSrc||$('passportPreview').src;if(src)openImagePreview(src,'معاينة صفحة الجواز');});
+  $('photoPreview')?.addEventListener('click',()=>{const src=$('photoPreview').currentSrc||$('photoPreview').src;if(src)openImagePreview(src,'معاينة صورة المعتمر');});
 
   $('passportSmartCropBtn').addEventListener('click',smartCropPassport);
   $('usePassportPhotoBtn').addEventListener('click',()=>{if(passportPhotoFile){usePassportPhoto=true;$('photoPreview').src=URL.createObjectURL(passportPhotoFile);$('photoPreviewWrap').classList.remove('hide');$('photoPreview').classList.remove('hide');$('passportPhotoStatus').textContent='✅ سيتم استخدام صورة المعتمر المستخرجة من الجواز.';}});
