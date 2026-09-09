@@ -251,7 +251,7 @@ function renderTripPilgrims(){
  $('tripPilgrimGrid').innerHTML=list.length?list.map(x=>{
    const img=x.photo_url||''; const b=x._booking||{};
    return `<article class="pilgrim-card">
-    <img class="pilgrim-photo" src="${img}" onerror="this.style.visibility='hidden'" alt="">
+    <img class="pilgrim-photo" src="${img}" onerror="this.style.visibility=\'hidden\'" alt="">
     <div>
       <div class="pilgrim-name">${esc(x.full_name||'—')}</div>
       <div class="pilgrim-meta">
@@ -311,7 +311,28 @@ async function loadPrograms(){
  if($('tripFilter')) $('tripFilter').onchange=render;
 }
 $('tripPilgrimSearch')?.addEventListener('input',renderTripPilgrims);
-$('printBadgesTrip')?.addEventListener('click',()=>{ if(activeTrip) window.location.href='./pilgrims.html?program='+encodeURIComponent(activeTrip.id); });
+async function tripBadgeData(p){return {name:p.full_name||'—',photo:p.photo_url||'',profile:p.profile_code||'—',passport:p.passport_number||'—',makkah:activeTrip?.makkah_hotel||'—',medina:activeTrip?.city_hotel||'—'};}
+
+function badgeHtml(d){return '<article class="print-badge"><div class="side r"></div><div class="side l"></div><div class="gold-line"></div><div class="badge-content"><div class="brand"><img class="brand-logo" src="logo.png" alt="قوافل الحرمين"></div><div class="tagline">بطاقة معتمر</div><div class="person"><div class="namebox"><div class="name">'+esc(d.name)+'</div><div class="role">معتمر</div></div><img class="photo" src="'+(d.photo||'')+'" onerror="this.style.visibility=\'hidden\'"></div><div class="info-list"><div class="info"><b>رقم المعتمر</b><span>'+esc(d.profile)+'</span></div><div class="info"><b>رقم جواز السفر</b><span>'+esc(d.passport)+'</span></div><div class="info"><b>الفندق في المدينة</b><span>'+esc(d.medina)+'</span></div><div class="info"><b>الفندق في مكة</b><span>'+esc(d.makkah)+'</span></div></div><div class="footer"><div class="contacts"><span><strong>العراق</strong> +964 778 007 7122</span><span><strong>السعودية</strong> +966 54 876 9707</span></div><div class="address">بغداد - العامرية</div><div class="bottom-mark">تقبّل الله منا ومنكم</div></div></div></article>'}
+function tripBadgePrintCSS(){return `
+*{box-sizing:border-box}body{margin:0;background:#fff;font-family:Tahoma,Arial}.badge-grid{display:grid;grid-template-columns:repeat(2,60mm);gap:8mm;padding:10mm;justify-content:center}.print-badge{width:60mm;height:90mm;border:0;border-radius:4mm;background:#fff;position:relative;overflow:hidden;box-shadow:none;page-break-inside:avoid;color:#17364e;border:0.45mm solid #c9d5dd}.print-badge:before{content:"";position:absolute;inset:0;border-radius:3.6mm;background:linear-gradient(135deg,#fdfcf8 0%,#fff 52%,#f7f5ef 100%)}.print-badge .side{position:absolute;top:0;bottom:0;width:4.5mm;background:#072b49}.print-badge .side.r{right:0}.print-badge .side.l{left:0}.print-badge .gold-line{position:absolute;right:4.5mm;left:4.5mm;top:24mm;height:.45mm;background:#c79a3b}.print-badge .badge-content{position:relative;z-index:2;height:100%;padding:5mm 6mm 4mm;display:flex;flex-direction:column}.print-badge .brand{display:flex;justify-content:center;align-items:center;height:16mm}.print-badge .brand-logo{width:39mm;height:16mm;object-fit:contain}.print-badge .tagline{text-align:center;color:#8b6b25;font-weight:800;font-size:2.25mm;margin-top:-1mm}.print-badge .person{display:grid;grid-template-columns:1fr 25mm;gap:3mm;align-items:center;margin-top:3.5mm;direction:rtl}.print-badge .name{font-weight:900;font-size:4.25mm;color:#072b49;line-height:1.25}.print-badge .role{font-size:2.25mm;color:#8b6b25;font-weight:800;margin-top:1mm}.print-badge .photo{width:25mm;height:29mm;border-radius:2.6mm;object-fit:cover;border:0.6mm solid #c79a3b;background:#eef2f4;display:block}.print-badge .info-list{display:flex;flex-direction:column;gap:1.7mm;margin-top:3.5mm;direction:rtl}.print-badge .info{min-height:7.7mm;background:#f5f7f8;border:0.3mm solid #d9e2e7;border-radius:1.8mm;padding:1.3mm 2mm;display:grid;grid-template-columns:27mm 1fr;gap:1mm;align-items:center;font-size:2.25mm;line-height:1.15}.print-badge .info b{color:#0c3b63;font-size:2.05mm}.print-badge .info span{font-weight:800;color:#17364e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.print-badge .footer{margin-top:auto;background:#072b49;color:#fff;border-radius:2.5mm;padding:2.2mm 2mm 2.5mm;text-align:center}.print-badge .contacts{display:flex;justify-content:center;gap:3mm;direction:ltr;font-size:2.05mm;white-space:nowrap}.print-badge .contacts strong{color:#e2bd67}.print-badge .address{font-size:1.9mm;margin-top:1.1mm;color:#f2f4f5}.print-badge .bottom-mark{font-size:2mm;color:#c79a3b;font-weight:900;margin-top:1.1mm}@page{size:A4;margin:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.badge-grid{padding:10mm}}
+`;}
+
+async function printTripBadges(){
+ const list=allProgramPilgrims||[];
+ if(!activeTrip||!list.length)return alert('لا يوجد معتمرون في هذه الرحلة.');
+ const w=window.open('about:blank','_blank');
+ if(!w)return alert('المتصفح منع نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');
+ w.document.open();
+ w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باجات — '+esc(activeTrip.title||'قوافل الحرمين')+'</title><style>'+tripBadgePrintCSS()+'</style></head><body><div id="printArea" class="badge-grid"><div style="padding:20px;text-align:center;font-family:Tahoma,Arial">جاري تجهيز الباجات…</div></div></body></html>');
+ w.document.close();
+ const cards=[]; for(const x of list) cards.push(badgeHtml(await tripBadgeData(x)));
+ const area=w.document.getElementById('printArea'); if(area)area.innerHTML=cards.join('');
+ const imgs=Array.from(w.document.images); await Promise.all(imgs.map(img=>new Promise(resolve=>{if(img.complete)return resolve();img.onload=img.onerror=resolve;})));
+ setTimeout(()=>{w.focus();w.print();},250);
+}
+
+$('printBadgesTrip')?.addEventListener('click',printTripBadges);
 $('passportStickersTrip')?.addEventListener('click',()=>alert('ستيكر الجواز سنربطه بطباعة جماعية من هذه الرحلة في المرحلة التالية.'));
 $('zamzamStickersTrip')?.addEventListener('click',()=>alert('ستيكر زمزم سنربطه بطباعة جماعية من هذه الرحلة في المرحلة التالية.'));
 function calcAgeForReport(birth){
