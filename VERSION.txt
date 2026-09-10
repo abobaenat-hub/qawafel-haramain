@@ -1,1 +1,1 @@
-Qawafel Haramain V117 — fix supervisor/driver staff permissions and account creation
+Qawafel Haramain V118 — main driver fee only + audit logging fix

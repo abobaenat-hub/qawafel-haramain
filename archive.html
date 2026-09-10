@@ -142,10 +142,7 @@ document.getElementById('close').onclick=()=>document.getElementById('modal').st
     try{
       if(!window.db) return;
       const {data}=await window.db.auth.getUser(); const u=data?.user; if(!u) return;
-      let sp=await window.db.from('staff_profiles').select('full_name,active').eq('user_id',u.id).maybeSingle();
-      if(sp.error || !sp.data?.active) return;
-      const name=sp.data.full_name||u.email||'موظف';
-      await window.db.from('audit_logs').insert({staff_id:u.id,staff_name:name,action,entity_type,entity_id,entity_label,details:details||{},page:location.pathname.split('/').pop()||'index.html',user_agent:navigator.userAgent});
+      await window.db.rpc('log_audit_event',{p_action:action,p_entity_type:entity_type,p_entity_id:entity_id,p_entity_label:entity_label,p_details:details||{},p_page:location.pathname.split('/').pop()||'index.html'});
     }catch(e){ console.debug('audit',e); }
   }
   window.qawafelAudit=audit;
@@ -167,7 +164,7 @@ document.getElementById('close').onclick=()=>document.getElementById('modal').st
   }
 })();
 </script>
-<script id="qawafel-audit-v115">
-(function(){const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';function run(){if(!window.supabase)return;const db=window.supabase.createClient(U,K);const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:location.pathname.split('/').pop()||'index.html'}).catch(()=>{});window.qawafelAuditV115=log;if(window.__qawafelAuditV115Bound)return;window.__qawafelAuditV115Bound=true;document.addEventListener('click',e=>{const el=e.target.closest('button,a,[role="button"]');if(!el)return;const txt=(el.innerText||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);if(txt)setTimeout(()=>log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null}),0)},true);db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'&&session?.user)log('login','auth',session.user.id,'تسجيل دخول')});setTimeout(()=>log('page_view','page',null,document.title),900)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
+<script id="qawafel-audit-v118">
+(function(){const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';function run(){if(!window.supabase)return;const db=window.supabase.createClient(U,K);const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:location.pathname.split('/').pop()||'index.html'}).catch(()=>{});window.qawafelAuditV118=log;if(!window.__qawafelAuditV118Bound){window.__qawafelAuditV118Bound=true;document.addEventListener('click',e=>{const el=e.target.closest('button,a,[role="button"],input[type="submit"]');if(!el)return;const txt=(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);if(txt)log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});},true)}db.auth.getSession().then(({data})=>{if(data?.session?.user)log('page_view','page',null,document.title)})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
 </script>
 </body></html>
