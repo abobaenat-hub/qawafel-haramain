@@ -1,1 +1,1 @@
-Qawafel Haramain V132 — persistent admin session fix
+Qawafel Haramain V133 — shared Supabase auth client / session persistence fix
