@@ -21,9 +21,13 @@
 @media(max-width:760px){.top{height:68px}.topin{padding:0 14px}.status{display:none}.menu{display:block}.shell{min-height:calc(100vh - 68px)}.side{position:fixed;right:-295px;top:68px;height:calc(100vh - 68px);transition:right .2s;box-shadow:-8px 0 24px #0002}.side.open{right:0}.overlay{display:none}.overlay.show{display:block;position:fixed;inset:68px 0 0;background:#0005;z-index:40}.content{padding:18px 14px}.head{align-items:flex-start;flex-direction:column}.today{display:none}.finance{grid-template-columns:1fr 1fr}.finance div{border-left:0;border-bottom:1px solid #ffffff20;padding:8px}.kpis{grid-template-columns:1fr 1fr}}
 @media(max-width:470px){.brand b{font-size:16px}.brand small{font-size:9px}.kpi{padding:12px}.kpi b{font-size:20px}.finance b{font-size:14px}}
 
-/* V110: date + time only */
+/* V108: live clock + date only */
 .timePrayer{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(480px,1.65fr);gap:12px;margin:0 0 18px}
-.clockBadge{font-size:11px;font-weight:900;color:var(--gold);white-space:nowrap}.clockTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.clockMain{font-size:27px;font-weight:900;letter-spacing:1px;color:var(--navy);direction:ltr}.clockDate{font-size:11px;color:var(--muted);margin-top:5px}
+.clockCard{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:15px}.prayerCard{overflow:hidden}.awailPanel{border-radius:14px;background:#fff}.awailTop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.awailModes{display:flex;gap:4px;background:#eef3f5;border-radius:10px;padding:3px}.awailModes button{border:0;background:transparent;border-radius:8px;padding:6px 12px;font-family:inherit;font-size:11px;font-weight:900;color:var(--muted);cursor:pointer}.awailModes button.active{background:var(--navy);color:#fff}.season{display:flex;gap:3px;background:#eef3f5;border-radius:10px;padding:3px}.season span{padding:5px 9px;border-radius:8px;font-size:10px;font-weight:900;color:var(--muted)}.season span.active{background:#fff;box-shadow:0 1px 4px #0001;color:var(--navy)}.prayerList{grid-template-columns:repeat(6,1fr);gap:5px}.prayerItem{background:#f7f9fa;border-radius:9px;padding:10px 4px;text-align:center;border:1px solid #edf1f3}.prayerItem b{font-size:10px}.prayerItem span{font-size:15px}.prayerItem.next{background:var(--navy);outline:0;color:#fff}.prayerItem.next b,.prayerItem.next span{color:#fff}.awailProgress{height:7px;background:#e8edef;border-radius:99px;overflow:hidden;margin-top:12px}.awailProgress>i{display:block;height:100%;width:0;background:var(--navy);border-radius:99px;transition:width .5s}.awailElapsed{text-align:center;font-size:9px;color:var(--muted);margin-top:5px}
+.clockBadge{font-size:11px;font-weight:900;color:var(--gold);white-space:nowrap}.clockTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.clockMain{font-size:27px;font-weight:900;letter-spacing:1px;color:var(--navy);direction:ltr}.clockDate{font-size:11px;color:var(--muted);margin-top:5px}.locSelect{border:1px solid #d7e0e5;border-radius:9px;padding:8px 9px;background:#fff;color:var(--navy);font-weight:800;font-size:11px}
+.prayerHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}.nextPrayer{font-size:12px;font-weight:900;color:var(--navy)}.countdown{font-size:11px;font-weight:900;color:var(--gold);white-space:nowrap}.prayerList{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}.prayerItem{background:#f4f7f9;border-radius:10px;padding:8px 5px;text-align:center}.prayerItem b{display:block;font-size:10px;color:var(--muted)}.prayerItem span{display:block;font-size:13px;font-weight:900;color:var(--navy);margin-top:4px;direction:ltr}.prayerItem.next{background:#fff4d9;outline:1px solid #e7c86e}.prayerSource{font-size:9px;color:var(--muted);margin-top:8px}.prayerSource a{color:var(--blue);font-weight:900;text-decoration:none}.prayerError{font-size:10px;color:var(--red);padding:8px;background:#fff0f0;border-radius:8px}
+@media(max-width:900px){.timePrayer{grid-template-columns:1fr}.prayerList{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:470px){.clockMain{font-size:23px}.clockTop{align-items:flex-start}.prayerHead{align-items:flex-start;flex-direction:column}.prayerList{grid-template-columns:repeat(3,1fr)}}
 
 </style>
 
@@ -114,7 +118,7 @@
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
-    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
@@ -288,9 +292,49 @@ $('menu').onclick=()=>{$('side').classList.add('open');$('overlay').classList.ad
 $('overlay').onclick=()=>{$('side').classList.remove('open');$('overlay').classList.remove('show')};
 document.querySelectorAll('.nav').forEach(a=>a.addEventListener('click',()=>{$('side').classList.remove('open');$('overlay').classList.remove('show')}));
 
-function formatClock(h,m,s){
-  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+const prayerCfg={
+  baghdad:{name:'بغداد',tz:'Asia/Baghdad',url:'/awail-prayer/baghdad',source:'https://www.al-awail.com/prayers/1138442_iq_baghdad-%28%D8%A8%D8%BA%D8%AF%D8%A7%D8%AF_%D8%AD%D8%AF%D9%8A%D8%AB%29.html'},
+  makkah:{name:'مكة المكرمة',tz:'Asia/Riyadh',url:'/awail-prayer/makkah',source:'https://www.al-awail.com/prayers/2238312_sa_makkah.html'},
+  madinah:{name:'المدينة المنورة',tz:'Asia/Riyadh',url:'/awail-prayer/madinah',source:'https://www.al-awail.com/prayers/2238427_sa_medina-%28%D8%A7%D9%84%D9%85%D8%AF%D9%8A%D9%86%D8%A9_%D8%A7%D9%84%D9%85%D9%86%D9%88%D8%B1%D8%A9%29.html'}
+};
+const prayerOrder=[['fajr','الفجر'],['sunrise','الشروق'],['dhuhr','الظهر'],['asr','العصر'],['maghrib','المغرب'],['isha','العشاء']];
+let prayerData=null, prayerDay='';
+function to24(time,suffix){
+  if(!time)return null;
+  let m=String(time).match(/(\d{1,2})\s*[:٫\.]\s*(\d{2})/); if(!m)return null;
+  let h=Number(m[1]),mi=Number(m[2]);
+  if(suffix){suffix=String(suffix).trim(); if((suffix==='م'||suffix.toLowerCase()==='pm')&&h<12)h+=12; if((suffix==='ص'||suffix.toLowerCase()==='am')&&h===12)h=0;}
+  return String(h).padStart(2,'0')+':'+String(mi).padStart(2,'0');
 }
+function extractAwailTimes(html){
+  const doc=new DOMParser().parseFromString(html,'text/html');
+  const text=(doc.body?.innerText||'').replace(/\s+/g,' ');
+  const out={};
+  for(const [id,label] of prayerOrder){
+    const re=new RegExp(label+'\\s*(?:\\|?\\s*بعد)?[\\s\\S]{0,70}?(\\d{1,2})\\s*[:٫\\.]\\s*(\\d{2})\\s*(ص|م|AM|PM)?','i');
+    const m=text.match(re); if(m)out[id]=to24(m[1]+':'+m[2],m[3]);
+  }
+  return Object.keys(out).length===6?out:null;
+}
+async function loadAwail(){
+  const loc=$('prayerLocation').value,cfg=prayerCfg[loc];
+  try{
+    const r=await fetch(cfg.url+'?v=107',{cache:'no-store'}); if(!r.ok)throw new Error('AWAIL '+r.status);
+    const html=await r.text(),times=extractAwailTimes(html); if(!times)throw new Error('AWAIL parse');
+    return times;
+  }catch(e){console.warn('Awail prayer',e);return null}
+}
+async function loadPrayerData(){ return null; }
+function format12(time){
+  if(!time)return '—';
+  const [h,m]=time.split(':').map(Number),suffix=h>=12?'م':'ص',hh=(h%12)||12;
+  return String(hh).padStart(2,'0')+':'+String(m).padStart(2,'0')+' '+suffix;
+}
+function formatClock(h,m,s){
+  const n=Number(h),suffix=n>=12?'م':'ص',hh=(n%12)||12;
+  return String(hh).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+' '+suffix;
+}
+function renderPrayer(){ return; }
 function setToday(){
   const tick=()=>{
     const now=new Date();

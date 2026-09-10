@@ -141,7 +141,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
-    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
@@ -357,7 +357,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);
-let B=[],P=[],PR=[],I=[],E=[],S=[],SP=[],A=[];
+let B=[],P=[],PR=[],I=[],E=[],S=[],SP=[],A=[],SUP_E=[],DRV_PAY=[];
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function msg(id,t,e=false){$(id).className='msg'+(e?' err':'');$(id).textContent=t||''}
@@ -378,7 +378,7 @@ async function login(){
 $('loginBtn').onclick=login;$('password').onkeydown=e=>{if(e.key==='Enter')login()};
 
 async function load(){
- const [b,p,pr,i,e,sup,sp,a]=await Promise.all([
+ const [b,p,pr,i,e,sup,sp,a,supE,drvP]=await Promise.all([
   db.from('bookings').select('*').order('created_at',{ascending:false}),
   db.from('pilgrims').select('*'),
   db.from('programs').select('*').order('departure_date'),
@@ -386,10 +386,12 @@ async function load(){
   db.from('expenses').select('*').order('expense_date',{ascending:false}),
   db.from('suppliers').select('*').order('active',{ascending:false}).order('name'),
   db.from('supplier_payments').select('*').order('payment_date',{ascending:false}),
-  db.from('expense_allocations').select('*')
+  db.from('expense_allocations').select('*'),
+  db.from('supervisor_earnings').select('*'),
+  db.from('driver_payments').select('*')
  ]);
- const er=[b,p,pr,i,e,sup,sp,a].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
- B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];S=sup.data||[];SP=sp.data||[];A=a.data||[];
+ const er=[b,p,pr,i,e,sup,sp,a,supE,drvP].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
+ B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];S=sup.data||[];SP=sp.data||[];A=a.data||[];SUP_E=supE.data||[];DRV_PAY=drvP.data||[];
  $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
  $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
@@ -399,7 +401,9 @@ async function load(){
  const salesTotal=B.reduce((s,x)=>s+Number(x.total_amount||0),0);
   const purchaseTotal=B.reduce((s,b)=>{const pr=PR.find(x=>x.id===b.program_id);return s+Number(pr?.purchase_cost||0)*Math.max(Number(b.passengers_count||1),1)},0);
   const expenseTotal=E.reduce((s,x)=>s+Number(x.amount||0),0);
-  const netExpected=salesTotal-purchaseTotal-expenseTotal;
+  const supervisorTotal=SUP_E.reduce((s,x)=>s+Number(x.earned_amount||0),0);
+  const driverTotal=PR.reduce((s,x)=>s+Number(x.driver_fee||0),0);
+  const netExpected=salesTotal-purchaseTotal-expenseTotal-supervisorTotal-driverTotal;
   $('profit').textContent=money(netExpected);
   $('heroSales').textContent=money(salesTotal);$('heroReceived').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));$('heroRemaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));$('heroLate').textContent=money(late);$('heroExpenses').textContent=money(expenseTotal);$('heroNet').textContent=money(netExpected);
  $('programFilter').innerHTML='<option value="">كل البرامج</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
@@ -481,10 +485,10 @@ function renderReportVisuals(sales,cost,tripExp,generalExp,net,rows){
 function renderProfitabilityVisuals(){
  const data=[];
  const by={}; B.forEach(b=>{by[b.program_id]??={total:0,paid:0,remaining:0,count:0};by[b.program_id].total+=Number(b.total_amount||0);by[b.program_id].paid+=Number(b.paid_amount||0);by[b.program_id].remaining+=Number(b.remaining_amount||0);by[b.program_id].count++;});
- Object.entries(by).forEach(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0),cost=x.count*costSeat,ex=linkedExpenseForProgram(id),net=x.total-cost-ex;data.push({title:pr.title||'—',sales:x.total,cost,expense:ex,net,count:x.count});});
+ Object.entries(by).forEach(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0),cost=x.count*costSeat,ex=linkedExpenseForProgram(id),supEarn=SUP_E.filter(z=>z.program_id===id).reduce((a,z)=>a+Number(z.earned_amount||0),0),driverFee=Number(pr.driver_fee||0),net=x.total-cost-ex-supEarn-driverFee;data.push({title:pr.title||'—',sales:x.total,cost,expense:ex,supervisor:supEarn,driver:driverFee,net,count:x.count});});
  data.sort((a,b)=>b.net-a.net);
- const totalSales=data.reduce((s,x)=>s+x.sales,0),totalCost=data.reduce((s,x)=>s+x.cost,0),totalExp=data.reduce((s,x)=>s+x.expense,0),totalNet=totalSales-totalCost-totalExp;
- $('profitabilitySummary').innerHTML=[['إجمالي المبيعات',totalSales,''],['تكلفة الجملة',totalCost,''],['مصروفات الرحلات',totalExp,''],['صافي الربح',totalNet,totalNet>=0?'good':'bad']].map(x=>'<div class="profitMini '+x[2]+'"><small>'+x[0]+'</small><b>'+money(x[1])+'</b></div>').join('');
+ const totalSales=data.reduce((s,x)=>s+x.sales,0),totalCost=data.reduce((s,x)=>s+x.cost,0),totalExp=data.reduce((s,x)=>s+x.expense,0),totalSup=data.reduce((s,x)=>s+x.supervisor,0),totalDriver=data.reduce((s,x)=>s+x.driver,0),totalNet=totalSales-totalCost-totalExp-totalSup-totalDriver;
+ $('profitabilitySummary').innerHTML=[['إجمالي المبيعات',totalSales,''],['تكلفة الجملة',totalCost,''],['مصروفات الرحلات',totalExp,''],['أجور المشرفين',totalSup,''],['أجور السائقين',totalDriver,''],['صافي الربح',totalNet,totalNet>=0?'good':'bad']].map(x=>'<div class="profitMini '+x[2]+'"><small>'+x[0]+'</small><b>'+money(x[1])+'</b></div>').join('');
  $('profitRankings').innerHTML=data.slice(0,6).map((x,i)=>'<div class="rankRow"><span class="rankNo">'+(i+1)+'</span><span class="rankTitle">'+esc(x.title)+' <small>('+x.count+' معتمر)</small></span><span class="rankValue '+(x.net>=0?'good':'bad')+'">'+money(x.net)+'</span></div>').join('')||'<div class="reportEmpty">لا توجد بيانات رحلات.</div>';
  const max=Math.max(...data.map(x=>x.sales),1);
  $('profitChart').innerHTML=data.slice(0,7).map(x=>{const sw=Math.max(2,x.sales/max*100),cw=Math.min(x.cost/max*100,100),nw=Math.max(0,x.net/max*100);return '<div class="profitChartRow"><span class="profitChartLabel">'+esc(x.title)+'</span><div class="profitChartTrack"><span class="profitChartSales" style="width:'+sw+'%"></span><span class="profitChartCost" style="width:'+cw+'%"></span></div><span class="profitChartValue '+(x.net>=0?'marginGood':'marginBad')+'">'+money(x.net)+'</span></div>';}).join('')||'<div class="reportEmpty">لا توجد بيانات.</div>';
@@ -508,7 +512,7 @@ function render(){
  }).join('')||'<tr><td colspan="11">لا توجد نتائج.</td></tr>';
  document.querySelectorAll('[data-pay-booking]').forEach(btn=>btn.onclick=()=>openPaymentModal(btn.dataset.payBooking));
  const by={};B.forEach(b=>{by[b.program_id]??={total:0,paid:0,remaining:0,count:0};by[b.program_id].total+=Number(b.total_amount||0);by[b.program_id].paid+=Number(b.paid_amount||0);by[b.program_id].remaining+=Number(b.remaining_amount||0);by[b.program_id].count++});
- $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0);const sold=x.count;const totalCost=sold*costSeat;const linkedExpenses=linkedExpenseForProgram(id);const gross=x.total-totalCost;const net=gross-linkedExpenses;const avgSale=sold?x.total/sold:0;const profitSeat=avgSale-costSeat;const cls=net>=0?'marginGood':'marginBad';return '<div class="tripCard"><div class="tripHead"><h4>'+esc(pr.title||'—')+'</h4><span class="badge '+(net>=0?'ok':'')+'">'+(net>=0?'رابحة':'خسارة')+'</span></div><div class="tripNums"><div class="tripNum"><small>المبيعات الفعلية</small><b>'+money(x.total)+'</b></div><div class="tripNum"><small>تكلفة الجملة على المعتمرين</small><b>'+money(totalCost)+'</b></div><div class="tripNum"><small>الربح الإجمالي</small><b>'+money(gross)+'</b></div><div class="tripNum"><small>المصروفات المرتبطة</small><b>'+money(linkedExpenses)+'</b></div><div class="tripNum"><small>صافي الربح</small><b class="'+cls+'">'+money(net)+'</b></div><div class="tripNum"><small>تكلفة المقعد</small><b>'+money(costSeat)+'</b></div><div class="tripNum"><small>متوسط البيع/معتمر</small><b>'+money(avgSale)+'</b></div><div class="tripNum"><small>ربح المقعد التقريبي</small><b class="'+(profitSeat>=0?'marginGood':'marginBad')+'">'+money(profitSeat)+'</b></div><div class="tripNum"><small>المقبوض</small><b>'+money(x.paid)+'</b></div><div class="tripNum"><small>المتبقي</small><b>'+money(x.remaining)+'</b></div></div></div>'}).join('')||'لا توجد بيانات.';
+ $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0);const sold=x.count;const totalCost=sold*costSeat;const linkedExpenses=linkedExpenseForProgram(id);const supervisorEarn=SUP_E.filter(z=>z.program_id===id).reduce((a,z)=>a+Number(z.earned_amount||0),0);const driverFee=Number(pr.driver_fee||0);const gross=x.total-totalCost;const net=gross-linkedExpenses-supervisorEarn-driverFee;const avgSale=sold?x.total/sold:0;const profitSeat=avgSale-costSeat;const cls=net>=0?'marginGood':'marginBad';return '<div class="tripCard"><div class="tripHead"><h4>'+esc(pr.title||'—')+'</h4><span class="badge '+(net>=0?'ok':'')+'">'+(net>=0?'رابحة':'خسارة')+'</span></div><div class="tripNums"><div class="tripNum"><small>المبيعات الفعلية</small><b>'+money(x.total)+'</b></div><div class="tripNum"><small>تكلفة الجملة على المعتمرين</small><b>'+money(totalCost)+'</b></div><div class="tripNum"><small>الربح الإجمالي</small><b>'+money(gross)+'</b></div><div class="tripNum"><small>المصروفات المرتبطة</small><b>'+money(linkedExpenses)+'</b></div><div class="tripNum"><small>أجر المشرف 1.5%</small><b>'+money(supervisorEarn)+'</b></div><div class="tripNum"><small>أجرة السائق</small><b>'+money(driverFee)+'</b></div><div class="tripNum"><small>صافي الربح</small><b class="'+cls+'">'+money(net)+'</b></div><div class="tripNum"><small>تكلفة المقعد</small><b>'+money(costSeat)+'</b></div><div class="tripNum"><small>متوسط البيع/معتمر</small><b>'+money(avgSale)+'</b></div><div class="tripNum"><small>ربح المقعد التقريبي</small><b class="'+(profitSeat>=0?'marginGood':'marginBad')+'">'+money(profitSeat)+'</b></div><div class="tripNum"><small>المقبوض</small><b>'+money(x.paid)+'</b></div><div class="tripNum"><small>المتبقي</small><b>'+money(x.remaining)+'</b></div></div></div>'}).join('')||'لا توجد بيانات.';
  const today=new Date().toISOString().slice(0,10);
  const due=I.filter(x=>x.status!=='paid'),late=due.filter(x=>x.due_date&&x.due_date<today);
  $('installmentReport').innerHTML='<p>أقساط غير مسددة: <b>'+due.length+'</b></p><p>قيمة غير مسددة: <b>'+money(due.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p><p>أقساط متأخرة: <b>'+late.length+'</b></p><p>قيمة المتأخر: <b>'+money(late.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p>';
