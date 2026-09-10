@@ -85,10 +85,7 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
  #qawafelAdminDrawer{top:62px;height:calc(100vh - 62px);width:min(310px,88vw)}
 }
 /* V95: unified admin drawer menu visible on all screen sizes */
-#qawafelGlobalAdminBar .qga-menu{display:inline-flex!important;min-width:42px;min-height:38px;font-size:20px;line-height:1;order:-1;margin-inline-start:0}
-/* V111.1: menu trigger is on the right, directly above the right-side drawer */
-#qawafelGlobalAdminBar .qga-inner{direction:rtl}
-#qawafelGlobalAdminBar .qga-menu{flex:0 0 auto}
+#qawafelGlobalAdminBar .qga-menu{display:inline-flex!important;min-width:42px;min-height:38px;font-size:20px;line-height:1}
 #qawafelAdminDrawer{z-index:100001}
 #qawafelAdminDrawerOverlay{z-index:100000}
 </style>
@@ -104,24 +101,24 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
     if(document.getElementById('qawafelGlobalAdminBar')) return document.getElementById('qawafelGlobalAdminBar');
     const bar=document.createElement('div'); bar.id='qawafelGlobalAdminBar';
     bar.innerHTML=`<div class="qga-inner">
-      <button type="button" class="qga-btn qga-menu" id="qgaMenu" aria-label="فتح قائمة الإدارة">☰</button>
       <div class="qga-brand"><img class="qga-logo" src="./logo.png" alt="قوافل الحرمين"><div class="qga-brand-text"><b>قوافل الحرمين</b><small id="qgaPageTitle">${PAGE_TITLE}</small></div></div>
       <div class="qga-user"><div class="qga-avatar" id="qgaAvatar">ق</div><div class="qga-text"><div class="qga-name" id="qgaName">جاري التحميل...</div><div class="qga-role" id="qgaRole"></div></div></div>
       <div class="qga-actions">
+        <button type="button" class="qga-btn qga-menu" id="qgaMenu">☰</button>
         <a class="qga-btn qga-dashboard" id="qgaDashboard" href="./internal.html">⌂ لوحة الإدارة</a>
         <a class="qga-btn qga-home" href="./index.html">🌐 الموقع العام</a>
         <button type="button" class="qga-btn qga-logout" id="qgaLogout">تسجيل الخروج</button>
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
-    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=114"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html?v=114"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
     if(!window.supabase) return;
     const bar=boot();
     const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',supervisor:'مشرف رحلة'};
+    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
     const qad=document.getElementById('qawafelAdminDrawer'),qao=document.getElementById('qawafelAdminDrawerOverlay');
@@ -175,10 +172,10 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
 <div class="row2"><div><label>تاريخ الذهاب</label><input id="departure_date" type="date"></div><div><label>تاريخ العودة</label><input id="return_date" type="date"></div></div>
 <div class="row2"><div><label>فندق المدينة</label><input id="city_hotel"></div><div><label>فندق مكة</label><input id="makkah_hotel"></div></div>
 <div class="row2"><div><label>نوع الرحلة</label><select id="travel_type"><option>بر</option><option>جو</option><option>مختلط</option></select></div><div><label>العملة</label><select id="currency"><option value="IQD">د.ع</option><option value="SAR">ريال</option><option value="USD">دولار</option></select></div></div>
-<div class="row2"><div><label>سعر النقد</label><input id="price" type="number" min="0" required></div><div><label>سعر القسط</label><input id="installment_price" type="number" min="0" required></div></div><input id="purchase_cost" type="hidden"><input id="purchase_cost_currency" type="hidden" value="IQD"><div class="row2"><div><label>إجمالي المقاعد</label><input id="seats_total" type="number" min="0"></div><div><label>المقاعد المتاحة</label><input id="seats_available" type="number" min="0"></div></div>
-<div class="row2"><div><label>رقم الباص</label><input id="bus_number"></div><div><label>شركة النقل</label><input id="bus_company"></div></div><div class="row2"><div><label>السائق الرئيسي</label><select id="driver_id"><option value="">اختر السائق الرئيسي...</option></select></div><div><label>أجرة السائق الرئيسي</label><input id="driver_fee" type="number" min="0" placeholder="أجر السائق الرئيسي"></div></div><div class="row2"><div><label>السائق المساعد</label><select id="assistant_driver_id"><option value="">اختر السائق المساعد...</option></select></div><div style="padding:10px;border:1px solid #d9e3e8;border-radius:9px;background:#f8fafc;font-weight:800;color:#0c3b63">الأجرة المالية للرحلة تُسجل للسائق الرئيسي فقط</div></div><div class="row2"><div><label>مشرف الرحلة</label><select id="supervisor_id"><option value="">اختر المشرف...</option></select></div><div><label>نسبة المشرف</label><div id="supervisorRateHint" style="padding:10px;border:1px solid #d9e3e8;border-radius:9px;background:#f8fafc;font-weight:800;color:#0c3b63">1.5% من سعر بيع كل معتمر</div></div><input id="driver_name" type="hidden"><input id="driver_phone" type="hidden"><input id="supervisor_name" type="hidden"><input id="supervisor_phone" type="hidden"></div><div class="row2"><div><label>الحالة</label><select id="status"><option value="draft">مسودة</option><option value="published">منشور</option><option value="full">مكتمل</option><option value="stopped">متوقف</option><option value="archived">مؤرشف</option></select></div></div>
+<div class="row2"><div><label>سعر النقد</label><input id="price" type="number" min="0" required></div><div><label>سعر القسط</label><input id="installment_price" type="number" min="0" required></div></div><div class="row2"><div><label>تكلفة المقعد علينا (سعر الجملة للمعتمر الواحد)</label><input id="purchase_cost" type="number" min="0" placeholder="مثلاً 625000"></div><div><label>عملة التكلفة</label><select id="purchase_cost_currency"><option value="IQD">دينار عراقي</option><option value="SAR">ريال سعودي</option><option value="USD">دولار</option></select></div></div><div class="row2"><div><label>إجمالي المقاعد</label><input id="seats_total" type="number" min="0"></div><div><label>المقاعد المتاحة</label><input id="seats_available" type="number" min="0"></div></div>
+<div class="row2"><div><label>رقم الباص</label><input id="bus_number"></div><div><label>شركة النقل</label><input id="bus_company"></div></div><div class="row2"><div><label>اسم السائق</label><input id="driver_name"></div><div><label>هاتف السائق</label><input id="driver_phone" inputmode="tel"></div></div><div class="row2"><div><label>مشرف الرحلة</label><input id="supervisor_name"></div><div><label>هاتف المشرف</label><input id="supervisor_phone" inputmode="tel"></div></div><div class="row2"><div><label>الحالة</label><select id="status"><option value="draft">مسودة</option><option value="published">منشور</option><option value="full">مكتمل</option><option value="stopped">متوقف</option><option value="archived">مؤرشف</option></select></div></div>
 <label>الخدمات</label><textarea id="services"></textarea><label>الوصف</label><textarea id="description"></textarea>
-<div class="actions" style="margin-top:14px"><a href="./financial.html?v=114" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:10px;background:#0c3b63;color:#fff;text-decoration:none;font-weight:700;margin:6px">💰 الإدارة المالية</a><button class="btn primary" type="submit">حفظ البرنامج</button><button id="resetBtn" class="btn ghost" type="button">إلغاء</button></div>
+<div class="actions" style="margin-top:14px"><a href="./financial.html" style="display:inline-flex;align-items:center;gap:6px;padding:10px 14px;border-radius:10px;background:#0c3b63;color:#fff;text-decoration:none;font-weight:700;margin:6px">💰 الإدارة المالية</a><button class="btn primary" type="submit">حفظ البرنامج</button><button id="resetBtn" class="btn ghost" type="button">إلغاء</button></div>
 </form></section>
 </div></main>
 
@@ -221,8 +218,8 @@ function showLogin(text=''){document.body.classList.remove('auth-pending');$('lo
 $('loginBtn').onclick=async()=>{msg($('loginMsg'),'');const{error}=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(error)return msg($('loginMsg'),error.message,'err');showAdmin()}
 $('logout').onclick=async()=>{await db.auth.signOut();showLogin()}
 $('newBtn').onclick=()=>{resetForm();$('formTitle').textContent='إضافة برنامج'};$('resetBtn').onclick=resetForm;
-function resetForm(){$('programForm').reset();$('id').value='';$('currency').value='IQD';$('travel_type').value='بر';$('installment_price').value='';$('purchase_cost').value='';$('purchase_cost_currency').value='IQD';['bus_number','bus_company','driver_name','driver_phone','assistant_driver_id','assistant_driver_name','assistant_driver_phone','supervisor_name','supervisor_phone','driver_id','supervisor_id','driver_fee'].forEach(id=>{if($(id))$(id).value='';});$('status').value='draft';msg($('formMsg'),'')}
-function fill(p){for(const k of ['id','title','departure_date','return_date','city_hotel','makkah_hotel','travel_type','price','installment_price','purchase_cost','purchase_cost_currency','currency','seats_total','seats_available','bus_number','bus_company','driver_name','driver_phone','assistant_driver_name','assistant_driver_phone','supervisor_name','supervisor_phone','driver_id','assistant_driver_id','driver_fee','services','description','status'])if($(k))$(k).value=p[k]??'';$('formTitle').textContent='تعديل البرنامج';window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})}
+function resetForm(){$('programForm').reset();$('id').value='';$('currency').value='IQD';$('travel_type').value='بر';$('installment_price').value='';$('purchase_cost').value='';$('purchase_cost_currency').value='IQD';['bus_number','bus_company','driver_name','driver_phone','supervisor_name','supervisor_phone'].forEach(id=>$(id).value='');$('status').value='draft';msg($('formMsg'),'')}
+function fill(p){for(const k of ['id','title','departure_date','return_date','city_hotel','makkah_hotel','travel_type','price','installment_price','purchase_cost','purchase_cost_currency','currency','seats_total','seats_available','bus_number','bus_company','driver_name','driver_phone','supervisor_name','supervisor_phone','services','description','status'])$(k).value=p[k]??'';$('formTitle').textContent='تعديل البرنامج';window.scrollTo({top:document.body.scrollHeight,behavior:'smooth'})}
 function statusName(s){return({draft:'مسودة',published:'منشور',full:'مكتمل',stopped:'متوقف',archived:'مؤرشف'})[s]||s}
 function esc(s){return String(s).replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]))}
 let allProgramPilgrims=[];
@@ -254,7 +251,7 @@ function renderTripPilgrims(){
  $('tripPilgrimGrid').innerHTML=list.length?list.map(x=>{
    const img=x.photo_url||''; const b=x._booking||{};
    return `<article class="pilgrim-card">
-    <img class="pilgrim-photo" src="${img}" onerror="this.style.visibility=\'hidden\'" alt="">
+    <img class="pilgrim-photo" src="${img}" onerror="this.style.visibility='hidden'" alt="">
     <div>
       <div class="pilgrim-name">${esc(x.full_name||'—')}</div>
       <div class="pilgrim-meta">
@@ -288,23 +285,13 @@ async function openTripPilgrims(id){
  const map=new Map(bookings.map(x=>[x.id,x]));
  const people=(ps||[]).filter(x=>map.has(x.booking_id)).map(x=>({...x,_booking:map.get(x.booking_id)}));
  const total=people.length, cap=Number(p.seats_total||0), available=Math.max(cap-total,0), used=cap?Math.min(100,Math.round(total/cap*100)):0;
- $('tripSummary').innerHTML=`<div class="box"><span>المعتمرون</span><b>${total}</b></div><div class="box"><span>إجمالي المقاعد</span><b>${cap}</b></div><div class="box"><span>المقاعد المتاحة</span><b>${available}</b></div><div class="box"><span>نسبة الإشغال</span><b>${used}%</b></div>`; $('tripOps').innerHTML=`<div class="box"><span>مشرف الرحلة</span><b style="font-size:15px">${esc(p.supervisor_name||'غير محدد')}</b><small>${esc(p.supervisor_phone||'')}</small></div><div class="box"><span>الباص</span><b style="font-size:15px">${esc(p.bus_number||'غير محدد')}</b><small>${esc(p.bus_company||'')}</small></div><div class="box"><span>السائق الرئيسي</span><b style="font-size:15px">${esc(p.driver_name||'غير محدد')}</b><small>${esc(p.driver_phone||'')}</small></div><div class="box"><span>السائق المساعد</span><b style="font-size:15px">${esc(p.assistant_driver_name||'غير محدد')}</b><small>${esc(p.assistant_driver_phone||'')}</small></div><div class="box"><span>معلومات التشغيل</span><b style="font-size:15px">${esc(p.travel_type||'—')}</b><small>${esc(p.return_date||'')}</small></div>`;
+ $('tripSummary').innerHTML=`<div class="box"><span>المعتمرون</span><b>${total}</b></div><div class="box"><span>إجمالي المقاعد</span><b>${cap}</b></div><div class="box"><span>المقاعد المتاحة</span><b>${available}</b></div><div class="box"><span>نسبة الإشغال</span><b>${used}%</b></div>`; $('tripOps').innerHTML=`<div class="box"><span>مشرف الرحلة</span><b style="font-size:15px">${esc(p.supervisor_name||'غير محدد')}</b><small>${esc(p.supervisor_phone||'')}</small></div><div class="box"><span>الباص</span><b style="font-size:15px">${esc(p.bus_number||'غير محدد')}</b><small>${esc(p.bus_company||'')}</small></div><div class="box"><span>السائق</span><b style="font-size:15px">${esc(p.driver_name||'غير محدد')}</b><small>${esc(p.driver_phone||'')}</small></div><div class="box"><span>معلومات التشغيل</span><b style="font-size:15px">${esc(p.travel_type||'—')}</b><small>${esc(p.return_date||'')}</small></div>`;
  const paths=people.filter(x=>x.photo_path);
  await Promise.all(paths.map(async x=>{try{const r=await db.storage.from('pilgrim-photos').createSignedUrl(x.photo_path,3600);x.photo_url=r.data?.signedUrl||''}catch(e){x.photo_url=''}}));
  allProgramPilgrims=people; renderTripPilgrims(); renderVisaPanel();
 }
 
-async function loadTeamLists(){
- try{
-  const [{data:s},{data:d}]=await Promise.all([db.from('supervisors').select('id,full_name,phone,commission_rate').eq('active',true).order('full_name'),db.from('drivers').select('id,full_name,phone,vehicle_type,vehicle_number').eq('active',true).order('full_name')]);
-  $('supervisor_id').innerHTML='<option value="">اختر المشرف...</option>'+(s||[]).map(x=>`<option value="${x.id}">${esc(x.full_name)} — ${Number(x.commission_rate||1.5)}%</option>`).join('');
-  $('driver_id').innerHTML='<option value="">اختر السائق...</option>'+(d||[]).map(x=>`<option value="${x.id}">${esc(x.full_name)}${x.vehicle_number?' — '+esc(x.vehicle_number):''}</option>`).join('');
-  $('supervisor_id').onchange=()=>{const x=(s||[]).find(v=>v.id===$('supervisor_id').value);$('supervisor_name').value=x?.full_name||'';$('supervisor_phone').value=x?.phone||'';$('supervisorRateHint').textContent=(x?Number(x.commission_rate||1.5):1.5)+'% من سعر بيع كل معتمر';};
-  $('driver_id').onchange=()=>{const x=(d||[]).find(v=>v.id===$('driver_id').value);$('driver_name').value=x?.full_name||'';$('driver_phone').value=x?.phone||'';}; $('assistant_driver_id').innerHTML='<option value="">اختر السائق المساعد...</option>'+(d||[]).map(x=>`<option value="${x.id}">${esc(x.full_name)}${x.vehicle_number?' — '+esc(x.vehicle_number):''}</option>`).join(''); $('assistant_driver_id').onchange=()=>{const x=(d||[]).find(v=>v.id===$('assistant_driver_id').value);$('assistant_driver_name').value=x?.full_name||'';$('assistant_driver_phone').value=x?.phone||'';};
- }catch(e){console.warn('team lists',e)}
-}
 async function loadPrograms(){
- await loadTeamLists();
  const [{data,error},{data:bookings}] = await Promise.all([
    db.from('programs').select('*').order('departure_date',{ascending:true}),
    db.from('bookings').select('id,program_id,status')
@@ -324,28 +311,7 @@ async function loadPrograms(){
  if($('tripFilter')) $('tripFilter').onchange=render;
 }
 $('tripPilgrimSearch')?.addEventListener('input',renderTripPilgrims);
-async function tripBadgeData(p){return {name:p.full_name||'—',photo:p.photo_url||'',profile:p.profile_code||'—',passport:p.passport_number||'—',makkah:activeTrip?.makkah_hotel||'—',medina:activeTrip?.city_hotel||'—'};}
-
-function badgeHtml(d){return '<article class="print-badge"><div class="side r"></div><div class="side l"></div><div class="gold-line"></div><div class="badge-content"><div class="brand"><img class="brand-logo" src="logo.png" alt="قوافل الحرمين"></div><div class="tagline">بطاقة معتمر</div><div class="person"><div class="namebox"><div class="name">'+esc(d.name)+'</div><div class="role">معتمر</div></div><img class="photo" src="'+(d.photo||'')+'" onerror="this.style.visibility=\'hidden\'"></div><div class="info-list"><div class="info"><b>رقم المعتمر</b><span>'+esc(d.profile)+'</span></div><div class="info"><b>رقم جواز السفر</b><span>'+esc(d.passport)+'</span></div><div class="info"><b>الفندق في المدينة</b><span>'+esc(d.medina)+'</span></div><div class="info"><b>الفندق في مكة</b><span>'+esc(d.makkah)+'</span></div></div><div class="footer"><div class="contacts"><span><strong>العراق</strong> +964 778 007 7122</span><span><strong>السعودية</strong> +966 54 876 9707</span></div><div class="address">بغداد - العامرية</div><div class="bottom-mark">تقبّل الله منا ومنكم</div></div></div></article>'}
-function tripBadgePrintCSS(){return `
-*{box-sizing:border-box}body{margin:0;background:#fff;font-family:Tahoma,Arial}.badge-grid{display:grid;grid-template-columns:repeat(2,60mm);gap:8mm;padding:10mm;justify-content:center}.print-badge{width:60mm;height:90mm;border:0;border-radius:4mm;background:#fff;position:relative;overflow:hidden;box-shadow:none;page-break-inside:avoid;color:#17364e;border:0.45mm solid #c9d5dd}.print-badge:before{content:"";position:absolute;inset:0;border-radius:3.6mm;background:linear-gradient(135deg,#fdfcf8 0%,#fff 52%,#f7f5ef 100%)}.print-badge .side{position:absolute;top:0;bottom:0;width:4.5mm;background:#072b49}.print-badge .side.r{right:0}.print-badge .side.l{left:0}.print-badge .gold-line{position:absolute;right:4.5mm;left:4.5mm;top:24mm;height:.45mm;background:#c79a3b}.print-badge .badge-content{position:relative;z-index:2;height:100%;padding:5mm 6mm 4mm;display:flex;flex-direction:column}.print-badge .brand{display:flex;justify-content:center;align-items:center;height:16mm}.print-badge .brand-logo{width:39mm;height:16mm;object-fit:contain}.print-badge .tagline{text-align:center;color:#8b6b25;font-weight:800;font-size:2.25mm;margin-top:-1mm}.print-badge .person{display:grid;grid-template-columns:1fr 25mm;gap:3mm;align-items:center;margin-top:3.5mm;direction:rtl}.print-badge .name{font-weight:900;font-size:4.25mm;color:#072b49;line-height:1.25}.print-badge .role{font-size:2.25mm;color:#8b6b25;font-weight:800;margin-top:1mm}.print-badge .photo{width:25mm;height:29mm;border-radius:2.6mm;object-fit:cover;border:0.6mm solid #c79a3b;background:#eef2f4;display:block}.print-badge .info-list{display:flex;flex-direction:column;gap:1.7mm;margin-top:3.5mm;direction:rtl}.print-badge .info{min-height:7.7mm;background:#f5f7f8;border:0.3mm solid #d9e2e7;border-radius:1.8mm;padding:1.3mm 2mm;display:grid;grid-template-columns:27mm 1fr;gap:1mm;align-items:center;font-size:2.25mm;line-height:1.15}.print-badge .info b{color:#0c3b63;font-size:2.05mm}.print-badge .info span{font-weight:800;color:#17364e;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.print-badge .footer{margin-top:auto;background:#072b49;color:#fff;border-radius:2.5mm;padding:2.2mm 2mm 2.5mm;text-align:center}.print-badge .contacts{display:flex;justify-content:center;gap:3mm;direction:ltr;font-size:2.05mm;white-space:nowrap}.print-badge .contacts strong{color:#e2bd67}.print-badge .address{font-size:1.9mm;margin-top:1.1mm;color:#f2f4f5}.print-badge .bottom-mark{font-size:2mm;color:#c79a3b;font-weight:900;margin-top:1.1mm}@page{size:A4;margin:0}@media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}.badge-grid{padding:10mm}}
-`;}
-
-async function printTripBadges(){
- const list=allProgramPilgrims||[];
- if(!activeTrip||!list.length)return alert('لا يوجد معتمرون في هذه الرحلة.');
- const w=window.open('about:blank','_blank');
- if(!w)return alert('المتصفح منع نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');
- w.document.open();
- w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باجات — '+esc(activeTrip.title||'قوافل الحرمين')+'</title><style>'+tripBadgePrintCSS()+'</style></head><body><div id="printArea" class="badge-grid"><div style="padding:20px;text-align:center;font-family:Tahoma,Arial">جاري تجهيز الباجات…</div></div></body></html>');
- w.document.close();
- const cards=[]; for(const x of list) cards.push(badgeHtml(await tripBadgeData(x)));
- const area=w.document.getElementById('printArea'); if(area)area.innerHTML=cards.join('');
- const imgs=Array.from(w.document.images); await Promise.all(imgs.map(img=>new Promise(resolve=>{if(img.complete)return resolve();img.onload=img.onerror=resolve;})));
- setTimeout(()=>{w.focus();w.print();},250);
-}
-
-$('printBadgesTrip')?.addEventListener('click',printTripBadges);
+$('printBadgesTrip')?.addEventListener('click',()=>{ if(activeTrip) window.location.href='./pilgrims.html?program='+encodeURIComponent(activeTrip.id); });
 $('passportStickersTrip')?.addEventListener('click',()=>alert('ستيكر الجواز سنربطه بطباعة جماعية من هذه الرحلة في المرحلة التالية.'));
 $('zamzamStickersTrip')?.addEventListener('click',()=>alert('ستيكر زمزم سنربطه بطباعة جماعية من هذه الرحلة في المرحلة التالية.'));
 function calcAgeForReport(birth){
@@ -389,7 +355,10 @@ function openTripReport(){
     try{
       if(!window.db) return;
       const {data}=await window.db.auth.getUser(); const u=data?.user; if(!u) return;
-      await window.db.rpc('log_audit_event',{p_action:action,p_entity_type:entity_type,p_entity_id:entity_id,p_entity_label:entity_label,p_details:details||{},p_page:location.pathname.split('/').pop()||'index.html'});
+      let sp=await window.db.from('staff_profiles').select('full_name,active').eq('user_id',u.id).maybeSingle();
+      if(sp.error || !sp.data?.active) return;
+      const name=sp.data.full_name||u.email||'موظف';
+      await window.db.from('audit_logs').insert({staff_id:u.id,staff_name:name,action,entity_type,entity_id,entity_label,details:details||{},page:location.pathname.split('/').pop()||'index.html',user_agent:navigator.userAgent});
     }catch(e){ console.debug('audit',e); }
   }
   window.qawafelAudit=audit;
@@ -417,7 +386,7 @@ function openTripReport(){
 $('tripReportTrip')?.addEventListener('click',openTripReport);
 $('tripVisaTrip')?.addEventListener('click',()=>{$('visaPanel').classList.toggle('hidden'); if(!$('visaPanel').classList.contains('hidden')) renderVisaPanel();});
 $('tripModal')?.addEventListener('click',e=>{if(e.target.id==='tripModal')closeTripModal()});
-$('programForm').onsubmit=async e=>{e.preventDefault();msg($('formMsg'),'جاري الحفظ...');const id=$('id').value;const payload={title:$('title').value.trim(),departure_date:$('departure_date').value||null,return_date:$('return_date').value||null,city_hotel:$('city_hotel').value.trim()||null,makkah_hotel:$('makkah_hotel').value.trim()||null,travel_type:$('travel_type').value,price:Number($('price').value||0),installment_price:Number($('installment_price').value||0),purchase_cost:Number($('purchase_cost').value||0),purchase_cost_currency:$('purchase_cost_currency').value,currency:$('currency').value,seats_total:Number($('seats_total').value||0),seats_available:Number($('seats_available').value||0),services:$('services').value.trim()||null,description:$('description').value.trim()||null,bus_number:$('bus_number').value.trim()||null,bus_company:$('bus_company').value.trim()||null,driver_id:$('driver_id').value||null,driver_fee:Number($('driver_fee').value||0),driver_name:$('driver_name').value.trim()||null,driver_phone:$('driver_phone').value.trim()||null,assistant_driver_id:$('assistant_driver_id').value||null,assistant_driver_name:$('assistant_driver_name').value.trim()||null,assistant_driver_phone:$('assistant_driver_phone').value.trim()||null,supervisor_id:$('supervisor_id').value||null,supervisor_name:$('supervisor_name').value.trim()||null,supervisor_phone:$('supervisor_phone').value.trim()||null,status:$('status').value};const r=id?await db.from('programs').update(payload).eq('id',id):await db.from('programs').insert(payload);if(r.error)return msg($('formMsg'),r.error.message,'err');msg($('formMsg'),'تم حفظ البرنامج بنجاح');resetForm();loadPrograms()}
+$('programForm').onsubmit=async e=>{e.preventDefault();msg($('formMsg'),'جاري الحفظ...');const id=$('id').value;const payload={title:$('title').value.trim(),departure_date:$('departure_date').value||null,return_date:$('return_date').value||null,city_hotel:$('city_hotel').value.trim()||null,makkah_hotel:$('makkah_hotel').value.trim()||null,travel_type:$('travel_type').value,price:Number($('price').value||0),installment_price:Number($('installment_price').value||0),purchase_cost:Number($('purchase_cost').value||0),purchase_cost_currency:$('purchase_cost_currency').value,currency:$('currency').value,seats_total:Number($('seats_total').value||0),seats_available:Number($('seats_available').value||0),services:$('services').value.trim()||null,description:$('description').value.trim()||null,bus_number:$('bus_number').value.trim()||null,bus_company:$('bus_company').value.trim()||null,driver_name:$('driver_name').value.trim()||null,driver_phone:$('driver_phone').value.trim()||null,supervisor_name:$('supervisor_name').value.trim()||null,supervisor_phone:$('supervisor_phone').value.trim()||null,status:$('status').value};const r=id?await db.from('programs').update(payload).eq('id',id):await db.from('programs').insert(payload);if(r.error)return msg($('formMsg'),r.error.message,'err');msg($('formMsg'),'تم حفظ البرنامج بنجاح');resetForm();loadPrograms()}
 async function removeProgram(id){if(!confirm('حذف هذا البرنامج؟'))return;const{error}=await db.from('programs').delete().eq('id',id);if(error)return msg($('listMsg'),error.message,'err');loadPrograms()}
 db.auth.onAuthStateChange((_e,session)=>session?showAdmin():showLogin());
 (async()=>{const{data}=await db.auth.getSession();data.session?showAdmin():showLogin()})();
@@ -430,7 +399,10 @@ db.auth.onAuthStateChange((_e,session)=>session?showAdmin():showLogin());
     try{
       if(!window.db) return;
       const {data}=await window.db.auth.getUser(); const u=data?.user; if(!u) return;
-      await window.db.rpc('log_audit_event',{p_action:action,p_entity_type:entity_type,p_entity_id:entity_id,p_entity_label:entity_label,p_details:details||{},p_page:location.pathname.split('/').pop()||'index.html'});
+      let sp=await window.db.from('staff_profiles').select('full_name,active').eq('user_id',u.id).maybeSingle();
+      if(sp.error || !sp.data?.active) return;
+      const name=sp.data.full_name||u.email||'موظف';
+      await window.db.from('audit_logs').insert({staff_id:u.id,staff_name:name,action,entity_type,entity_id,entity_label,details:details||{},page:location.pathname.split('/').pop()||'index.html',user_agent:navigator.userAgent});
     }catch(e){ console.debug('audit',e); }
   }
   window.qawafelAudit=audit;
@@ -454,8 +426,5 @@ db.auth.onAuthStateChange((_e,session)=>session?showAdmin():showLogin());
 </script>
 <div data-qawafel-fallback style="display:none;position:fixed;inset:auto 12px 18px 12px;z-index:9999;background:#fff8e7;border:1px solid #d7b65f;border-radius:12px;padding:12px;text-align:center;font-family:Tahoma,Arial;color:#18384f;box-shadow:0 8px 30px #0002">تعذر تحميل مكونات النظام. حدّث الصفحة وحاول مرة أخرى.</div>
 <script>setTimeout(function(){var a=document.getElementById('app'),f=document.querySelector('[data-qawafel-fallback]');if(a&&a.classList.contains('hide')&&f)f.style.display='block';},5000);</script>
-<script id="qawafel-audit-v118">
-(function(){const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';function run(){if(!window.supabase)return;const db=window.supabase.createClient(U,K);const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:location.pathname.split('/').pop()||'index.html'}).catch(()=>{});window.qawafelAuditV118=log;if(!window.__qawafelAuditV118Bound){window.__qawafelAuditV118Bound=true;document.addEventListener('click',e=>{const el=e.target.closest('button,a,[role="button"],input[type="submit"]');if(!el)return;const txt=(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);if(txt)log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});},true)}db.auth.getSession().then(({data})=>{if(data?.session?.user)log('page_view','page',null,document.title)})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
-</script>
 </body>
 </html>
