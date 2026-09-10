@@ -289,6 +289,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 </div>
 <label>ملاحظات</label><input id="supplierPayNotes" placeholder="مثلاً دفعة أولى للمورّد">
 <button id="saveSupplierPayment" class="p" style="margin-top:12px">💾 حفظ دفعة المورّد</button>
+<div class="panel" style="margin-top:15px;padding:14px;background:#fbfcfd"><h3 style="margin:0 0 10px">🧾 سجل دفعات المورّدين</h3><div class="table"><table><thead><tr><th>التاريخ</th><th>المورّد</th><th>الرحلة</th><th>المبلغ</th><th>طريقة الدفع</th><th>المرجع</th><th>ملاحظات</th></tr></thead><tbody id="supplierPaymentRows"></tbody></table></div></div>
 </section>
 <section class="panel"><h2>📒 التزامات المورّدين</h2><div class="hint">المستحق المتوقع يُحسب من عدد المقاعد المباعة × سعر الجملة للمقعد، ثم نطرح ما دُفع للمورّد.</div><div class="table"><table><thead><tr><th>المورّد</th><th>الرحلة</th><th>عدد المعتمرين</th><th>المستحق المتوقع</th><th>المدفوع للمورّد</th><th>المتبقي</th></tr></thead><tbody id="supplierObligationRows"></tbody></table></div></section>
 </div>
@@ -446,7 +447,7 @@ function fillSuppliers(){
  document.querySelectorAll('.supplierToggle').forEach(b=>b.onclick=()=>toggleSupplier(b.dataset.id));
  document.querySelectorAll('.supplierDelete').forEach(b=>b.onclick=()=>deleteSupplier(b.dataset.id));
  $('supplierPayProgram').innerHTML='<option value="">اختر الرحلة...</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
- renderSupplierObligations();
+ renderSupplierObligations();renderSupplierPaymentHistory();
 }
 
 function updatePurchasePreview(){
@@ -533,6 +534,14 @@ function render(){
  renderProfitabilityVisuals();
 }
 $('search').oninput=()=>{render();renderExpenses()};$('programFilter').onchange=()=>{render();renderExpenses()};$('statusFilter').onchange=render;
+function renderSupplierPaymentHistory(){
+ const rows=SP.slice().sort((a,b)=>String(b.payment_date||'').localeCompare(String(a.payment_date||''))).map(x=>{
+  const supplier=S.find(z=>z.id===x.supplier_id); const pr=PR.find(z=>z.id===x.program_id);
+  return '<tr><td>'+esc(x.payment_date||'—')+'</td><td><b>'+esc(supplier?.name||'مورد غير معروف')+'</b></td><td>'+esc(pr?.title||'دفعة عامة')+'</td><td><b>'+money(x.amount||0)+'</b></td><td>'+esc(x.payment_method||'—')+'</td><td>'+esc(x.reference||'—')+'</td><td>'+esc(x.notes||'—')+'</td></tr>';
+ }).join('');
+ $('supplierPaymentRows').innerHTML=rows||'<tr><td colspan="7">لا توجد دفعات مورّدين مسجلة حتى الآن.</td></tr>';
+}
+
 async function renderSupplierObligations(){
  const rows=[];
  PR.forEach(pr=>{
@@ -598,7 +607,7 @@ $('saveSupplierPayment').onclick=async()=>{
  const supplier_id=$('supplierPaySupplier').value,program_id=$('supplierPayProgram').value||null,amount=Number($('supplierPayAmount').value||0),payment_date=$('supplierPayDate').value, payment_method=$('supplierPayMethod').value,reference=$('supplierPayReference').value.trim()||null,notes=$('supplierPayNotes').value.trim()||null;
  if(!supplier_id||!amount||amount<=0||!payment_date)return msg('supplierPayMsg','أكمل المورّد والمبلغ والتاريخ.',true);
  $('saveSupplierPayment').disabled=true;
- try{const {data:{user}}=await db.auth.getUser();const {error}=await db.from('supplier_payments').insert({supplier_id,program_id,amount,payment_date,payment_method,reference,notes,created_by:user?.id||null});if(error)throw error;msg('supplierPayMsg','تم تسجيل دفعة المورّد بنجاح.');$('supplierPayAmount').value='';$('supplierPayReference').value='';$('supplierPayNotes').value='';await load();}catch(e){msg('supplierPayMsg',e.message||'تعذر تسجيل الدفعة.',true)}finally{$('saveSupplierPayment').disabled=false}
+ try{const {error}=await db.rpc('record_supplier_payment',{p_supplier_id:supplier_id,p_program_id:program_id,p_amount:amount,p_payment_date:payment_date,p_payment_method:payment_method,p_reference:reference,p_notes:notes});if(error)throw error;msg('supplierPayMsg','تم تسجيل دفعة المورّد بنجاح وحفظها في قاعدة البيانات.');$('supplierPayAmount').value='';$('supplierPayReference').value='';$('supplierPayNotes').value='';await load();}catch(e){msg('supplierPayMsg',e.message||'تعذر تسجيل الدفعة.',true)}finally{$('saveSupplierPayment').disabled=false}
 };
 
 function dateOnly(v){return v?String(v).slice(0,10):''}
