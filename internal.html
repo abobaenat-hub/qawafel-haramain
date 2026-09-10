@@ -3,7 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>المركز الداخلي | قوافل الحرمين</title>
+<meta name="qawafel-build" content="V107-AWAIL-12H-VERIFIED"><meta name="qawafel-prayer-source" content="Al-Awail">
+  <title>المركز الداخلي | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <style>
 :root{--navy:#0b3556;--blue:#155985;--gold:#c99a32;--bg:#f4f6f8;--card:#fff;--line:#e3e9ee;--text:#18384f;--muted:#718390;--green:#18734e;--red:#a43b3b;--shadow:0 5px 22px rgba(11,53,86,.07)}
@@ -20,7 +21,7 @@
 @media(max-width:760px){.top{height:68px}.topin{padding:0 14px}.status{display:none}.menu{display:block}.shell{min-height:calc(100vh - 68px)}.side{position:fixed;right:-295px;top:68px;height:calc(100vh - 68px);transition:right .2s;box-shadow:-8px 0 24px #0002}.side.open{right:0}.overlay{display:none}.overlay.show{display:block;position:fixed;inset:68px 0 0;background:#0005;z-index:40}.content{padding:18px 14px}.head{align-items:flex-start;flex-direction:column}.today{display:none}.finance{grid-template-columns:1fr 1fr}.finance div{border-left:0;border-bottom:1px solid #ffffff20;padding:8px}.kpis{grid-template-columns:1fr 1fr}}
 @media(max-width:470px){.brand b{font-size:16px}.brand small{font-size:9px}.kpi{padding:12px}.kpi b{font-size:20px}.finance b{font-size:14px}}
 
-/* V105: live clock + DWS prayer times */
+/* V107: live clock + Al-Awail prayer times */
 .timePrayer{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(480px,1.65fr);gap:12px;margin:0 0 18px}
 .clockCard,.prayerCard{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:15px}.prayerCard{overflow:hidden}.awailPanel{border-radius:14px;background:#fff}.awailTop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.awailModes{display:flex;gap:4px;background:#eef3f5;border-radius:10px;padding:3px}.awailModes button{border:0;background:transparent;border-radius:8px;padding:6px 12px;font-family:inherit;font-size:11px;font-weight:900;color:var(--muted);cursor:pointer}.awailModes button.active{background:var(--navy);color:#fff}.season{display:flex;gap:3px;background:#eef3f5;border-radius:10px;padding:3px}.season span{padding:5px 9px;border-radius:8px;font-size:10px;font-weight:900;color:var(--muted)}.season span.active{background:#fff;box-shadow:0 1px 4px #0001;color:var(--navy)}.prayerList{grid-template-columns:repeat(6,1fr);gap:5px}.prayerItem{background:#f7f9fa;border-radius:9px;padding:10px 4px;text-align:center;border:1px solid #edf1f3}.prayerItem b{font-size:10px}.prayerItem span{font-size:15px}.prayerItem.next{background:var(--navy);outline:0;color:#fff}.prayerItem.next b,.prayerItem.next span{color:#fff}.awailProgress{height:7px;background:#e8edef;border-radius:99px;overflow:hidden;margin-top:12px}.awailProgress>i{display:block;height:100%;width:0;background:var(--navy);border-radius:99px;transition:width .5s}.awailElapsed{text-align:center;font-size:9px;color:var(--muted);margin-top:5px}
 .clockTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.clockMain{font-size:27px;font-weight:900;letter-spacing:1px;color:var(--navy);direction:ltr}.clockDate{font-size:11px;color:var(--muted);margin-top:5px}.locSelect{border:1px solid #d7e0e5;border-radius:9px;padding:8px 9px;background:#fff;color:var(--navy);font-weight:800;font-size:11px}
@@ -219,7 +220,7 @@
           <div id="prayerList" class="prayerList"></div>
           <div class="awailProgress"><i id="prayerProgress"></i></div>
           <div id="prayerElapsed" class="awailElapsed">—</div>
-          <div class="prayerSource">المصدر: <a id="prayerSourceLink" href="https://www.al-awail.com/prayers/1138442_iq_baghdad-%28%D8%A8%D8%BA%D8%AF%D8%A7%D8%AF_%D8%AD%D8%AF%D9%8A%D8%AB%29.html" target="_blank" rel="noopener">الأوائل لمواقيت الصلاة</a></div>
+          <div class="prayerSource">المصدر: <a id="prayerSourceLink" href="https://www.al-awail.com/prayers/1138442_iq_baghdad-%28%D8%A8%D8%BA%D8%AF%D8%A7%D8%AF_%D8%AD%D8%AF%D9%8A%D8%AB%29.html" target="_blank" rel="noopener">الأوائل — مواقيت الصلاة</a></div>
         </div>
       </div>
     </section>
@@ -338,7 +339,7 @@ function extractAwailTimes(html){
 async function loadAwail(){
   const loc=$('prayerLocation').value,cfg=prayerCfg[loc];
   try{
-    const r=await fetch(cfg.url,{cache:'no-store'}); if(!r.ok)throw new Error('AWAIL '+r.status);
+    const r=await fetch(cfg.url+'?v=107',{cache:'no-store'}); if(!r.ok)throw new Error('AWAIL '+r.status);
     const html=await r.text(),times=extractAwailTimes(html); if(!times)throw new Error('AWAIL parse');
     return times;
   }catch(e){console.warn('Awail prayer',e);return null}
@@ -347,7 +348,7 @@ async function loadPrayerData(){
   const loc=$('prayerLocation').value,cfg=prayerCfg[loc];
   const t=await loadAwail();
   $('prayerSourceLink').href=cfg.source;
-  $('prayerSourceLink').textContent='الأوائل لمواقيت الصلاة';
+  $('prayerSourceLink').textContent='الأوائل — مواقيت الصلاة';
   if(t){
     prayerData=t;
     prayerDay=new Intl.DateTimeFormat('en-CA',{timeZone:cfg.tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
