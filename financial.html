@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>المالية | قوافل الحرمين — V140</title>
+<title>المالية | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <style>body.auth-pending #login{display:none!important}
 :root{--n:#0c3b63;--d:#072b49;--c:#f7f5ef;--l:#dfe6ea;--r:#a33}
@@ -32,28 +32,8 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 @media(max-width:800px){.supplierPayGrid{grid-template-columns:1fr 1fr}.supplierGrid{grid-template-columns:1fr}.supplierKpi{grid-template-columns:1fr 1fr}}@media(max-width:550px){.supplierPayGrid{grid-template-columns:1fr}.supplierKpi{grid-template-columns:1fr 1fr}}
 
 .reportToolbar{display:grid;grid-template-columns:1fr 1fr 1fr auto;gap:10px;align-items:end}.reportKpis{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:15px}.reportKpi{background:linear-gradient(180deg,#fff,#f7fafc);border:1px solid #dfe6ea;border-radius:15px;padding:13px}.reportKpi small{display:block;color:#72838d}.reportKpi b{display:block;font-size:18px;color:var(--n);margin-top:6px}.reportKpi.profit b{color:#176644}.reportKpi.loss b{color:#a33}.reportNote{background:#f7f3e8;border-right:4px solid #c79a3b;padding:11px;border-radius:10px;color:#6d5a31;font-size:12px;margin-top:12px}.reportActions{display:flex;gap:8px;flex-wrap:wrap}.reportTable{margin-top:14px}.reportEmpty{text-align:center;padding:25px;color:#718390}.reportPrintHeader{display:none}
-
-.visualGrid{display:grid;grid-template-columns:1.15fr .85fr;gap:14px;margin-top:15px}.visualCard{background:linear-gradient(180deg,#fff,#f8fafb);border:1px solid #dfe6ea;border-radius:18px;padding:16px}.visualCard h3{margin:0 0 12px;color:var(--n);font-size:15px}.barList{display:flex;flex-direction:column;gap:12px}.barItem{display:grid;grid-template-columns:125px 1fr 105px;gap:10px;align-items:center}.barLabel{font-size:11px;color:#536875;font-weight:bold}.barTrack{height:11px;background:#eaf0f3;border-radius:99px;overflow:hidden}.barFill{height:100%;border-radius:99px;background:linear-gradient(90deg,#0c3b63,#c79a3b);transition:width .5s ease}.barValue{text-align:left;font-weight:900;color:var(--n);font-size:11px;white-space:nowrap}.donutWrap{display:flex;align-items:center;justify-content:center;gap:18px;min-height:150px}.donut{width:132px;height:132px;border-radius:50%;position:relative;background:conic-gradient(#0c3b63 0 50%,#c79a3b 50% 75%,#dfe6ea 75% 100%);display:flex;align-items:center;justify-content:center}.donut:after{content:'';width:78px;height:78px;background:#fff;border-radius:50%;position:absolute}.donutCenter{position:absolute;z-index:2;text-align:center}.donutCenter b{display:block;color:var(--n);font-size:17px}.donutCenter small{color:#718390;font-size:9px}.legend{display:flex;flex-direction:column;gap:9px;font-size:11px}.legend span{display:flex;align-items:center;gap:7px}.dot{width:9px;height:9px;border-radius:50%;display:inline-block}.dotSales{background:#0c3b63}.dotCost{background:#c79a3b}.dotExp{background:#dfe6ea}.profitSummary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:15px}.profitMini{background:linear-gradient(180deg,#fff,#f7fafc);border:1px solid #dfe6ea;border-radius:15px;padding:13px}.profitMini small{display:block;color:#72838d}.profitMini b{display:block;margin-top:6px;font-size:18px;color:var(--n)}.profitMini.good b{color:#176644}.profitMini.bad b{color:#a33}.rankList{display:flex;flex-direction:column;gap:8px}.rankRow{display:grid;grid-template-columns:28px 1fr 105px;gap:8px;align-items:center;background:#f6f9fa;border-radius:12px;padding:9px}.rankNo{width:25px;height:25px;border-radius:50%;background:#e9eef1;color:var(--n);display:flex;align-items:center;justify-content:center;font-weight:900;font-size:11px}.rankTitle{font-weight:bold;color:#29485c;font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.rankValue{text-align:left;font-weight:900;font-size:11px}.rankValue.good{color:#176644}.rankValue.bad{color:#a33}.profitChart{margin-top:14px}.profitChartRow{display:grid;grid-template-columns:150px 1fr 100px;gap:9px;align-items:center;margin:10px 0}.profitChartTrack{height:18px;background:#edf2f4;border-radius:8px;overflow:hidden;display:flex}.profitChartSales{height:100%;background:#0c3b63}.profitChartCost{height:100%;background:#c79a3b}.profitChartLabel{font-size:10px;font-weight:bold;color:#526a78;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.profitChartValue{text-align:left;font-size:10px;font-weight:900}.chartLegend{display:flex;gap:15px;flex-wrap:wrap;font-size:10px;color:#6d7d86;margin-top:8px}.chartLegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:4px}.chartSales{background:#0c3b63}.chartCost{background:#c79a3b}.chartProfit{background:#176644}.sectionFade{animation:sectionFade .22s ease}@keyframes sectionFade{from{opacity:.2;transform:translateY(5px)}to{opacity:1;transform:none}}
-@media(max-width:900px){.visualGrid{grid-template-columns:1fr}.profitSummary{grid-template-columns:1fr 1fr}.barItem{grid-template-columns:100px 1fr 95px}.profitChartRow{grid-template-columns:115px 1fr 90px}}
-@media(max-width:550px){.profitSummary{grid-template-columns:1fr}.barItem{grid-template-columns:85px 1fr 85px}.donutWrap{flex-direction:column}.profitChartRow{grid-template-columns:90px 1fr 78px}}
 @media(max-width:1000px){.reportKpis{grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){.reportToolbar{grid-template-columns:1fr 1fr}.reportKpis{grid-template-columns:1fr 1fr}}
-@media print{body{background:#fff}.top,.financeHero,.stats,.filters,.purchaseBox,.cards,.supplierGrid,.supplierPayGrid,.reportToolbar,.reportActions,.visualGrid{display:none!important}.panel{box-shadow:none;border:0}.reportPrintHeader{display:block;text-align:center;margin-bottom:15px}.reportPrintHeader h1{margin:0;color:#0c3b63}.reportPrintHeader p{margin:5px 0;color:#666}.reportKpis{grid-template-columns:repeat(3,1fr)}.reportTable{font-size:11px}button{display:none!important}}
-
-/* V144 Shared Cost System */
-.sharedCostBox{margin-top:14px;border:1px solid #dfe7ec;border-radius:18px;padding:16px;background:linear-gradient(135deg,#fbfdff,#f7fafc)}
-.sharedToggle{display:flex;align-items:center;gap:10px;font-weight:900;cursor:pointer}
-.sharedToggle input{width:20px;height:20px;accent-color:#0c3b63}
-.sharedHint{font-size:11px;color:#6e7f89;line-height:1.8;margin-top:6px}
-.sharedControls{display:none;margin-top:13px}.sharedControls.active{display:block}
-.sharedProgramGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
-.sharedProgramRow{display:grid;grid-template-columns:28px 1fr 105px;align-items:center;gap:8px;border:1px solid #e2e9ed;border-radius:12px;padding:9px;background:#fff}
-.sharedProgramRow small{display:block;color:#778790;font-size:10px;margin-top:2px}
-.sharedProgramRow input[type=number]{margin:0}
-.sharedPreview{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.sharedPreview .purchaseMetric{margin:0}
-.sharedAllocTag{display:inline-flex;align-items:center;gap:4px;background:#edf5fb;color:#0c3b63;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800}
-@media(max-width:700px){.sharedProgramGrid{grid-template-columns:1fr}.sharedPreview{grid-template-columns:1fr 1fr}.sharedProgramRow{grid-template-columns:28px 1fr 90px}}
-
-.staffPaySummary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0}.staffMini{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:12px}.staffMini small{display:block;color:#718390;font-size:10px}.staffMini b{display:block;color:var(--n);font-size:18px;margin-top:4px}.staffPayGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.staffPaySection{margin-top:14px}@media(max-width:800px){.staffPayGrid{grid-template-columns:1fr}.staffPaySummary{grid-template-columns:1fr 1fr}}
+@media print{body{background:#fff}.top,.financeHero,.stats,.filters,.purchaseBox,.cards,.supplierGrid,.supplierPayGrid,.reportToolbar,.reportActions{display:none!important}.panel{box-shadow:none;border:0}.reportPrintHeader{display:block;text-align:center;margin-bottom:15px}.reportPrintHeader h1{margin:0;color:#0c3b63}.reportPrintHeader p{margin:5px 0;color:#666}.reportKpis{grid-template-columns:repeat(3,1fr)}.reportTable{font-size:11px}button{display:none!important}}
 </style>
 
 <style id="qawafel-global-admin-css">
@@ -117,10 +97,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
  #qawafelAdminDrawer{top:62px;height:calc(100vh - 62px);width:min(310px,88vw)}
 }
 /* V95: unified admin drawer menu visible on all screen sizes */
-#qawafelGlobalAdminBar .qga-menu{display:inline-flex!important;min-width:42px;min-height:38px;font-size:20px;line-height:1;order:-1;margin-inline-start:0}
-/* V111.1: menu trigger is on the right, directly above the right-side drawer */
-#qawafelGlobalAdminBar .qga-inner{direction:rtl}
-#qawafelGlobalAdminBar .qga-menu{flex:0 0 auto}
+#qawafelGlobalAdminBar .qga-menu{display:inline-flex!important;min-width:42px;min-height:38px;font-size:20px;line-height:1}
 #qawafelAdminDrawer{z-index:100001}
 #qawafelAdminDrawerOverlay{z-index:100000}
 </style>
@@ -136,24 +113,24 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
     if(document.getElementById('qawafelGlobalAdminBar')) return document.getElementById('qawafelGlobalAdminBar');
     const bar=document.createElement('div'); bar.id='qawafelGlobalAdminBar';
     bar.innerHTML=`<div class="qga-inner">
-      <button type="button" class="qga-btn qga-menu" id="qgaMenu" aria-label="فتح قائمة الإدارة">☰</button>
       <div class="qga-brand"><img class="qga-logo" src="./logo.png" alt="قوافل الحرمين"><div class="qga-brand-text"><b>قوافل الحرمين</b><small id="qgaPageTitle">${PAGE_TITLE}</small></div></div>
       <div class="qga-user"><div class="qga-avatar" id="qgaAvatar">ق</div><div class="qga-text"><div class="qga-name" id="qgaName">جاري التحميل...</div><div class="qga-role" id="qgaRole"></div></div></div>
       <div class="qga-actions">
+        <button type="button" class="qga-btn qga-menu" id="qgaMenu">☰</button>
         <a class="qga-btn qga-dashboard" id="qgaDashboard" href="./internal.html">⌂ لوحة الإدارة</a>
         <a class="qga-btn qga-home" href="./index.html">🌐 الموقع العام</a>
         <button type="button" class="qga-btn qga-logout" id="qgaLogout">تسجيل الخروج</button>
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
-    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=114"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html?v=114"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
     if(!window.supabase) return;
     const bar=boot();
     const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',supervisor:'مشرف رحلة'};
+    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
     const qad=document.getElementById('qawafelAdminDrawer'),qao=document.getElementById('qawafelAdminDrawerOverlay');
@@ -189,33 +166,14 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <label>كلمة المرور</label><input id="password" type="password">
 <br><button id="loginBtn" class="p" style="width:100%">دخول</button></div>
 
-<main id="app" class="wrap hide"><section class="financeHero compactHero"><div class="heroHead"><div><h1>💰 الإدارة المالية</h1><p>لوحة تحكم مالية مختصرة — اختر القسم الذي تريد العمل عليه</p></div><span class="heroBadge">قوافل الحرمين</span></div><div class="financeKpis">
-<div class="financeKpi"><small>إجمالي المبيعات</small><b id="heroSales">0 د.ع</b></div>
-<div class="financeKpi"><small>المقبوض</small><b id="heroReceived">0 د.ع</b></div>
-<div class="financeKpi"><small>المتبقي</small><b id="heroRemaining">0 د.ع</b></div>
-<div class="financeKpi"><small>المتأخر</small><b id="heroLate">0 د.ع</b></div>
-<div class="financeKpi"><small>المصروفات</small><b id="heroExpenses">0 د.ع</b></div>
-<div class="financeKpi highlight"><small>صافي الربح المتوقع</small><b id="heroNet">0 د.ع</b></div>
-</div></section>
-<div class="stats compactStats" aria-hidden="true" style="display:none!important">
+<main id="app" class="wrap hide"><section class="financeHero"><h1>💰 المركز المالي</h1><p>اعرف تكلفة كل رحلة، مبيعاتها، مصروفاتها، وربحها الحقيقي قبل وبعد التحصيل.</p><div class="profitGrid"><div class="profitCard"><small>قيمة المبيعات</small><b id="heroSales">0 د.ع</b></div><div class="profitCard"><small>تكلفة الجملة على المبيعات</small><b id="heroCost">0 د.ع</b></div><div class="profitCard"><small>المصروفات الإضافية</small><b id="heroExpenses">0 د.ع</b></div><div class="profitCard"><small>صافي الربح المتوقع</small><b id="heroNet">0 د.ع</b></div></div></section>
+<div class="stats">
 <div class="stat">إجمالي المبيعات<b id="sales">0 د.ع</b></div>
 <div class="stat">المقبوض<b id="received">0 د.ع</b></div>
 <div class="stat">المتبقي<b id="remaining">0 د.ع</b></div>
 <div class="stat">المتأخر<b id="late">0 د.ع</b></div><div class="stat">صافي الربح<b id="profit">0 د.ع</b></div>
 </div>
 
-<section class="financeMenu" id="financeMenu">
-  <button class="financeTile" data-section="reports"><span>📊</span><div><b>التقارير المالية</b><small>الإيرادات والمصروفات والربح وتقارير الرحلات</small></div><i>←</i></button>
-  <button class="financeTile" data-section="purchase"><span>🚌</span><div><b>تسجيل تكلفة شراء الرحلة</b><small>تكلفة الجملة والمورّد والتزامات الرحلات</small></div><i>←</i></button>
-  <button class="financeTile" data-section="suppliers"><span>🏢</span><div><b>المورّدون</b><small>إضافة وتعديل وتعطيل ومتابعة دفعات المورّدين</small></div><i>←</i></button>
-  <button class="financeTile" data-section="expenses"><span>💸</span><div><b>إدارة المصروفات</b><small>تسجيل المصروفات والفواتير والمستندات</small></div><i>←</i></button>
-  <button class="financeTile" data-section="pilgrimAccounts"><span>💳</span><div><b>دفعات المعتمرين والأقساط</b><small>كشف الحساب والدفعات والأقساط المستحقة</small></div><i>←</i></button>
-  <button class="financeTile" data-section="staffPayments"><span>👥</span><div><b>مستحقات المشرفين والسائقين</b><small>تسديد العمولات والأجور وكشف المتبقي لكل رحلة</small></div><i>←</i></button>
-  <button class="financeTile" data-section="profitability"><span>📈</span><div><b>ربحية الرحلات</b><small>مقارنة المبيعات بالتكلفة والمصروفات</small></div><i>←</i></button>
-</section>
-
-<div id="financeSections">
-<div class="financeSection" data-section-id="reports"><div class="sectionTop"><div><h2>📊 التقارير المالية</h2><small>التقارير التفصيلية والتحليل المالي</small></div><button class="w backFinance">← القائمة المالية</button></div>
 <div class="panel">
 <h2>التقارير المالية <small style="font-size:13px;color:#a77b22">— العملة: الدينار العراقي فقط</small></h2>
 <div class="filters">
@@ -224,29 +182,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <select id="statusFilter"><option value="">كل الحالات</option><option value="paid">مسدد</option><option value="pending">غير مكتمل</option><option value="late">متأخر</option></select>
 </div>
 </div>
-<section class="panel" id="advancedReportPanel">
-<div class="reportPrintHeader"><h1>قوافل الحرمين للحج والعمرة</h1><p>التقرير المالي الإداري</p><div id="printReportPeriod"></div></div>
-<h2>📊 التقرير المالي الاحترافي</h2>
-<div class="reportToolbar">
-<div><label>من تاريخ</label><input id="reportFrom" type="date"></div>
-<div><label>إلى تاريخ</label><input id="reportTo" type="date"></div>
-<div><label>الرحلة</label><select id="reportProgram"><option value="">كل الرحلات</option></select></div>
-<div class="reportActions"><button id="runReport" class="p">🔎 عرض التقرير</button><button id="printReport" class="w">🖨️ طباعة / PDF</button></div>
-</div>
-<div class="reportPresets"><span>فترة سريعة:</span><button type="button" class="presetBtn" data-preset="month">هذا الشهر</button><button type="button" class="presetBtn" data-preset="lastmonth">الشهر السابق</button><button type="button" class="presetBtn" data-preset="year">هذه السنة</button><button type="button" class="presetBtn" data-preset="all">كل الفترة</button>
-</div>
-<div class="reportNote">التقرير يعتمد على <b>سعر البيع الفعلي بعد الخصم</b>، ويخصم منه <b>سعر الجملة للمقعد</b> ثم مصروفات الرحلة للوصول إلى صافي الربح. المصروفات العامة تظهر منفصلة ولا تُحمّل على الرحلات.</div>
-<div class="reportKpis" id="reportKpis"></div>
-<div id="reportCollectionNote" class="reportCollectionNote"></div>
-<div class="visualGrid" id="reportVisuals">
-  <div class="visualCard"><h3>📊 توزيع الأرقام المالية</h3><div id="reportBars" class="barList"></div></div>
-  <div class="visualCard"><h3>💰 قراءة سريعة للنتيجة</h3><div id="reportDonut" class="donutWrap"></div></div>
-</div>
-<div class="table reportTable"><table><thead><tr><th>الرحلة</th><th>المعتمرون</th><th>المبيعات</th><th>المقبوض</th><th>الجملة</th><th>الربح الإجمالي</th><th>مصروفات الرحلة</th><th>صافي الربح</th><th>هامش الربح</th></tr></thead><tbody id="advancedReportRows"></tbody></table></div>
-</section>
-</div>
 
-<div class="financeSection" data-section-id="purchase"><div class="sectionTop"><div><h2>🚌 تكلفة شراء الرحلة</h2><small>تسجيل تكلفة الجملة لكل رحلة</small></div><button class="w backFinance">← القائمة المالية</button></div>
 <section class="panel purchaseBox">
   <div class="purchaseTitle">
     <div><h2>🏷️ تسجيل تكلفة شراء الرحلة</h2><div class="purchaseHint">هنا تسجل سعر الجملة الذي تدفعه قوافل الحرمين عن المعتمر الواحد في هذه الرحلة. بعد الحفظ يدخل تلقائيًا في حساب الربح الفعلي لكل معتمر والرحلة.</div></div>
@@ -257,15 +193,13 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
     <div><label class="purchaseLabel">اختر الرحلة</label><select id="purchaseProgram"><option value="">اختر الرحلة...</option></select></div>
     <div><label class="purchaseLabel">تكلفة المعتمر علينا (سعر الجملة)</label><input id="purchaseAmount" type="number" min="0" placeholder="مثلاً 625000"></div>
     <div><label class="purchaseLabel">العملة</label><select id="purchaseCurrency"><option value="IQD">دينار عراقي</option><option value="SAR">ريال سعودي</option><option value="USD">دولار</option></select></div>
-    <div><label class="purchaseLabel">المورّد</label><select id="purchaseSupplier"><option value="">اختر المورّد (اختياري)...</option></select></div>
   </div>
   <div id="purchasePreview" class="purchasePreview"></div>
   <div class="purchaseWarn">⚠️ أدخل تكلفة <b>المعتمر الواحد</b> علينا من المورّد (سعر الجملة)، وليس إجمالي الرحلة.</div>
   <button id="savePurchase" class="p" style="margin-top:13px">💾 حفظ تكلفة الرحلة</button>
 </section>
-</div>
 
-<div class="financeSection" data-section-id="suppliers"><div class="sectionTop"><div><h2>🏢 المورّدون</h2><small>إدارة الموردين والدفعات</small></div><button class="w backFinance">← القائمة المالية</button></div>
+<div class="cards">
 <section class="panel">
 <h2>🏢 المورّدون</h2>
 <div class="supplierGrid">
@@ -274,8 +208,8 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div><label>نوع الخدمة</label><input id="supplierCategory" placeholder="فنادق، نقل، خدمات..." ></div>
 <div><label>ملاحظات</label><input id="supplierNotes" placeholder="اختياري"></div>
 </div>
-<input id="supplierEditId" type="hidden"><div id="supplierMsg"></div><div class="actions" style="margin-top:12px"><button id="addSupplier" class="p">➕ إضافة المورّد</button><button id="cancelSupplierEdit" class="w hidden">✖️ إلغاء التعديل</button></div>
-<div class="table" style="margin-top:15px"><table><thead><tr><th>المورّد</th><th>الهاتف</th><th>الخدمة</th><th>الحالة</th><th>إجراءات</th></tr></thead><tbody id="supplierRows"></tbody></table></div>
+<div id="supplierMsg"></div><button id="addSupplier" class="p" style="margin-top:12px">➕ إضافة المورّد</button>
+<div class="table" style="margin-top:15px"><table><thead><tr><th>المورّد</th><th>الهاتف</th><th>الخدمة</th><th>الحالة</th></tr></thead><tbody id="supplierRows"></tbody></table></div>
 </section>
 <section class="panel">
 <h2>💳 دفعة للمورّد</h2><div id="supplierPayMsg"></div>
@@ -289,12 +223,24 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 </div>
 <label>ملاحظات</label><input id="supplierPayNotes" placeholder="مثلاً دفعة أولى للمورّد">
 <button id="saveSupplierPayment" class="p" style="margin-top:12px">💾 حفظ دفعة المورّد</button>
-<div class="panel" style="margin-top:15px;padding:14px;background:#fbfcfd"><h3 style="margin:0 0 10px">🧾 سجل دفعات المورّدين</h3><div class="table"><table><thead><tr><th>التاريخ</th><th>المورّد</th><th>الرحلة</th><th>المبلغ</th><th>طريقة الدفع</th><th>المرجع</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="supplierPaymentRows"></tbody></table></div></div>
-</section>
-<section class="panel"><h2>📒 التزامات المورّدين</h2><div class="hint">المستحق المتوقع يُحسب من عدد المقاعد المباعة × سعر الجملة للمقعد، ثم نطرح ما دُفع للمورّد.</div><div class="table"><table><thead><tr><th>المورّد</th><th>الرحلة</th><th>عدد المعتمرين</th><th>المستحق المتوقع</th><th>المدفوع للمورّد</th><th>المتبقي</th></tr></thead><tbody id="supplierObligationRows"></tbody></table></div></section>
-</div>
+</section></div>
 
-<div class="financeSection" data-section-id="expenses"><div class="sectionTop"><div><h2>💸 إدارة المصروفات</h2><small>المصروفات والفواتير والمستندات</small></div><button class="w backFinance">← القائمة المالية</button></div>
+<section class="panel" id="advancedReportPanel">
+<div class="reportPrintHeader"><h1>قوافل الحرمين للحج والعمرة</h1><p>التقرير المالي الإداري</p><div id="printReportPeriod"></div></div>
+<h2>📊 التقرير المالي الاحترافي</h2>
+<div class="reportToolbar">
+<div><label>من تاريخ</label><input id="reportFrom" type="date"></div>
+<div><label>إلى تاريخ</label><input id="reportTo" type="date"></div>
+<div><label>الرحلة</label><select id="reportProgram"><option value="">كل الرحلات</option></select></div>
+<div class="reportActions"><button id="runReport" class="p">🔎 عرض التقرير</button><button id="printReport" class="w">🖨️ طباعة / PDF</button></div>
+</div>
+<div class="reportNote">التقرير يعتمد على <b>سعر البيع الفعلي بعد الخصم</b>، ويخصم منه <b>سعر الجملة للمقعد</b> ثم مصروفات الرحلة للوصول إلى صافي الربح. المصروفات العامة تظهر منفصلة ولا تُحمّل على الرحلات.</div>
+<div class="reportKpis" id="reportKpis"></div>
+<div class="table reportTable"><table><thead><tr><th>الرحلة</th><th>المعتمرون</th><th>المبيعات</th><th>المقبوض</th><th>الجملة</th><th>الربح الإجمالي</th><th>مصروفات الرحلة</th><th>صافي الربح</th><th>هامش الربح</th></tr></thead><tbody id="advancedReportRows"></tbody></table></div>
+</section>
+
+<section class="panel"><h2>📒 التزامات المورّدين</h2><div class="hint">المستحق المتوقع يُحسب من عدد المقاعد المباعة × سعر الجملة للمقعد، ثم نطرح ما دُفع للمورّد.</div><div class="table"><table><thead><tr><th>المورّد</th><th>الرحلة</th><th>عدد المعتمرين</th><th>المستحق المتوقع</th><th>المدفوع للمورّد</th><th>المتبقي</th></tr></thead><tbody id="supplierObligationRows"></tbody></table></div></section>
+
 <section class="panel">
 <h2>💸 إدارة المصروفات</h2>
 <div id="expenseMsg"></div>
@@ -305,22 +251,6 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div><label>التاريخ</label><input id="expenseDate" type="date"></div>
 </div>
 <label>الرحلة المرتبطة (اختياري)</label><select id="expenseProgram"><option value="">مصروف عام للشركة</option></select>
-<div class="sharedCostBox">
-  <label class="sharedToggle"><input id="expenseIsShared" type="checkbox"> 🔗 هذه تكلفة مشتركة بين أكثر من رحلة</label>
-  <div class="sharedHint">مثال: الحقائب أو فندق يخدم رحلة البر والجو. يسجل المبلغ مرة واحدة، ثم يوزعه النظام على الرحلات ولا يكرر المصروف في إجمالي الشركة.</div>
-  <div id="sharedControls" class="sharedControls">
-    <label>طريقة توزيع التكلفة</label>
-    <select id="sharedMethod">
-      <option value="passengers">حسب عدد المعتمرين</option>
-      <option value="units">حسب الكمية / الوحدات</option>
-      <option value="percent">حسب النسب المئوية</option>
-      <option value="manual">توزيع يدوي بالمبالغ</option>
-    </select>
-    <div id="sharedMethodHint" class="sharedHint"></div>
-    <div id="sharedProgramGrid" class="sharedProgramGrid"></div>
-    <div id="sharedPreview" class="sharedPreview"></div>
-  </div>
-</div>
 <div class="filters" style="grid-template-columns:1fr 1fr;margin-top:4px">
 <div><label>رقم الفاتورة / المستند</label><input id="expenseInvoice" placeholder="مثلاً INV-2026-001"></div>
 <div class="filePick"><label>صورة الفاتورة أو المستند</label><input id="expenseAttachment" type="file" accept="image/*,.pdf"></div>
@@ -334,34 +264,17 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <section class="panel">
 <h2>📋 سجل المصروفات</h2>
 <div id="expenseCategoryBreakdown" class="expenseCategoryGrid"></div>
-<div class="table"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفاتورة</th><th>النوع</th><th>الرحلة</th><th>المبلغ</th><th>المستند</th><th>ملاحظات</th><th>إجراء</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
+<div class="table"><table><thead><tr><th>التاريخ</th><th>البيان</th><th>الفاتورة</th><th>النوع</th><th>الرحلة</th><th>المبلغ</th><th>المستند</th><th>ملاحظات</th></tr></thead><tbody id="expenseRows"></tbody></table></div>
 </section>
-</div>
-
-<div class="financeSection" data-section-id="profitability"><div class="sectionTop"><div><h2>📈 ربحية الرحلات</h2><small>تحليل ربحية البرامج</small></div><button class="w backFinance">← القائمة المالية</button></div>
-<div id="profitabilitySummary" class="profitSummary"></div>
-<div class="visualGrid">
-<section class="visualCard"><h3>🏆 أفضل الرحلات حسب صافي الربح</h3><div id="profitRankings" class="rankList"></div></section>
-<section class="visualCard"><h3>📈 المبيعات مقابل التكلفة</h3><div id="profitChart" class="profitChart"></div><div class="chartLegend"><span><i class="chartSales"></i>المبيعات</span><span><i class="chartCost"></i>الجملة</span><span><i class="chartProfit"></i>صافي الربح</span></div></section>
-</div>
 <div class="cards">
 <section class="panel"><h3>📊 ربحية الرحلات</h3><div class="hint">الربح هنا يعتمد على قيمة البيع ناقص تكلفة شراء الرحلة والمصروفات المرتبطة بها.</div><div id="programReport"></div></section>
 <section class="panel"><h3>الأقساط المستحقة والمتأخرة</h3><div id="installmentReport"></div></section>
 </div>
-</div>
 
-<div class="financeSection" data-section-id="pilgrimAccounts"><div class="sectionTop"><div><h2>💳 دفعات المعتمرين والأقساط</h2><small>كشف الحساب والمتابعة المالية</small></div><button class="w backFinance">← القائمة المالية</button></div>
 <section class="panel">
 <h3>كشف الحساب</h3><div id="tableMsg"></div>
 <div class="table"><table><thead><tr><th>المعتمر</th><th>البرنامج</th><th>نوع الدفع</th><th>السعر الأساسي</th><th>الخصم</th><th>البيع الفعلي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>الدفعات</th></tr></thead><tbody id="rows"></tbody></table></div>
 </section>
-</div>
-<div class="financeSection" data-section-id="staffPayments"><div class="sectionTop"><div><h2>👥 مستحقات المشرفين والسائقين</h2><small>تسديد المستحقات وربط كل دفعة بالرحلة والشخص</small></div><button class="w backFinance">← القائمة المالية</button></div>
-<section class="panel"><h3>💰 ملخص الالتزامات</h3><div id="staffPaySummary" class="staffPaySummary"></div></section>
-<section class="panel staffPaySection"><h3>👤 مستحقات المشرفين</h3><div class="hint">المستحق يُحسب من عمولة المشرف على مبيعات المعتمرين، والمدفوع يُجمع من دفعات المشرف المسجلة.</div><div class="table"><table><thead><tr><th>المشرف</th><th>الرحلة</th><th>المبيعات</th><th>النسبة</th><th>المستحق</th><th>المدفوع</th><th>المتبقي</th><th>إجراء</th></tr></thead><tbody id="staffSupervisorRows"></tbody></table></div></section>
-<section class="panel staffPaySection"><h3>🚌 مستحقات السائقين</h3><div class="hint">أجر السائق المحدد في الرحلة يُعد تكلفة على الرحلة. الدفعات المسجلة تُخصم من المتبقي.</div><div class="table"><table><thead><tr><th>السائق</th><th>الرحلة</th><th>الأجر المتفق</th><th>المدفوع</th><th>المتبقي</th><th>إجراء</th></tr></thead><tbody id="staffDriverRows"></tbody></table></div></section>
-</div>
-</div>
 </main>
 
 
@@ -369,7 +282,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);
-let B=[],P=[],PR=[],I=[],E=[],S=[],SP=[],A=[],SUP_E=[],DRV_PAY=[],SUP=[],DRV=[];
+let B=[],P=[],PR=[],I=[],E=[],S=[],SP=[];
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function msg(id,t,e=false){$(id).className='msg'+(e?' err':'');$(id).textContent=t||''}
@@ -390,22 +303,17 @@ async function login(){
 $('loginBtn').onclick=login;$('password').onkeydown=e=>{if(e.key==='Enter')login()};
 
 async function load(){
- const [b,p,pr,i,e,sup,sp,a,supE,drvP,ss,dd]=await Promise.all([
+ const [b,p,pr,i,e,sup,sp]=await Promise.all([
   db.from('bookings').select('*').order('created_at',{ascending:false}),
   db.from('pilgrims').select('*'),
   db.from('programs').select('*').order('departure_date'),
   db.from('installment_plans').select('*').order('due_date'),
   db.from('expenses').select('*').order('expense_date',{ascending:false}),
-  db.from('suppliers').select('*').order('active',{ascending:false}).order('name'),
-  db.from('supplier_payments').select('*').order('payment_date',{ascending:false}),
-  db.from('expense_allocations').select('*'),
-  db.from('supervisor_earnings').select('*'),
-  db.from('driver_payments').select('*'),
-  db.from('supervisors').select('*').order('full_name'),
-  db.from('drivers').select('*').order('full_name')
+  db.from('suppliers').select('*').eq('active',true).order('name'),
+  db.from('supplier_payments').select('*').order('payment_date',{ascending:false})
  ]);
- const er=[b,p,pr,i,e,sup,sp,a,supE,drvP,ss,dd].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
- B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];S=sup.data||[];SP=sp.data||[];A=a.data||[];SUP_E=supE.data||[];DRV_PAY=drvP.data||[];SUP=ss.data||[];DRV=dd.data||[];
+ const er=[b,p,pr,i,e,sup,sp].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
+ B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];S=sup.data||[];SP=sp.data||[];
  $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
  $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
@@ -415,39 +323,28 @@ async function load(){
  const salesTotal=B.reduce((s,x)=>s+Number(x.total_amount||0),0);
   const purchaseTotal=B.reduce((s,b)=>{const pr=PR.find(x=>x.id===b.program_id);return s+Number(pr?.purchase_cost||0)*Math.max(Number(b.passengers_count||1),1)},0);
   const expenseTotal=E.reduce((s,x)=>s+Number(x.amount||0),0);
-  const supervisorTotal=SUP_E.reduce((s,x)=>s+Number(x.earned_amount||0),0);
-  const driverTotal=PR.reduce((s,x)=>s+Number(x.driver_fee||0),0);
-  const netExpected=salesTotal-purchaseTotal-expenseTotal-supervisorTotal-driverTotal;
+  const netExpected=salesTotal-purchaseTotal-expenseTotal;
   $('profit').textContent=money(netExpected);
-  $('heroSales').textContent=money(salesTotal);$('heroReceived').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));$('heroRemaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));$('heroLate').textContent=money(late);$('heroExpenses').textContent=money(expenseTotal);$('heroNet').textContent=money(netExpected);
+  $('heroSales').textContent=money(salesTotal);$('heroCost').textContent=money(purchaseTotal);$('heroExpenses').textContent=money(expenseTotal);$('heroNet').textContent=money(netExpected);
  $('programFilter').innerHTML='<option value="">كل البرامج</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  fillPurchasePrograms();
  fillSuppliers();
  $('expenseProgram').innerHTML='<option value="">مصروف عام للشركة</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  $('expenseDate').value=new Date().toISOString().slice(0,10); $('supplierPayDate').value=new Date().toISOString().slice(0,10);
  render();
- renderStaffPayments();
  await renderExpenses();
- initSharedCostUI();
  initReport();
 }
 function fillPurchasePrograms(){
  $('purchaseProgram').innerHTML='<option value="">اختر الرحلة...</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
 }
 function fillSuppliers(){
- const active=S.filter(x=>x.active);
- const opts='<option value="">اختر المورّد (اختياري)...</option>'+S.map(x=>'<option value="'+x.id+'">'+esc(x.name)+(x.active?'':' — معطّل')+'</option>').join('');
+ const opts='<option value="">اختر المورّد (اختياري)...</option>'+S.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
  $('purchaseSupplier').innerHTML=opts;
- $('supplierPaySupplier').innerHTML='<option value="">اختر المورّد...</option>'+active.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
- $('supplierRows').innerHTML=S.map(x=>{
-   const status=x.active?'<span class="badge ok">نشط</span>':'<span class="badge">معطّل</span>';
-   return '<tr><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.category||'—')+'</td><td>'+status+'</td><td class="actions"><button class="btn w supplierEdit" data-id="'+x.id+'">✏️ تعديل</button><button class="btn '+(x.active?'danger':'p')+' supplierToggle" data-id="'+x.id+'">'+(x.active?'⛔ تعطيل':'✅ تفعيل')+'</button><button class="btn danger supplierDelete" data-id="'+x.id+'">🗑️ حذف</button></td></tr>';
- }).join('')||'<tr><td colspan="5">لا يوجد مورّدون.</td></tr>';
- document.querySelectorAll('.supplierEdit').forEach(b=>b.onclick=()=>editSupplier(b.dataset.id));
- document.querySelectorAll('.supplierToggle').forEach(b=>b.onclick=()=>toggleSupplier(b.dataset.id));
- document.querySelectorAll('.supplierDelete').forEach(b=>b.onclick=()=>deleteSupplier(b.dataset.id));
+ $('supplierPaySupplier').innerHTML='<option value="">اختر المورّد...</option>'+S.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
+ $('supplierRows').innerHTML=S.map(x=>'<tr><td><b>'+esc(x.name)+'</b></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.category||'—')+'</td><td><span class="badge ok">نشط</span></td></tr>').join('')||'<tr><td colspan="4">لا يوجد مورّدون.</td></tr>';
  $('supplierPayProgram').innerHTML='<option value="">اختر الرحلة...</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
- renderSupplierObligations();renderSupplierPaymentHistory();
+ renderSupplierObligations();
 }
 
 function updatePurchasePreview(){
@@ -489,26 +386,6 @@ async function saveBookingPayment(bookingId){
 }
 $('payClose').onclick=()=>$('payModal').classList.add('hide');$('payModal').addEventListener('click',e=>{if(e.target.id==='payModal')$('payModal').classList.add('hide')});
 
-
-function renderReportVisuals(sales,cost,tripExp,generalExp,net,rows){
- const vals=[['المبيعات',sales],['تكلفة الجملة',cost],['مصروفات الرحلات',tripExp],['المصروفات العامة',generalExp],['صافي الربح',Math.max(net,0)]];
- const max=Math.max(...vals.map(x=>Number(x[1])||0),1);
- $('reportBars').innerHTML=vals.map(x=>'<div class="barItem"><span class="barLabel">'+x[0]+'</span><div class="barTrack"><div class="barFill" style="width:'+Math.min((Number(x[1])||0)/max*100,100)+'%"></div></div><span class="barValue">'+money(x[1])+'</span></div>').join('');
- const expenseShare=sales?Math.min(((cost+tripExp+generalExp)/sales)*100,100):0, profitShare=sales?Math.max(Math.min((net/sales)*100,100),0):0, remainingShare=sales?Math.max(100-expenseShare-profitShare,0):0;
- $('reportDonut').innerHTML='<div class="donut" style="background:conic-gradient(#0c3b63 0 '+expenseShare+'%,#176644 '+expenseShare+'% '+(expenseShare+profitShare)+'%,#dfe6ea '+(expenseShare+profitShare)+'% 100%)"><div class="donutCenter"><b>'+net.toLocaleString('ar-IQ')+'</b><small>صافي الربح</small></div></div><div class="legend"><span><i class="dot dotSales"></i>تكاليف ومصروفات '+expenseShare.toFixed(1)+'%</span><span><i class="dot" style="background:#176644"></i>صافي الربح '+profitShare.toFixed(1)+'%</span><span><i class="dot dotExp"></i>متبقٍ '+remainingShare.toFixed(1)+'%</span></div>';
-}
-function renderProfitabilityVisuals(){
- const data=[];
- const by={}; B.forEach(b=>{by[b.program_id]??={total:0,paid:0,remaining:0,count:0};by[b.program_id].total+=Number(b.total_amount||0);by[b.program_id].paid+=Number(b.paid_amount||0);by[b.program_id].remaining+=Number(b.remaining_amount||0);by[b.program_id].count++;});
- Object.entries(by).forEach(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0),cost=x.count*costSeat,ex=linkedExpenseForProgram(id),supEarn=SUP_E.filter(z=>z.program_id===id).reduce((a,z)=>a+Number(z.earned_amount||0),0),driverFee=Number(pr.driver_fee||0),net=x.total-cost-ex-supEarn-driverFee;data.push({title:pr.title||'—',sales:x.total,cost,expense:ex,supervisor:supEarn,driver:driverFee,net,count:x.count});});
- data.sort((a,b)=>b.net-a.net);
- const totalSales=data.reduce((s,x)=>s+x.sales,0),totalCost=data.reduce((s,x)=>s+x.cost,0),totalExp=data.reduce((s,x)=>s+x.expense,0),totalSup=data.reduce((s,x)=>s+x.supervisor,0),totalDriver=data.reduce((s,x)=>s+x.driver,0),totalNet=totalSales-totalCost-totalExp-totalSup-totalDriver;
- $('profitabilitySummary').innerHTML=[['إجمالي المبيعات',totalSales,''],['تكلفة الجملة',totalCost,''],['مصروفات الرحلات',totalExp,''],['أجور المشرفين',totalSup,''],['أجور السائقين',totalDriver,''],['صافي الربح',totalNet,totalNet>=0?'good':'bad']].map(x=>'<div class="profitMini '+x[2]+'"><small>'+x[0]+'</small><b>'+money(x[1])+'</b></div>').join('');
- $('profitRankings').innerHTML=data.slice(0,6).map((x,i)=>'<div class="rankRow"><span class="rankNo">'+(i+1)+'</span><span class="rankTitle">'+esc(x.title)+' <small>('+x.count+' معتمر)</small></span><span class="rankValue '+(x.net>=0?'good':'bad')+'">'+money(x.net)+'</span></div>').join('')||'<div class="reportEmpty">لا توجد بيانات رحلات.</div>';
- const max=Math.max(...data.map(x=>x.sales),1);
- $('profitChart').innerHTML=data.slice(0,7).map(x=>{const sw=Math.max(2,x.sales/max*100),cw=Math.min(x.cost/max*100,100),nw=Math.max(0,x.net/max*100);return '<div class="profitChartRow"><span class="profitChartLabel">'+esc(x.title)+'</span><div class="profitChartTrack"><span class="profitChartSales" style="width:'+sw+'%"></span><span class="profitChartCost" style="width:'+cw+'%"></span></div><span class="profitChartValue '+(x.net>=0?'marginGood':'marginBad')+'">'+money(x.net)+'</span></div>';}).join('')||'<div class="reportEmpty">لا توجد بيانات.</div>';
-}
-
 function render(){
  const q=$('search').value.trim().toLowerCase(),pf=$('programFilter').value,sf=$('statusFilter').value;
  let rows=B.filter(b=>{
@@ -527,23 +404,12 @@ function render(){
  }).join('')||'<tr><td colspan="11">لا توجد نتائج.</td></tr>';
  document.querySelectorAll('[data-pay-booking]').forEach(btn=>btn.onclick=()=>openPaymentModal(btn.dataset.payBooking));
  const by={};B.forEach(b=>{by[b.program_id]??={total:0,paid:0,remaining:0,count:0};by[b.program_id].total+=Number(b.total_amount||0);by[b.program_id].paid+=Number(b.paid_amount||0);by[b.program_id].remaining+=Number(b.remaining_amount||0);by[b.program_id].count++});
- $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0);const sold=x.count;const totalCost=sold*costSeat;const linkedExpenses=linkedExpenseForProgram(id);const supervisorEarn=SUP_E.filter(z=>z.program_id===id).reduce((a,z)=>a+Number(z.earned_amount||0),0);const driverFee=Number(pr.driver_fee||0);const gross=x.total-totalCost;const net=gross-linkedExpenses-supervisorEarn-driverFee;const avgSale=sold?x.total/sold:0;const profitSeat=avgSale-costSeat;const cls=net>=0?'marginGood':'marginBad';return '<div class="tripCard"><div class="tripHead"><h4>'+esc(pr.title||'—')+'</h4><span class="badge '+(net>=0?'ok':'')+'">'+(net>=0?'رابحة':'خسارة')+'</span></div><div class="tripNums"><div class="tripNum"><small>المبيعات الفعلية</small><b>'+money(x.total)+'</b></div><div class="tripNum"><small>تكلفة الجملة على المعتمرين</small><b>'+money(totalCost)+'</b></div><div class="tripNum"><small>الربح الإجمالي</small><b>'+money(gross)+'</b></div><div class="tripNum"><small>المصروفات المرتبطة</small><b>'+money(linkedExpenses)+'</b></div><div class="tripNum"><small>أجر المشرف 1.5%</small><b>'+money(supervisorEarn)+'</b></div><div class="tripNum"><small>أجرة السائق</small><b>'+money(driverFee)+'</b></div><div class="tripNum"><small>صافي الربح</small><b class="'+cls+'">'+money(net)+'</b></div><div class="tripNum"><small>تكلفة المقعد</small><b>'+money(costSeat)+'</b></div><div class="tripNum"><small>متوسط البيع/معتمر</small><b>'+money(avgSale)+'</b></div><div class="tripNum"><small>ربح المقعد التقريبي</small><b class="'+(profitSeat>=0?'marginGood':'marginBad')+'">'+money(profitSeat)+'</b></div><div class="tripNum"><small>المقبوض</small><b>'+money(x.paid)+'</b></div><div class="tripNum"><small>المتبقي</small><b>'+money(x.remaining)+'</b></div></div></div>'}).join('')||'لا توجد بيانات.';
+ $('programReport').innerHTML=Object.entries(by).map(([id,x])=>{const pr=PR.find(z=>z.id===id)||{};const costSeat=Number(pr.purchase_cost||0);const sold=x.count;const totalCost=sold*costSeat;const linkedExpenses=E.filter(e=>e.program_id===id).reduce((s,e)=>s+Number(e.amount||0),0);const gross=x.total-totalCost;const net=gross-linkedExpenses;const avgSale=sold?x.total/sold:0;const profitSeat=avgSale-costSeat;const cls=net>=0?'marginGood':'marginBad';return '<div class="tripCard"><div class="tripHead"><h4>'+esc(pr.title||'—')+'</h4><span class="badge '+(net>=0?'ok':'')+'">'+(net>=0?'رابحة':'خسارة')+'</span></div><div class="tripNums"><div class="tripNum"><small>المبيعات الفعلية</small><b>'+money(x.total)+'</b></div><div class="tripNum"><small>تكلفة الجملة على المعتمرين</small><b>'+money(totalCost)+'</b></div><div class="tripNum"><small>الربح الإجمالي</small><b>'+money(gross)+'</b></div><div class="tripNum"><small>المصروفات المرتبطة</small><b>'+money(linkedExpenses)+'</b></div><div class="tripNum"><small>صافي الربح</small><b class="'+cls+'">'+money(net)+'</b></div><div class="tripNum"><small>تكلفة المقعد</small><b>'+money(costSeat)+'</b></div><div class="tripNum"><small>متوسط البيع/معتمر</small><b>'+money(avgSale)+'</b></div><div class="tripNum"><small>ربح المقعد التقريبي</small><b class="'+(profitSeat>=0?'marginGood':'marginBad')+'">'+money(profitSeat)+'</b></div><div class="tripNum"><small>المقبوض</small><b>'+money(x.paid)+'</b></div><div class="tripNum"><small>المتبقي</small><b>'+money(x.remaining)+'</b></div></div></div>'}).join('')||'لا توجد بيانات.';
  const today=new Date().toISOString().slice(0,10);
  const due=I.filter(x=>x.status!=='paid'),late=due.filter(x=>x.due_date&&x.due_date<today);
  $('installmentReport').innerHTML='<p>أقساط غير مسددة: <b>'+due.length+'</b></p><p>قيمة غير مسددة: <b>'+money(due.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p><p>أقساط متأخرة: <b>'+late.length+'</b></p><p>قيمة المتأخر: <b>'+money(late.reduce((s,x)=>s+Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0),0))+'</b></p>';
- renderProfitabilityVisuals();
 }
 $('search').oninput=()=>{render();renderExpenses()};$('programFilter').onchange=()=>{render();renderExpenses()};$('statusFilter').onchange=render;
-function renderSupplierPaymentHistory(){
- const rows=SP.slice().sort((a,b)=>String(b.payment_date||'').localeCompare(String(a.payment_date||''))).map(x=>{
-  const supplier=S.find(z=>z.id===x.supplier_id); const pr=PR.find(z=>z.id===x.program_id);
-  return '<tr><td>'+esc(x.payment_date||'—')+'</td><td><b>'+esc(supplier?.name||'مورد غير معروف')+'</b></td><td>'+esc(pr?.title||'دفعة عامة')+'</td><td><b>'+money(x.amount||0)+'</b></td><td>'+esc(x.payment_method||'—')+'</td><td>'+esc(x.reference||'—')+'</td><td>'+esc(x.notes||'—')+'</td><td><div style=\"display:flex;gap:6px;flex-wrap:wrap\"><button class=\"btn w supplierPayEditBtn\" data-id=\"'+x.id+'\">✏️ تعديل</button><button class=\"btn supplierPayDeleteBtn\" data-id=\"'+x.id+'\" style=\"background:#b42318;color:#fff\">🗑️ حذف</button></div></td></tr>';
- }).join('');
- $('supplierPaymentRows').innerHTML=rows||'<tr><td colspan="8">لا توجد دفعات مورّدين مسجلة حتى الآن.</td></tr>';
- document.querySelectorAll('.supplierPayEditBtn').forEach(b=>b.onclick=()=>editSupplierPayment(b.dataset.id));
- document.querySelectorAll('.supplierPayDeleteBtn').forEach(b=>b.onclick=()=>deleteSupplierPayment(b.dataset.id));
-}
-
 async function renderSupplierObligations(){
  const rows=[];
  PR.forEach(pr=>{
@@ -554,131 +420,19 @@ async function renderSupplierObligations(){
  });
  $('supplierObligationRows').innerHTML=rows.join('')||'<tr><td colspan="6">لا توجد التزامات مورّدين مرتبطة برحلات بعد.</td></tr>';
 }
-function renderStaffPayments(){
- const supRows=SUP_E.map(x=>{const paid=SP.filter(p=>p.supervisor_id===x.supervisor_id&&p.program_id===x.program_id).reduce((a,p)=>a+Number(p.amount||0),0);const rem=Math.max(Number(x.earned_amount||0)-paid,0);return '<tr><td><b>'+esc(x.supervisor_name||'—')+'</b></td><td>'+esc(x.title||'—')+'<br><small>'+esc(x.departure_date||'')+'</small></td><td>'+money(x.sales_total)+'</td><td>'+Number(x.commission_rate||1.5)+'%</td><td><b>'+money(x.earned_amount)+'</b></td><td>'+money(paid)+'</td><td><b>'+money(rem)+'</b></td><td><button class="btn p" onclick="openStaffPay(\'supervisor\',\''+x.supervisor_id+'\',\''+x.program_id+'\')">💰 تسديد</button></td></tr>'}).join('');
- $('staffSupervisorRows').innerHTML=supRows||'<tr><td colspan="8">لا توجد مستحقات مشرفين حاليًا.</td></tr>';
- const drvRows=PR.flatMap(p=>{const x={id:p.driver_id,name:p.driver_name,fee:Number(p.driver_fee||0),kind:'رئيسي'};if(!x.id||x.fee<=0)return [];const d=DRV.find(y=>y.id===x.id);const paid=DRV_PAY.filter(q=>q.driver_id===x.id&&q.program_id===p.id).reduce((a,q)=>a+Number(q.paid_amount||0),0);const rem=Math.max(x.fee-paid,0);return ['<tr><td><b>'+esc(d?.full_name||x.name||'—')+'</b><br><small>سائق رئيسي</small></td><td>'+esc(p.title||'—')+'<br><small>'+esc(p.departure_date||'')+'</small></td><td>'+money(x.fee)+'</td><td>'+money(paid)+'</td><td><b>'+money(rem)+'</b></td><td><button class="btn p" onclick="openStaffPay(\'driver\',\''+x.id+'\',\''+p.id+'\')">💰 تسديد</button></td></tr>'];}).join('');
-$('staffDriverRows').innerHTML=drvRows||'<tr><td colspan="6">لا توجد أجور سائقين محددة على الرحلات.</td></tr>';
- const supEarn=SUP_E.reduce((a,x)=>a+Number(x.earned_amount||0),0),supPaid=SP.reduce((a,x)=>a+Number(x.amount||0),0),driverAgreed=PR.reduce((a,x)=>a+Number(x.driver_fee||0),0),driverPaid=DRV_PAY.reduce((a,x)=>a+Number(x.paid_amount||0),0);
- $('staffPaySummary').innerHTML=[['مستحق المشرفين',supEarn],['مدفوع للمشرفين',supPaid],['مستحق السائقين',driverAgreed],['مدفوع للسائقين',driverPaid],['متبقي المشرفين',Math.max(supEarn-supPaid,0)],['متبقي السائقين',Math.max(driverAgreed-driverPaid,0)]].map(x=>'<div class="staffMini"><small>'+x[0]+'</small><b>'+money(x[1])+'</b></div>').join('');
-}
-async function openStaffPay(kind,personId,programId){
- const pr=PR.find(x=>x.id===programId);if(!pr)return;const isSup=kind==='supervisor';let owed=0,paid=0;
- if(isSup){const e=SUP_E.find(x=>x.supervisor_id===personId&&x.program_id===programId);owed=Number(e?.earned_amount||0);paid=SP.filter(x=>x.supervisor_id===personId&&x.program_id===programId).reduce((a,x)=>a+Number(x.amount||0),0)}else{owed=Number(pr.driver_fee||0);paid=DRV_PAY.filter(x=>x.driver_id===personId&&x.program_id===programId).reduce((a,x)=>a+Number(x.paid_amount||0),0)}
- const rem=Math.max(owed-paid,0);if(rem<=0)return alert('لا يوجد مبلغ متبقٍ لهذه الرحلة.');const amount=prompt('المتبقي '+money(rem)+'\nأدخل مبلغ التسديد:',String(rem));if(amount===null)return;const n=Number(amount);if(!n||n<=0)return alert('أدخل مبلغًا صحيحًا.');if(n>rem+0.01)return alert('المبلغ أكبر من المتبقي.');
- const date=prompt('تاريخ التسديد YYYY-MM-DD:',new Date().toISOString().slice(0,10))||new Date().toISOString().slice(0,10);const method=prompt('طريقة الدفع:','نقد')||'نقد';const notes=prompt('ملاحظات (اختياري):','')||null;const {data:{user}}=await db.auth.getUser();let r;
- if(isSup)r=await db.from('supervisor_payments').insert({supervisor_id:personId,program_id:programId,amount:n,payment_date:date,payment_method:method,notes,created_by:user?.id||null});else r=await db.from('driver_payments').insert({driver_id:personId,program_id:programId,agreed_amount:owed,paid_amount:n,payment_date:date,payment_method:method,notes,created_by:user?.id||null});
- if(r.error)return alert(r.error.message);await load();
-}
-window.openStaffPay=openStaffPay;
-
-function clearSupplierForm(){ $('supplierEditId').value='';$('supplierName').value='';$('supplierPhone').value='';$('supplierCategory').value='';$('supplierNotes').value='';$('addSupplier').textContent='➕ إضافة المورّد';$('cancelSupplierEdit').classList.add('hidden'); }
-function editSupplier(id){ const x=S.find(z=>z.id===id); if(!x)return; $('supplierEditId').value=x.id;$('supplierName').value=x.name||'';$('supplierPhone').value=x.phone||'';$('supplierCategory').value=x.category||'';$('supplierNotes').value=x.notes||'';$('addSupplier').textContent='💾 حفظ تعديل المورّد';$('cancelSupplierEdit').classList.remove('hidden');$('supplierName').focus();msg('supplierMsg','وضع التعديل مفعّل: عدّل البيانات ثم احفظ.'); }
-$('cancelSupplierEdit').onclick=()=>{clearSupplierForm();msg('supplierMsg','تم إلغاء التعديل.');};
 $('addSupplier').onclick=async()=>{
- const editId=$('supplierEditId').value||null,name=$('supplierName').value.trim(),phone=$('supplierPhone').value.trim()||null,category=$('supplierCategory').value.trim()||null,notes=$('supplierNotes').value.trim()||null;
+ const name=$('supplierName').value.trim(),phone=$('supplierPhone').value.trim()||null,category=$('supplierCategory').value.trim()||null,notes=$('supplierNotes').value.trim()||null;
  if(!name)return msg('supplierMsg','أدخل اسم المورّد.',true); $('addSupplier').disabled=true;
- try{
-   const duplicate=S.find(x=>x.id!==editId&&x.active&&String(x.name||'').trim().toLowerCase()===name.toLowerCase());
-   if(duplicate) throw Error('هذا المورّد موجود مسبقًا باسم «'+duplicate.name+'». استخدم تعديل المورد الموجود بدل تسجيله مرة أخرى.');
-   if(editId){ const {error}=await db.from('suppliers').update({name,phone,category,notes,updated_at:new Date().toISOString()}).eq('id',editId);if(error)throw error;clearSupplierForm();msg('supplierMsg','تم تعديل المورّد بنجاح.'); }
-   else { const {error}=await db.from('suppliers').insert({name,phone,category,notes});if(error)throw error;clearSupplierForm();msg('supplierMsg','تمت إضافة المورّد بنجاح.'); }
-   await load();
- }catch(e){msg('supplierMsg',e.message||'تعذر حفظ المورّد.',true)}finally{$('addSupplier').disabled=false}
+ try{const {error}=await db.from('suppliers').insert({name,phone,category,notes});if(error)throw error; $('supplierName').value='';$('supplierPhone').value='';$('supplierCategory').value='';$('supplierNotes').value='';msg('supplierMsg','تمت إضافة المورّد بنجاح.');await load();}catch(e){msg('supplierMsg',e.message||'تعذر إضافة المورّد.',true)}finally{$('addSupplier').disabled=false}
 };
-async function toggleSupplier(id){
- const x=S.find(z=>z.id===id);if(!x)return;
- const action=x.active?'تعطيل':'تفعيل';
- if(!confirm('هل تريد '+action+' المورد «'+x.name+'»؟'))return;
- try{const {error}=await db.from('suppliers').update({active:!x.active,updated_at:new Date().toISOString()}).eq('id',id);if(error)throw error;msg('supplierMsg','تم '+action+' المورّد بنجاح.');await load();}catch(e){msg('supplierMsg',e.message||'تعذر تغيير حالة المورّد.',true)}
-}
-async function deleteSupplier(id){
- const x=S.find(z=>z.id===id);if(!x)return;
- if(!confirm('حذف المورد «'+x.name+'» نهائيًا؟ سيتم فحص ارتباطاته أولًا.'))return;
- try{
-   const [pay,prog]=await Promise.all([db.from('supplier_payments').select('id').eq('supplier_id',id).limit(1),db.from('programs').select('id').eq('supplier_id',id).limit(1)]);
-   if(pay.error)throw pay.error;if(prog.error)throw prog.error;
-   if((pay.data||[]).length||(prog.data||[]).length){
-     const reasons=[];if((pay.data||[]).length)reasons.push('دفعات مسجلة');if((prog.data||[]).length)reasons.push('رحلات مرتبطة');
-     throw Error('لا يمكن الحذف النهائي لأن المورد مرتبط بـ '+reasons.join(' و ')+'. استخدم «تعطيل» بدل الحذف.');
-   }
-   const {error}=await db.from('suppliers').delete().eq('id',id);if(error)throw error;msg('supplierMsg','تم حذف المورّد نهائيًا.');await load();
- }catch(e){msg('supplierMsg',e.message||'تعذر حذف المورّد.',true)}
-}
-let editingSupplierPaymentId=null;
-function resetSupplierPaymentForm(){editingSupplierPaymentId=null;$('supplierPaySupplier').value='';$('supplierPayProgram').value='';$('supplierPayAmount').value='';$('supplierPayDate').value=new Date().toISOString().slice(0,10);$('supplierPayMethod').value='نقد';$('supplierPayReference').value='';$('supplierPayNotes').value='';$('saveSupplierPayment').textContent='💾 حفظ دفعة المورّد';}
-function editSupplierPayment(id){
- const x=SP.find(z=>z.id===id);if(!x)return;
- editingSupplierPaymentId=id;$('supplierPaySupplier').value=x.supplier_id||'';$('supplierPayProgram').value=x.program_id||'';$('supplierPayAmount').value=Number(x.amount||0);$('supplierPayDate').value=dateOnly(x.payment_date);$('supplierPayMethod').value=x.payment_method||'نقد';$('supplierPayReference').value=x.reference||'';$('supplierPayNotes').value=x.notes||'';$('saveSupplierPayment').textContent='💾 حفظ تعديل الدفعة';msg('supplierPayMsg','وضع تعديل الدفعة مفعّل — عدّل البيانات ثم احفظ.');$('supplierPayAmount').focus();window.scrollTo({top:document.getElementById('supplierPayAmount').getBoundingClientRect().top+window.scrollY-160,behavior:'smooth'});
-}
-async function deleteSupplierPayment(id){
- const x=SP.find(z=>z.id===id);if(!x)return;const supplier=S.find(z=>z.id===x.supplier_id);const pr=PR.find(z=>z.id===x.program_id);
- if(!confirm('حذف هذه الدفعة نهائيًا؟\nالمورد: '+(supplier?.name||'—')+'\nالمبلغ: '+money(x.amount||0)+'\nالتاريخ: '+(x.payment_date||'—')+'\n'+(pr?'الرحلة: '+pr.title:'دفعة عامة')))return;
- try{const {error}=await db.rpc('delete_supplier_payment',{p_payment_id:id});if(error)throw error;msg('supplierPayMsg','تم حذف الدفعة بنجاح.');await load();}catch(e){msg('supplierPayMsg',e.message||'تعذر حذف الدفعة.',true)}
-}
-window.editSupplierPayment=editSupplierPayment;window.deleteSupplierPayment=deleteSupplierPayment;
 $('saveSupplierPayment').onclick=async()=>{
  const supplier_id=$('supplierPaySupplier').value,program_id=$('supplierPayProgram').value||null,amount=Number($('supplierPayAmount').value||0),payment_date=$('supplierPayDate').value, payment_method=$('supplierPayMethod').value,reference=$('supplierPayReference').value.trim()||null,notes=$('supplierPayNotes').value.trim()||null;
  if(!supplier_id||!amount||amount<=0||!payment_date)return msg('supplierPayMsg','أكمل المورّد والمبلغ والتاريخ.',true);
  $('saveSupplierPayment').disabled=true;
- try{
-   let error;
-   if(editingSupplierPaymentId){({error}=await db.rpc('update_supplier_payment',{p_payment_id:editingSupplierPaymentId,p_supplier_id:supplier_id,p_program_id:program_id,p_amount:amount,p_payment_date:payment_date,p_payment_method:payment_method,p_reference:reference,p_notes:notes}));}
-   else {({error}=await db.rpc('record_supplier_payment',{p_supplier_id:supplier_id,p_program_id:program_id,p_amount:amount,p_payment_date:payment_date,p_payment_method:payment_method,p_reference:reference,p_notes:notes}));}
-   if(error)throw error;msg('supplierPayMsg',editingSupplierPaymentId?'تم تعديل الدفعة وحفظ التعديل.':'تم تسجيل دفعة المورّد بنجاح وحفظها في قاعدة البيانات.');resetSupplierPaymentForm();await load();
- }catch(e){msg('supplierPayMsg',e.message||'تعذر حفظ الدفعة.',true)}finally{$('saveSupplierPayment').disabled=false}
+ try{const {data:{user}}=await db.auth.getUser();const {error}=await db.from('supplier_payments').insert({supplier_id,program_id,amount,payment_date,payment_method,reference,notes,created_by:user?.id||null});if(error)throw error;msg('supplierPayMsg','تم تسجيل دفعة المورّد بنجاح.');$('supplierPayAmount').value='';$('supplierPayReference').value='';$('supplierPayNotes').value='';await load();}catch(e){msg('supplierPayMsg',e.message||'تعذر تسجيل الدفعة.',true)}finally{$('saveSupplierPayment').disabled=false}
 };
 
 function dateOnly(v){return v?String(v).slice(0,10):''}
-function sharedAmountForProgram(programId, from='', to=''){
- return A.filter(a=>a.program_id===programId).reduce((sum,a)=>{const e=E.find(x=>x.id===a.expense_id);if(!e||!e.is_shared)return sum;const d=dateOnly(e.expense_date);if(from&&d<from)return sum;if(to&&d>to)return sum;return sum+Number(a.allocated_amount||0)},0);
-}
-function linkedExpenseForProgram(programId, from='', to=''){
- const direct=E.filter(e=>e.program_id===programId&&!e.is_shared&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((s,e)=>s+Number(e.amount||0),0);
- return direct+sharedAmountForProgram(programId,from,to);
-}
-function renderSharedPrograms(){
- const method=$('sharedMethod')?.value||'passengers', amount=Number($('expenseAmount')?.value||0);
- const checked=[...document.querySelectorAll('.sharedProgramCheck:checked')].map(x=>x.value);
- const grid=$('sharedProgramGrid'); if(!grid)return;
- const selected=new Set(checked);
- const rows=PR.map(pr=>{
-   const bs=B.filter(b=>b.program_id===pr.id);
-   const pax=bs.reduce((n,b)=>n+Math.max(Number(b.passengers_count||1),1),0);
-   const old=document.querySelector('.sharedBasis[data-id="'+pr.id+'"]')?.value||'';
-   const label=method==='passengers'?('المعتمرون: '+pax):method==='units'?'أدخل الكمية':method==='percent'?'النسبة %':'المبلغ';
-   const val=old!==''?old:(method==='passengers'?pax:'');
-   return '<div class="sharedProgramRow"><input class="sharedProgramCheck" type="checkbox" value="'+pr.id+'" '+(selected.has(pr.id)?'checked':'')+'><div><b>'+esc(pr.title)+'</b><small>'+label+'</small></div><input class="sharedBasis" data-id="'+pr.id+'" type="number" min="0" step="0.01" value="'+esc(val)+'" placeholder="'+(method==='percent'?'مثلاً 40':method==='manual'?'المبلغ':'الكمية')+'" '+(method==='passengers'?'readonly':'')+'></div>';
- }).join('');
- grid.innerHTML=rows||'<div class="sharedHint">لا توجد رحلات مسجلة.</div>';
- $('sharedMethodHint').textContent=method==='passengers'?'يحسب النظام نصيب كل رحلة تلقائيًا حسب عدد المعتمرين المسجلين فيها.':method==='units'?'أدخل كمية الخدمة لكل رحلة (مثلاً عدد الغرف أو الليالي)، وسيتم توزيع المبلغ بنسبة الكميات.':method==='percent'?'أدخل نسبة كل رحلة. يجب أن يكون مجموع النسب 100%.':'أدخل المبلغ الذي تريد تحميله على كل رحلة. يجب أن يساوي مجموع المبالغ إجمالي التكلفة.';
- updateSharedPreview();
- document.querySelectorAll('.sharedProgramCheck,.sharedBasis').forEach(el=>el.oninput=updateSharedPreview);
-}
-function getSharedAllocations(){
- const amount=Number($('expenseAmount')?.value||0), method=$('sharedMethod')?.value||'passengers';
- const ids=[...document.querySelectorAll('.sharedProgramCheck:checked')].map(x=>x.value); if(!ids.length)return [];
- const vals=ids.map(id=>({program_id:id,basis:Number(document.querySelector('.sharedBasis[data-id="'+id+'"]')?.value||0)}));
- if(method==='passengers') vals.forEach(v=>{const bs=B.filter(b=>b.program_id===v.program_id);v.basis=bs.reduce((n,b)=>n+Math.max(Number(b.passengers_count||1),1),0)});
- if(method==='percent') return vals.map(v=>({...v,allocated_amount:amount*v.basis/100}));
- if(method==='manual') return vals.map(v=>({...v,allocated_amount:v.basis}));
- const total=vals.reduce((s,v)=>s+v.basis,0); if(!total)return vals.map(v=>({...v,allocated_amount:0}));
- return vals.map(v=>({...v,allocated_amount:amount*v.basis/total}));
-}
-function updateSharedPreview(){
- const box=$('sharedPreview');if(!box)return;const amount=Number($('expenseAmount')?.value||0), method=$('sharedMethod')?.value||'passengers', arr=getSharedAllocations(), total=arr.reduce((s,x)=>s+Number(x.allocated_amount||0),0), diff=amount-total;
- box.innerHTML=[['التكلفة الكلية',money(amount),''],['الموزع على الرحلات',money(total),Math.abs(diff)<0.01?'':'warn'],['الفرق',money(Math.abs(diff)),Math.abs(diff)<0.01?'good':'warn']].map(x=>'<div class="purchaseMetric '+x[2]+'"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('');
-}
-function validateShared(){
- if(!$('expenseIsShared').checked)return {ok:true,allocations:[]};
- const arr=getSharedAllocations(), amount=Number($('expenseAmount').value||0); if(!arr.length)return {ok:false,msg:'اختر رحلة واحدة على الأقل للتكلفة المشتركة.'};
- const total=arr.reduce((s,x)=>s+Number(x.allocated_amount||0),0); if(Math.abs(total-amount)>0.01)return {ok:false,msg:'توزيع التكلفة غير مكتمل. يجب أن يساوي مجموع التوزيع '+money(amount)+' تمامًا.'};
- return {ok:true,allocations:arr};
-}
-function initSharedCostUI(){
- $('expenseIsShared').onchange=()=>{const on=$('expenseIsShared').checked;$('sharedControls').classList.toggle('active',on);$('expenseProgram').disabled=on;if(on){$('expenseProgram').value='';renderSharedPrograms();}else updateSharedPreview();};
- $('sharedMethod').onchange=renderSharedPrograms; $('expenseAmount').oninput=()=>{if($('expenseIsShared').checked){renderSharedPrograms();updateSharedPreview();}};
-}
 function initReport(){
  const now=new Date(), y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0');
  $('reportFrom').value=`${y}-${m}-01`; $('reportTo').value=now.toISOString().slice(0,10);
@@ -699,30 +453,18 @@ function renderAdvancedReport(){
    const n=bs.reduce((s,b)=>s+Math.max(Number(b.passengers_count||1),1),0);
    const s=bs.reduce((x,b)=>x+Number(b.total_amount||0),0), r=bs.reduce((x,b)=>x+Number(b.paid_amount||0),0);
    const c=n*Number(pr.purchase_cost||0);
-   const ex=linkedExpenseForProgram(pr.id,from,to);
+   const ex=E.filter(e=>e.program_id===pr.id&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((x,e)=>x+Number(e.amount||0),0);
    const g=s-c, net=g-ex, margin=s?(net/s*100):0;
    sales+=s;received+=r;cost+=c;tripExp+=ex;people+=n;
    rows.push({pr,n,s,r,c,g,ex,net,margin});
  });
- const generalExp=E.filter(e=>!e.program_id&&!e.is_shared&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((x,e)=>x+Number(e.amount||0),0);
+ const generalExp=E.filter(e=>!e.program_id&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((x,e)=>x+Number(e.amount||0),0);
  const gross=sales-cost, net=gross-tripExp-generalExp, remaining=sales-received, margin=sales?(net/s*100):0;
  const supplierPaid=SP.filter(x=>(!from||dateOnly(x.payment_date)>=from)&&(!to||dateOnly(x.payment_date)<=to)&&(!pid||x.program_id===pid)).reduce((x,e)=>x+Number(e.amount||0),0);
- const supplierObligation=Math.max(cost-supplierPaid,0);
- const collectionRate=sales?Math.min(Math.max(received/sales*100,0),100):0;
- $('reportKpis').innerHTML=[['المبيعات الفعلية',sales,''],['المقبوض',received,''],['نسبة التحصيل',collectionRate.toFixed(1)+' %',collectionRate>=80?'profit':''],['المتبقي',remaining,''],['تكلفة الجملة',cost,''],['المدفوع للمورّد',supplierPaid,''],['التزامات المورّدين',supplierObligation,supplierObligation?'':'profit'],['الربح الإجمالي',gross,'profit'],['مصروفات الرحلات',tripExp,''],['مصروفات عامة',generalExp,''],['صافي الربح',net,net>=0?'profit':'loss'],['هامش صافي الربح',margin.toFixed(1)+' %',net>=0?'profit':'loss']].map(x=>'<div class="reportKpi '+x[2]+'"><small>'+x[0]+'</small><b>'+((typeof x[1]==='number')?money(x[1]):x[1])+'</b></div>').join('');
- $('reportCollectionNote').innerHTML='<b>قراءة إدارية:</b> تم تحصيل <strong>'+collectionRate.toFixed(1)+'%</strong> من المبيعات خلال الفترة. التزام المورّدين المتبقي حسب تكلفة الجملة المسجلة هو <strong>'+money(supplierObligation)+'</strong>.';
+ $('reportKpis').innerHTML=[['المبيعات الفعلية',sales,''],['المقبوض',received,''],['المتبقي',remaining,''],['تكلفة الجملة',cost,''],['الربح الإجمالي',gross,'profit'],['مصروفات الرحلات',tripExp,''],['مصروفات عامة',generalExp,''],['صافي الربح',net,net>=0?'profit':'loss'],['هامش صافي الربح',margin.toFixed(1)+' %',net>=0?'profit':'loss']].map(x=>'<div class="reportKpi '+x[2]+'"><small>'+x[0]+'</small><b>'+((typeof x[1]==='number')?money(x[1]):x[1])+'</b></div>').join('');
  $('advancedReportRows').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.pr.title)+'</b></td><td>'+x.n+'</td><td>'+money(x.s)+'</td><td>'+money(x.r)+'</td><td>'+money(x.c)+'</td><td>'+money(x.g)+'</td><td>'+money(x.ex)+'</td><td><b class="'+(x.net>=0?'marginGood':'marginBad')+'">'+money(x.net)+'</b></td><td>'+x.margin.toFixed(1)+'%</td></tr>').join('')||'<tr><td colspan="9" class="reportEmpty">لا توجد رحلات ضمن الفترة المحددة.</td></tr>';
  $('printReportPeriod').textContent='الفترة: '+(from||'—')+' إلى '+(to||'—')+(pid?' — '+(PR.find(x=>x.id===pid)?.title||''):'');
- renderReportVisuals(sales,cost,tripExp,generalExp,net,rows);
 }
-document.querySelectorAll('.presetBtn').forEach(btn=>btn.onclick=()=>{
- const now=new Date(), y=now.getFullYear(), m=now.getMonth(); let from='',to='';
- const fmt=d=>{const yy=d.getFullYear(),mm=String(d.getMonth()+1).padStart(2,'0'),dd=String(d.getDate()).padStart(2,'0');return yy+'-'+mm+'-'+dd};
- if(btn.dataset.preset==='month'){from=fmt(new Date(y,m,1));to=fmt(new Date(y,m+1,0));}
- if(btn.dataset.preset==='lastmonth'){from=fmt(new Date(y,m-1,1));to=fmt(new Date(y,m,0));}
- if(btn.dataset.preset==='year'){from=y+'-01-01';to=y+'-12-31';}
- $('reportFrom').value=from;$('reportTo').value=to;renderAdvancedReport();
-});
 $('runReport').onclick=renderAdvancedReport;
 $('printReport').onclick=()=>{renderAdvancedReport();window.print()};
 
@@ -735,9 +477,7 @@ async function renderExpenses(){
    return matchQ&&matchP;
  });
  const total=list.reduce((s,x)=>s+Number(x.amount||0),0);
- const tripDirect=list.filter(x=>x.program_id&&!x.is_shared).reduce((s,x)=>s+Number(x.amount||0),0);
- const shared=list.filter(x=>x.is_shared).reduce((s,x)=>s+Number(x.amount||0),0);
- const trip=tripDirect+shared;
+ const trip=list.filter(x=>x.program_id).reduce((s,x)=>s+Number(x.amount||0),0);
  const general=total-trip;
  $('expenseSummary').innerHTML=[
   ['إجمالي المصروفات',total,''],
@@ -754,41 +494,20 @@ async function renderExpenses(){
      const {data}=await db.storage.from('pilgrim-photos').createSignedUrl(x.attachment_path,3600);
      if(data?.signedUrl) link='<a class="attachLink" target="_blank" rel="noopener" href="'+esc(data.signedUrl)+'">📎 فتح المستند</a>';
    }
-   const tag=x.is_shared?'<span class="sharedAllocTag">🔗 مشترك</span>':'';
-   return '<tr><td>'+esc(x.expense_date)+'</td><td><div style="display:flex;align-items:center;gap:8px;justify-content:space-between"><b>'+esc(x.description)+'</b> '+tag+'<button class="danger expenseDeleteBtn" type="button" onclick="deleteExpense(\''+x.id+'\')">🗑️ حذف</button></div></td><td>'+esc(x.invoice_number||'—')+'</td><td>'+esc(x.category)+'</td><td>'+esc(pr?.title||'عام')+'</td><td>'+money(x.amount)+'</td><td>'+link+'</td><td>'+esc(x.notes||'—')+(x.is_shared?' <br><span class="sharedHint">توزيع مشترك محفوظ</span>':'')+'</td><td><button class="danger expenseDeleteBtn" type="button" onclick="deleteExpense(\''+x.id+'\')">🗑️ حذف</button></td></tr>';
+   return '<tr><td>'+esc(x.expense_date)+'</td><td><b>'+esc(x.description)+'</b></td><td>'+esc(x.invoice_number||'—')+'</td><td>'+esc(x.category)+'</td><td>'+esc(pr?.title||'عام')+'</td><td>'+money(x.amount)+'</td><td>'+link+'</td><td>'+esc(x.notes||'—')+'</td></tr>';
  }));
- $('expenseRows').innerHTML=rendered.join('')||'<tr><td colspan="9">لا توجد مصروفات مسجلة.</td></tr>';
+ $('expenseRows').innerHTML=rendered.join('')||'<tr><td colspan="8">لا توجد مصروفات مسجلة.</td></tr>';
 }
-async function deleteExpense(id){
- const item=E.find(x=>x.id===id);
- if(!item)return;
- const ok=confirm('هل أنت متأكد من حذف هذا المصروف؟\n\n'+(item.description||'مصروف')+' — '+money(item.amount)+'\n\nسيتم حذفه من السجل، ولن يدخل ضمن إجمالي المصروفات والربح.');
- if(!ok)return;
- try{
-   const {error}=await db.from('expenses').delete().eq('id',id);
-   if(error)throw error;
-   if(item.attachment_path){
-     const {error:storageErr}=await db.storage.from('pilgrim-photos').remove([item.attachment_path]);
-     if(storageErr)console.warn('تعذر حذف المستند المرفق من التخزين:',storageErr.message);
-   }
-   msg('expenseMsg','تم حذف المصروف بنجاح.');
-   await load();
- }catch(e){msg('expenseMsg',e.message||'تعذر حذف المصروف.',true)}
-}
-window.deleteExpense=deleteExpense;
-
 $('addExpense').onclick=async()=>{
  const category=$('expenseCategory').value, amount=Number($('expenseAmount').value), date=$('expenseDate').value;
- const description=$('expenseDescription').value.trim(), notes=$('expenseNotes').value.trim(), is_shared=$('expenseIsShared').checked;
- const program_id=is_shared?null:($('expenseProgram').value||null);
+ const description=$('expenseDescription').value.trim(), notes=$('expenseNotes').value.trim(), program_id=$('expenseProgram').value||null;
  const invoice_number=$('expenseInvoice').value.trim()||null, file=$('expenseAttachment').files?.[0]||null;
  if(!amount||amount<=0||!date||!description)return msg('expenseMsg','أكمل نوع المصروف والمبلغ والتاريخ والبيان.',true);
  if(file && file.size>8*1024*1024)return msg('expenseMsg','حجم المستند يجب ألا يتجاوز 8 ميغابايت.',true);
  const allowed=/^image\/(jpeg|png|webp|heic|heif|gif)$|^application\/pdf$/i;
  if(file && !allowed.test(file.type))return msg('expenseMsg','الملف المرفوع يجب أن يكون صورة أو PDF.',true);
- const validation=validateShared(); if(!validation.ok)return msg('expenseMsg',validation.msg,true);
- $('addExpense').disabled=true;msg('expenseMsg','جاري حفظ المصروف والتوزيع...');
- let uploadedPath=null, expenseId=null;
+ $('addExpense').disabled=true;msg('expenseMsg','جاري حفظ المصروف والمستند...');
+ let uploadedPath=null;
  try{
    const {data:{user}}=await db.auth.getUser();
    if(file){
@@ -797,17 +516,12 @@ $('addExpense').onclick=async()=>{
      const {error:upErr}=await db.storage.from('pilgrim-photos').upload(uploadedPath,file,{upsert:false,contentType:file.type||undefined});
      if(upErr)throw upErr;
    }
-   const {data:inserted,error}=await db.from('expenses').insert({category,amount,expense_date:date,description,notes,program_id,invoice_number,attachment_path:uploadedPath,attachment_name:file?.name||null,attachment_type:file?.type||null,created_by:user?.id||null,is_shared,allocation_method:is_shared?$('sharedMethod').value:null}).select('id').single();
-   if(error)throw error; expenseId=inserted.id;
-   if(is_shared){
-     const allocations=validation.allocations.map(x=>({expense_id:expenseId,program_id:x.program_id,basis_value:x.basis,allocated_amount:x.allocated_amount}));
-     const {error:aErr}=await db.from('expense_allocations').insert(allocations);
-     if(aErr){await db.from('expenses').delete().eq('id',expenseId);throw aErr;}
-   }
-   $('expenseAmount').value='';$('expenseDescription').value='';$('expenseNotes').value='';$('expenseInvoice').value='';$('expenseAttachment').value='';$('expenseIsShared').checked=false;$('sharedControls').classList.remove('active');$('expenseProgram').disabled=false;$('expenseProgram').value='';
-   msg('expenseMsg',file?'تم حفظ المصروف وتوزيعه وإرفاق المستند بنجاح.':is_shared?'تم حفظ التكلفة المشتركة وتوزيعها على الرحلات بنجاح.':'تم حفظ المصروف بنجاح.');
+   const {error}=await db.from('expenses').insert({category,amount,expense_date:date,description,notes,program_id,invoice_number,attachment_path:uploadedPath,attachment_name:file?.name||null,attachment_type:file?.type||null,created_by:user?.id||null});
+   if(error){if(uploadedPath)await db.storage.from('pilgrim-photos').remove([uploadedPath]);throw error;}
+   $('expenseAmount').value='';$('expenseDescription').value='';$('expenseNotes').value='';$('expenseInvoice').value='';$('expenseAttachment').value='';
+   msg('expenseMsg',file?'تم حفظ المصروف وإرفاق المستند بنجاح.':'تم حفظ المصروف بنجاح.');
    await load();
- }catch(e){if(uploadedPath && !expenseId)await db.storage.from('pilgrim-photos').remove([uploadedPath]);msg('expenseMsg',e.message||'تعذر حفظ المصروف.',true)}
+ }catch(e){msg('expenseMsg',e.message||'تعذر حفظ المصروف.',true)}
  finally{$('addExpense').disabled=false}
 };
 (async()=>{const{data:{session}}=await db.auth.getSession();if(session&&await admin()){$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load()}else{document.body.classList.remove('auth-pending')}})();
@@ -820,7 +534,10 @@ $('addExpense').onclick=async()=>{
     try{
       if(!window.db) return;
       const {data}=await window.db.auth.getUser(); const u=data?.user; if(!u) return;
-      await window.db.rpc('log_audit_event',{p_action:action,p_entity_type:entity_type,p_entity_id:entity_id,p_entity_label:entity_label,p_details:details||{},p_page:location.pathname.split('/').pop()||'index.html'});
+      let sp=await window.db.from('staff_profiles').select('full_name,active').eq('user_id',u.id).maybeSingle();
+      if(sp.error || !sp.data?.active) return;
+      const name=sp.data.full_name||u.email||'موظف';
+      await window.db.from('audit_logs').insert({staff_id:u.id,staff_name:name,action,entity_type,entity_id,entity_label,details:details||{},page:location.pathname.split('/').pop()||'index.html',user_agent:navigator.userAgent});
     }catch(e){ console.debug('audit',e); }
   }
   window.qawafelAudit=audit;
@@ -842,92 +559,4 @@ $('addExpense').onclick=async()=>{
   }
 })();
 </script>
-
-<style id="finance-v137-css">
-.compactHero{padding:18px 20px;margin:16px 0 12px}.heroHead{display:flex;justify-content:space-between;align-items:center;gap:12px}.heroHead h1{margin:0 0 4px;font-size:22px}.heroHead p{margin:0;color:#dce9f1;font-size:12px}.heroBadge{border:1px solid #ffffff30;border-radius:20px;padding:7px 12px;font-size:11px}.compactStats{grid-template-columns:repeat(5,1fr);margin-bottom:14px}.financeMenu{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:14px 0 20px}.financeTile{border:1px solid #dfe6ea;background:#fff;border-radius:18px;padding:17px;text-align:right;display:flex;align-items:center;gap:13px;box-shadow:0 6px 18px #0000000a;transition:.18s}.financeTile:hover{transform:translateY(-2px);box-shadow:0 10px 25px #00000012}.financeTile>span{width:46px;height:46px;border-radius:14px;background:#eef4f7;display:flex;align-items:center;justify-content:center;font-size:23px;flex:0 0 46px}.financeTile div{flex:1}.financeTile b{display:block;color:var(--n);font-size:15px}.financeTile small{display:block;color:#718390;font-size:11px;line-height:1.7;margin-top:4px}.financeTile i{font-style:normal;color:#9a7b2c;font-size:18px}.financeSection{display:none}.financeSection.active{display:block}.sectionTop{background:#fff;border:1px solid var(--l);border-radius:17px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;margin:15px 0}.sectionTop h2{margin:0;color:var(--n);font-size:19px}.sectionTop small{color:#718390;font-size:11px}.sectionTop .w{white-space:nowrap}.financeSection>.panel{margin:12px 0}.financeSection .purchaseBox{margin:12px 0}.financeSection .cards{margin:0}.financeSection .cards .panel{margin:0 0 15px}.financeSection .hint{color:#718390;font-size:12px;line-height:1.7}.financeSection .cards{grid-template-columns:1fr 1fr}
-@media(max-width:800px){.financeMenu{grid-template-columns:1fr}.compactStats{grid-template-columns:1fr 1fr}.sectionTop{align-items:flex-start}.sectionTop .w{font-size:11px;padding:9px 10px}}
-@media(max-width:550px){.compactStats{grid-template-columns:1fr 1fr}.financeTile{padding:14px}.financeTile b{font-size:14px}.sectionTop{flex-direction:column}.sectionTop .w{width:100%}.financeSection .cards{grid-template-columns:1fr}}
-</style>
-<script id="finance-v137-js">
-(function(){
-  function showSection(name){
-    document.querySelectorAll('.financeSection').forEach(x=>x.classList.toggle('active',x.dataset.sectionId===name));
-    const menu=document.getElementById('financeMenu'); if(menu) menu.style.display='none';
-    window.scrollTo({top:0,behavior:'smooth'});
-  }
-  function showMenu(){
-    document.querySelectorAll('.financeSection').forEach(x=>x.classList.remove('active'));
-    const menu=document.getElementById('financeMenu'); if(menu){menu.style.display='grid';window.scrollTo({top:0,behavior:'smooth'});}
-  }
-  document.addEventListener('click',function(e){
-    const tile=e.target.closest('.financeTile'); if(tile){showSection(tile.dataset.section);return;}
-    const back=e.target.closest('.backFinance'); if(back){showMenu();return;}
-  });
-  const received=document.getElementById('received'), hero=document.getElementById('heroReceived');
-  if(received&&hero){new MutationObserver(()=>hero.textContent=received.textContent).observe(received,{childList:true,characterData:true,subtree:true});hero.textContent=received.textContent;}
-})();
-</script>
-
-<script id="qawafel-audit-v118">
-(function(){const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';function run(){if(!window.supabase)return;const db=window.supabase.createClient(U,K);const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:location.pathname.split('/').pop()||'index.html'}).catch(()=>{});window.qawafelAuditV118=log;if(!window.__qawafelAuditV118Bound){window.__qawafelAuditV118Bound=true;document.addEventListener('click',e=>{const el=e.target.closest('button,a,[role="button"],input[type="submit"]');if(!el)return;const txt=(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);if(txt)log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});},true)}db.auth.getSession().then(({data})=>{if(data?.session?.user)log('page_view','page',null,document.title)})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
-</script>
-</body></html><style id="finance-v138-modern">
-:root{--n:#0a3152;--d:#061f36;--gold:#c9a45c;--bg:#f5f7fa;--card:#ffffff;--muted:#718096;--line:#e7edf2}
-body{background:radial-gradient(circle at 10% 0%,#eef5fa 0,transparent 28%),linear-gradient(180deg,#f7f9fb 0%,#f1f4f7 100%);font-family:Tahoma,Arial,sans-serif}
-.top{background:linear-gradient(135deg,#061f36,#0d4168 58%,#092d4a);padding:18px 24px;box-shadow:0 8px 30px #061f361c;position:sticky;top:0;z-index:50}
-.top b{font-size:18px;letter-spacing:.2px}.top small{opacity:.85}
-.wrap{max-width:1320px;padding:22px}
-.panel{border:1px solid #ffffffcc;border-radius:22px;box-shadow:0 12px 35px #16324b0d;background:rgba(255,255,255,.94);backdrop-filter:blur(8px)}
-.compactHero{border:0!important;border-radius:26px!important;padding:28px 30px!important;margin:20px 0 16px!important;background:linear-gradient(135deg,#082b49 0%,#0b466f 62%,#123f5f 100%)!important;box-shadow:0 18px 45px #082b4930!important;position:relative;overflow:hidden}
-.compactHero:after{content:"";position:absolute;width:260px;height:260px;border-radius:50%;left:-90px;top:-120px;background:#ffffff0d}.compactHero:before{content:"";position:absolute;width:180px;height:180px;border:1px solid #ffffff14;border-radius:50%;left:40px;bottom:-120px}
-.heroHead{position:relative;z-index:1}.heroHead h1{font-size:26px!important;margin-bottom:8px!important}.heroHead p{font-size:13px!important;color:#dceaf4!important}.heroBadge{background:#ffffff12;border-color:#ffffff25!important;padding:8px 14px!important}
-.compactStats{display:grid!important;gap:12px!important}.compactStats .stat{border:1px solid var(--line);border-radius:20px!important;background:linear-gradient(180deg,#fff,#fafdff);padding:18px 17px!important;box-shadow:0 8px 24px #18354b0b;transition:.2s}.compactStats .stat:hover{transform:translateY(-3px);box-shadow:0 14px 30px #18354b14}.compactStats .stat b{font-size:22px!important;color:var(--n)!important;margin-top:6px;display:block}
-.financeMenu{gap:16px!important;margin:18px 0 26px!important;grid-template-columns:repeat(3,1fr)!important}
-.financeTile{min-height:112px;border:1px solid var(--line)!important;border-radius:24px!important;padding:20px!important;background:linear-gradient(145deg,#fff 0%,#f8fbfd 100%)!important;box-shadow:0 10px 28px #17374d0d!important;position:relative;overflow:hidden;cursor:pointer!important;transition:transform .2s,box-shadow .2s,border-color .2s!important}
-.financeTile:after{content:"";position:absolute;inset:auto -30px -45px auto;width:110px;height:110px;border-radius:50%;background:#0c3b6308}.financeTile:hover{transform:translateY(-5px)!important;box-shadow:0 18px 38px #17374d18!important;border-color:#cbdbe5!important}.financeTile:active{transform:translateY(-1px) scale(.99)!important}
-.financeTile>span{width:54px!important;height:54px!important;border-radius:17px!important;background:linear-gradient(135deg,#edf5f9,#e3edf3)!important;color:var(--n);box-shadow:inset 0 1px #fff;font-size:25px!important}.financeTile b{font-size:16px!important}.financeTile small{font-size:12px!important;color:#7b8a96!important}.financeTile i{font-size:22px!important;opacity:.75}
-.financeSection{animation:fadeIn .25s ease}.sectionTop{border:1px solid var(--line)!important;border-radius:20px!important;padding:16px 18px!important;box-shadow:0 8px 25px #17374d09!important}.sectionTop h2{font-size:20px!important}.financeSection>.panel{border-radius:20px!important}
-button,.btn{border-radius:12px!important;transition:.18s!important}.btn:hover,button:hover{transform:translateY(-1px)}
-input,select,textarea{border:1px solid #dce5eb!important;border-radius:12px!important;background:#fbfdfe!important;padding:11px 12px!important;transition:.18s!important}input:focus,select:focus,textarea:focus{outline:none!important;border-color:#7aa1bc!important;box-shadow:0 0 0 4px #0c3b6310!important;background:#fff!important}
-.tablewrap,.table{border-radius:16px;overflow:auto}.table table,table{border-radius:16px;overflow:hidden}.table th,table th{background:#f1f6f9!important;color:#123b59!important}.table td{background:#fff}
-@keyframes fadeIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
-@media(max-width:1000px){.financeMenu{grid-template-columns:repeat(2,1fr)!important}}
-@media(max-width:600px){.wrap{padding:14px}.compactHero{padding:22px!important;border-radius:22px!important}.heroHead h1{font-size:21px!important}.compactStats{grid-template-columns:repeat(2,1fr)!important}.compactStats .stat{padding:15px 13px!important}.compactStats .stat b{font-size:18px!important}.financeMenu{grid-template-columns:1fr!important;gap:12px!important}.financeTile{min-height:94px;padding:16px!important;border-radius:20px!important}.financeTile>span{width:48px!important;height:48px!important}.sectionTop{padding:14px!important}}
-</style>
-
-<style id="finance-v139-dashboard">
-/* V139 — compact modern financial dashboard */
-.compactHero{padding:24px 26px!important;margin:18px 0 14px!important;border-radius:26px!important}
-.financeKpis{position:relative;z-index:2;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:20px}
-.financeKpi{min-width:0;padding:13px 12px;border:1px solid #ffffff1f;border-radius:16px;background:#ffffff0d;backdrop-filter:blur(7px);box-shadow:inset 0 1px #ffffff12;transition:.2s}
-.financeKpi:hover{transform:translateY(-2px);background:#ffffff14}
-.financeKpi small{display:block;color:#cfe0eb;font-size:10px;margin-bottom:6px;white-space:nowrap}
-.financeKpi b{display:block;color:#fff;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.financeKpi.highlight{background:linear-gradient(135deg,#ffffff18,#ffffff0b);border-color:#d8b96b55}
-.financeKpi.highlight b{color:#ffe5a0}
-.financeMenu{margin-top:16px!important;gap:14px!important}
-.financeTile{min-height:104px!important;border-radius:22px!important}
-.financeTile>span{box-shadow:0 6px 15px #0b355015!important}
-.financeTile b{font-size:15px!important}
-@media(max-width:1100px){.financeKpis{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:650px){.compactHero{padding:20px!important}.financeKpis{grid-template-columns:repeat(2,1fr);gap:8px;margin-top:16px}.financeKpi{padding:12px 10px}.financeKpi b{font-size:14px}.financeKpi small{font-size:9px}.financeMenu{margin-top:12px!important}}
-.expenseDeleteBtn{display:inline-flex!important;align-items:center;justify-content:center;padding:6px 9px!important;border-radius:9px!important;font-size:11px!important;white-space:nowrap}.expenseDeleteBtn:hover{transform:translateY(-1px)}
-</style>
-
-<style id="finance-v141-final-report">
-.reportPresets{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px;color:#718390;font-size:11px}.presetBtn{padding:7px 11px!important;border:1px solid #d9e4ea!important;background:#fff!important;color:#31556d!important;border-radius:999px!important;font-size:11px!important}.presetBtn:hover{background:#f2f7fa!important;border-color:#b9cfdb!important}.reportCollectionNote{margin-top:12px;padding:12px 14px;border-radius:14px;background:linear-gradient(90deg,#f7fbfd,#fffaf0);border:1px solid #e1e9ed;color:#526875;font-size:12px}.reportCollectionNote strong{color:#0c3b63}.reportKpis{grid-template-columns:repeat(6,1fr)!important}
-@media(max-width:1050px){.reportKpis{grid-template-columns:repeat(4,1fr)!important}}
-@media(max-width:700px){.reportKpis{grid-template-columns:repeat(2,1fr)!important}.reportPresets{align-items:flex-start}}
-@media print{
- body{background:#fff!important;color:#111!important;font-family:Tahoma,Arial,sans-serif!important}
- body *{visibility:hidden!important} 
- #advancedReportPanel,#advancedReportPanel *{visibility:visible!important}
- #advancedReportPanel{position:absolute!important;left:0!important;top:0!important;width:100%!important;margin:0!important;padding:10mm!important;border:0!important;box-shadow:none!important;border-radius:0!important;background:#fff!important}
- .reportPrintHeader{display:block!important;text-align:center!important;margin-bottom:12px!important;border-bottom:2px solid #123b59!important;padding-bottom:9px!important}.reportPrintHeader h1{margin:0!important;font-size:22px!important;color:#123b59!important}.reportPrintHeader p{margin:4px 0!important;color:#666!important}.reportPrintHeader #printReportPeriod{font-size:11px!important;color:#555!important}
- .reportToolbar,.reportPresets,.reportNote,#runReport,#printReport{display:none!important}
- .reportKpis{grid-template-columns:repeat(6,1fr)!important;gap:6px!important}.reportKpi{padding:8px!important;border:1px solid #ddd!important;box-shadow:none!important}.reportKpi small{font-size:8px!important}.reportKpi b{font-size:11px!important}
- .visualGrid{grid-template-columns:1fr 1fr!important;gap:8px!important}.visualCard{box-shadow:none!important;border:1px solid #ddd!important;padding:9px!important}.visualCard h3{font-size:10px!important}.barItem{grid-template-columns:70px 1fr 80px!important;gap:5px!important}.barLabel,.barValue{font-size:8px!important}.barTrack{height:7px!important}.donut{width:90px!important;height:90px!important}.donut:after{width:52px!important;height:52px!important}.donutCenter b{font-size:10px!important}.donutCenter small{font-size:7px!important}.legend{font-size:8px!important}
- .reportCollectionNote{font-size:9px!important;padding:7px!important}.reportTable{margin-top:8px!important}.reportTable table{min-width:0!important;font-size:8px!important}.reportTable th,.reportTable td{padding:5px!important}.reportTable th{background:#eef3f6!important}.expenseDeleteBtn{display:none!important}
- @page{size:A4 landscape;margin:8mm}
-}
-</style>
+</body></html>
