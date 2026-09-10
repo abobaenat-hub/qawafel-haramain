@@ -1,6 +1,14 @@
 {
   "rewrites": [
     {
+      "source": "/dws-prayer",
+      "destination": "https://dws.gov.iq/"
+    },
+    {
+      "source": "/dws-prayer/",
+      "destination": "https://dws.gov.iq/"
+    },
+    {
       "source": "/agent",
       "destination": "/agent.html"
     },
