@@ -289,7 +289,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 </div>
 <label>ملاحظات</label><input id="supplierPayNotes" placeholder="مثلاً دفعة أولى للمورّد">
 <button id="saveSupplierPayment" class="p" style="margin-top:12px">💾 حفظ دفعة المورّد</button>
-<div class="panel" style="margin-top:15px;padding:14px;background:#fbfcfd"><h3 style="margin:0 0 10px">🧾 سجل دفعات المورّدين</h3><div class="table"><table><thead><tr><th>التاريخ</th><th>المورّد</th><th>الرحلة</th><th>المبلغ</th><th>طريقة الدفع</th><th>المرجع</th><th>ملاحظات</th></tr></thead><tbody id="supplierPaymentRows"></tbody></table></div></div>
+<div class="panel" style="margin-top:15px;padding:14px;background:#fbfcfd"><h3 style="margin:0 0 10px">🧾 سجل دفعات المورّدين</h3><div class="table"><table><thead><tr><th>التاريخ</th><th>المورّد</th><th>الرحلة</th><th>المبلغ</th><th>طريقة الدفع</th><th>المرجع</th><th>ملاحظات</th><th>إجراءات</th></tr></thead><tbody id="supplierPaymentRows"></tbody></table></div></div>
 </section>
 <section class="panel"><h2>📒 التزامات المورّدين</h2><div class="hint">المستحق المتوقع يُحسب من عدد المقاعد المباعة × سعر الجملة للمقعد، ثم نطرح ما دُفع للمورّد.</div><div class="table"><table><thead><tr><th>المورّد</th><th>الرحلة</th><th>عدد المعتمرين</th><th>المستحق المتوقع</th><th>المدفوع للمورّد</th><th>المتبقي</th></tr></thead><tbody id="supplierObligationRows"></tbody></table></div></section>
 </div>
@@ -537,9 +537,11 @@ $('search').oninput=()=>{render();renderExpenses()};$('programFilter').onchange=
 function renderSupplierPaymentHistory(){
  const rows=SP.slice().sort((a,b)=>String(b.payment_date||'').localeCompare(String(a.payment_date||''))).map(x=>{
   const supplier=S.find(z=>z.id===x.supplier_id); const pr=PR.find(z=>z.id===x.program_id);
-  return '<tr><td>'+esc(x.payment_date||'—')+'</td><td><b>'+esc(supplier?.name||'مورد غير معروف')+'</b></td><td>'+esc(pr?.title||'دفعة عامة')+'</td><td><b>'+money(x.amount||0)+'</b></td><td>'+esc(x.payment_method||'—')+'</td><td>'+esc(x.reference||'—')+'</td><td>'+esc(x.notes||'—')+'</td></tr>';
+  return '<tr><td>'+esc(x.payment_date||'—')+'</td><td><b>'+esc(supplier?.name||'مورد غير معروف')+'</b></td><td>'+esc(pr?.title||'دفعة عامة')+'</td><td><b>'+money(x.amount||0)+'</b></td><td>'+esc(x.payment_method||'—')+'</td><td>'+esc(x.reference||'—')+'</td><td>'+esc(x.notes||'—')+'</td><td><div style=\"display:flex;gap:6px;flex-wrap:wrap\"><button class=\"btn w supplierPayEditBtn\" data-id=\"'+x.id+'\">✏️ تعديل</button><button class=\"btn supplierPayDeleteBtn\" data-id=\"'+x.id+'\" style=\"background:#b42318;color:#fff\">🗑️ حذف</button></div></td></tr>';
  }).join('');
- $('supplierPaymentRows').innerHTML=rows||'<tr><td colspan="7">لا توجد دفعات مورّدين مسجلة حتى الآن.</td></tr>';
+ $('supplierPaymentRows').innerHTML=rows||'<tr><td colspan="8">لا توجد دفعات مورّدين مسجلة حتى الآن.</td></tr>';
+ document.querySelectorAll('.supplierPayEditBtn').forEach(b=>b.onclick=()=>editSupplierPayment(b.dataset.id));
+ document.querySelectorAll('.supplierPayDeleteBtn').forEach(b=>b.onclick=()=>deleteSupplierPayment(b.dataset.id));
 }
 
 async function renderSupplierObligations(){
@@ -603,11 +605,28 @@ async function deleteSupplier(id){
    const {error}=await db.from('suppliers').delete().eq('id',id);if(error)throw error;msg('supplierMsg','تم حذف المورّد نهائيًا.');await load();
  }catch(e){msg('supplierMsg',e.message||'تعذر حذف المورّد.',true)}
 }
+let editingSupplierPaymentId=null;
+function resetSupplierPaymentForm(){editingSupplierPaymentId=null;$('supplierPaySupplier').value='';$('supplierPayProgram').value='';$('supplierPayAmount').value='';$('supplierPayDate').value=new Date().toISOString().slice(0,10);$('supplierPayMethod').value='نقد';$('supplierPayReference').value='';$('supplierPayNotes').value='';$('saveSupplierPayment').textContent='💾 حفظ دفعة المورّد';}
+function editSupplierPayment(id){
+ const x=SP.find(z=>z.id===id);if(!x)return;
+ editingSupplierPaymentId=id;$('supplierPaySupplier').value=x.supplier_id||'';$('supplierPayProgram').value=x.program_id||'';$('supplierPayAmount').value=Number(x.amount||0);$('supplierPayDate').value=dateOnly(x.payment_date);$('supplierPayMethod').value=x.payment_method||'نقد';$('supplierPayReference').value=x.reference||'';$('supplierPayNotes').value=x.notes||'';$('saveSupplierPayment').textContent='💾 حفظ تعديل الدفعة';msg('supplierPayMsg','وضع تعديل الدفعة مفعّل — عدّل البيانات ثم احفظ.');$('supplierPayAmount').focus();window.scrollTo({top:document.getElementById('supplierPayAmount').getBoundingClientRect().top+window.scrollY-160,behavior:'smooth'});
+}
+async function deleteSupplierPayment(id){
+ const x=SP.find(z=>z.id===id);if(!x)return;const supplier=S.find(z=>z.id===x.supplier_id);const pr=PR.find(z=>z.id===x.program_id);
+ if(!confirm('حذف هذه الدفعة نهائيًا؟\nالمورد: '+(supplier?.name||'—')+'\nالمبلغ: '+money(x.amount||0)+'\nالتاريخ: '+(x.payment_date||'—')+'\n'+(pr?'الرحلة: '+pr.title:'دفعة عامة')))return;
+ try{const {error}=await db.rpc('delete_supplier_payment',{p_payment_id:id});if(error)throw error;msg('supplierPayMsg','تم حذف الدفعة بنجاح.');await load();}catch(e){msg('supplierPayMsg',e.message||'تعذر حذف الدفعة.',true)}
+}
+window.editSupplierPayment=editSupplierPayment;window.deleteSupplierPayment=deleteSupplierPayment;
 $('saveSupplierPayment').onclick=async()=>{
  const supplier_id=$('supplierPaySupplier').value,program_id=$('supplierPayProgram').value||null,amount=Number($('supplierPayAmount').value||0),payment_date=$('supplierPayDate').value, payment_method=$('supplierPayMethod').value,reference=$('supplierPayReference').value.trim()||null,notes=$('supplierPayNotes').value.trim()||null;
  if(!supplier_id||!amount||amount<=0||!payment_date)return msg('supplierPayMsg','أكمل المورّد والمبلغ والتاريخ.',true);
  $('saveSupplierPayment').disabled=true;
- try{const {error}=await db.rpc('record_supplier_payment',{p_supplier_id:supplier_id,p_program_id:program_id,p_amount:amount,p_payment_date:payment_date,p_payment_method:payment_method,p_reference:reference,p_notes:notes});if(error)throw error;msg('supplierPayMsg','تم تسجيل دفعة المورّد بنجاح وحفظها في قاعدة البيانات.');$('supplierPayAmount').value='';$('supplierPayReference').value='';$('supplierPayNotes').value='';await load();}catch(e){msg('supplierPayMsg',e.message||'تعذر تسجيل الدفعة.',true)}finally{$('saveSupplierPayment').disabled=false}
+ try{
+   let error;
+   if(editingSupplierPaymentId){({error}=await db.rpc('update_supplier_payment',{p_payment_id:editingSupplierPaymentId,p_supplier_id:supplier_id,p_program_id:program_id,p_amount:amount,p_payment_date:payment_date,p_payment_method:payment_method,p_reference:reference,p_notes:notes}));}
+   else {({error}=await db.rpc('record_supplier_payment',{p_supplier_id:supplier_id,p_program_id:program_id,p_amount:amount,p_payment_date:payment_date,p_payment_method:payment_method,p_reference:reference,p_notes:notes}));}
+   if(error)throw error;msg('supplierPayMsg',editingSupplierPaymentId?'تم تعديل الدفعة وحفظ التعديل.':'تم تسجيل دفعة المورّد بنجاح وحفظها في قاعدة البيانات.');resetSupplierPaymentForm();await load();
+ }catch(e){msg('supplierPayMsg',e.message||'تعذر حفظ الدفعة.',true)}finally{$('saveSupplierPayment').disabled=false}
 };
 
 function dateOnly(v){return v?String(v).slice(0,10):''}
