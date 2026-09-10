@@ -21,9 +21,9 @@
 @media(max-width:760px){.top{height:68px}.topin{padding:0 14px}.status{display:none}.menu{display:block}.shell{min-height:calc(100vh - 68px)}.side{position:fixed;right:-295px;top:68px;height:calc(100vh - 68px);transition:right .2s;box-shadow:-8px 0 24px #0002}.side.open{right:0}.overlay{display:none}.overlay.show{display:block;position:fixed;inset:68px 0 0;background:#0005;z-index:40}.content{padding:18px 14px}.head{align-items:flex-start;flex-direction:column}.today{display:none}.finance{grid-template-columns:1fr 1fr}.finance div{border-left:0;border-bottom:1px solid #ffffff20;padding:8px}.kpis{grid-template-columns:1fr 1fr}}
 @media(max-width:470px){.brand b{font-size:16px}.brand small{font-size:9px}.kpi{padding:12px}.kpi b{font-size:20px}.finance b{font-size:14px}}
 
-/* V108: live clock + date only */
+/* V110: date + time only */
 .timePrayer{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(480px,1.65fr);gap:12px;margin:0 0 18px}
-.clockBadge{font-size:11px;font-weight:900;color:var(--gold);white-space:nowrap}.clockTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.clockMain{font-size:27px;font-weight:900;letter-spacing:1px;color:var(--navy);direction:ltr}.clockDate{font-size:11px;color:var(--muted);margin-top:5px}.locSelect{border:1px solid #d7e0e5;border-radius:9px;padding:8px 9px;background:#fff;color:var(--navy);font-weight:800;font-size:11px}
+.clockBadge{font-size:11px;font-weight:900;color:var(--gold);white-space:nowrap}.clockTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.clockMain{font-size:27px;font-weight:900;letter-spacing:1px;color:var(--navy);direction:ltr}.clockDate{font-size:11px;color:var(--muted);margin-top:5px}
 
 </style>
 
@@ -289,8 +289,7 @@ $('overlay').onclick=()=>{$('side').classList.remove('open');$('overlay').classL
 document.querySelectorAll('.nav').forEach(a=>a.addEventListener('click',()=>{$('side').classList.remove('open');$('overlay').classList.remove('show')}));
 
 function formatClock(h,m,s){
-  const n=Number(h),suffix=n>=12?'م':'ص',hh=(n%12)||12;
-  return String(hh).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+' '+suffix;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
 }
 function setToday(){
   const tick=()=>{
