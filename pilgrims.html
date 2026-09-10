@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>V133 — المعتمرون | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
-<style>body.auth-pending #login{display:none!important}
+<style>body.auth-pending #login{visibility:hidden!important}
 :root{--n:#0c3b63;--d:#072b49;--g:#c79a3b;--c:#f7f5ef;--l:#dfe6ea;--r:#a33}
 *{box-sizing:border-box}body{margin:0;background:var(--c);color:#17364e;font-family:Tahoma,Arial}
 .top{background:var(--d);color:#fff;padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:10px}
@@ -320,8 +320,9 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
 const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
-const db=window.supabase.createClient(U,K);
+const db=(window.supabase&&window.supabase.createClient)?window.supabase.createClient(U,K):null;
 const $=id=>document.getElementById(id);
+if(!db){ setTimeout(()=>document.body.classList.remove('auth-pending'),3000); const lm=document.getElementById('loginMsg'); if(lm) lm.textContent='تعذر تحميل خدمة الدخول مؤقتًا. حدّث الصفحة وحاول مرة أخرى.'; }
 // ترتيب بيانات ولي الأمر مباشرة بعد حقل تاريخ الميلاد
 (function(){
   const birth=$('birthDate'), minor=$('minorWrap');
@@ -1199,7 +1200,7 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
     setTimeout(()=>audit('ui_action','ui',id,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null}),0);
   },true);
   if(window.db){
-    window.db.auth.onAuthStateChange((event,session)=>{
+    window.db?.auth.onAuthStateChange((event,session)=>{
       if(event==='SIGNED_IN' && session?.user){
         if(!sessionStorage.getItem(AUDIT_KEY)){sessionStorage.setItem(AUDIT_KEY,'1');audit('login','auth',session.user.id,'تسجيل دخول');}
       }
@@ -1211,7 +1212,7 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
 <div data-qawafel-fallback style="display:none;position:fixed;inset:auto 12px 18px 12px;z-index:9999;background:#fff8e7;border:1px solid #d7b65f;border-radius:12px;padding:12px;text-align:center;font-family:Tahoma,Arial;color:#18384f;box-shadow:0 8px 30px #0002">تعذر تحميل مكونات النظام. حدّث الصفحة وحاول مرة أخرى.</div>
 <script>setTimeout(function(){var a=document.getElementById('app'),f=document.querySelector('[data-qawafel-fallback]');if(a&&a.classList.contains('hide')&&f)f.style.display='block';},5000);</script>
 <script id="qawafel-audit-v118">
-(function(){const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';function run(){if(!window.supabase)return;const db=window.supabase.createClient(U,K);const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:location.pathname.split('/').pop()||'index.html'}).catch(()=>{});window.qawafelAuditV118=log;if(!window.__qawafelAuditV118Bound){window.__qawafelAuditV118Bound=true;document.addEventListener('click',e=>{const el=e.target.closest('button,a,[role="button"],input[type="submit"]');if(!el)return;const txt=(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);if(txt)log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});},true)}db.auth.getSession().then(({data})=>{if(data?.session?.user)log('page_view','page',null,document.title)})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
+(function(){const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';function run(){if(!window.supabase)return;const db=window.supabase.createClient(U,K);const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:location.pathname.split('/').pop()||'index.html'}).catch(()=>{});window.qawafelAuditV118=log;if(!window.__qawafelAuditV118Bound){window.__qawafelAuditV118Bound=true;document.addEventListener('click',e=>{const el=e.target.closest('button,a,[role="button"],input[type="submit"]');if(!el)return;const txt=(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);if(txt)log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});},true)}db?.auth.getSession().then(({data})=>{if(data?.session?.user)log('page_view','page',null,document.title)})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
 </script>
 </body>
 </html>
