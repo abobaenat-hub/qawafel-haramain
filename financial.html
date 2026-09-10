@@ -52,6 +52,8 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 .sharedPreview{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}.sharedPreview .purchaseMetric{margin:0}
 .sharedAllocTag{display:inline-flex;align-items:center;gap:4px;background:#edf5fb;color:#0c3b63;border-radius:999px;padding:4px 8px;font-size:10px;font-weight:800}
 @media(max-width:700px){.sharedProgramGrid{grid-template-columns:1fr}.sharedPreview{grid-template-columns:1fr 1fr}.sharedProgramRow{grid-template-columns:28px 1fr 90px}}
+
+.staffPaySummary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:10px 0}.staffMini{background:#f8fafb;border:1px solid var(--line);border-radius:12px;padding:12px}.staffMini small{display:block;color:#718390;font-size:10px}.staffMini b{display:block;color:var(--n);font-size:18px;margin-top:4px}.staffPayGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.staffPaySection{margin-top:14px}@media(max-width:800px){.staffPayGrid{grid-template-columns:1fr}.staffPaySummary{grid-template-columns:1fr 1fr}}
 </style>
 
 <style id="qawafel-global-admin-css">
@@ -144,7 +146,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
-    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=112"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=114"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html?v=114"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
@@ -208,6 +210,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
   <button class="financeTile" data-section="suppliers"><span>🏢</span><div><b>المورّدون</b><small>إضافة وتعديل وتعطيل ومتابعة دفعات المورّدين</small></div><i>←</i></button>
   <button class="financeTile" data-section="expenses"><span>💸</span><div><b>إدارة المصروفات</b><small>تسجيل المصروفات والفواتير والمستندات</small></div><i>←</i></button>
   <button class="financeTile" data-section="pilgrimAccounts"><span>💳</span><div><b>دفعات المعتمرين والأقساط</b><small>كشف الحساب والدفعات والأقساط المستحقة</small></div><i>←</i></button>
+  <button class="financeTile" data-section="staffPayments"><span>👥</span><div><b>مستحقات المشرفين والسائقين</b><small>تسديد العمولات والأجور وكشف المتبقي لكل رحلة</small></div><i>←</i></button>
   <button class="financeTile" data-section="profitability"><span>📈</span><div><b>ربحية الرحلات</b><small>مقارنة المبيعات بالتكلفة والمصروفات</small></div><i>←</i></button>
 </section>
 
@@ -352,6 +355,11 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div class="table"><table><thead><tr><th>المعتمر</th><th>البرنامج</th><th>نوع الدفع</th><th>السعر الأساسي</th><th>الخصم</th><th>البيع الفعلي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>الدفعات</th></tr></thead><tbody id="rows"></tbody></table></div>
 </section>
 </div>
+<div class="financeSection" data-section-id="staffPayments"><div class="sectionTop"><div><h2>👥 مستحقات المشرفين والسائقين</h2><small>تسديد المستحقات وربط كل دفعة بالرحلة والشخص</small></div><button class="w backFinance">← القائمة المالية</button></div>
+<section class="panel"><h3>💰 ملخص الالتزامات</h3><div id="staffPaySummary" class="staffPaySummary"></div></section>
+<section class="panel staffPaySection"><h3>👤 مستحقات المشرفين</h3><div class="hint">المستحق يُحسب من عمولة المشرف على مبيعات المعتمرين، والمدفوع يُجمع من دفعات المشرف المسجلة.</div><div class="table"><table><thead><tr><th>المشرف</th><th>الرحلة</th><th>المبيعات</th><th>النسبة</th><th>المستحق</th><th>المدفوع</th><th>المتبقي</th><th>إجراء</th></tr></thead><tbody id="staffSupervisorRows"></tbody></table></div></section>
+<section class="panel staffPaySection"><h3>🚌 مستحقات السائقين</h3><div class="hint">أجر السائق المحدد في الرحلة يُعد تكلفة على الرحلة. الدفعات المسجلة تُخصم من المتبقي.</div><div class="table"><table><thead><tr><th>السائق</th><th>الرحلة</th><th>الأجر المتفق</th><th>المدفوع</th><th>المتبقي</th><th>إجراء</th></tr></thead><tbody id="staffDriverRows"></tbody></table></div></section>
+</div>
 </div>
 </main>
 
@@ -360,7 +368,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);
-let B=[],P=[],PR=[],I=[],E=[],S=[],SP=[],A=[],SUP_E=[],DRV_PAY=[];
+let B=[],P=[],PR=[],I=[],E=[],S=[],SP=[],A=[],SUP_E=[],DRV_PAY=[],SUP=[],DRV=[];
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function msg(id,t,e=false){$(id).className='msg'+(e?' err':'');$(id).textContent=t||''}
@@ -381,7 +389,7 @@ async function login(){
 $('loginBtn').onclick=login;$('password').onkeydown=e=>{if(e.key==='Enter')login()};
 
 async function load(){
- const [b,p,pr,i,e,sup,sp,a,supE,drvP]=await Promise.all([
+ const [b,p,pr,i,e,sup,sp,a,supE,drvP,ss,dd]=await Promise.all([
   db.from('bookings').select('*').order('created_at',{ascending:false}),
   db.from('pilgrims').select('*'),
   db.from('programs').select('*').order('departure_date'),
@@ -391,10 +399,12 @@ async function load(){
   db.from('supplier_payments').select('*').order('payment_date',{ascending:false}),
   db.from('expense_allocations').select('*'),
   db.from('supervisor_earnings').select('*'),
-  db.from('driver_payments').select('*')
+  db.from('driver_payments').select('*'),
+  db.from('supervisors').select('*').order('full_name'),
+  db.from('drivers').select('*').order('full_name')
  ]);
- const er=[b,p,pr,i,e,sup,sp,a,supE,drvP].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
- B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];S=sup.data||[];SP=sp.data||[];A=a.data||[];SUP_E=supE.data||[];DRV_PAY=drvP.data||[];
+ const er=[b,p,pr,i,e,sup,sp,a,supE,drvP,ss,dd].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
+ B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];S=sup.data||[];SP=sp.data||[];A=a.data||[];SUP_E=supE.data||[];DRV_PAY=drvP.data||[];SUP=ss.data||[];DRV=dd.data||[];
  $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
  $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
@@ -415,6 +425,7 @@ async function load(){
  $('expenseProgram').innerHTML='<option value="">مصروف عام للشركة</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  $('expenseDate').value=new Date().toISOString().slice(0,10); $('supplierPayDate').value=new Date().toISOString().slice(0,10);
  render();
+ renderStaffPayments();
  await renderExpenses();
  initSharedCostUI();
  initReport();
@@ -532,6 +543,24 @@ async function renderSupplierObligations(){
  });
  $('supplierObligationRows').innerHTML=rows.join('')||'<tr><td colspan="6">لا توجد التزامات مورّدين مرتبطة برحلات بعد.</td></tr>';
 }
+function renderStaffPayments(){
+ const supRows=SUP_E.map(x=>{const paid=SP.filter(p=>p.supervisor_id===x.supervisor_id&&p.program_id===x.program_id).reduce((a,p)=>a+Number(p.amount||0),0);const rem=Math.max(Number(x.earned_amount||0)-paid,0);return '<tr><td><b>'+esc(x.supervisor_name||'—')+'</b></td><td>'+esc(x.title||'—')+'<br><small>'+esc(x.departure_date||'')+'</small></td><td>'+money(x.sales_total)+'</td><td>'+Number(x.commission_rate||1.5)+'%</td><td><b>'+money(x.earned_amount)+'</b></td><td>'+money(paid)+'</td><td><b>'+money(rem)+'</b></td><td><button class="btn p" onclick="openStaffPay(\'supervisor\',\''+x.supervisor_id+'\',\''+x.program_id+'\')">💰 تسديد</button></td></tr>'}).join('');
+ $('staffSupervisorRows').innerHTML=supRows||'<tr><td colspan="8">لا توجد مستحقات مشرفين حاليًا.</td></tr>';
+ const drvRows=PR.filter(p=>p.driver_id&&Number(p.driver_fee||0)>0).map(p=>{const d=DRV.find(x=>x.id===p.driver_id);const paid=DRV_PAY.filter(x=>x.driver_id===p.driver_id&&x.program_id===p.id).reduce((a,x)=>a+Number(x.paid_amount||0),0);const fee=Number(p.driver_fee||0),rem=Math.max(fee-paid,0);return '<tr><td><b>'+esc(d?.full_name||p.driver_name||'—')+'</b></td><td>'+esc(p.title||'—')+'<br><small>'+esc(p.departure_date||'')+'</small></td><td>'+money(fee)+'</td><td>'+money(paid)+'</td><td><b>'+money(rem)+'</b></td><td><button class="btn p" onclick="openStaffPay(\'driver\',\''+(p.driver_id||'')+'\',\''+p.id+'\')">💰 تسديد</button></td></tr>'}).join('');
+ $('staffDriverRows').innerHTML=drvRows||'<tr><td colspan="6">لا توجد أجور سائقين محددة على الرحلات.</td></tr>';
+ const supEarn=SUP_E.reduce((a,x)=>a+Number(x.earned_amount||0),0),supPaid=SP.reduce((a,x)=>a+Number(x.amount||0),0),driverAgreed=PR.reduce((a,x)=>a+Number(x.driver_fee||0),0),driverPaid=DRV_PAY.reduce((a,x)=>a+Number(x.paid_amount||0),0);
+ $('staffPaySummary').innerHTML=[['مستحق المشرفين',supEarn],['مدفوع للمشرفين',supPaid],['مستحق السائقين',driverAgreed],['مدفوع للسائقين',driverPaid],['متبقي المشرفين',Math.max(supEarn-supPaid,0)],['متبقي السائقين',Math.max(driverAgreed-driverPaid,0)]].map(x=>'<div class="staffMini"><small>'+x[0]+'</small><b>'+money(x[1])+'</b></div>').join('');
+}
+async function openStaffPay(kind,personId,programId){
+ const pr=PR.find(x=>x.id===programId);if(!pr)return;const isSup=kind==='supervisor';let owed=0,paid=0;
+ if(isSup){const e=SUP_E.find(x=>x.supervisor_id===personId&&x.program_id===programId);owed=Number(e?.earned_amount||0);paid=SP.filter(x=>x.supervisor_id===personId&&x.program_id===programId).reduce((a,x)=>a+Number(x.amount||0),0)}else{owed=Number(pr.driver_fee||0);paid=DRV_PAY.filter(x=>x.driver_id===personId&&x.program_id===programId).reduce((a,x)=>a+Number(x.paid_amount||0),0)}
+ const rem=Math.max(owed-paid,0);if(rem<=0)return alert('لا يوجد مبلغ متبقٍ لهذه الرحلة.');const amount=prompt('المتبقي '+money(rem)+'\nأدخل مبلغ التسديد:',String(rem));if(amount===null)return;const n=Number(amount);if(!n||n<=0)return alert('أدخل مبلغًا صحيحًا.');if(n>rem+0.01)return alert('المبلغ أكبر من المتبقي.');
+ const date=prompt('تاريخ التسديد YYYY-MM-DD:',new Date().toISOString().slice(0,10))||new Date().toISOString().slice(0,10);const method=prompt('طريقة الدفع:','نقد')||'نقد';const notes=prompt('ملاحظات (اختياري):','')||null;const {data:{user}}=await db.auth.getUser();let r;
+ if(isSup)r=await db.from('supervisor_payments').insert({supervisor_id:personId,program_id:programId,amount:n,payment_date:date,payment_method:method,notes,created_by:user?.id||null});else r=await db.from('driver_payments').insert({driver_id:personId,program_id:programId,agreed_amount:owed,paid_amount:n,payment_date:date,payment_method:method,notes,created_by:user?.id||null});
+ if(r.error)return alert(r.error.message);await load();
+}
+window.openStaffPay=openStaffPay;
+
 function clearSupplierForm(){ $('supplierEditId').value='';$('supplierName').value='';$('supplierPhone').value='';$('supplierCategory').value='';$('supplierNotes').value='';$('addSupplier').textContent='➕ إضافة المورّد';$('cancelSupplierEdit').classList.add('hidden'); }
 function editSupplier(id){ const x=S.find(z=>z.id===id); if(!x)return; $('supplierEditId').value=x.id;$('supplierName').value=x.name||'';$('supplierPhone').value=x.phone||'';$('supplierCategory').value=x.category||'';$('supplierNotes').value=x.notes||'';$('addSupplier').textContent='💾 حفظ تعديل المورّد';$('cancelSupplierEdit').classList.remove('hidden');$('supplierName').focus();msg('supplierMsg','وضع التعديل مفعّل: عدّل البيانات ثم احفظ.'); }
 $('cancelSupplierEdit').onclick=()=>{clearSupplierForm();msg('supplierMsg','تم إلغاء التعديل.');};
