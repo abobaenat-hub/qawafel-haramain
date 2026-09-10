@@ -48,4 +48,7 @@ $('bookingForm').onsubmit=async e=>{e.preventDefault();try{const docFile=$('bDoc
 $('addAnother').onclick=()=>{resetPilgrimForm();bookingMsg('ارفع صورة الجواز التالي.');};$('paymentBtn').onclick=()=>{alert('الحساب المالي والدفعات تُدار من قبل قوافل الحرمين من لوحة الإدارة.');};$('finishGroup').onclick=async()=>{await boot();$('bookingModal').classList.remove('show')};
 const wantsApply=new URLSearchParams(location.search).get('apply')==='1'||location.hash==='#apply';boot().then(()=>{if(!$('dash').classList.contains('hidden'))return;if(wantsApply)tabs(false)});
 })();
-</script></body></html>
+</script><script id="qawafel-audit-v118">
+(function(){const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';function run(){if(!window.supabase)return;const db=window.supabase.createClient(U,K);const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:location.pathname.split('/').pop()||'index.html'}).catch(()=>{});window.qawafelAuditV118=log;if(!window.__qawafelAuditV118Bound){window.__qawafelAuditV118Bound=true;document.addEventListener('click',e=>{const el=e.target.closest('button,a,[role="button"],input[type="submit"]');if(!el)return;const txt=(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);if(txt)log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});},true)}db.auth.getSession().then(({data})=>{if(data?.session?.user)log('page_view','page',null,document.title)})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
+</script>
+</body></html>

@@ -1,1 +1,1 @@
-Qawafel Haramain V121 — visa tracking dashboard
+Qawafel Haramain V122 — add visa management to admin navigation
