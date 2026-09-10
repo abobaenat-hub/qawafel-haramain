@@ -1,1 +1,1 @@
-Qawafel Haramain V133 — shared Supabase auth client / session persistence fix
+Qawafel Haramain V128 — food section numbering + restore visa menu
