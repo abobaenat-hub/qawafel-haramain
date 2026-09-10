@@ -275,14 +275,14 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <div id="scheduleWrap" class="hide section"><h3>جدول الأقساط</h3><div style="background:#f8fafc;border:1px solid #d9e3e8;border-radius:12px;padding:12px;margin-bottom:12px"><label>تاريخ أول قسط *</label><input id="firstInstallmentDate" type="date"><small style="display:block;color:#6b7780;margin-top:6px">بعد تحديد تاريخ أول قسط، يحسب النظام تلقائيًا موعد كل قسط بعده كل 30 يومًا.</small></div><div id="schedule"></div></div>
 
 <!-- 7. Documents and photo -->
-<div class="form-section-title"><span>8</span><b>الصور والمستندات</b></div>
+<div class="form-section-title"><span>7</span><b>الصور والمستندات</b></div>
 <div class="cols">
   <div><label>صورة المعتمر *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><button id="usePassportPhotoBtn" type="button" class="btn p" style="display:none;margin:0">👤 استخدام صورة الجواز</button><button id="photoCropBtn" type="button" class="btn w" style="display:none;margin:0">✂️ تعديل وقص الصورة</button><label class="btn w" style="display:inline-block;margin:0">📷 تصوير صورة أخرى<input id="photoCamera" type="file" accept="image/*" capture="user" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 رفع صورة أخرى<input id="photoUpload" type="file" accept="image/*" style="display:none"></label></div><small id="photoHint" style="display:block;color:#6b7b88;margin-top:5px">بعد قراءة الجواز يحاول النظام استخراج صورة المعتمر تلقائيًا. إذا كانت غير واضحة، ارفع أو صوّر صورة أخرى.</small><div id="photoPreviewWrap" class="passport-preview-wrap hide" style="max-width:240px;margin-top:10px"><div style="font-weight:900;color:#072b49;margin-bottom:7px">👤 معاينة صورة المعتمر</div><img id="photoPreview" class="photo-preview" style="width:180px;height:220px;margin-top:0;object-fit:cover" alt="معاينة صورة المعتمر"></div><div id="passportPhotoStatus" style="font-size:12px;font-weight:800;color:#176644;margin-top:6px"></div></div>
   <div id="minorWrap" class="hide" style="grid-column:1/-1;border:1px solid #ead9b5;border-radius:12px;padding:12px;background:#fffaf0"><label>المعتمر دون 18 سنة</label><div style="display:flex;gap:14px;flex-wrap:wrap;margin:8px 0"><label><input type="radio" name="guardianAccompanied" value="yes"> نعم، الوالد/ولي الأمر مرافق</label><label><input type="radio" name="guardianAccompanied" value="no" checked> لا، غير مرافق</label></div><small id="minorHint" style="display:block;color:#a33">إذا كان ولي الأمر مرافقًا فلا نطلب وكالة.</small><div id="guardianWrap"><label>وكالة ولي الأمر *</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label class="btn p" style="display:inline-block;margin:0">📷 تصوير الوكالة<input id="guardianCamera" type="file" accept="image/*,application/pdf" capture="environment" style="display:none"></label><label class="btn w" style="display:inline-block;margin:0">📁 تحميل الوكالة<input id="guardianUpload" type="file" accept="image/*,application/pdf" style="display:none"></label></div><small id="guardianHint" style="display:block;color:#a33;margin-top:5px">مطلوبة لأن ولي الأمر غير مرافق.</small></div></div>
 </div>
 
 <!-- 9. Notes -->
-<div class="form-section-title"><span>9</span><b>ملاحظات</b></div>
+<div class="form-section-title"><span>8</span><b>ملاحظات</b></div>
 <label>ملاحظات إضافية</label><textarea id="notes"></textarea>
 <br><button class="btn p" type="submit" style="width:100%;font-size:15px">حفظ المعتمر والحجز</button>
 </form>
@@ -853,48 +853,103 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
     return {name:[given,surname].filter(Boolean).join(' '),surname,given,passport:pass,nat,birth:date6(birth),exp:date6(exp),gender:gender==='M'?'ذكر':gender==='F'?'أنثى':'',mrzLine1:l1,mrzLine2:l2,valid};
   }
 
+  let ocrWorkerPromise=null;
+  async function getOcrWorker(){
+    await loadTesseract();
+    if(!ocrWorkerPromise){
+      ocrWorkerPromise=(async()=>{
+        const worker=await Tesseract.createWorker('eng');
+        await worker.setParameters({
+          tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',
+          preserve_interword_spaces:'1',
+          user_defined_dpi:'300'
+        });
+        return worker;
+      })();
+    }
+    return ocrWorkerPromise;
+  }
   async function recognizeCanvas(canvas, psm){
-    const worker=await Tesseract.createWorker('eng');
-    try{
-      await worker.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',tessedit_pageseg_mode:String(psm),preserve_interword_spaces:'1'});
-      const result=await worker.recognize(canvas); return result.data.text||'';
-    }finally{await worker.terminate();}
+    const worker=await getOcrWorker();
+    await worker.setParameters({tessedit_pageseg_mode:String(psm||6)});
+    const result=await worker.recognize(canvas);
+    return result.data?.text||'';
   }
 
-  function loadTesseract(){
-    if(window.Tesseract) return Promise.resolve();
-    return new Promise((resolve,reject)=>{
-      const sc=document.createElement('script');
-      sc.src='https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
-      sc.onload=resolve; sc.onerror=reject; document.head.appendChild(sc);
-    });
-  }
-
-  function canvasFromFile(file){
-    return new Promise((resolve,reject)=>{
-      const url=URL.createObjectURL(file), im=new Image();
-      im.onload=()=>{URL.revokeObjectURL(url);resolve(im)}; im.onerror=e=>{URL.revokeObjectURL(url);reject(e)}; im.src=url;
-    });
+  function makeOcrVariants(canvas){
+    const variants=[];
+    const src=canvas.getContext('2d',{willReadFrequently:true}).getImageData(0,0,canvas.width,canvas.height);
+    const gray=document.createElement('canvas');gray.width=canvas.width;gray.height=canvas.height;
+    const g=gray.getContext('2d',{willReadFrequently:true});g.putImageData(src,0,0);
+    const data=g.getImageData(0,0,gray.width,gray.height),d=data.data;
+    for(let i=0;i<d.length;i+=4){
+      const v=Math.max(0,Math.min(255,Math.round((.299*d[i]+.587*d[i+1]+.114*d[i+2]-128)*2.15+128)));
+      d[i]=d[i+1]=d[i+2]=v; d[i+3]=255;
+    }
+    g.putImageData(data,0,0);variants.push(gray);
+    const bw=document.createElement('canvas');bw.width=gray.width;bw.height=gray.height;
+    const b=bw.getContext('2d',{willReadFrequently:true});const bd=b.createImageData(bw.width,bw.height);
+    const gd=g.getImageData(0,0,gray.width,gray.height).data, out=bd.data;
+    for(let i=0;i<gd.length;i+=4){const v=gd[i]>165?255:0;out[i]=out[i+1]=out[i+2]=v;out[i+3]=255;}
+    b.putImageData(bd,0,0);variants.push(bw);
+    return variants;
   }
 
   async function findMrzAnchor(file){
-    await loadTesseract();
     const im=await canvasFromFile(file);
-    const maxW=1800, scale=Math.min(1,maxW/im.naturalWidth);
-    const W=Math.round(im.naturalWidth*scale), H=Math.round(im.naturalHeight*scale);
-    const c=document.createElement('canvas'); c.width=W;c.height=H;
-    const ctx=c.getContext('2d',{willReadFrequently:true}); ctx.drawImage(im,0,0,W,H);
-    const worker=await Tesseract.createWorker('eng');
+    const maxW=2200, scale=Math.min(1,maxW/im.naturalWidth);
+    const W=Math.max(1000,Math.round(im.naturalWidth*scale)), H=Math.round(im.naturalHeight*(W/im.naturalWidth));
+    const full=document.createElement('canvas');full.width=W;full.height=H;
+    const fctx=full.getContext('2d',{willReadFrequently:true});fctx.imageSmoothingEnabled=true;fctx.imageSmoothingQuality='high';fctx.drawImage(im,0,0,W,H);
+    const regions=[];
+    // Try the bottom half first (where passport MRZ normally lives), then wider fallbacks.
+    for(const [topRatio,heightRatio] of [[.52,.48],[.62,.38],[.42,.58]]){
+      const c=document.createElement('canvas');c.width=W;c.height=Math.round(H*heightRatio);
+      c.getContext('2d').drawImage(full,0,Math.round(H*topRatio),W,c.height,0,0,W,c.height);regions.push(c);
+    }
+    const worker=await getOcrWorker();
+    const candidates=[];
     try{
-      await worker.setParameters({tessedit_char_whitelist:'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<',tessedit_pageseg_mode:'11',preserve_interword_spaces:'1'});
-      const r=await worker.recognize(c);
-      const lines=(r.data.lines||[]).map(x=>({text:(x.text||'').toUpperCase().replace(/[^A-Z0-9<]/g,''),bbox:x.bbox}));
-      const mrz=lines.filter(x=>x.text.length>=25 && /[<]{3,}|\d{5,}/.test(x.text)).sort((a,b)=>b.text.length-a.text.length);
-      if(!mrz.length)return null;
-      const ys=mrz.slice(0,2).map(x=>x.bbox);
-      const x0=Math.min(...ys.map(b=>b.x0)), x1=Math.max(...ys.map(b=>b.x1)), y0=Math.min(...ys.map(b=>b.y0)), y1=Math.max(...ys.map(b=>b.y1));
-      return {im,W,H,x0,x1,y0,y1};
-    }finally{await worker.terminate();}
+      for(const region of regions){
+        for(const variant of makeOcrVariants(region)){
+          for(const psm of [6,11,12]){
+            await worker.setParameters({tessedit_pageseg_mode:String(psm)});
+            const r=await worker.recognize(variant);
+            const raw=r.data?.text||'';
+            const lines=raw.toUpperCase().split(/\n+/).map(x=>x.replace(/[^A-Z0-9<]/g,''));
+            for(const line of lines){
+              if(line.length>=25 && /[A-Z0-9<]{25,}/.test(line)) candidates.push(line);
+            }
+          }
+        }
+      }
+    }finally{}
+    const norm=candidates.map(x=>x.replace(/<+/g,'<').replace(/[^A-Z0-9<]/g,'')).filter(x=>x.length>=25);
+    const l2=norm.find(x=>line2LooksValid(x)) || norm.find(x=>/^[A-Z0-9<]{40,44}$/.test(x)&&/\d{6}[MF<]\d{6}/.test(x));
+    const l1=norm.find(x=>/^P[A-Z<]{1,3}[A-Z0-9<]{20,}$/.test(x));
+    if(l2){
+      // Return the whole lower region as the crop anchor. This is deliberately generous so MRZ is never cut off.
+      return {im,W,H,x0:0,x1:W,y0:Math.round(H*.42),y1:H,detected:true,l1,l2};
+    }
+    return null;
+  }
+
+  async function readPassportData(file){
+    const im=await canvasFromFile(file);
+    const maxW=2400, scale=Math.min(1,maxW/im.naturalWidth);
+    const W=Math.max(1200,Math.round(im.naturalWidth*scale)),H=Math.round(im.naturalHeight*(W/im.naturalWidth));
+    const full=document.createElement('canvas');full.width=W;full.height=H;full.getContext('2d').drawImage(im,0,0,W,H);
+    const crops=[];
+    for(const top of [.45,.52,.58,.62]){
+      const c=document.createElement('canvas');c.width=W;c.height=Math.max(300,Math.round(H*(1-top)));c.getContext('2d').drawImage(full,0,Math.round(H*top),W,c.height,0,0,W,c.height);crops.push(c);
+    }
+    const all=[];
+    for(const c of crops){for(const v of makeOcrVariants(c)){for(const psm of [6,11,12]) all.push(await recognizeCanvas(v,psm));}}
+    const parsed=[];
+    for(const text of all){const lines=normalizeMrzText(text); if(lines.length>=2) parsed.push(parseMRZ(lines));}
+    const best=parsed.find(x=>x.valid)||parsed.find(x=>x.passport||x.exp||x.birth);
+    if(!best||!best.passport)return null;
+    return best;
   }
 
   async function smartCropPassport(){
@@ -1048,32 +1103,60 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
   async function ocr(){
     if(!passportFile)return alert('ارفع صورة الجواز أولًا.');
     if(!passportFile.type.startsWith('image/'))return alert('قراءة الجواز تحتاج صورة.');
-    const st=$('passportOcrStatus');st.innerHTML='<span class="ocr-spin"></span> جارٍ تحسين الصورة وقراءة سطرَي MRZ والتحقق من البيانات...';$('passportOcrBtn').disabled=true;
+    const st=$('passportOcrStatus'); const btn=$('passportOcrBtn');
+    st.innerHTML='<span class="ocr-spin"></span> جارٍ تحسين الصورة وقراءة سطرَي MRZ بعدة طرق...';btn.disabled=true;
     try{
-      await loadTesseract();
-      const modes=['bottom18','bottom28','bottom42']; let best=null, all=[];
-      for(const mode of modes){
-        const canvas=await imageToCanvas(passportFile,mode);
-        for(const psm of [6,11]){
-          const text=await recognizeCanvas(canvas,psm); const lines=normalizeMrzText(text); all.push(...lines);
-          const parsed=parseMRZ(lines); if(parsed.valid && parsed.passport && parsed.name){best=parsed;break;}
-          if(!best && parsed.passport && parsed.name)best=parsed;
+      const im=await canvasFromFile(passportFile);
+      const maxW=2600, scale=Math.min(1,maxW/im.naturalWidth);
+      const W=Math.max(1400,Math.round(im.naturalWidth*scale)), H=Math.round(im.naturalHeight*(W/im.naturalWidth));
+      const full=document.createElement('canvas');full.width=W;full.height=H;
+      const fc=full.getContext('2d',{willReadFrequently:true});fc.imageSmoothingEnabled=true;fc.imageSmoothingQuality='high';fc.drawImage(im,0,0,W,H);
+      const crops=[];
+      // MRZ is at the bottom of the passport data page. Multiple overlaps handle
+      // portrait/landscape photos and slightly rotated pages.
+      for(const [top,bottom] of [[.48,1],[.55,1],[.60,1],[.64,1],[.40,.95]]){
+        const c=document.createElement('canvas');c.width=W;c.height=Math.max(360,Math.round(H*(bottom-top)));
+        const cc=c.getContext('2d');cc.drawImage(full,0,Math.round(H*top),W,c.height,0,0,W,c.height);crops.push(c);
+      }
+      const worker=await getOcrWorker();
+      let best=null, candidates=[];
+      for(const crop of crops){
+        for(const variant of makeOcrVariants(crop)){
+          for(const psm of [6,11,12]){
+            await worker.setParameters({tessedit_pageseg_mode:String(psm)});
+            const r=await worker.recognize(variant); const text=r.data?.text||'';
+            const lines=normalizeMrzText(text); candidates.push(...lines);
+            const parsed=parseMRZ(lines);
+            if(parsed.passport && parsed.name && (parsed.valid || !best)) best=parsed;
+            if(parsed.valid && parsed.passport && parsed.name){best=parsed;break;}
+          }
+          if(best?.valid)break;
         }
         if(best?.valid)break;
       }
-      if(best && best.passport && best.name){
+      if(!best || !best.passport){
+        // Last attempt: use the smart MRZ anchor, crop generously around it, then OCR.
+        const anchor=await findMrzAnchor(passportFile);
+        if(anchor?.l2){
+          const parsed=parseMRZ([anchor.l1||'',anchor.l2]);
+          if(parsed.passport)best=parsed;
+        }
+      }
+      if(best && best.passport){
         apply(best);
-        const suggestedArabic=englishToArabicName(best.name);
+        const suggestedArabic=englishToArabicName(best.name||'');
         if(suggestedArabic) $('name').value=suggestedArabic;
         await extractPassportPhoto(passportFile);
-        st.textContent=best.valid?'تمت قراءة بيانات الجواز والتحقق من MRZ. راجع الاسم الإنكليزي والبيانات قبل الحفظ، ثم اعتمد الاسم بالعربي.':'تمت قراءة بيانات الجواز. راجع الاسم الإنكليزي والبيانات قبل الحفظ، ثم اعتمد الاسم بالعربي.';
+        validatePassportExpiry(true);
+        st.textContent=best.valid?'✅ تمت قراءة بيانات الجواز والتحقق من MRZ بنجاح. راجع البيانات قبل الحفظ.':'✅ تمت قراءة بيانات الجواز. راجع البيانات قبل الحفظ؛ تحقق MRZ غير مكتمل.';
       }else{
-        st.textContent='لم تتم قراءة الجواز بشكل موثوق. استخدم «قص وتعديل» وحدد صفحة البيانات كاملة مع إبقاء سطرَي MRZ ثم أعد القراءة.';
+        st.textContent='❌ لم أتمكن من قراءة سطرَي MRZ. صوّر صفحة البيانات كاملة بوضوح، بدون انعكاس ضوء، واجعل الجواز موازيًا للكاميرا ثم جرّب «قراءة بيانات الجواز» مرة أخرى.';
       }
-      console.log('MRZ OCR candidates',all, best);
-    }catch(e){console.error(e);st.textContent='تعذر تشغيل قارئ الجواز. يمكنك إدخال البيانات يدويًا.';}
-    finally{$('passportOcrBtn').disabled=false;}
+      console.log('MRZ OCR candidates',candidates.slice(-40),best);
+    }catch(e){console.error('passport OCR',e);st.textContent='❌ تعذر تشغيل قارئ الجواز. جرّب القص اليدوي لصفحة البيانات ثم أعد القراءة، أو أدخل البيانات يدويًا.';}
+    finally{btn.disabled=false;}
   }
+
   function englishToArabicName(input){
     // Smart Arabic suggestion: prefer exact/common name spellings, then handle
     // common Arabic compound prefixes/suffixes, and finally use a conservative
