@@ -276,6 +276,7 @@ async function isAdmin(){
  const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();
  return q.error||!q.data?null:r.data.user;
 }
+async function routeStaffPortal(){const r=await db.auth.getUser();if(!r.data.user)return false;const q=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();if(!q.error&&q.data?.active){if(q.data.role==='supervisor'||q.data.role==='driver'){location.href='./supervisors.html?v=115';return true;}}return false}
 async function signIn(){
  const email=$('email').value.trim(),password=$('password').value;
  if(!email||!password)return showLoginMsg('أدخل البريد الإلكتروني وكلمة المرور.',true);
@@ -284,6 +285,7 @@ async function signIn(){
    const r=await db.auth.signInWithPassword({email,password});
    if(r.error)throw r.error;
    if(!await isAdmin()){await db.auth.signOut();throw Error('هذا الحساب غير مخول للدخول إلى الإدارة.')}
+   if(await routeStaffPortal()) return;
    $('login').classList.add('hide');$('app').classList.remove('hide');await load();
  }catch(e){showLoginMsg(e.message||'تعذر تسجيل الدخول.',true)}
  finally{$('loginBtn').disabled=false}
@@ -477,6 +479,9 @@ setToday();
     setTimeout(()=>window.qawafelAuditPage(),700);
   }
 })();
+</script>
+<script id="qawafel-audit-v115">
+(function(){const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';function run(){if(!window.supabase)return;const db=window.supabase.createClient(U,K);const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:location.pathname.split('/').pop()||'index.html'}).catch(()=>{});window.qawafelAuditV115=log;if(window.__qawafelAuditV115Bound)return;window.__qawafelAuditV115Bound=true;document.addEventListener('click',e=>{const el=e.target.closest('button,a,[role="button"]');if(!el)return;const txt=(el.innerText||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);if(txt)setTimeout(()=>log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null}),0)},true);db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'&&session?.user)log('login','auth',session.user.id,'تسجيل دخول')});setTimeout(()=>log('page_view','page',null,document.title),900)}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
 </script>
 </body>
 </html>
