@@ -431,7 +431,8 @@ $('email').onkeydown=e=>{if(e.key==='Enter')login()};
 $('logout').onclick=async()=>{await db.auth.signOut();location.reload()};
 function selectedBasePrice(){
  const pr=PR.find(x=>x.id===$('program').value)||{};
- return Number(($('paymentType').value==='installment'?pr.installment_price:pr.price)||0);
+ const pkg=currentPackages.find(x=>x.id===$('packageSelect')?.value)||{};
+ return Number(($('paymentType').value==='installment'?(pkg.installment_price??pr.installment_price):(pkg.price??pr.price))||0);
 }
 function saleValues(){
  const base=selectedBasePrice();
@@ -508,6 +509,16 @@ $('program').onchange=()=>{updateSaleBox(); if($('paymentType').value==='install
 $('initial').oninput=()=>{if($('paymentType').value==='installment')buildSchedule()};
 $('firstInstallmentDate').onchange=()=>{if($('paymentType').value==='installment')buildSchedule()};
 
+let currentPackages=[];
+async function loadProgramPackages(programId){
+ currentPackages=[]; const wrap=$('packageWrap'), sel=$('packageSelect'); if(!wrap||!sel)return;
+ const r=await db.from('program_packages').select('*').eq('program_id',programId).eq('active',true).order('created_at'); if(r.error){console.error(r.error);wrap.classList.add('hide');return;}
+ currentPackages=r.data||[]; if(!currentPackages.length){wrap.classList.add('hide');sel.innerHTML='<option value="">لا توجد باقات</option>';return;}
+ wrap.classList.remove('hide'); sel.innerHTML='<option value="">اختر الباقة...</option>'+currentPackages.map(x=>`<option value="${x.id}">${esc(x.name)} — نقد: ${money(x.price)} | قسط: ${money(x.installment_price||x.price)}</option>`).join('');
+ updateSelectedPackage();
+}
+function updateSelectedPackage(){const x=currentPackages.find(z=>z.id===$('packageSelect')?.value); if(!x){if($('packageHotels'))$('packageHotels').textContent='—';return;} if($('packageHotels'))$('packageHotels').textContent='المدينة: '+(x.city_hotel||'—')+' | مكة: '+(x.makkah_hotel||'—'); updateBasePrice();}
+$('program')?.addEventListener('change',()=>loadProgramPackages($('program').value)); $('packageSelect')?.addEventListener('change',updateSelectedPackage);
 async function load(){
  const [a,b,c,i,ar]=await Promise.all([
   db.from('pilgrims').select('*').order('created_at',{ascending:false}),
@@ -522,7 +533,7 @@ async function load(){
  $('pc').textContent=P.length;$('bc').textContent=B.length;
  $('paid').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('rem').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
- $('program').innerHTML='<option value="">اختر البرنامج</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+' — نقد: '+money(x.price)+' | قسط: '+money(x.installment_price??x.price)+'</option>').join('');
+ $('program').innerHTML='<option value="">اختر البرنامج</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+' — نقد: '+money(x.price)+' | قسط: '+money(x.installment_price??x.price)+'</option>').join(''); $('packageWrap')?.classList.add('hide');
  render();
 }
 
@@ -699,11 +710,11 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
  const manualPhotoFile=$('photoCamera').files?.[0] || $('photoUpload').files?.[0]; const photoFile=editedPhotoFile || manualPhotoFile || (usePassportPhoto?passportPhotoFile:null); if(!photoFile)return msg('formMsg','أرفق الصورة الشخصية أو استخدم الصورة المستخرجة من الجواز.',true);
  saveInProgress=true; const submitBtn=$('form').querySelector('button[type=submit]'); if(submitBtn)submitBtn.disabled=true;
  try{
-  const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,base_price:basePrice,discount_amount:discountAmount,discount_reason:discountReason,total_amount:total,paid_amount:paid,status:remaining?'pending':'confirmed',notes:'حجز من إدارة المعتمرين',payment_type:paymentType,cash_payment_status:paymentType==='cash'?cashStatus:null,cash_due_date:paymentType==='cash'&&cashStatus==='partial'?($('cashDueDate').value||null):null};
+  const booking={program_id:pr.id,package_id:$('packageSelect')?.value||null,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,base_price:basePrice,discount_amount:discountAmount,discount_reason:discountReason,total_amount:total,paid_amount:paid,status:remaining?'pending':'confirmed',notes:'حجز من إدارة المعتمرين',payment_type:paymentType,cash_payment_status:paymentType==='cash'?cashStatus:null,cash_due_date:paymentType==='cash'&&cashStatus==='partial'?($('cashDueDate').value||null):null};
   let photoPath=archiveConfirmed?(archiveMatch?.photo_path||null):null; if(photoFile){const ext=(photoFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; photoPath='pilgrim-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; const upPhoto=await db.storage.from('pilgrim-photos').upload(photoPath,photoFile,{upsert:false,contentType:photoFile.type||'image/jpeg'}); if(upPhoto.error)throw upPhoto.error;}
   let passportImagePath=archiveConfirmed?(archiveMatch?.passport_image_path||null):null; if(passportFile){const pext=(passportFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; passportImagePath='passport-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+pext; const upPassport=await db.storage.from('pilgrim-photos').upload(passportImagePath,passportFile,{upsert:false,contentType:passportFile.type||'image/jpeg'}); if(upPassport.error)throw upPassport.error;}
   let guardianPath=archiveConfirmed?(archiveMatch?.guardian_authorization_path||null):null; if(guardianFile){const gext=(guardianFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; guardianPath='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+gext; const ug=await db.storage.from('pilgrim-photos').upload(guardianPath,guardianFile,{upsert:false,contentType:guardianFile.type||'application/octet-stream'}); if(ug.error)throw ug.error;}
-  const payload={full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,gender:($('gender').value==='ذكر'?'male':$('gender').value==='أنثى'?'female':null),gender_ar:$('gender').value||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,current_residence:$('currentResidence').value.trim()||null,food_subscribed:$('foodSubscribed').value==='yes',food_amount:$('foodSubscribed').value==='yes'?Number($('foodAmount').value||0):0,food_meals_count:$('foodSubscribed').value==='yes'?Number($('foodMealsCount').value||0):0,food_meal_type:$('foodSubscribed').value==='yes'?($('foodMealType').value||null):null,food_payment_status:$('foodSubscribed').value==='yes'?($('foodPaymentStatus').value||'unpaid'):'unpaid',food_notes:$('foodSubscribed').value==='yes'?($('foodNotes').value.trim()||null):null,visa_status:'pending',document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8),nationality:'عراقي'};
+  const payload={full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,gender:($('gender').value==='ذكر'?'male':$('gender').value==='أنثى'?'female':null),gender_ar:$('gender').value||null,passport_number:$('pass').value.trim()||null,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,current_residence:$('currentResidence').value.trim()||null,food_subscribed:$('foodSubscribed').value==='yes',food_amount:Number($('foodAmount').value||0),food_meals_count:Number($('foodMealsCount').value||0),food_meal_type:$('foodMealType').value||null,food_payment_status:$('foodPaymentStatus').value||null,food_notes:$('foodNotes').value.trim()||null,food_subscribed:$('foodSubscribed').value==='yes',food_amount:$('foodSubscribed').value==='yes'?Number($('foodAmount').value||0):0,food_meals_count:$('foodSubscribed').value==='yes'?Number($('foodMealsCount').value||0):0,food_meal_type:$('foodSubscribed').value==='yes'?($('foodMealType').value||null):null,food_payment_status:$('foodSubscribed').value==='yes'?($('foodPaymentStatus').value||'unpaid'):'unpaid',food_notes:$('foodSubscribed').value==='yes'?($('foodNotes').value.trim()||null):null,visa_status:'pending',document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8),nationality:'عراقي'};
   const installmentRows=[];
   if(paymentType==='cash'&&cashStatus==='partial'&&remaining>0){
     installmentRows.push({installment_number:1,due_date:$('cashDueDate').value,amount:remaining,paid_amount:0,status:'pending',notes:'متبقي برنامج نقدي — يستحق قبل السفر'});
