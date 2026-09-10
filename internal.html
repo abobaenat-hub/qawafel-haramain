@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V107-AWAIL-12H-VERIFIED"><meta name="qawafel-prayer-source" content="Al-Awail">
+<meta name="qawafel-build" content="V108-CLOCK-DATE-ONLY-VERIFIED">
   <title>المركز الداخلي | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <style>
@@ -21,10 +21,10 @@
 @media(max-width:760px){.top{height:68px}.topin{padding:0 14px}.status{display:none}.menu{display:block}.shell{min-height:calc(100vh - 68px)}.side{position:fixed;right:-295px;top:68px;height:calc(100vh - 68px);transition:right .2s;box-shadow:-8px 0 24px #0002}.side.open{right:0}.overlay{display:none}.overlay.show{display:block;position:fixed;inset:68px 0 0;background:#0005;z-index:40}.content{padding:18px 14px}.head{align-items:flex-start;flex-direction:column}.today{display:none}.finance{grid-template-columns:1fr 1fr}.finance div{border-left:0;border-bottom:1px solid #ffffff20;padding:8px}.kpis{grid-template-columns:1fr 1fr}}
 @media(max-width:470px){.brand b{font-size:16px}.brand small{font-size:9px}.kpi{padding:12px}.kpi b{font-size:20px}.finance b{font-size:14px}}
 
-/* V107: live clock + Al-Awail prayer times */
+/* V108: live clock + date only */
 .timePrayer{display:grid;grid-template-columns:minmax(260px,.75fr) minmax(480px,1.65fr);gap:12px;margin:0 0 18px}
-.clockCard,.prayerCard{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:15px}.prayerCard{overflow:hidden}.awailPanel{border-radius:14px;background:#fff}.awailTop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.awailModes{display:flex;gap:4px;background:#eef3f5;border-radius:10px;padding:3px}.awailModes button{border:0;background:transparent;border-radius:8px;padding:6px 12px;font-family:inherit;font-size:11px;font-weight:900;color:var(--muted);cursor:pointer}.awailModes button.active{background:var(--navy);color:#fff}.season{display:flex;gap:3px;background:#eef3f5;border-radius:10px;padding:3px}.season span{padding:5px 9px;border-radius:8px;font-size:10px;font-weight:900;color:var(--muted)}.season span.active{background:#fff;box-shadow:0 1px 4px #0001;color:var(--navy)}.prayerList{grid-template-columns:repeat(6,1fr);gap:5px}.prayerItem{background:#f7f9fa;border-radius:9px;padding:10px 4px;text-align:center;border:1px solid #edf1f3}.prayerItem b{font-size:10px}.prayerItem span{font-size:15px}.prayerItem.next{background:var(--navy);outline:0;color:#fff}.prayerItem.next b,.prayerItem.next span{color:#fff}.awailProgress{height:7px;background:#e8edef;border-radius:99px;overflow:hidden;margin-top:12px}.awailProgress>i{display:block;height:100%;width:0;background:var(--navy);border-radius:99px;transition:width .5s}.awailElapsed{text-align:center;font-size:9px;color:var(--muted);margin-top:5px}
-.clockTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.clockMain{font-size:27px;font-weight:900;letter-spacing:1px;color:var(--navy);direction:ltr}.clockDate{font-size:11px;color:var(--muted);margin-top:5px}.locSelect{border:1px solid #d7e0e5;border-radius:9px;padding:8px 9px;background:#fff;color:var(--navy);font-weight:800;font-size:11px}
+.clockCard{background:#fff;border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:15px}.prayerCard{overflow:hidden}.awailPanel{border-radius:14px;background:#fff}.awailTop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px}.awailModes{display:flex;gap:4px;background:#eef3f5;border-radius:10px;padding:3px}.awailModes button{border:0;background:transparent;border-radius:8px;padding:6px 12px;font-family:inherit;font-size:11px;font-weight:900;color:var(--muted);cursor:pointer}.awailModes button.active{background:var(--navy);color:#fff}.season{display:flex;gap:3px;background:#eef3f5;border-radius:10px;padding:3px}.season span{padding:5px 9px;border-radius:8px;font-size:10px;font-weight:900;color:var(--muted)}.season span.active{background:#fff;box-shadow:0 1px 4px #0001;color:var(--navy)}.prayerList{grid-template-columns:repeat(6,1fr);gap:5px}.prayerItem{background:#f7f9fa;border-radius:9px;padding:10px 4px;text-align:center;border:1px solid #edf1f3}.prayerItem b{font-size:10px}.prayerItem span{font-size:15px}.prayerItem.next{background:var(--navy);outline:0;color:#fff}.prayerItem.next b,.prayerItem.next span{color:#fff}.awailProgress{height:7px;background:#e8edef;border-radius:99px;overflow:hidden;margin-top:12px}.awailProgress>i{display:block;height:100%;width:0;background:var(--navy);border-radius:99px;transition:width .5s}.awailElapsed{text-align:center;font-size:9px;color:var(--muted);margin-top:5px}
+.clockBadge{font-size:11px;font-weight:900;color:var(--gold);white-space:nowrap}.clockTop{display:flex;align-items:center;justify-content:space-between;gap:10px}.clockMain{font-size:27px;font-weight:900;letter-spacing:1px;color:var(--navy);direction:ltr}.clockDate{font-size:11px;color:var(--muted);margin-top:5px}.locSelect{border:1px solid #d7e0e5;border-radius:9px;padding:8px 9px;background:#fff;color:var(--navy);font-weight:800;font-size:11px}
 .prayerHead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}.nextPrayer{font-size:12px;font-weight:900;color:var(--navy)}.countdown{font-size:11px;font-weight:900;color:var(--gold);white-space:nowrap}.prayerList{display:grid;grid-template-columns:repeat(6,1fr);gap:7px}.prayerItem{background:#f4f7f9;border-radius:10px;padding:8px 5px;text-align:center}.prayerItem b{display:block;font-size:10px;color:var(--muted)}.prayerItem span{display:block;font-size:13px;font-weight:900;color:var(--navy);margin-top:4px;direction:ltr}.prayerItem.next{background:#fff4d9;outline:1px solid #e7c86e}.prayerSource{font-size:9px;color:var(--muted);margin-top:8px}.prayerSource a{color:var(--blue);font-weight:900;text-decoration:none}.prayerError{font-size:10px;color:var(--red);padding:8px;background:#fff0f0;border-radius:8px}
 @media(max-width:900px){.timePrayer{grid-template-columns:1fr}.prayerList{grid-template-columns:repeat(3,1fr)}}
 @media(max-width:470px){.clockMain{font-size:23px}.clockTop{align-items:flex-start}.prayerHead{align-items:flex-start;flex-direction:column}.prayerList{grid-template-columns:repeat(3,1fr)}}
@@ -193,34 +193,14 @@
       <div><div class="eyebrow">المركز الداخلي</div><h1>لوحة المتابعة</h1><p>ملخص أعمال الشركة اليوم في شاشة واحدة.</p></div>
       
     </div>
-    <section class="timePrayer" aria-label="الوقت ومواقيت الصلاة">
-      <div class="clockCard">
+    <section class="timePrayer" aria-label="الوقت والتاريخ">
+      <div class="clockCard" style="grid-column:1/-1">
         <div class="clockTop">
           <div>
             <div id="liveClock" class="clockMain">12:00:00 ص</div>
             <div id="liveDate" class="clockDate">جاري تحميل التاريخ...</div>
           </div>
-          <select id="prayerLocation" class="locSelect" aria-label="موقع المواقيت">
-            <option value="baghdad">بغداد</option>
-            <option value="makkah">مكة المكرمة</option>
-            <option value="madinah">المدينة المنورة</option>
-          </select>
-        </div>
-      </div>
-      <div class="prayerCard">
-        <div class="awailPanel">
-          <div class="awailTop">
-            <div class="season"><span class="active">☀ صيفي</span><span>شتوي</span></div>
-            <div class="awailModes"><button id="dayMode" class="active" type="button">يومي</button><button id="weekMode" type="button">أسبوعي</button></div>
-          </div>
-          <div class="prayerHead">
-            <div id="nextPrayer" class="nextPrayer">الصلاة القادمة: —</div>
-            <div id="prayerCountdown" class="countdown">—</div>
-          </div>
-          <div id="prayerList" class="prayerList"></div>
-          <div class="awailProgress"><i id="prayerProgress"></i></div>
-          <div id="prayerElapsed" class="awailElapsed">—</div>
-          <div class="prayerSource">المصدر: <a id="prayerSourceLink" href="https://www.al-awail.com/prayers/1138442_iq_baghdad-%28%D8%A8%D8%BA%D8%AF%D8%A7%D8%AF_%D8%AD%D8%AF%D9%8A%D8%AB%29.html" target="_blank" rel="noopener">الأوائل — مواقيت الصلاة</a></div>
+          <div class="clockBadge">الوقت الحالي</div>
         </div>
       </div>
     </section>
@@ -344,20 +324,7 @@ async function loadAwail(){
     return times;
   }catch(e){console.warn('Awail prayer',e);return null}
 }
-async function loadPrayerData(){
-  const loc=$('prayerLocation').value,cfg=prayerCfg[loc];
-  const t=await loadAwail();
-  $('prayerSourceLink').href=cfg.source;
-  $('prayerSourceLink').textContent='الأوائل — مواقيت الصلاة';
-  if(t){
-    prayerData=t;
-    prayerDay=new Intl.DateTimeFormat('en-CA',{timeZone:cfg.tz,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
-    renderPrayer();
-  }else{
-    prayerData=null;
-    $('prayerList').innerHTML='<div class="prayerError" style="grid-column:1/-1">تعذر تحميل مواقيت الأوائل حاليًا.</div>';
-  }
-}
+async function loadPrayerData(){ return null; }
 function format12(time){
   if(!time)return '—';
   const [h,m]=time.split(':').map(Number),suffix=h>=12?'م':'ص',hh=(h%12)||12;
@@ -367,27 +334,17 @@ function formatClock(h,m,s){
   const n=Number(h),suffix=n>=12?'م':'ص',hh=(n%12)||12;
   return String(hh).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0')+' '+suffix;
 }
-function renderPrayer(){
-  if(!prayerData)return;
-  const cfg=prayerCfg[$('prayerLocation').value],now=new Date();
-  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:cfg.tz,year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(now),o={};parts.forEach(x=>o[x.type]=x.value);
-  const nowMin=Number(o.hour)*60+Number(o.minute)+Number(o.second)/60;let next=null,prev=null;
-  for(const [id,label] of prayerOrder){const t=prayerData[id];if(!t)continue;const [h,m]=t.split(':').map(Number),v=h*60+m;if(v<=nowMin)prev={id,label,time:t,min:v};if(v>nowMin&&!next)next={id,label,time:t,delta:v-nowMin,min:v};}
-  if(!next){const t=prayerData.fajr,[h,m]=t.split(':').map(Number);next={id:'fajr',label:'الفجر',time:t,delta:1440-nowMin+h*60+m,min:h*60+m};}
-  $('nextPrayer').textContent='🕌 الصلاة القادمة: '+next.label+' — '+format12(next.time);
-  const hh=Math.floor(next.delta/60),mm=Math.floor(next.delta%60);$('prayerCountdown').textContent='متبقي '+(hh?hh+' س ':'')+mm+' د';
-  $('prayerList').innerHTML=prayerOrder.map(([id,label])=>'<div class="prayerItem '+(id===next.id?'next':'')+'"><b>'+label+'</b><span>'+format12(prayerData[id])+'</span></div>').join('');
-  const progress=Math.max(0,Math.min(100,(nowMin-(prev?.min??0))/((next.min-(prev?.min??0))||1)*100));
-  $('prayerProgress').style.width=progress+'%';
-  $('prayerElapsed').textContent=prev?'مضى منذ '+prev.label+' '+Math.round(progress)+'%':'الوقت الحالي قبل الفجر';
-  $('liveDate').textContent=new Intl.DateTimeFormat('ar-IQ',{timeZone:cfg.tz,weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(now)+' · '+cfg.name;
-}
+function renderPrayer(){ return; }
 function setToday(){
-  const tick=()=>{const cfg=prayerCfg[$('prayerLocation').value],p=new Intl.DateTimeFormat('en-CA',{timeZone:cfg.tz,hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(new Date()),o={};p.forEach(x=>o[x.type]=x.value);$('liveClock').textContent=formatClock(o.hour,o.minute,o.second);renderPrayer()};
-  $('prayerLocation').addEventListener('change',loadPrayerData);
-  $('dayMode').onclick=()=>{$('dayMode').classList.add('active');$('weekMode').classList.remove('active')};
-  $('weekMode').onclick=()=>{$('weekMode').classList.add('active');$('dayMode').classList.remove('active');alert('التوقيت الأسبوعي متاح في مصدر الأوائل، وسيتم إضافته للوحة في التحديث القادم.')};
-  tick();setInterval(tick,1000);loadPrayerData();
+  const tick=()=>{
+    const now=new Date();
+    const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Baghdad',hour:'2-digit',minute:'2-digit',second:'2-digit',hour12:false}).formatToParts(now);
+    const o={}; parts.forEach(x=>o[x.type]=x.value);
+    $('liveClock').textContent=formatClock(o.hour,o.minute,o.second);
+    $('liveDate').textContent=new Intl.DateTimeFormat('ar-IQ',{timeZone:'Asia/Baghdad',weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(now)+' · بغداد';
+  };
+  tick();
+  setInterval(tick,1000);
 }
 async function getCurrentStaff(){const r=await db.auth.getUser();if(!r.data.user)return null;const q=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',r.data.user.id).maybeSingle();return q.data||null}
 async function loadAudit(){
