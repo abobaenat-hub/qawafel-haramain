@@ -70,7 +70,10 @@
  #qawafelAdminDrawer{top:62px;height:calc(100vh - 62px);width:min(310px,88vw)}
 }
 /* V95: unified admin drawer menu visible on all screen sizes */
-#qawafelGlobalAdminBar .qga-menu{display:inline-flex!important;min-width:42px;min-height:38px;font-size:20px;line-height:1}
+#qawafelGlobalAdminBar .qga-menu{display:inline-flex!important;min-width:42px;min-height:38px;font-size:20px;line-height:1;order:-1;margin-inline-start:0}
+/* V111.1: menu trigger is on the right, directly above the right-side drawer */
+#qawafelGlobalAdminBar .qga-inner{direction:rtl}
+#qawafelGlobalAdminBar .qga-menu{flex:0 0 auto}
 #qawafelAdminDrawer{z-index:100001}
 #qawafelAdminDrawerOverlay{z-index:100000}
 </style>
@@ -86,24 +89,24 @@
     if(document.getElementById('qawafelGlobalAdminBar')) return document.getElementById('qawafelGlobalAdminBar');
     const bar=document.createElement('div'); bar.id='qawafelGlobalAdminBar';
     bar.innerHTML=`<div class="qga-inner">
+      <button type="button" class="qga-btn qga-menu" id="qgaMenu" aria-label="فتح قائمة الإدارة">☰</button>
       <div class="qga-brand"><img class="qga-logo" src="./logo.png" alt="قوافل الحرمين"><div class="qga-brand-text"><b>قوافل الحرمين</b><small id="qgaPageTitle">${PAGE_TITLE}</small></div></div>
       <div class="qga-user"><div class="qga-avatar" id="qgaAvatar">ق</div><div class="qga-text"><div class="qga-name" id="qgaName">جاري التحميل...</div><div class="qga-role" id="qgaRole"></div></div></div>
       <div class="qga-actions">
-        <button type="button" class="qga-btn qga-menu" id="qgaMenu">☰</button>
         <a class="qga-btn qga-dashboard" id="qgaDashboard" href="./internal.html">⌂ لوحة الإدارة</a>
         <a class="qga-btn qga-home" href="./index.html">🌐 الموقع العام</a>
         <button type="button" class="qga-btn qga-logout" id="qgaLogout">تسجيل الخروج</button>
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
-    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=112"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
     if(!window.supabase) return;
     const bar=boot();
     const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف'};
+    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',supervisor:'مشرف رحلة'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
     const qad=document.getElementById('qawafelAdminDrawer'),qao=document.getElementById('qawafelAdminDrawerOverlay');
@@ -145,7 +148,7 @@
 const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const $=id=>document.getElementById(id);let agents=[],apps=[],prices=[],programs=[],bookings=[],tx=[],receipts=[],settlements=[];let editingAgent=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));const money=n=>Number(n||0).toLocaleString('ar-IQ')+' د.ع';
 function badge(s){const map={active:['فعال','ok'],pending:['قيد المراجعة','pending'],suspended:['موقوف','red'],inactive:['غير فعال','off'],contacted:['تم التواصل','pending'],approved:['مقبول','ok'],rejected:['مرفوض','red']};const x=map[s]||[s||'—','off'];return `<span class="badge ${x[1]}">${esc(x[0])}</span>`}
-const roleLabels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف'};
+const roleLabels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',supervisor:'مشرف رحلة'};
 async function loadCurrentUser(){try{const r=await db.auth.getUser();const u=r.data?.user;if(!u)return;let q=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',u.id).maybeSingle();if(!q.error&&q.data){$('currentUserName').textContent=q.data.full_name||u.email||'موظف';$('currentUserRole').textContent=roleLabels[q.data.role]||q.data.role||'موظف';return}let a=await db.from('admin_users').select('role').eq('user_id',u.id).maybeSingle();$('currentUserName').textContent=u.email||'مدير';$('currentUserRole').textContent=roleLabels[a.data?.role]||a.data?.role||'مدير';}catch(e){$('currentUserName').textContent='المستخدم';$('currentUserRole').textContent=''}}
 async function isAdmin(){const r=await db.auth.getUser();if(!r.data.user)return null;const s=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();if(!s.error&&s.data?.active)return r.data.user;const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();return q.error||!q.data?null:r.data.user}
 function showLogin(){ $('login').classList.remove('hide');$('app').classList.add('hide') }
