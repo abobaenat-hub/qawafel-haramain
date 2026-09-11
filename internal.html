@@ -222,7 +222,7 @@
       <div class="kpi"><div class="kicon">👥</div><div><span>المتعهدون الفعالون</span><b id="agentsCount">0</b></div></div>
     </section>
 
-    <section class="finance">
+    <section id="financeSummary" class="finance" style="display:none">
       <div><span>إجمالي المبيعات</span><b id="sales">0 د.ع</b></div>
       <div><span>المقبوض</span><b id="received">0 د.ع</b></div>
       <div><span>المتبقي</span><b id="remaining">0 د.ع</b></div>
@@ -393,12 +393,16 @@ async function loadAgents(){
 }
 
 async function load(){
+ const me=await getCurrentStaff();
+ const canFinance=!!me && (me.role==='super_admin'||me.role==='manager'||(Array.isArray(me.permissions)&&me.permissions.includes('finance')));
+ const fs=document.getElementById('financeSummary');
+ if(fs) fs.style.display=canFinance?'':'none';
  const [b,p,pr,i,e]=await Promise.all([
    db.from('bookings').select('*').order('created_at',{ascending:false}),
    db.from('pilgrims').select('*'),
    db.from('programs').select('*').order('departure_date'),
    db.from('installment_plans').select('*').order('due_date'),
-   db.from('expenses').select('*').order('expense_date',{ascending:false})
+   canFinance ? db.from('expenses').select('*').order('expense_date',{ascending:false}) : Promise.resolve({data:[],error:null})
  ]);
  const er=[b,p,pr,i,e].find(x=>x.error);
  if(er){$('alerts').innerHTML='<div class="alert">'+esc(er.error.message)+'</div>';return}
@@ -407,10 +411,12 @@ async function load(){
  $('pilgrims').textContent=P.length;
  $('bookings').textContent=B.length;
  $('seats').textContent=PR.reduce((s,x)=>s+Number(x.seats_available||0),0);
- $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
- $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
- $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
- $('expenses').textContent=money(E.reduce((s,x)=>s+Number(x.amount||0),0));
+ if(canFinance){
+   $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
+   $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
+   $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
+   $('expenses').textContent=money(E.reduce((s,x)=>s+Number(x.amount||0),0));
+ }
  render();
 }
 function render(){
