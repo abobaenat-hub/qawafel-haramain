@@ -239,7 +239,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
   <div><label>الجنس *</label><select id="gender" required><option value="">اختر الجنس</option><option value="ذكر">ذكر</option><option value="أنثى">أنثى</option></select></div>
   <div><label>المحافظة</label><select id="governorate"><option value="">اختر المحافظة</option><option>بغداد</option><option>الأنبار</option><option>بابل</option><option>البصرة</option><option>ديالى</option><option>القادسية</option><option>ذي قار</option><option>السليمانية</option><option>صلاح الدين</option><option>كربلاء</option><option>كركوك</option><option>واسط</option><option>ميسان</option><option>المثنى</option><option>النجف</option><option>نينوى</option><option>دهوك</option><option>حلبجة</option></select></div>
   <div><label>تاريخ الميلاد *</label><input id="birthDate" type="date" required><small id="ageHint" style="display:block;color:#6b7788;margin-top:5px"></small></div>
-  <div style="grid-column:1/-1"><label>محل السكن الحالي</label><input id="currentResidence" autocomplete="street-address" placeholder="المحافظة – القضاء/الناحية – المنطقة – العنوان"></div>
+  <div style="grid-column:1/-1"><label>محل السكن الحالي</label><input id="currentResidence" autocomplete="street-address" placeholder="القضاء/الناحية – المنطقة – العنوان"></div>
 </div>
 
 <!-- 3. Passport information -->
@@ -611,7 +611,7 @@ async function updatePilgrimProfile(p){
 async function openFocusedIssue(p,issue){
  const allowed=await isAdmin();
  if(!allowed){alert('لا تملك صلاحية تعديل بيانات المعتمرين.');return;}
- const labels={phone:'رقم الهاتف',residence:'محل السكن الحالي',guardian:'وكالة ولي الأمر للقاصر'};
+ const labels={phone:'رقم الهاتف',residence:'محل السكن الحالي',governorate:'المحافظة',guardian:'وكالة ولي الأمر للقاصر'};
  const label=labels[issue];
  if(!label)return openProfile(p.id);
  let body='';
@@ -620,8 +620,13 @@ async function openFocusedIssue(p,issue){
    if(p.guardian_accompanied){return openProfile(p.id);}
    body='<div class="section" style="border-top:0;padding-top:0"><div style="padding:14px;border-radius:12px;border:1px solid #ead9b5;background:#fff8e7"><b>⚠️ الوكالة غير مرفوعة</b><p style="margin:8px 0;color:#6b5a2b">ارفع وكالة ولي الأمر لإكمال هذا النقص.</p><label class="btn p" style="display:inline-block;margin:0">📁 اختيار الوكالة<input id="focusedGuardianUpload" type="file" accept="image/*,application/pdf" style="display:none"></label></div></div>';
  }else{
-   const val=issue==='phone'?(p.phone||''):(p.current_residence||'');
-   body='<div class="section" style="border-top:0;padding-top:0"><label for="focusedIssueInput">'+label+'</label><input id="focusedIssueInput" type="text" value="'+esc(val)+'" placeholder="أدخل '+label+'" autofocus><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button id="focusedIssueSave" class="btn p">💾 حفظ</button><button id="focusedIssueCancel" class="btn w">رجوع لملف المعتمر</button></div><div id="focusedIssueMsg" class="msg hide"></div></div>';
+   const val=issue==='phone'?(p.phone||''):issue==='residence'?(p.current_residence||''):(p.governorate||'');
+   if(issue==='governorate'){
+     const govs=['بغداد','الأنبار','بابل','البصرة','ديالى','القادسية','ذي قار','السليمانية','صلاح الدين','كربلاء','كركوك','واسط','ميسان','المثنى','النجف','نينوى','دهوك','حلبجة'];
+     body='<div class="section" style="border-top:0;padding-top:0"><label for="focusedIssueInput">المحافظة</label><select id="focusedIssueInput" autofocus><option value="">اختر المحافظة</option>'+govs.map(g=>'<option value="'+esc(g)+'"'+(g===val?' selected':'')+'>'+esc(g)+'</option>').join('')+'</select><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button id="focusedIssueSave" class="btn p">💾 حفظ</button><button id="focusedIssueCancel" class="btn w">رجوع لملف المعتمر</button></div><div id="focusedIssueMsg" class="msg hide"></div></div>';
+   }else{
+     body='<div class="section" style="border-top:0;padding-top:0"><label for="focusedIssueInput">'+label+'</label><input id="focusedIssueInput" type="text" value="'+esc(val)+'" placeholder="أدخل '+label+'" autofocus><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button id="focusedIssueSave" class="btn p">💾 حفظ</button><button id="focusedIssueCancel" class="btn w">رجوع لملف المعتمر</button></div><div id="focusedIssueMsg" class="msg hide"></div></div>';
+   }
  }
  $('profile').classList.remove('hide');
  $('profile').innerHTML='<h2>استكمال بيانات المعتمر</h2><div class="section" style="border-top:0;padding-top:0"><b>'+esc(p.full_name||'معتمر')+'</b><br><small>إكمال: '+esc(label)+'</small></div>'+body;
@@ -629,7 +634,7 @@ async function openFocusedIssue(p,issue){
    const f=$('focusedGuardianUpload');
    if(f)f.onchange=async()=>{const file=f.files?.[0];if(!file)return;const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';const path='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext;f.disabled=true;try{const up=await db.storage.from('pilgrim-photos').upload(path,file,{upsert:false,contentType:file.type||'application/octet-stream'});if(up.error)throw up.error;const ur=await db.from('pilgrims').update({guardian_authorization_path:path}).eq('id',p.id);if(ur.error)throw ur.error;alert('تم رفع وكالة ولي الأمر بنجاح ✅');await load();const np=P.find(x=>x.id===p.id);if(np)openProfile(np.id);}catch(e){alert('تعذر رفع الوكالة: '+(e?.message||e));}finally{f.disabled=false;}};
  }else{
-   $('focusedIssueSave').onclick=async()=>{const v=$('focusedIssueInput').value.trim();if(!v){alert('يرجى إدخال '+label);return;}const field=issue==='phone'?'phone':'current_residence';const r=await db.from('pilgrims').update({[field]:v}).eq('id',p.id);if(r.error){alert('تعذر الحفظ: '+r.error.message);return;}try{await db.rpc('log_audit_event',{p_action:'update_pilgrim',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:p.full_name,p_details:{field,value:v},p_page:'pilgrims.html'});}catch(e){} await load();alert('تم حفظ '+label+' بنجاح ✅');}
+   $('focusedIssueSave').onclick=async()=>{const v=$('focusedIssueInput').value.trim();if(!v){alert('يرجى إدخال '+label);return;}const field=issue==='phone'?'phone':issue==='residence'?'current_residence':'governorate';const r=await db.from('pilgrims').update({[field]:v}).eq('id',p.id);if(r.error){alert('تعذر الحفظ: '+r.error.message);return;}try{await db.rpc('log_audit_event',{p_action:'update_pilgrim',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:p.full_name,p_details:{field,value:v},p_page:'pilgrims.html'});}catch(e){} await load();alert('تم حفظ '+label+' بنجاح ✅');}
    $('focusedIssueCancel').onclick=()=>openProfile(p.id);
  }
  $('profile').scrollIntoView({behavior:'smooth'});

@@ -1,6 +1,4 @@
-Qawafel Haramain V155
+Qawafel Haramain V157
 Based on V156.
-Archive fixed-profile redesign: archive now stores/synchronizes only stable pilgrim information; trip-specific fields such as food and visa remain outside the permanent profile.
-Added english_name, passport_first_name and current_residence to the archive, synchronized from pilgrim records.
-Pilgrim archive sync now runs on INSERT and UPDATE so fixed information is refreshed after edits.
+Archive fixed-profile refinement: current residence placeholder no longer repeats governorate; governorate is a separate Iraqi-provinces dropdown. Existing pilgrims missing governorate now receive a dedicated notification, and the notification opens a focused governorate selector. Governorate is synchronized to the permanent archive profile. Trip-specific data remains outside the archive.
 V138 remains GOLD MASTER.
