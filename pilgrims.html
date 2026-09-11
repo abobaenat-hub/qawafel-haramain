@@ -252,6 +252,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 <div class="form-section-title"><span>4</span><b>البرنامج</b></div>
 <div class="cols">
   <div><label>البرنامج *</label><select id="program" required><option value="">جاري التحميل...</option></select></div>
+  <div id="packageWrap" class="hide"><label>الباقة</label><select id="package"><option value="">البرنامج بدون باقات</option></select><small style="display:block;color:#6b7788;margin-top:5px">اختر باقة السكن والسعر لهذا المعتمر.</small></div>
   <div><label>نوع البرنامج *</label><select id="paymentType" required><option value="cash">نقد</option><option value="installment">قسط</option></select></div>
 </div>
 
@@ -429,9 +430,20 @@ $('loginBtn').onclick=login;
 $('password').onkeydown=e=>{if(e.key==='Enter')login()};
 $('email').onkeydown=e=>{if(e.key==='Enter')login()};
 $('logout').onclick=async()=>{await db.auth.signOut();location.reload()};
+let PK=[];
+async function loadPackagesForProgram(programId){
+ if(!programId){PK=[];$('packageWrap').classList.add('hide');$('package').innerHTML='<option value="">البرنامج بدون باقات</option>';return;}
+ const pr=PR.find(x=>x.id===programId);
+ if(!pr?.package_mode){PK=[];$('packageWrap').classList.add('hide');$('package').innerHTML='<option value="">البرنامج بدون باقات</option>';return;}
+ const {data,error}=await db.from('program_packages').select('*').eq('program_id',programId).eq('active',true).order('created_at',{ascending:true});
+ if(error){console.error(error);PK=[];$('packageWrap').classList.add('hide');return;}
+ PK=data||[];$('packageWrap').classList.toggle('hide',!PK.length);
+ $('package').innerHTML='<option value="">اختر الباقة...</option>'+PK.map(x=>'<option value="'+x.id+'">'+esc(x.name)+' — نقد: '+money(x.price)+' | قسط: '+money(x.installment_price??x.price)+' — متاح: '+Number(x.seats_available??0)+'</option>').join('');
+}
+function selectedPackage(){return PK.find(x=>x.id===$('package').value)||null;}
 function selectedBasePrice(){
- const pr=PR.find(x=>x.id===$('program').value)||{};
- return Number(($('paymentType').value==='installment'?pr.installment_price:pr.price)||0);
+ const pr=PR.find(x=>x.id===$('program').value)||{}; const pk=selectedPackage();
+ return Number(($('paymentType').value==='installment'?(pk?.installment_price??pr.installment_price):(pk?.price??pr.price))||0);
 }
 function saleValues(){
  const base=selectedBasePrice();
@@ -440,7 +452,7 @@ function saleValues(){
 }
 function updateSaleBox(){
  const {base,discount,total}=saleValues();
- $('basePriceBox').textContent=base?money(base):'اختر البرنامج';
+ const pk=selectedPackage();$('basePriceBox').textContent=base?money(base):'اختر البرنامج';$('basePriceBox').title=pk?('الباقة: '+(pk.name||'')+' | المدينة: '+(pk.city_hotel||'—')+' | مكة: '+(pk.makkah_hotel||'—')):'';
  $('finalPrice').textContent=base?money(total):'—';
  const hint=$('discountHint');
  if(discount>base&&base>0){hint.style.color='#b3261e';hint.textContent='❌ الخصم أكبر من سعر البرنامج. خفّض قيمة الخصم.';$('finalPriceBox').style.background='#fff0f0';$('finalPriceBox').style.borderColor='#efb4b0';}
@@ -504,7 +516,8 @@ $('cashPaymentStatus')?.addEventListener('change',updateCashPaymentBox);
 $('cashInitial')?.addEventListener('input',updateCashPaymentBox);
 $('cashDueDate')?.addEventListener('change',updateCashPaymentBox);
 $('installmentCount').onchange=buildSchedule;
-$('program').onchange=()=>{updateSaleBox(); if($('paymentType').value==='installment')buildSchedule(); else updateCashPaymentBox()};
+$('program').onchange=async()=>{await loadPackagesForProgram($('program').value);$('package').value='';updateSaleBox(); if($('paymentType').value==='installment')buildSchedule(); else updateCashPaymentBox()};
+$('package').onchange=()=>{updateSaleBox(); if($('paymentType').value==='installment')buildSchedule(); else updateCashPaymentBox()};
 $('initial').oninput=()=>{if($('paymentType').value==='installment')buildSchedule()};
 $('firstInstallmentDate').onchange=()=>{if($('paymentType').value==='installment')buildSchedule()};
 
@@ -671,7 +684,7 @@ $('form').onsubmit=async e=>{
  e.preventDefault(); if(saveInProgress)return;
 await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('formMsg','⚠️ هذا الاسم مسجل كعميل سابق. اختر: نعم، أضفه للرحلة الحالية، أو لا، إلغاء.',true);}if(nameDuplicate)return msg('formMsg','❌ لا يمكن المتابعة بهذا الاسم.',true);msg('formMsg','جاري التحقق من البيانات...');
  const pr=PR.find(x=>x.id===$('program').value);if(!pr)return msg('formMsg','اختر البرنامج أولًا.',true);if(archiveConfirmed&&archiveMatch&&archiveAlreadyInProgram(archiveMatch.id,pr.id))return msg('formMsg','❌ هذا العميل مضاف بالفعل إلى الرحلة الحالية.',true);
- const paymentType=$('paymentType').value, basePrice=Number((paymentType==='installment'?pr.installment_price:pr.price)||0), discountAmount=Math.max(Number($('discountAmount').value||0),0), total=Math.max(basePrice-discountAmount,0), discountReason=$('discountReason').value.trim()||null, passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date, cashStatus=$('cashPaymentStatus')?.value||'paid', cashInitial=Math.max(Number($('cashInitial')?.value||0),0), paid=Math.min(Math.max(paymentType==='cash'?cashInitial:Number($('initial').value||0),0),total);
+ const chosenPackage=selectedPackage(); if(pr.package_mode && !chosenPackage)return msg('formMsg','❌ هذا البرنامج يحتوي على باقات. اختر الباقة أولًا.',true); const paymentType=$('paymentType').value, basePrice=Number((paymentType==='installment'?(chosenPackage?.installment_price??pr.installment_price):(chosenPackage?.price??pr.price))||0), discountAmount=Math.max(Number($('discountAmount').value||0),0), total=Math.max(basePrice-discountAmount,0), discountReason=$('discountReason').value.trim()||null, passportExpiry=$('pex').value,tripDate=pr.departure_date||pr.departure||pr.start_date, cashStatus=$('cashPaymentStatus')?.value||'paid', cashInitial=Math.max(Number($('cashInitial')?.value||0),0), paid=Math.min(Math.max(paymentType==='cash'?cashInitial:Number($('initial').value||0),0),total);
  if(discountAmount>basePrice)return msg('formMsg','❌ قيمة الخصم أكبر من سعر البرنامج.',true);
  const remaining=total-paid;
  if(paymentType==='cash'){
@@ -699,7 +712,7 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
  const manualPhotoFile=$('photoCamera').files?.[0] || $('photoUpload').files?.[0]; const photoFile=editedPhotoFile || manualPhotoFile || (usePassportPhoto?passportPhotoFile:null); if(!photoFile)return msg('formMsg','أرفق الصورة الشخصية أو استخدم الصورة المستخرجة من الجواز.',true);
  saveInProgress=true; const submitBtn=$('form').querySelector('button[type=submit]'); if(submitBtn)submitBtn.disabled=true;
  try{
-  const booking={program_id:pr.id,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,base_price:basePrice,discount_amount:discountAmount,discount_reason:discountReason,total_amount:total,paid_amount:paid,status:remaining?'pending':'confirmed',notes:'حجز من إدارة المعتمرين',payment_type:paymentType,cash_payment_status:paymentType==='cash'?cashStatus:null,cash_due_date:paymentType==='cash'&&cashStatus==='partial'?($('cashDueDate').value||null):null};
+  const booking={program_id:pr.id,package_id:chosenPackage?.id||null,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,base_price:basePrice,discount_amount:discountAmount,discount_reason:discountReason,total_amount:total,paid_amount:paid,status:remaining?'pending':'confirmed',notes:'حجز من إدارة المعتمرين',payment_type:paymentType,cash_payment_status:paymentType==='cash'?cashStatus:null,cash_due_date:paymentType==='cash'&&cashStatus==='partial'?($('cashDueDate').value||null):null};
   let photoPath=archiveConfirmed?(archiveMatch?.photo_path||null):null; if(photoFile){const ext=(photoFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; photoPath='pilgrim-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; const upPhoto=await db.storage.from('pilgrim-photos').upload(photoPath,photoFile,{upsert:false,contentType:photoFile.type||'image/jpeg'}); if(upPhoto.error)throw upPhoto.error;}
   let passportImagePath=archiveConfirmed?(archiveMatch?.passport_image_path||null):null; if(passportFile){const pext=(passportFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; passportImagePath='passport-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+pext; const upPassport=await db.storage.from('pilgrim-photos').upload(passportImagePath,passportFile,{upsert:false,contentType:passportFile.type||'image/jpeg'}); if(upPassport.error)throw upPassport.error;}
   let guardianPath=archiveConfirmed?(archiveMatch?.guardian_authorization_path||null):null; if(guardianFile){const gext=(guardianFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; guardianPath='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+gext; const ug=await db.storage.from('pilgrim-photos').upload(guardianPath,guardianFile,{upsert:false,contentType:guardianFile.type||'application/octet-stream'}); if(ug.error)throw ug.error;}

@@ -1,1 +1,1 @@
-Qawafel Haramain V138 — V128 stable + program save fix only
+Qawafel Haramain V139 — V138 gold master + isolated program packages
