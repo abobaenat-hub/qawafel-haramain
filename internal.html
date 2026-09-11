@@ -290,6 +290,7 @@ async function signIn(){
  if(!email||!password)return showLoginMsg('أدخل البريد الإلكتروني وكلمة المرور.',true);
  $('loginBtn').disabled=true;showLoginMsg('جاري التحقق...');
  try{
+   await db.auth.signOut();
    const r=await db.auth.signInWithPassword({email,password});
    if(r.error)throw r.error;
    if(!await isAdmin()){await db.auth.signOut();throw Error('هذا الحساب غير مخول للدخول إلى الإدارة.')}

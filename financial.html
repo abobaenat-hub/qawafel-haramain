@@ -390,7 +390,7 @@ async function admin(){
 async function login(){
  const e=$('email').value.trim(),pw=$('password').value;if(!e||!pw)return msg('loginMsg','أدخل البريد وكلمة المرور.',true);
  $('loginBtn').disabled=true;msg('loginMsg','جاري التحقق...');
- try{const {data,error}=await db.auth.signInWithPassword({email:e,password:pw});if(error)throw error;if(!await admin()){await db.auth.signOut();throw Error('الحساب غير مخول للإدارة.')}$('login').classList.add('hide');$('app').classList.remove('hide');await load()}
+ try{await db.auth.signOut();const {data,error}=await db.auth.signInWithPassword({email:e,password:pw});if(error)throw error;if(!await admin()){await db.auth.signOut();throw Error('الحساب غير مخول للإدارة.')}$('login').classList.add('hide');$('app').classList.remove('hide');await load()}
  catch(x){msg('loginMsg',x.message||'تعذر الدخول.',true)}finally{$('loginBtn').disabled=false}
 }
 $('loginBtn').onclick=login;$('password').onkeydown=e=>{if(e.key==='Enter')login()};

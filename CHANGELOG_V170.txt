@@ -1,0 +1,13 @@
+Qawafel Haramain V170
+
+Audit identity/session hardening:
+- Before every explicit staff/admin login, the previous browser Supabase session is signed out first.
+- This prevents an old Abu Al Hasan session from remaining active when an employee logs in on the same browser.
+- The existing server-side audit logger continues to attribute records from auth.uid() and does not accept a UI name as the actor.
+- V168 archive fixes and V169 broad audit instrumentation are preserved.
+
+Required test after deployment:
+1. On Abdul Aziz's device/browser, log out once.
+2. Log in with Abdul Aziz's own account.
+3. Perform a test action.
+4. Abu Al Hasan opens Audit Log and confirms the new row is under عبد العزيز.

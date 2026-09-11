@@ -446,7 +446,7 @@ async function login(){
  if(!email||!password)return msg('loginMsg','أدخل البريد الإلكتروني وكلمة المرور.',true);
  $('loginBtn').disabled=true;msg('loginMsg','جاري التحقق...');
  try{
-  const {data,error}=await db.auth.signInWithPassword({email,password});
+  await db.auth.signOut();const {data,error}=await db.auth.signInWithPassword({email,password});
   if(error)throw error;
   const u=await isAdmin();
   if(!u){await db.auth.signOut();throw Error('هذا الحساب غير مخول للإدارة.')}
