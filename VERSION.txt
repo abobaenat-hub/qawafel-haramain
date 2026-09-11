@@ -1,3 +1,4 @@
-Qawafel Haramain V148 — archive image restore fix
-V138 remains GOLD MASTER. V148 is a derived test build from V147.
-Fix: when adding an existing pilgrim from the archive, preserve and reuse the archived personal photo and passport image without requiring re-upload; show a preview/status when available.
+Qawafel Al-Haramain — V150
+Based on V149.
+V138 remains the untouched GOLD MASTER.
+V150 adds operational alerts for incomplete pilgrim information (phone, current residence, and minor guardian authorization), with clickable links to the pilgrim profile.
