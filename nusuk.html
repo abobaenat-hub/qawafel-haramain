@@ -87,4 +87,62 @@ initFolderStatus();boot();
  }
  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
 })();
+</script><script id="qawafel-permission-guard-v175">
+(function(){
+  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  const map={
+    'programs.html':'trips','pilgrims.html':'booking_staff','agents.html':'agents','supervisors.html':'supervisors',
+    'visa.html':'visa','nusuk.html':'nusuk','archive.html':'archive','financial.html':'finance','employees.html':'manager','audit.html':'super_admin'
+  };
+  const sensitive=Object.keys(map);
+  let applied=false;
+  function key(h){
+    try{return new URL(h,location.href).pathname.split('/').pop().toLowerCase()}catch(e){return String(h||'').split('?')[0].split('#')[0].split('/').pop().toLowerCase()}
+  }
+  function hideAll(){
+    document.querySelectorAll('a[href]').forEach(a=>{
+      const k=key(a.getAttribute('href')); if(sensitive.includes(k)) a.style.display='none';
+    });
+  }
+  function sectionCleanup(){
+    document.querySelectorAll('#qawafelAdminDrawer .qad-section').forEach(sec=>{
+      let n=sec.nextElementSibling,has=false;
+      while(n && !n.classList.contains('qad-section')){if(n.matches&&n.matches('.qad-link')&&n.style.display!=='none')has=true;n=n.nextElementSibling}
+      if(sec.textContent.includes('المالية')||sec.textContent.includes('العمليات')) sec.style.display=has?'':'none';
+    });
+  }
+  async function apply(){
+    try{
+      if(!window.supabase){return false;}
+      const db=window.supabase.createClient(U,K);
+      const r=await db.auth.getUser(); const u=r.data&&r.data.user;
+      if(!u){hideAll();return false;}
+      const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+      const s=q.data;
+      if(!s || s.active===false){hideAll();return false;}
+      if(s.role==='super_admin'||s.role==='manager'){
+        document.querySelectorAll('a[href]').forEach(a=>{const k=key(a.getAttribute('href'));if(sensitive.includes(k))a.style.display='';});
+        sectionCleanup(); applied=true; return true;
+      }
+      const perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
+      document.querySelectorAll('a[href]').forEach(a=>{
+        const k=key(a.getAttribute('href')); const need=map[k]; if(!need)return;
+        let ok=perms.has(need);
+        if(k==='nusuk.html') ok=ok||perms.has('booking_staff')||perms.has('visa');
+        if(k==='supervisors.html') ok=ok||perms.has('supervisor')||perms.has('driver');
+        a.style.display=ok?'':'none';
+        a.setAttribute('aria-hidden',ok?'false':'true');
+      });
+      sectionCleanup(); applied=true; return true;
+    }catch(e){console.warn('permission guard',e);hideAll();return false;}
+  }
+  hideAll();
+  let tries=0;
+  const timer=setInterval(async()=>{tries++;const ok=await apply();if(ok||tries>=20){clearInterval(timer);}},500);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{hideAll();apply();});
+  else {hideAll();apply();}
+  const obs=new MutationObserver(()=>{if(applied)apply();});
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+  setTimeout(()=>obs.disconnect(),20000);
+})();
 </script></body></html>
