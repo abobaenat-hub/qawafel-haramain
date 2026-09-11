@@ -1,1 +1,2 @@
-Qawafel Haramain V139 — V138 gold master + isolated program packages
+Qawafel Haramain V140 — package loading fix
+V138 remains GOLD MASTER; V140 is a derived test build.

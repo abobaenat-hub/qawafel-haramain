@@ -434,7 +434,7 @@ let PK=[];
 async function loadPackagesForProgram(programId){
  if(!programId){PK=[];$('packageWrap').classList.add('hide');$('package').innerHTML='<option value="">البرنامج بدون باقات</option>';return;}
  const pr=PR.find(x=>x.id===programId);
- if(!pr?.package_mode){PK=[];$('packageWrap').classList.add('hide');$('package').innerHTML='<option value="">البرنامج بدون باقات</option>';return;}
+ // V140: وجود باقات محفوظة هو المرجع الفعلي، ولا نعتمد على package_mode فقط.
  const {data,error}=await db.from('program_packages').select('*').eq('program_id',programId).eq('active',true).order('created_at',{ascending:true});
  if(error){console.error(error);PK=[];$('packageWrap').classList.add('hide');return;}
  PK=data||[];$('packageWrap').classList.toggle('hide',!PK.length);
@@ -503,7 +503,7 @@ function buildSchedule(){
 }
 function updateCashPaymentBox(){
  const pr=PR.find(x=>x.id===$('program').value); if(!pr)return;
- const total=Math.max(Number(pr?.price||0)-Math.max(Number($('discountAmount').value||0),0),0);
+ const total=Math.max(Number(selectedBasePrice())-Math.max(Number($('discountAmount').value||0),0),0);
  const status=$('cashPaymentStatus')?.value||'paid'; const wrap=$('cashDueWrap');
  wrap?.classList.toggle('hide',status!=='partial');
  const inp=$('cashInitial');
