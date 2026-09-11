@@ -1,7 +1,6 @@
-Qawafel Haramain V144 — minor guardian authorization pending workflow
-V138 remains GOLD MASTER; V144 is a derived test build from V143.
+Qawafel Haramain V145 — clickable operational alerts
+V138 remains GOLD MASTER; V145 is a derived test build from V144.
 Changes:
-- Minors under 18 can be saved when guardian is not accompanying and authorization is not ready.
-- Such pilgrims appear in Internal Dashboard alerts until guardian authorization is uploaded.
-- Added later authorization upload from pilgrim profile; uploading clears the alert automatically.
-- Pilgrim list shows a "وكالة مطلوبة" badge for pending cases.
+- Guardian authorization alerts are shown as individual clickable alerts in the Internal Dashboard.
+- Clicking a guardian alert opens the exact pilgrim profile and scrolls to the authorization section for immediate handling.
+- Uploading the authorization clears the alert automatically after refresh.
