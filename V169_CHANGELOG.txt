@@ -1,0 +1,7 @@
+V169 - Comprehensive Employee Activity Audit
+- Audit is restricted at database level to super_admin for reading.
+- Every authenticated admin/staff page records page views and login/logout events.
+- Global UI tracking records button/link actions, form submissions, field changes, and file selections.
+- Supabase write operations (RPC/table POST/PATCH/PUT/DELETE) are recorded as db_operation events, excluding the audit logger itself.
+- Audit page filters and counts now include all activity categories.
+- Employee identity is resolved server-side from auth.uid().

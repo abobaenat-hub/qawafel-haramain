@@ -150,7 +150,7 @@
 <div class="head"><div><div class="eyebrow">الأمان والرقابة</div><h1>سجل نشاط الموظفين</h1><p>هذه الصفحة خاصة بالمدير العام فقط لمتابعة جميع نشاطات الموظفين، مع حفظ اسم المنفّذ والوقت والصفحة والتفاصيل.</p></div></div>
 <div id="msg" class="msg hide"></div>
 <section class="stats"><div class="stat"><span>إجمالي السجلات المعروضة</span><b id="count">0</b></div><div class="stat"><span>دخول</span><b id="logins">0</b></div><div class="stat"><span>عمليات داخل النظام</span><b id="actions">0</b></div></section>
-<section class="card"><div class="filters"><div class="field"><label>الموظف</label><select id="staff"><option value="">كل الموظفين</option></select></div><div class="field"><label>نوع النشاط</label><select id="action"><option value="">كل الأنشطة</option><option value="login">تسجيل دخول</option><option value="page_view">فتح صفحة</option><option value="ui_action">عملية داخل النظام</option></select></div><button id="refresh" class="btn primary">تحديث السجل</button></div></section>
+<section class="card"><div class="filters"><div class="field"><label>الموظف</label><select id="staff"><option value="">كل الموظفين</option></select></div><div class="field"><label>نوع النشاط</label><select id="action"><option value="">كل الأنشطة</option><option value="login">تسجيل دخول</option><option value="page_view">فتح صفحة</option><option value="ui_action">ضغط/عملية داخل الواجهة</option><option value="form_submit">إرسال نموذج</option><option value="field_change">تغيير حقل</option><option value="file_select">اختيار ملف</option><option value="db_operation">عملية فعلية في قاعدة البيانات</option></select></div><button id="refresh" class="btn primary">تحديث السجل</button></div></section>
 <section class="card"><div class="table"><table><thead><tr><th>التاريخ والوقت</th><th>الموظف</th><th>النشاط</th><th>التفاصيل</th><th>الصفحة</th></tr></thead><tbody id="rows"><tr><td colspan="5" class="empty">جاري التحميل...</td></tr></tbody></table></div></section>
 </main>
 <section id="denied" class="card" style="max-width:650px;margin:70px auto;display:none;text-align:center"><h2 style="color:var(--navy);margin-top:0">غير مصرح</h2><p style="color:var(--muted);font-size:12px">هذه الصفحة متاحة للمدير العام فقط.</p><a class="btn primary" href="./internal.html">العودة إلى لوحة الشركة</a></section>
@@ -162,11 +162,92 @@ function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 function showMsg(t,e=false){$('msg').textContent=t;$('msg').className='msg'+(e?' err':'')}
 async function guard(){const r=await db.auth.getUser();if(r.error||!r.data.user){location.href='internal.html';return false}const q=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',r.data.user.id).maybeSingle();if(!q.error&&q.data?.active&&q.data.role==='super_admin')return true;const a=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();if(!a.error&&a.data?.role==='super_admin')return true;$('denied').style.display='block';return false}
 async function loadStaff(){const r=await db.from('staff_profiles').select('user_id,full_name').eq('active',true).order('full_name');if(!r.error)$('staff').innerHTML='<option value="">كل الموظفين</option>'+(r.data||[]).map(x=>'<option value="'+esc(x.user_id)+'">'+esc(x.full_name||'موظف')+'</option>').join('')}
-async function render(){const staff=$('staff').value,action=$('action').value;let q=db.from('audit_logs').select('created_at,staff_id,staff_name,action,entity_label,page,details').order('created_at',{ascending:false}).limit(300);if(staff)q=q.eq('staff_id',staff);if(action)q=q.eq('action',action);const r=await q;if(r.error){$('rows').innerHTML='<tr><td colspan="5" class="empty">تعذر تحميل السجل.</td></tr>';showMsg(r.error.message,true);return}const data=r.data||[];const labels={login:'تسجيل دخول',page_view:'فتح صفحة',ui_action:'عملية داخل النظام'};$('count').textContent=data.length;$('logins').textContent=data.filter(x=>x.action==='login').length;$('actions').textContent=data.filter(x=>x.action==='ui_action').length;$('rows').innerHTML=data.map(x=>{const d=x.details||{};const detail=x.entity_label||d.href||'—';return '<tr><td>'+esc(new Date(x.created_at).toLocaleString('ar-IQ'))+'</td><td><b>'+esc(x.staff_name||'—')+'</b></td><td><span class="pill">'+esc(labels[x.action]||x.action)+'</span></td><td class="details" title="'+esc(detail)+'">'+esc(detail)+'</td><td>'+esc(x.page||'—')+'</td></tr>'}).join('')||'<tr><td colspan="5" class="empty">لا توجد نشاطات مسجلة.</td></tr>'}
+async function render(){const staff=$('staff').value,action=$('action').value;let q=db.from('audit_logs').select('created_at,staff_id,staff_name,action,entity_label,page,details').order('created_at',{ascending:false}).limit(300);if(staff)q=q.eq('staff_id',staff);if(action)q=q.eq('action',action);const r=await q;if(r.error){$('rows').innerHTML='<tr><td colspan="5" class="empty">تعذر تحميل السجل.</td></tr>';showMsg(r.error.message,true);return}const data=r.data||[];const labels={login:'تسجيل دخول',logout:'تسجيل خروج',page_view:'فتح صفحة',ui_action:'ضغط/عملية داخل الواجهة',form_submit:'إرسال نموذج',field_change:'تغيير حقل',file_select:'اختيار ملف',db_operation:'عملية فعلية في قاعدة البيانات'};$('count').textContent=data.length;$('logins').textContent=data.filter(x=>x.action==='login').length;$('actions').textContent=data.filter(x=>!['login','page_view'].includes(x.action)).length;$('rows').innerHTML=data.map(x=>{const d=x.details||{};const detail=x.entity_label||d.href||'—';return '<tr><td>'+esc(new Date(x.created_at).toLocaleString('ar-IQ'))+'</td><td><b>'+esc(x.staff_name||'—')+'</b></td><td><span class="pill">'+esc(labels[x.action]||x.action)+'</span></td><td class="details" title="'+esc(detail)+'">'+esc(detail)+'</td><td>'+esc(x.page||'—')+'</td></tr>'}).join('')||'<tr><td colspan="5" class="empty">لا توجد نشاطات مسجلة.</td></tr>'}
 $('staff').onchange=render;$('action').onchange=render;$('refresh').onclick=render;$('logout').onclick=async()=>{await db.auth.signOut();location.href='internal.html'};
 (async()=>{if(await guard()){$('app').classList.remove('hide');await loadStaff();await render()}})();
 </script>
-<script id="qawafel-audit-v118">
-(function(){const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';function run(){if(!window.supabase)return;const db=window.supabase.createClient(U,K);const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:location.pathname.split('/').pop()||'index.html'}).catch(()=>{});window.qawafelAuditV118=log;if(!window.__qawafelAuditV118Bound){window.__qawafelAuditV118Bound=true;document.addEventListener('click',e=>{const el=e.target.closest('button,a,[role="button"],input[type="submit"]');if(!el)return;const txt=(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);if(txt)log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});},true)}db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'&&session?.user){const k='qawafel_audit_login_logged';if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,'1');log('login','auth',session.user.id,'تسجيل دخول')}}});db.auth.getSession().then(({data})=>{if(data?.session?.user){log('page_view','page',location.pathname,document.title);const k='qawafel_audit_login_logged';if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,'1');log('login','auth',data.session.user.id,'تسجيل دخول')}}})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
+<script id="qawafel-audit-v169">
+(function(){
+  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+  const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  let started=false, wrapped=false;
+  const page=()=>location.pathname.split('/').pop()||'index.html';
+  const safe=(v)=>String(v??'').replace(/\s+/g,' ').trim().slice(0,180);
+  function start(){
+    if(started||!window.supabase||!window.supabase.createClient)return false;
+    started=true;
+    const db=window.supabase.createClient(U,K);
+    const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:page()}).catch(()=>{});
+    window.qawafelAudit=log;
+    window.qawafelAuditV169=log;
+
+    // تسجيل فتح الصفحة وتسجيل الدخول من هوية الجلسة الحقيقية.
+    db.auth.getSession().then(({data})=>{
+      if(data&&data.session&&data.session.user){
+        log('page_view','page',page(),document.title);
+        const key='qawafel_audit_login_logged_v169';
+        if(!sessionStorage.getItem(key)){sessionStorage.setItem(key,'1');log('login','auth',data.session.user.id,'تسجيل دخول');}
+      }
+    }).catch(()=>{});
+    db.auth.onAuthStateChange((event,session)=>{
+      if(event==='SIGNED_IN'&&session&&session.user) log('login','auth',session.user.id,'تسجيل دخول');
+      if(event==='SIGNED_OUT') log('logout','auth',null,'تسجيل خروج');
+    });
+
+    if(!window.__qawafelAuditV169Bound){
+      window.__qawafelAuditV169Bound=true;
+      document.addEventListener('click',e=>{
+        const el=e.target.closest('button,a,[role="button"],input[type="submit"],input[type="button"]');
+        if(!el)return;
+        const txt=safe(el.innerText||el.value||el.getAttribute('aria-label')||el.title||el.id||'زر');
+        if(txt) log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});
+      },true);
+      document.addEventListener('submit',e=>{
+        const f=e.target; if(!f)return;
+        log('form_submit','form',f.id||null,safe(f.getAttribute('aria-label')||f.getAttribute('name')||f.id||'إرسال نموذج'),{action:f.getAttribute('action')||null});
+      },true);
+      document.addEventListener('change',e=>{
+        const el=e.target; if(!el||!el.matches('select,input[type="file"],input[type="checkbox"],input[type="radio"]'))return;
+        const label=el.id||el.name||el.getAttribute('aria-label')||el.type||'حقل';
+        let detail={type:el.type||el.tagName.toLowerCase()};
+        if(el.type==='file') detail.files=Array.from(el.files||[]).map(f=>f.name).slice(0,10);
+        else if(el.type==='checkbox'||el.type==='radio') detail.checked=!!el.checked;
+        else detail.value=safe(el.value);
+        log(el.type==='file'?'file_select':'field_change','field',el.id||null,safe(label),detail);
+      },true);
+    }
+
+    // التقاط عمليات الكتابة/التعديل الفعلية إلى Supabase، حتى لو لم يكن للزر
+    // أي تسجيل يدوي داخل الصفحة. نتجاهل استدعاء سجل النشاط نفسه.
+    if(!wrapped){
+      wrapped=true;
+      const nativeFetch=window.fetch.bind(window);
+      window.fetch=async function(input,init){
+        const reqUrl=typeof input==='string'?input:(input&&input.url)||'';
+        const method=((init&&init.method)||((input&&input.method)||'GET')).toUpperCase();
+        const isSb=reqUrl.indexOf(U)>=0;
+        const isAudit=reqUrl.indexOf('/rest/v1/rpc/log_audit_event')>=0;
+        const mut=isSb&&['POST','PATCH','PUT','DELETE'].includes(method)&&!isAudit;
+        let resp;
+        try{resp=await nativeFetch(input,init);}catch(err){throw err;}
+        if(mut){
+          try{
+            const u=new URL(reqUrl,U);
+            const parts=u.pathname.split('/').filter(Boolean);
+            let op='db_operation', type=parts[1]||'supabase', label='';
+            if(parts[1]==='rpc'){label=parts[2]||'rpc';}else{label=parts[1]||'table';}
+            const status=resp.status;
+            log(op,type,null,safe(method+' '+label),{method,url:u.pathname,status,ok:resp.ok});
+          }catch(_){}
+        }
+        return resp;
+      };
+    }
+    return true;
+  }
+  if(!start()){
+    let tries=0; const timer=setInterval(()=>{if(start()||++tries>=75)clearInterval(timer)},200);
+  }
+})();
 </script>
 </body></html>

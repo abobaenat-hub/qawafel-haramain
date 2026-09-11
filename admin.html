@@ -50,8 +50,89 @@
   }
 })();
 </script>
-<script id="qawafel-audit-v118">
-(function(){const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';function run(){if(!window.supabase)return;const db=window.supabase.createClient(U,K);const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:location.pathname.split('/').pop()||'index.html'}).catch(()=>{});window.qawafelAuditV118=log;if(!window.__qawafelAuditV118Bound){window.__qawafelAuditV118Bound=true;document.addEventListener('click',e=>{const el=e.target.closest('button,a,[role="button"],input[type="submit"]');if(!el)return;const txt=(el.innerText||el.value||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);if(txt)log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});},true)}db.auth.onAuthStateChange((event,session)=>{if(event==='SIGNED_IN'&&session?.user){const k='qawafel_audit_login_logged';if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,'1');log('login','auth',session.user.id,'تسجيل دخول')}}});db.auth.getSession().then(({data})=>{if(data?.session?.user){log('page_view','page',location.pathname,document.title);const k='qawafel_audit_login_logged';if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,'1');log('login','auth',data.session.user.id,'تسجيل دخول')}}})}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run()})();
+<script id="qawafel-audit-v169">
+(function(){
+  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+  const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  let started=false, wrapped=false;
+  const page=()=>location.pathname.split('/').pop()||'index.html';
+  const safe=(v)=>String(v??'').replace(/\s+/g,' ').trim().slice(0,180);
+  function start(){
+    if(started||!window.supabase||!window.supabase.createClient)return false;
+    started=true;
+    const db=window.supabase.createClient(U,K);
+    const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:page()}).catch(()=>{});
+    window.qawafelAudit=log;
+    window.qawafelAuditV169=log;
+
+    // تسجيل فتح الصفحة وتسجيل الدخول من هوية الجلسة الحقيقية.
+    db.auth.getSession().then(({data})=>{
+      if(data&&data.session&&data.session.user){
+        log('page_view','page',page(),document.title);
+        const key='qawafel_audit_login_logged_v169';
+        if(!sessionStorage.getItem(key)){sessionStorage.setItem(key,'1');log('login','auth',data.session.user.id,'تسجيل دخول');}
+      }
+    }).catch(()=>{});
+    db.auth.onAuthStateChange((event,session)=>{
+      if(event==='SIGNED_IN'&&session&&session.user) log('login','auth',session.user.id,'تسجيل دخول');
+      if(event==='SIGNED_OUT') log('logout','auth',null,'تسجيل خروج');
+    });
+
+    if(!window.__qawafelAuditV169Bound){
+      window.__qawafelAuditV169Bound=true;
+      document.addEventListener('click',e=>{
+        const el=e.target.closest('button,a,[role="button"],input[type="submit"],input[type="button"]');
+        if(!el)return;
+        const txt=safe(el.innerText||el.value||el.getAttribute('aria-label')||el.title||el.id||'زر');
+        if(txt) log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});
+      },true);
+      document.addEventListener('submit',e=>{
+        const f=e.target; if(!f)return;
+        log('form_submit','form',f.id||null,safe(f.getAttribute('aria-label')||f.getAttribute('name')||f.id||'إرسال نموذج'),{action:f.getAttribute('action')||null});
+      },true);
+      document.addEventListener('change',e=>{
+        const el=e.target; if(!el||!el.matches('select,input[type="file"],input[type="checkbox"],input[type="radio"]'))return;
+        const label=el.id||el.name||el.getAttribute('aria-label')||el.type||'حقل';
+        let detail={type:el.type||el.tagName.toLowerCase()};
+        if(el.type==='file') detail.files=Array.from(el.files||[]).map(f=>f.name).slice(0,10);
+        else if(el.type==='checkbox'||el.type==='radio') detail.checked=!!el.checked;
+        else detail.value=safe(el.value);
+        log(el.type==='file'?'file_select':'field_change','field',el.id||null,safe(label),detail);
+      },true);
+    }
+
+    // التقاط عمليات الكتابة/التعديل الفعلية إلى Supabase، حتى لو لم يكن للزر
+    // أي تسجيل يدوي داخل الصفحة. نتجاهل استدعاء سجل النشاط نفسه.
+    if(!wrapped){
+      wrapped=true;
+      const nativeFetch=window.fetch.bind(window);
+      window.fetch=async function(input,init){
+        const reqUrl=typeof input==='string'?input:(input&&input.url)||'';
+        const method=((init&&init.method)||((input&&input.method)||'GET')).toUpperCase();
+        const isSb=reqUrl.indexOf(U)>=0;
+        const isAudit=reqUrl.indexOf('/rest/v1/rpc/log_audit_event')>=0;
+        const mut=isSb&&['POST','PATCH','PUT','DELETE'].includes(method)&&!isAudit;
+        let resp;
+        try{resp=await nativeFetch(input,init);}catch(err){throw err;}
+        if(mut){
+          try{
+            const u=new URL(reqUrl,U);
+            const parts=u.pathname.split('/').filter(Boolean);
+            let op='db_operation', type=parts[1]||'supabase', label='';
+            if(parts[1]==='rpc'){label=parts[2]||'rpc';}else{label=parts[1]||'table';}
+            const status=resp.status;
+            log(op,type,null,safe(method+' '+label),{method,url:u.pathname,status,ok:resp.ok});
+          }catch(_){}
+        }
+        return resp;
+      };
+    }
+    return true;
+  }
+  if(!start()){
+    let tries=0; const timer=setInterval(()=>{if(start()||++tries>=75)clearInterval(timer)},200);
+  }
+})();
 </script>
 </body>
 </html>
