@@ -1,4 +1,5 @@
-Qawafel Haramain V157
-Based on V156.
-Archive fixed-profile refinement: current residence placeholder no longer repeats governorate; governorate is a separate Iraqi-provinces dropdown. Existing pilgrims missing governorate now receive a dedicated notification, and the notification opens a focused governorate selector. Governorate is synchronized to the permanent archive profile. Trip-specific data remains outside the archive.
-V138 remains GOLD MASTER.
+Qawafel Haramain Platform
+Build: V160
+Base: V159
+Change: Redesigned admin alerts into compact summary cards and grouped expandable notifications.
+GOLD MASTER: V138 (untouched)
