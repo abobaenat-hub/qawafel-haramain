@@ -27,7 +27,7 @@ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5g
 const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);let P=[],B=[],PR=[];
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function showToast(t){$('toast').textContent=t;$('toast').classList.remove('hide');setTimeout(()=>$('toast').classList.add('hide'),4200)}
-async function isAllowed(){const r=await db.auth.getUser();if(!r.data.user)return false;const s=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();if(!s.error&&s.data?.active)return ['super_admin','manager','booking_staff','visa'].includes(s.data.role);const a=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();return !a.error&&!!a.data}
+async function isAllowed(){const r=await db.auth.getUser();if(!r.data.user)return false;const s=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();if(!s.error&&s.data?.active){const p=s.data.permissions||[];return ['super_admin','manager','booking_staff','visa'].includes(s.data.role)||p.includes('nusuk')||p.includes('booking_staff')||p.includes('visa');}const a=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();return !a.error&&!!a.data}
 async function photoUrl(path){if(!path)return '';const r=await db.storage.from('pilgrim-photos').createSignedUrl(path,3600);return r.data?.signedUrl||''}
 async function makeNusukPassport(blob){if(blob.size<=900*1024)return blob;const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(blob)});const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=data});let scale=Math.min(1,2200/Math.max(img.naturalWidth,img.naturalHeight));for(let pass=0;pass<5;pass++){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);for(const q of [.9,.82,.75,.68]){const out=await new Promise(r=>c.toBlob(r,'image/jpeg',q));if(out&&out.size<=950*1024)return out}scale*=.82}throw Error('تعذر تجهيز الصورة ضمن حد 1 ميجابايت.')}
 const FS_DB='qawafel_nusuk_fs';
@@ -49,4 +49,42 @@ async function boot(){const r=await db.auth.getSession();if(r.data.session&&awai
 $('loginBtn').onclick=async()=>{const e=$('email').value.trim(),p=$('password').value;if(!e||!p)return;$('loginBtn').disabled=true;await db.auth.signOut();const r=await db.auth.signInWithPassword({email:e,password:p});if(r.error||!(await isAllowed())){$('loginMsg').textContent=r.error?.message||'الحساب غير مخول.';$('loginMsg').classList.remove('hide');await db.auth.signOut()}else{$('login').classList.add('hide');$('app').classList.remove('hide');await load()}$('loginBtn').disabled=false};
 initFolderStatus();boot();
 </script>
-</body></html>
+<script id="qawafel-permission-menu-v174">
+(function(){
+ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
+ let perms=null, busy=false;
+ function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
+ function apply(){
+   if(!perms || busy)return; busy=true;
+   try{
+     document.querySelectorAll('a[href]').forEach(a=>{
+       const k=pageKey(a.getAttribute('href')); if(!k)return;
+       let ok=perms.has(k);
+       if(k==='nusuk') ok=ok||perms.has('booking_staff')||perms.has('visa');
+       if(k==='supervisors') ok=ok||perms.has('supervisor')||perms.has('driver');
+       if(k==='super_admin') ok=false;
+       a.style.display=ok?'':'none';
+       a.setAttribute('aria-hidden',ok?'false':'true');
+     });
+   }finally{busy=false}
+ }
+ async function run(){
+   try{
+     if(!window.supabase)return;
+     const db=window.supabase.createClient(U,K);
+     const r=await db.auth.getUser(),u=r.data&&r.data.user;if(!u)return;
+     const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+     const s=q.data;if(!s||s.active===false)return;
+     if(['super_admin','manager'].includes(s.role)) return; // المدير والمدير العام يرون كل الأقسام
+     perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
+     apply();
+     const obs=new MutationObserver(()=>apply());
+     obs.observe(document.body,{childList:true,subtree:true});
+     setTimeout(()=>obs.disconnect(),15000);
+     [100,300,700,1500,3000].forEach(t=>setTimeout(apply,t));
+   }catch(e){console.warn('permission menu',e)}
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();
+</script></body></html>

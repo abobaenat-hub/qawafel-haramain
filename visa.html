@@ -110,4 +110,42 @@ $('search').addEventListener('input',render);$('refresh').onclick=load;$('closeM
   }
 })();
 </script>
-</body></html>
+<script id="qawafel-permission-menu-v174">
+(function(){
+ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
+ let perms=null, busy=false;
+ function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
+ function apply(){
+   if(!perms || busy)return; busy=true;
+   try{
+     document.querySelectorAll('a[href]').forEach(a=>{
+       const k=pageKey(a.getAttribute('href')); if(!k)return;
+       let ok=perms.has(k);
+       if(k==='nusuk') ok=ok||perms.has('booking_staff')||perms.has('visa');
+       if(k==='supervisors') ok=ok||perms.has('supervisor')||perms.has('driver');
+       if(k==='super_admin') ok=false;
+       a.style.display=ok?'':'none';
+       a.setAttribute('aria-hidden',ok?'false':'true');
+     });
+   }finally{busy=false}
+ }
+ async function run(){
+   try{
+     if(!window.supabase)return;
+     const db=window.supabase.createClient(U,K);
+     const r=await db.auth.getUser(),u=r.data&&r.data.user;if(!u)return;
+     const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+     const s=q.data;if(!s||s.active===false)return;
+     if(['super_admin','manager'].includes(s.role)) return; // المدير والمدير العام يرون كل الأقسام
+     perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
+     apply();
+     const obs=new MutationObserver(()=>apply());
+     obs.observe(document.body,{childList:true,subtree:true});
+     setTimeout(()=>obs.disconnect(),15000);
+     [100,300,700,1500,3000].forEach(t=>setTimeout(apply,t));
+   }catch(e){console.warn('permission menu',e)}
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();
+</script></body></html>

@@ -96,7 +96,7 @@
     if(!window.supabase) return;
     const bar=boot();
     const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',supervisor:'مشرف رحلة',driver:'سائق'};
+    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة',driver:'سائق'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
     const qad=document.getElementById('qawafelAdminDrawer'),qao=document.getElementById('qawafelAdminDrawerOverlay');
@@ -139,7 +139,7 @@ function wirePassport(who){let ids=[who+'Pass',who+'PassCam'];ids.forEach(id=>$(
 wirePassport('s');wirePassport('d');
 ['cropZoom','cropX','cropY'].forEach(id=>$(id).oninput=drawCrop);$('rotL').onclick=()=>{cropState.angle=(cropState.angle+270)%360;drawCrop()};$('rotR').onclick=()=>{cropState.angle=(cropState.angle+90)%360;drawCrop()};$('cropReset').onclick=()=>{$('cropZoom').value=1;$('cropX').value=0;$('cropY').value=0;cropState.angle=0;drawCrop()};$('cropClose').onclick=()=>$('cropModal').classList.remove('show');$('cropSave').onclick=()=>{let c=$('cropCanvas'),w=c.toDataURL('image/jpeg',.9);fetch(w).then(r=>r.blob()).then(b=>{setEditedFile(cropState.who,b);$('cropModal').classList.remove('show')})};
 wirePassport('s');wirePassport('d');
-async function guard(){let r=await db.auth.getUser();if(!r.data?.user){location.href='internal.html';return false}currentUser=r.data.user;let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',currentUser.id).maybeSingle();if(!s.error&&s.data?.active!==false&&['super_admin','manager'].includes(s.data?.role)){return 'manager'}if(!s.error&&s.data?.active!==false&&s.data?.role==='driver'){document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');let dr=await db.from('drivers').select('*').eq('user_id',currentUser.id).maybeSingle();if(!dr.error&&dr.data){currentDriver=dr.data;return 'driver'}}if(!s.error&&s.data?.active!==false&&s.data?.role==='supervisor'){document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');let sp=await db.from('supervisors').select('*').eq('user_id',currentUser.id).maybeSingle();if(!sp.error&&sp.data){currentSupervisor=sp.data;return 'supervisor'}}let a=await db.from('admin_users').select('role').eq('user_id',currentUser.id).maybeSingle();if(!a.error&&['super_admin'].includes(a.data?.role))return 'manager';location.href='internal.html';return false}
+async function guard(){let r=await db.auth.getUser();if(!r.data?.user){location.href='internal.html';return false}currentUser=r.data.user;let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',currentUser.id).maybeSingle();if(!s.error&&s.data?.active!==false&&['super_admin','manager'].includes(s.data?.role)){return 'manager'}if(!s.error&&s.data?.active!==false&&Array.isArray(s.data?.permissions)&&s.data.permissions.includes('supervisors')){return 'manager'}if(!s.error&&s.data?.active!==false&&s.data?.role==='driver'){document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');let dr=await db.from('drivers').select('*').eq('user_id',currentUser.id).maybeSingle();if(!dr.error&&dr.data){currentDriver=dr.data;return 'driver'}}if(!s.error&&s.data?.active!==false&&s.data?.role==='supervisor'){document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');let sp=await db.from('supervisors').select('*').eq('user_id',currentUser.id).maybeSingle();if(!sp.error&&sp.data){currentSupervisor=sp.data;return 'supervisor'}}let a=await db.from('admin_users').select('role').eq('user_id',currentUser.id).maybeSingle();if(!a.error&&['super_admin'].includes(a.data?.role))return 'manager';location.href='internal.html';return false}
 async function loadData(){let [s,d,p]=await Promise.all([db.from('supervisors').select('*').order('full_name'),db.from('drivers').select('*').order('full_name'),db.from('programs').select('id,title,departure_date,supervisor_id,driver_id,driver_fee,assistant_driver_id,assistant_driver_name,assistant_driver_phone').order('departure_date')]);if(s.error)throw s.error;if(d.error)throw d.error;supervisors=s.data||[];drivers=d.data||[];programs=p.data||[];renderSup();renderDrv()}
 function renderSup(){let counts={};programs.forEach(p=>{if(p.supervisor_id)counts[p.supervisor_id]=(counts[p.supervisor_id]||0)+1});$('supRows').innerHTML=supervisors.map(s=>`<tr><td><b>${esc(s.full_name)}</b><br><span class="small">${esc(s.phone||'—')}</span></td><td>${esc(s.passport_number||'—')}<br><span class="small">${esc(s.passport_expiry||'')}</span></td><td>${Number(s.commission_rate||1.5)}%</td><td>${counts[s.id]||0}</td><td><span class="badge ${s.active?'ok':'warn'}">${s.active?'فعال':'موقوف'}</span></td><td><div class="actions"><button class="btn ghost" onclick="openSupervisor('${s.id}')">كشف الأرباح</button><button class="btn gold" onclick="editSupervisor('${s.id}')">تعديل</button></div></td></tr>`).join('')||'<tr><td colspan="6">لا يوجد مشرفون.</td></tr>'}
 function renderDrv(){let counts={};programs.forEach(p=>{if(p.driver_id)counts[p.driver_id]=(counts[p.driver_id]||0)+1;if(p.assistant_driver_id)counts[p.assistant_driver_id]=(counts[p.assistant_driver_id]||0)+1});$('drvRows').innerHTML=drivers.map(d=>`<tr><td><b>${esc(d.full_name)}</b><br>${esc(d.phone||'')}</td><td>${esc(d.passport_number||'—')}<br>${esc(d.passport_expiry||'')}</td><td>${esc(d.vehicle_type||'—')}<br>${esc(d.vehicle_number||'')}</td><td>${counts[d.id]||0}</td><td><button class="btn gold" onclick="editDriver('${d.id}')">تعديل</button></td></tr>`).join('')||'<tr><td colspan="5">لا يوجد سائقون.</td></tr>'}
@@ -235,4 +235,42 @@ document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelect
   }
 })();
 </script>
-</body></html>
+<script id="qawafel-permission-menu-v174">
+(function(){
+ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
+ let perms=null, busy=false;
+ function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
+ function apply(){
+   if(!perms || busy)return; busy=true;
+   try{
+     document.querySelectorAll('a[href]').forEach(a=>{
+       const k=pageKey(a.getAttribute('href')); if(!k)return;
+       let ok=perms.has(k);
+       if(k==='nusuk') ok=ok||perms.has('booking_staff')||perms.has('visa');
+       if(k==='supervisors') ok=ok||perms.has('supervisor')||perms.has('driver');
+       if(k==='super_admin') ok=false;
+       a.style.display=ok?'':'none';
+       a.setAttribute('aria-hidden',ok?'false':'true');
+     });
+   }finally{busy=false}
+ }
+ async function run(){
+   try{
+     if(!window.supabase)return;
+     const db=window.supabase.createClient(U,K);
+     const r=await db.auth.getUser(),u=r.data&&r.data.user;if(!u)return;
+     const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+     const s=q.data;if(!s||s.active===false)return;
+     if(['super_admin','manager'].includes(s.role)) return; // المدير والمدير العام يرون كل الأقسام
+     perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
+     apply();
+     const obs=new MutationObserver(()=>apply());
+     obs.observe(document.body,{childList:true,subtree:true});
+     setTimeout(()=>obs.disconnect(),15000);
+     [100,300,700,1500,3000].forEach(t=>setTimeout(apply,t));
+   }catch(e){console.warn('permission menu',e)}
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();
+</script></body></html>

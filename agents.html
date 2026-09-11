@@ -106,7 +106,7 @@
     if(!window.supabase) return;
     const bar=boot();
     const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',supervisor:'مشرف رحلة'};
+    const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
     const qad=document.getElementById('qawafelAdminDrawer'),qao=document.getElementById('qawafelAdminDrawerOverlay');
@@ -154,9 +154,9 @@
 const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const $=id=>document.getElementById(id);let agents=[],apps=[],prices=[],programs=[],bookings=[],tx=[],receipts=[],settlements=[];let editingAgent=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));const money=n=>Number(n||0).toLocaleString('ar-IQ')+' د.ع';
 function badge(s){const map={active:['فعال','ok'],pending:['قيد المراجعة','pending'],suspended:['موقوف','red'],inactive:['غير فعال','off'],contacted:['تم التواصل','pending'],approved:['مقبول','ok'],rejected:['مرفوض','red']};const x=map[s]||[s||'—','off'];return `<span class="badge ${x[1]}">${esc(x[0])}</span>`}
-const roleLabels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',supervisor:'مشرف رحلة'};
+const roleLabels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة'};
 async function loadCurrentUser(){try{const r=await db.auth.getUser();const u=r.data?.user;if(!u)return;let q=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',u.id).maybeSingle();if(!q.error&&q.data){$('currentUserName').textContent=q.data.full_name||u.email||'موظف';$('currentUserRole').textContent=roleLabels[q.data.role]||q.data.role||'موظف';return}let a=await db.from('admin_users').select('role').eq('user_id',u.id).maybeSingle();$('currentUserName').textContent=u.email||'مدير';$('currentUserRole').textContent=roleLabels[a.data?.role]||a.data?.role||'مدير';}catch(e){$('currentUserName').textContent='المستخدم';$('currentUserRole').textContent=''}}
-async function isAdmin(){const r=await db.auth.getUser();if(!r.data.user)return null;const s=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();if(!s.error&&s.data?.active)return r.data.user;const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();return q.error||!q.data?null:r.data.user}
+async function isAdmin(){const r=await db.auth.getUser();if(!r.data.user)return null;const s=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',r.data.user.id).maybeSingle();if(!s.error&&s.data?.active){const p=s.data.permissions||[];if(['super_admin','manager'].includes(s.data.role)||s.data.role==='agents'||p.includes('agents'))return r.data.user;return null;}const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();return !q.error&&q.data?.role==='super_admin'?r.data.user:null}
 function showLogin(){ $('login').classList.remove('hide');$('app').classList.add('hide') }
 async function boot(){const u=await isAdmin();if(!u){showLogin();return}$('login').classList.add('hide');$('app').classList.remove('hide');loadCurrentUser();$('today').textContent=new Intl.DateTimeFormat('ar-IQ',{weekday:'long',year:'numeric',month:'long',day:'numeric'}).format(new Date());await loadAll()}
 async function signIn(){const email=$('email').value.trim(),password=$('password').value;if(!email||!password){$('loginMsg').textContent='أدخل البريد الإلكتروني وكلمة المرور.';return}$('loginBtn').disabled=true;try{await db.auth.signOut();const r=await db.auth.signInWithPassword({email,password});if(r.error)throw r.error;if(!await isAdmin())throw Error('الحساب غير مخول للدخول إلى الإدارة.');location.reload()}catch(e){$('loginMsg').className='msg err';$('loginMsg').textContent=e.message||'تعذر تسجيل الدخول.'}finally{$('loginBtn').disabled=false}}
@@ -178,8 +178,84 @@ function renderFinance(){const aid=$('financeAgent')?.value||'';const list=booki
 $('financeAgent').onchange=renderFinance;
 $('issueReceipt').onclick=async()=>{const agent_id=$('financeAgent').value,amount=Number($('receiptAmount').value),booking_id=$('financeBooking').value||null,payment_method=$('receiptMethod').value,notes=$('receiptNotes').value.trim()||null;if(!agent_id||!amount){alert('اختر المتعهد وأدخل مبلغ الاستلام.');return}const r=await db.rpc('admin_receive_agent_payment',{p_agent_id:agent_id,p_amount:amount,p_booking_id:booking_id,p_payment_method:payment_method,p_notes:notes});if(r.error){alert(r.error.message);return}if(!r.data?.ok){alert('تعذر إصدار الوصل: '+(r.data?.reason||''));return}$('receiptAmount').value='';$('receiptNotes').value='';await loadAll();printReceipt(r.data.receipt_id)};
 $('makeSettlement').onclick=async()=>{const agent_id=$('financeAgent').value;if(!agent_id){alert('اختر المتعهد أولاً.');return}const r=await db.rpc('admin_create_agent_settlement',{p_agent_id:agent_id,p_notes:'تسوية حساب من الإدارة'});if(r.error){alert(r.error.message);return}if(!r.data?.ok){alert('تعذر إصدار التسوية: '+(r.data?.reason||''));return}await loadAll();printSettlement(r.data.settlement_id)};
-function printReceipt(id){const r=receipts.find(x=>x.id===id);if(!r)return;const a=agents.find(x=>x.id===r.agent_id);const b=bookings.find(x=>x.id===r.booking_id);const w=window.open('','_blank');if(!w)return;w.document.write(`<html dir="rtl"><head><title>وصل استلام ${esc(r.receipt_number)}</title><style>body{font-family:Tahoma,Arial;padding:40px;color:#18384f}h1{color:#0b3556}table{width:100%;border-collapse:collapse}td{padding:10px;border-bottom:1px solid #ddd}.box{border:1px solid #ddd;padding:20px;border-radius:12px}</style></head><body><h1>قوافل الحرمين للحج والعمرة</h1><h2>وصل استلام أموال</h2><div class="box"><table><tr><td>رقم الوصل</td><td>${esc(r.receipt_number)}</td></tr><tr><td>المتعهد</td><td>${esc(a?.full_name||'—')}</td></tr><tr><td>المبلغ</td><td><b>${money(r.amount)}</b></td></tr><tr><td>طريقة الدفع</td><td>${esc(r.payment_method)}</td></tr><tr><td>الحجز</td><td>${esc(b?.booking_number||'على الحساب العام')}</td></tr><tr><td>البيان</td><td>${esc(r.notes||'—')}</td></tr><tr><td>التاريخ</td><td>${new Date(r.received_at).toLocaleString('ar-IQ')}</td></tr></table></div><script>window.print()<\/script></body></html>`);w.document.close()}
-function printSettlement(id){const x=settlements.find(s=>s.id===id);if(!x)return;const a=agents.find(a=>a.id===x.agent_id);const w=window.open('','_blank');if(!w)return;w.document.write(`<html dir="rtl"><head><title>تسوية ${esc(x.settlement_number)}</title><style>body{font-family:Tahoma,Arial;padding:40px;color:#18384f}h1{color:#0b3556}table{width:100%;border-collapse:collapse}td{padding:12px;border-bottom:1px solid #ddd}</style></head><body><h1>قوافل الحرمين للحج والعمرة</h1><h2>تسوية حساب متعهد</h2><table><tr><td>رقم التسوية</td><td>${esc(x.settlement_number)}</td></tr><tr><td>المتعهد</td><td>${esc(a?.full_name||'—')}</td></tr><tr><td>إجمالي المستحق</td><td>${money(x.total_due)}</td></tr><tr><td>إجمالي المقبوض</td><td>${money(x.total_received)}</td></tr><tr><td>الرصيد المتبقي</td><td><b>${money(x.balance)}</b></td></tr><tr><td>التاريخ</td><td>${new Date(x.settled_at).toLocaleString('ar-IQ')}</td></tr></table><script>window.print()<\/script></body></html>`);w.document.close()}
+function printReceipt(id){const r=receipts.find(x=>x.id===id);if(!r)return;const a=agents.find(x=>x.id===r.agent_id);const b=bookings.find(x=>x.id===r.booking_id);const w=window.open('','_blank');if(!w)return;w.document.write(`<html dir="rtl"><head><title>وصل استلام ${esc(r.receipt_number)}</title><style>body{font-family:Tahoma,Arial;padding:40px;color:#18384f}h1{color:#0b3556}table{width:100%;border-collapse:collapse}td{padding:10px;border-bottom:1px solid #ddd}.box{border:1px solid #ddd;padding:20px;border-radius:12px}</style></head><body><h1>قوافل الحرمين للحج والعمرة</h1><h2>وصل استلام أموال</h2><div class="box"><table><tr><td>رقم الوصل</td><td>${esc(r.receipt_number)}</td></tr><tr><td>المتعهد</td><td>${esc(a?.full_name||'—')}</td></tr><tr><td>المبلغ</td><td><b>${money(r.amount)}</b></td></tr><tr><td>طريقة الدفع</td><td>${esc(r.payment_method)}</td></tr><tr><td>الحجز</td><td>${esc(b?.booking_number||'على الحساب العام')}</td></tr><tr><td>البيان</td><td>${esc(r.notes||'—')}</td></tr><tr><td>التاريخ</td><td>${new Date(r.received_at).toLocaleString('ar-IQ')}</td></tr></table></div><script>window.print()<\/script><script id="qawafel-permission-menu-v174">
+(function(){
+ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
+ let perms=null, busy=false;
+ function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
+ function apply(){
+   if(!perms || busy)return; busy=true;
+   try{
+     document.querySelectorAll('a[href]').forEach(a=>{
+       const k=pageKey(a.getAttribute('href')); if(!k)return;
+       let ok=perms.has(k);
+       if(k==='nusuk') ok=ok||perms.has('booking_staff')||perms.has('visa');
+       if(k==='supervisors') ok=ok||perms.has('supervisor')||perms.has('driver');
+       if(k==='super_admin') ok=false;
+       a.style.display=ok?'':'none';
+       a.setAttribute('aria-hidden',ok?'false':'true');
+     });
+   }finally{busy=false}
+ }
+ async function run(){
+   try{
+     if(!window.supabase)return;
+     const db=window.supabase.createClient(U,K);
+     const r=await db.auth.getUser(),u=r.data&&r.data.user;if(!u)return;
+     const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+     const s=q.data;if(!s||s.active===false)return;
+     if(['super_admin','manager'].includes(s.role)) return; // المدير والمدير العام يرون كل الأقسام
+     perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
+     apply();
+     const obs=new MutationObserver(()=>apply());
+     obs.observe(document.body,{childList:true,subtree:true});
+     setTimeout(()=>obs.disconnect(),15000);
+     [100,300,700,1500,3000].forEach(t=>setTimeout(apply,t));
+   }catch(e){console.warn('permission menu',e)}
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();
+</script></body></html>`);w.document.close()}
+function printSettlement(id){const x=settlements.find(s=>s.id===id);if(!x)return;const a=agents.find(a=>a.id===x.agent_id);const w=window.open('','_blank');if(!w)return;w.document.write(`<html dir="rtl"><head><title>تسوية ${esc(x.settlement_number)}</title><style>body{font-family:Tahoma,Arial;padding:40px;color:#18384f}h1{color:#0b3556}table{width:100%;border-collapse:collapse}td{padding:12px;border-bottom:1px solid #ddd}</style></head><body><h1>قوافل الحرمين للحج والعمرة</h1><h2>تسوية حساب متعهد</h2><table><tr><td>رقم التسوية</td><td>${esc(x.settlement_number)}</td></tr><tr><td>المتعهد</td><td>${esc(a?.full_name||'—')}</td></tr><tr><td>إجمالي المستحق</td><td>${money(x.total_due)}</td></tr><tr><td>إجمالي المقبوض</td><td>${money(x.total_received)}</td></tr><tr><td>الرصيد المتبقي</td><td><b>${money(x.balance)}</b></td></tr><tr><td>التاريخ</td><td>${new Date(x.settled_at).toLocaleString('ar-IQ')}</td></tr></table><script>window.print()<\/script><script id="qawafel-permission-menu-v174">
+(function(){
+ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
+ let perms=null, busy=false;
+ function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
+ function apply(){
+   if(!perms || busy)return; busy=true;
+   try{
+     document.querySelectorAll('a[href]').forEach(a=>{
+       const k=pageKey(a.getAttribute('href')); if(!k)return;
+       let ok=perms.has(k);
+       if(k==='nusuk') ok=ok||perms.has('booking_staff')||perms.has('visa');
+       if(k==='supervisors') ok=ok||perms.has('supervisor')||perms.has('driver');
+       if(k==='super_admin') ok=false;
+       a.style.display=ok?'':'none';
+       a.setAttribute('aria-hidden',ok?'false':'true');
+     });
+   }finally{busy=false}
+ }
+ async function run(){
+   try{
+     if(!window.supabase)return;
+     const db=window.supabase.createClient(U,K);
+     const r=await db.auth.getUser(),u=r.data&&r.data.user;if(!u)return;
+     const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+     const s=q.data;if(!s||s.active===false)return;
+     if(['super_admin','manager'].includes(s.role)) return; // المدير والمدير العام يرون كل الأقسام
+     perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
+     apply();
+     const obs=new MutationObserver(()=>apply());
+     obs.observe(document.body,{childList:true,subtree:true});
+     setTimeout(()=>obs.disconnect(),15000);
+     [100,300,700,1500,3000].forEach(t=>setTimeout(apply,t));
+   }catch(e){console.warn('permission menu',e)}
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();
+</script></body></html>`);w.document.close()}
 document.addEventListener('click',e=>{const r=e.target.closest('.printReceipt');if(r)printReceipt(r.dataset.id);const z=e.target.closest('.printSettlement');if(z)printSettlement(z.dataset.id)});
 $('agentSearch').oninput=renderAgents;$('agentStatus').onchange=renderAgents;$('appStatus').onchange=renderApps;$('refreshApps').onclick=loadAll;$('financeAgent').onchange=renderFinance;
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');document.querySelectorAll('.panel').forEach(x=>x.classList.add('hide'));$(t.dataset.tab+'Tab').classList.remove('hide');if(t.dataset.tab==='ledger')renderFinance()});
@@ -268,4 +344,42 @@ boot();
   }
 })();
 </script>
-</body></html>
+<script id="qawafel-permission-menu-v174">
+(function(){
+ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
+ let perms=null, busy=false;
+ function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
+ function apply(){
+   if(!perms || busy)return; busy=true;
+   try{
+     document.querySelectorAll('a[href]').forEach(a=>{
+       const k=pageKey(a.getAttribute('href')); if(!k)return;
+       let ok=perms.has(k);
+       if(k==='nusuk') ok=ok||perms.has('booking_staff')||perms.has('visa');
+       if(k==='supervisors') ok=ok||perms.has('supervisor')||perms.has('driver');
+       if(k==='super_admin') ok=false;
+       a.style.display=ok?'':'none';
+       a.setAttribute('aria-hidden',ok?'false':'true');
+     });
+   }finally{busy=false}
+ }
+ async function run(){
+   try{
+     if(!window.supabase)return;
+     const db=window.supabase.createClient(U,K);
+     const r=await db.auth.getUser(),u=r.data&&r.data.user;if(!u)return;
+     const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+     const s=q.data;if(!s||s.active===false)return;
+     if(['super_admin','manager'].includes(s.role)) return; // المدير والمدير العام يرون كل الأقسام
+     perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
+     apply();
+     const obs=new MutationObserver(()=>apply());
+     obs.observe(document.body,{childList:true,subtree:true});
+     setTimeout(()=>obs.disconnect(),15000);
+     [100,300,700,1500,3000].forEach(t=>setTimeout(apply,t));
+   }catch(e){console.warn('permission menu',e)}
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();
+</script></body></html>
