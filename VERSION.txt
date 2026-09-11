@@ -1,4 +1,4 @@
-Qawafel Haramain V152
+Qawafel Haramain V153
 Based on V151.
 Fix: notification links with ?open=<pilgrim_id> now automatically load and open the correct pilgrim profile after data loading.
 V138 remains GOLD MASTER.

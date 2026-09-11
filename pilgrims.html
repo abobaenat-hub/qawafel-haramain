@@ -571,18 +571,50 @@ async function photoUrl(path){
  return r.data?.signedUrl||'';
 }
 function qrUrl(text){return 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&margin=2&data='+encodeURIComponent(text)}
+async function updatePilgrimProfile(p){
+ const allowed=await isAdmin();
+ if(!allowed){alert('لا تملك صلاحية تعديل بيانات المعتمرين.');return;}
+ const old=p;
+ const full_name=prompt('الاسم بالعربي المعتمد',old.full_name||''); if(full_name===null)return;
+ const english=prompt('الاسم بالإنكليزي من الجواز',old.passport_first_name||''); if(english===null)return;
+ const phone=prompt('رقم الهاتف',old.phone||''); if(phone===null)return;
+ const residence=prompt('محل السكن الحالي',old.current_residence||''); if(residence===null)return;
+ const passport=prompt('رقم الجواز',old.passport_number||''); if(passport===null)return;
+ const expiry=prompt('تاريخ انتهاء الجواز YYYY-MM-DD',old.passport_expiry||''); if(expiry===null)return;
+ const birth=prompt('تاريخ الميلاد YYYY-MM-DD',old.birth_date||''); if(birth===null)return;
+ const gender=prompt('الجنس (ذكر/أنثى)',old.gender==='male'?'ذكر':old.gender==='female'?'أنثى':(old.gender||'')); if(gender===null)return;
+ const visa=prompt('رقم التأشيرة (إن وجد)',old.visa_number||''); if(visa===null)return;
+ const visaStatus=prompt('حالة التأشيرة (pending/processing/issued/rejected)',old.visa_status||'pending'); if(visaStatus===null)return;
+ const notes=prompt('ملاحظات',old.notes||''); if(notes===null)return;
+ let guardian=old.guardian_accompanied===true;
+ if(birth && calcAge(birth)<18){ const g=prompt('هل ولي الأمر مرافق؟ (نعم/لا)',guardian?'نعم':'لا'); if(g===null)return; guardian=['نعم','yes','y'].includes(g.trim().toLowerCase()); }
+ const payload={
+  full_name:full_name.trim(), passport_first_name:(english.trim().replace(/[^A-Za-z\s'-]/g,' ').split(/\s+/)[0]||null)?.toUpperCase()||null,
+  phone:phone.trim()||null,current_residence:residence.trim()||null,passport_number:passport.trim()||null,
+  passport_or_id:passport.trim()||null,passport_expiry:expiry.trim()||null,birth_date:birth.trim()||null,
+  gender:gender==='ذكر'?'male':gender==='أنثى'?'female':(gender||null),gender_ar:gender||null,
+  visa_number:visa.trim()||null,visa_status:visaStatus.trim()||'pending',notes:notes.trim()||null,
+  guardian_accompanied:guardian
+ };
+ const r=await db.from('pilgrims').update(payload).eq('id',p.id);
+ if(r.error){alert('تعذر حفظ التعديلات: '+r.error.message);return;}
+ try{await db.rpc('log_audit_event',{p_action:'update_pilgrim',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:payload.full_name,p_details:{fields:Object.keys(payload)},p_page:'pilgrims.html'});}catch(e){}
+ alert('تم تحديث بيانات المعتمر بنجاح ✅');
+ await load(); const np=P.find(x=>x.id===p.id); if(np)openProfile(np.id);
+}
+
 async function openProfile(id){
  const p=P.find(x=>x.id===id);if(!p)return;
  const b=B.find(x=>x.id===p.booking_id),pr=PR.find(x=>x.id===b?.program_id),ins=I.filter(x=>x.booking_id===b?.id);
  $('profile').classList.remove('hide');
- $('profile').innerHTML='<h2>ملف المعتمر: '+esc(p.full_name)+'</h2>'+
+ $('profile').innerHTML='<h2>ملف المعتمر: '+esc(p.full_name)+'</h2><div class="section noPrint" style="display:flex;gap:8px;flex-wrap:wrap"><button id="editPilgrimBtn" class="btn p">✏️ تعديل بيانات المعتمر</button></div>'+
  '<div class="cols"><div>رمز الملف<br><b>'+esc(p.profile_code||'—')+'</b></div><div>الهاتف<br>'+esc(p.phone||'—')+'</div><div>محل السكن الحالي<br>'+esc(p.current_residence||'—')+'</div><div>الجواز<br>'+esc(p.passport_number||'—')+'</div><div>انتهاء الجواز<br>'+esc(p.passport_expiry||'—')+'</div><div>الفيزا<br>'+badge(p.visa_status)+' '+esc(p.visa_number||'')+'</div></div>'+
  '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج<br><b>'+esc(pr?.title||'—')+'</b></div><div>نوع البرنامج<br><b>'+(b?.payment_type==='installment'?'قسط':'نقد')+'</b></div>'+(b?.payment_type==='cash'?'<div>حالة الدفع<br><b>'+(b?.cash_payment_status==='partial'?'دفعة مقدمة — المتبقي قبل السفر':'تم دفع المبلغ كاملًا')+'</b>'+(b?.cash_payment_status==='partial'&&b?.cash_due_date?'<br><small>موعد المتبقي: '+esc(b.cash_due_date)+'</small>':'')+'</div>':'')+'<div>الإجمالي<br><span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع<br><span class="money">'+money(b?.paid_amount)+'</span></div><div>المتبقي<br><span class="money">'+money(b?.remaining_amount)+'</span></div><div>الحالة<br>'+badge(b?.status)+'</div></div></div>'+
  (p?.birth_date && calcAge(p.birth_date)<18 ? '<div class="section"><h3>👨‍👦 وكالة ولي الأمر</h3><div style="padding:12px;border-radius:12px;border:1px solid '+(p.guardian_accompanied?'#b8dec9':(p.guardian_authorization_path?'#b8dec9':'#ead9b5'))+';background:'+(p.guardian_accompanied||p.guardian_authorization_path?'#edf8f3':'#fff8e7')+'"><b>'+(p.guardian_accompanied?'✅ ولي الأمر مرافق — لا تحتاج وكالة.':(p.guardian_authorization_path?'✅ تم إرفاق وكالة ولي الأمر.':'⚠️ القاصر غير مرافق ولم تُرفع الوكالة بعد.'))+'</b>'+(p.guardian_accompanied?'':'<div style="margin-top:9px;display:flex;gap:8px;flex-wrap:wrap"><label class="btn p noPrint" style="display:inline-block;margin:0">📁 رفع الوكالة الآن<input id="profileGuardianUpload" type="file" accept="image/*,application/pdf" style="display:none"></label></div><small class="noPrint" style="display:block;margin-top:6px;color:#795b16">عند رفع الوكالة يختفي التنبيه تلقائيًا.</small>')+'</div></div>' : '')+
  ((b?.payment_type==='installment'||(b?.payment_type==='cash'&&b?.cash_payment_status==='partial'))?'<div class="section"><h3>'+(b?.payment_type==='cash'?'المبلغ المتبقي قبل السفر':'الأقساط')+'</h3><div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+((ins.length?ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join(''):'<tr><td colspan="5">لا توجد أقساط.</td></tr>'))+'</tbody></table></div><button id="manageBtn" class="btn p noPrint">💰 إدارة الدفعات والأقساط</button><div id="manager" class="section hide"></div></div>':'<div class="section"><span class="badge ok">برنامج نقدي — لا توجد أقساط</span></div>')+
  ((p?.food_subscribed)?'<div class="section"><h3>🍽️ اشتراك الطعام</h3><div class="cols"><div>الحالة<br><b>مشترك بالطعام</b></div><div>المبلغ المستلم<br><span class="money">'+money(p.food_amount)+'</span></div><div>عدد الوجبات<br><b>'+esc(p.food_meals_count||0)+'</b></div><div>نوع الوجبات<br><b>'+esc(({all:'جميع الوجبات',breakfast:'فطور',lunch:'غداء',dinner:'عشاء',custom:'اشتراك مخصص'})[p.food_meal_type]||'—')+'</b></div><div>حالة الدفع<br><b>'+esc(({paid:'تم الدفع',unpaid:'غير مدفوع',partial:'مدفوع جزئيًا'})[p.food_payment_status]||'—')+'</b></div></div><div style="margin-top:8px;color:#795b16;font-weight:800;font-size:12px">هذا المبلغ مستلم من المعتمر لصالح المطعم ولا يدخل ضمن إيرادات أو أرباح الشركة.</div></div>':'')+'<div class="section"><button class="btn w noPrint" onclick="window.print()">طباعة الملف</button> <button class="btn danger noPrint" id="deleteTripBtn">حذف المعتمر من الرحلة</button></div>';
  if(b?.payment_type==='installment'||(b?.payment_type==='cash'&&b?.cash_payment_status==='partial'))$('manageBtn').onclick=()=>managePayments(b);
- $('deleteTripBtn').onclick=()=>deletePilgrimFromTrip(p.id);
+ $('deleteTripBtn').onclick=()=>deletePilgrimFromTrip(p.id); $('editPilgrimBtn').onclick=()=>updatePilgrimProfile(p);
  const profileGuardianUpload=$('profileGuardianUpload');
  if(profileGuardianUpload){ profileGuardianUpload.onchange=async()=>{ const file=profileGuardianUpload.files?.[0]; if(!file)return; const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; const path='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; profileGuardianUpload.disabled=true; try{ const up=await db.storage.from('pilgrim-photos').upload(path,file,{upsert:false,contentType:file.type||'application/octet-stream'}); if(up.error)throw up.error; const ur=await db.from('pilgrims').update({guardian_authorization_path:path}).eq('id',p.id); if(ur.error)throw ur.error; p.guardian_authorization_path=path; alert('تم رفع وكالة ولي الأمر بنجاح، وسيختفي التنبيه.'); await load(); openProfile(p.id); }catch(e){ alert('تعذر رفع الوكالة: '+(e?.message||e)); }finally{profileGuardianUpload.disabled=false;} }; }
  $('profile').scrollIntoView({behavior:'smooth'});
