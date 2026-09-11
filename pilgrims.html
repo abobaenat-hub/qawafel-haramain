@@ -549,7 +549,8 @@ async function load(){
  if(requestedId){
    const target=P.find(x=>String(x.id)===String(requestedId));
    if(target){
-     await openProfile(target.id);
+     const requestedIssue=new URLSearchParams(window.location.search).get('issue');
+     if(requestedIssue) await openFocusedIssue(target,requestedIssue); else await openProfile(target.id);
      history.replaceState(null,'',window.location.pathname+'#profile');
    }
  }
@@ -601,6 +602,33 @@ async function updatePilgrimProfile(p){
  try{await db.rpc('log_audit_event',{p_action:'update_pilgrim',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:payload.full_name,p_details:{fields:Object.keys(payload)},p_page:'pilgrims.html'});}catch(e){}
  alert('تم تحديث بيانات المعتمر بنجاح ✅');
  await load(); const np=P.find(x=>x.id===p.id); if(np)openProfile(np.id);
+}
+
+async function openFocusedIssue(p,issue){
+ const allowed=await isAdmin();
+ if(!allowed){alert('لا تملك صلاحية تعديل بيانات المعتمرين.');return;}
+ const labels={phone:'رقم الهاتف',residence:'محل السكن الحالي',guardian:'وكالة ولي الأمر للقاصر'};
+ const label=labels[issue];
+ if(!label)return openProfile(p.id);
+ let body='';
+ if(issue==='guardian'){
+   if(!(p.birth_date&&calcAge(p.birth_date)<18)){return openProfile(p.id);}
+   if(p.guardian_accompanied){return openProfile(p.id);}
+   body='<div class="section" style="border-top:0;padding-top:0"><div style="padding:14px;border-radius:12px;border:1px solid #ead9b5;background:#fff8e7"><b>⚠️ الوكالة غير مرفوعة</b><p style="margin:8px 0;color:#6b5a2b">ارفع وكالة ولي الأمر لإكمال هذا النقص.</p><label class="btn p" style="display:inline-block;margin:0">📁 اختيار الوكالة<input id="focusedGuardianUpload" type="file" accept="image/*,application/pdf" style="display:none"></label></div></div>';
+ }else{
+   const val=issue==='phone'?(p.phone||''):(p.current_residence||'');
+   body='<div class="section" style="border-top:0;padding-top:0"><label for="focusedIssueInput">'+label+'</label><input id="focusedIssueInput" type="text" value="'+esc(val)+'" placeholder="أدخل '+label+'" autofocus><div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button id="focusedIssueSave" class="btn p">💾 حفظ</button><button id="focusedIssueCancel" class="btn w">رجوع لملف المعتمر</button></div><div id="focusedIssueMsg" class="msg hide"></div></div>';
+ }
+ $('profile').classList.remove('hide');
+ $('profile').innerHTML='<h2>استكمال بيانات المعتمر</h2><div class="section" style="border-top:0;padding-top:0"><b>'+esc(p.full_name||'معتمر')+'</b><br><small>إكمال: '+esc(label)+'</small></div>'+body;
+ if(issue==='guardian'){
+   const f=$('focusedGuardianUpload');
+   if(f)f.onchange=async()=>{const file=f.files?.[0];if(!file)return;const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg';const path='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext;f.disabled=true;try{const up=await db.storage.from('pilgrim-photos').upload(path,file,{upsert:false,contentType:file.type||'application/octet-stream'});if(up.error)throw up.error;const ur=await db.from('pilgrims').update({guardian_authorization_path:path}).eq('id',p.id);if(ur.error)throw ur.error;alert('تم رفع وكالة ولي الأمر بنجاح ✅');await load();const np=P.find(x=>x.id===p.id);if(np)openProfile(np.id);}catch(e){alert('تعذر رفع الوكالة: '+(e?.message||e));}finally{f.disabled=false;}};
+ }else{
+   $('focusedIssueSave').onclick=async()=>{const v=$('focusedIssueInput').value.trim();if(!v){alert('يرجى إدخال '+label);return;}const field=issue==='phone'?'phone':'current_residence';const r=await db.from('pilgrims').update({[field]:v}).eq('id',p.id);if(r.error){alert('تعذر الحفظ: '+r.error.message);return;}try{await db.rpc('log_audit_event',{p_action:'update_pilgrim',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:p.full_name,p_details:{field,value:v},p_page:'pilgrims.html'});}catch(e){} await load();alert('تم حفظ '+label+' بنجاح ✅');}
+   $('focusedIssueCancel').onclick=()=>openProfile(p.id);
+ }
+ $('profile').scrollIntoView({behavior:'smooth'});
 }
 
 async function openProfile(id){
