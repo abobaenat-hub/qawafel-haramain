@@ -1,3 +1,2 @@
-Qawafel Haramain V142 — remove program-level price from pilgrim selection
-V138 remains GOLD MASTER; V142 is a derived test build from V141.
-Program price is no longer displayed in the program dropdown; package prices remain inside package selection.
+Qawafel Haramain V143 — flight transport fields fix
+V138 remains GOLD MASTER; V143 is a derived test build from V142.
