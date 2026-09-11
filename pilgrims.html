@@ -360,7 +360,9 @@ function clearArchiveMatch(){archiveMatch=null;archiveConfirmed=false;const box=
 function applyArchiveData(a){
  if(!a)return;
  archiveConfirmed=true; archiveMatch=a;
+ if($('englishName'))$('englishName').value=a.english_name||a.passport_first_name||'';
  if($('phone'))$('phone').value=a.phone||'';
+ if($('currentResidence'))$('currentResidence').value=a.current_residence||'';
  if($('gender'))$('gender').value=a.gender||'';
  if($('pass'))$('pass').value=a.passport_number||'';
  if($('pex'))$('pex').value=a.passport_expiry||'';
@@ -577,7 +579,7 @@ async function updatePilgrimProfile(p){
  if(!allowed){alert('لا تملك صلاحية تعديل بيانات المعتمرين.');return;}
  const old=p;
  const full_name=prompt('الاسم بالعربي المعتمد',old.full_name||''); if(full_name===null)return;
- const english=prompt('الاسم بالإنكليزي من الجواز',old.passport_first_name||''); if(english===null)return;
+ const english=prompt('الاسم بالإنكليزي من الجواز',old.english_name||old.passport_first_name||''); if(english===null)return;
  const phone=prompt('رقم الهاتف',old.phone||''); if(phone===null)return;
  const residence=prompt('محل السكن الحالي',old.current_residence||''); if(residence===null)return;
  const passport=prompt('رقم الجواز',old.passport_number||''); if(passport===null)return;
@@ -590,7 +592,7 @@ async function updatePilgrimProfile(p){
  let guardian=old.guardian_accompanied===true;
  if(birth && calcAge(birth)<18){ const g=prompt('هل ولي الأمر مرافق؟ (نعم/لا)',guardian?'نعم':'لا'); if(g===null)return; guardian=['نعم','yes','y'].includes(g.trim().toLowerCase()); }
  const payload={
-  full_name:full_name.trim(), passport_first_name:(english.trim().replace(/[^A-Za-z\s'-]/g,' ').split(/\s+/)[0]||null)?.toUpperCase()||null,
+  full_name:full_name.trim(), english_name:english.trim()||null, passport_first_name:(english.trim().replace(/[^A-Za-z\s'-]/g,' ').split(/\s+/)[0]||null)?.toUpperCase()||null,
   phone:phone.trim()||null,current_residence:residence.trim()||null,passport_number:passport.trim()||null,
   passport_or_id:passport.trim()||null,passport_expiry:expiry.trim()||null,birth_date:birth.trim()||null,
   gender:gender==='ذكر'?'male':gender==='أنثى'?'female':(gender||null),gender_ar:gender||null,
@@ -800,7 +802,7 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
   let photoPath=archiveConfirmed?(archiveMatch?.photo_path||null):null; if(photoFile){const ext=(photoFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; photoPath='pilgrim-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; const upPhoto=await db.storage.from('pilgrim-photos').upload(photoPath,photoFile,{upsert:false,contentType:photoFile.type||'image/jpeg'}); if(upPhoto.error)throw upPhoto.error;}
   let passportImagePath=archiveConfirmed?(archiveMatch?.passport_image_path||null):null; if(passportFile){const pext=(passportFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; passportImagePath='passport-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+pext; const upPassport=await db.storage.from('pilgrim-photos').upload(passportImagePath,passportFile,{upsert:false,contentType:passportFile.type||'image/jpeg'}); if(upPassport.error)throw upPassport.error;}
   let guardianPath=archiveConfirmed?(archiveMatch?.guardian_authorization_path||null):null; if(guardianFile){const gext=(guardianFile.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; guardianPath='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+gext; const ug=await db.storage.from('pilgrim-photos').upload(guardianPath,guardianFile,{upsert:false,contentType:guardianFile.type||'application/octet-stream'}); if(ug.error)throw ug.error;}
-  const passportFirstName=(($('englishName').value||'').trim().replace(/[<_]+/g,' ').replace(/[^A-Za-z\s'-]/g,' ').split(/\s+/)[0]||null)?.toUpperCase()||null; const payload={full_name:$('name').value.trim(),phone:$('phone').value.trim()||null,gender:($('gender').value==='ذكر'?'male':$('gender').value==='أنثى'?'female':null),gender_ar:$('gender').value||null,passport_number:$('pass').value.trim()||null,passport_first_name:passportFirstName,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,current_residence:$('currentResidence').value.trim()||null,food_subscribed:$('foodSubscribed').value==='yes',food_amount:$('foodSubscribed').value==='yes'?Number($('foodAmount').value||0):0,food_meals_count:$('foodSubscribed').value==='yes'?Number($('foodMealsCount').value||0):0,food_meal_type:$('foodSubscribed').value==='yes'?($('foodMealType').value||null):null,food_payment_status:$('foodSubscribed').value==='yes'?($('foodPaymentStatus').value||'unpaid'):'unpaid',food_notes:$('foodSubscribed').value==='yes'?($('foodNotes').value.trim()||null):null,visa_status:'pending',document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8),nationality:'عراقي'};
+  const englishFullName=(($('englishName').value||'').trim().replace(/[<_]+/g,' ').replace(/[^A-Za-z\s'-]/g,' ').replace(/\s+/g,' ').trim()||null); const passportFirstName=(englishFullName?.split(/\s+/)[0]||null)?.toUpperCase()||null; const payload={full_name:$('name').value.trim(),english_name:englishFullName,phone:$('phone').value.trim()||null,gender:($('gender').value==='ذكر'?'male':$('gender').value==='أنثى'?'female':null),gender_ar:$('gender').value||null,passport_number:$('pass').value.trim()||null,passport_first_name:passportFirstName,passport_expiry:$('pex').value||null,passport_image_path:passportImagePath,guardian_authorization_path:guardianPath,guardian_accompanied:accompanied,birth_date:$('birthDate').value,current_residence:$('currentResidence').value.trim()||null,food_subscribed:$('foodSubscribed').value==='yes',food_amount:$('foodSubscribed').value==='yes'?Number($('foodAmount').value||0):0,food_meals_count:$('foodSubscribed').value==='yes'?Number($('foodMealsCount').value||0):0,food_meal_type:$('foodSubscribed').value==='yes'?($('foodMealType').value||null):null,food_payment_status:$('foodSubscribed').value==='yes'?($('foodPaymentStatus').value||'unpaid'):'unpaid',food_notes:$('foodSubscribed').value==='yes'?($('foodNotes').value.trim()||null):null,visa_status:'pending',document_url:null,photo_path:photoPath,notes:$('notes').value.trim()||null,archive_id:archiveConfirmed?(archiveMatch?.id||null):null,profile_code:'QH-'+Date.now().toString().slice(-8),nationality:'عراقي'};
   const installmentRows=[];
   if(paymentType==='cash'&&cashStatus==='partial'&&remaining>0){
     installmentRows.push({installment_number:1,due_date:$('cashDueDate').value,amount:remaining,paid_amount:0,status:'pending',notes:'متبقي برنامج نقدي — يستحق قبل السفر'});
