@@ -1,5 +1,5 @@
 Qawafel Haramain Platform
-Build: V160
-Base: V159
-Change: Redesigned admin alerts into compact summary cards and grouped expandable notifications.
+Build: V162
+Base: V161
+Change: Added a safe Nusuk passport preparation helper on pilgrim profiles. It prepares the stored passport image as JPG/PNG under 1 MB, downloads a Nusuk-ready file, opens the official Masar Nusuk pilgrim list, and logs the preparation action. Direct cross-origin file injection into Nusuk is intentionally not used.
 GOLD MASTER: V138 (untouched)

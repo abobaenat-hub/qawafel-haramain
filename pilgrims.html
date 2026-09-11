@@ -1,10 +1,10 @@
 <!doctype html>
 <html lang="ar" dir="rtl">
 <head>
-<!-- V130: cash payment RLS compatibility fix applied in Supabase -->
+<!-- V162: Nusuk passport preparation helper added; V138 GOLD MASTER untouched -->
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>V133 — المعتمرون | قوافل الحرمين</title>
+<title>V162 — المعتمرون | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <style>body.auth-pending #login{display:none!important}
 :root{--n:#0c3b63;--d:#072b49;--g:#c79a3b;--c:#f7f5ef;--l:#dfe6ea;--r:#a33}
@@ -126,6 +126,11 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 #saveSuccessCard h2{margin:0;color:#123e6b;font-size:30px}
 #saveSuccessCard p{margin:10px 0 0;color:#65727d;font-size:16px}
 @keyframes v135pop{from{transform:scale(.9);opacity:.2}to{transform:scale(1);opacity:1}}
+</style>
+
+<style id="v162-nusuk-ui">
+.nusuk-box{margin-top:12px;border:1px solid #cfe0e8;border-radius:16px;padding:14px;background:linear-gradient(135deg,#f7fbfd,#fff)}
+.nusuk-box h3{margin:0;color:#0c3b63;font-size:16px}.nusuk-box p{margin:6px 0;color:#687984;font-size:11px;line-height:1.7}.nusuk-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.nusuk-btn{background:#087443!important;color:#fff!important}.nusuk-btn[disabled]{opacity:.55;cursor:not-allowed}.nusuk-note{font-size:10px!important;color:#795b16!important;margin-top:9px!important}
 </style>
 </head>
 <!-- V91 Global Admin Header: persistent public-site button and current user/role -->
@@ -640,18 +645,63 @@ async function openFocusedIssue(p,issue){
  $('profile').scrollIntoView({behavior:'smooth'});
 }
 
+async function prepareNusukPassport(p){
+ const passportPath=p?.passport_image_path||'';
+ if(!passportPath){alert('لا توجد صورة جواز محفوظة لهذا المعتمر في قوافل الحرمين.');return;}
+ const popup=window.open('https://masar.nusuk.sa/umrah/mutamer/mutamer-list','_blank');
+ try{
+   if(popup){try{popup.opener=null;}catch(e){}}
+   const signed=await photoUrl(passportPath);
+   if(!signed)throw new Error('تعذر الوصول إلى صورة الجواز المحفوظة.');
+   const resp=await fetch(signed);
+   if(!resp.ok)throw new Error('تعذر تحميل صورة الجواز.');
+   const blob=await resp.blob();
+   const sourceType=(blob.type||'').toLowerCase();
+   if(!['image/jpeg','image/png'].includes(sourceType))throw new Error('صورة الجواز الحالية ليست JPG أو PNG. يرجى استبدالها بصورة JPG/PNG.');
+   const ready=await makeNusukPassport(blob);
+   const ext=ready.type==='image/png'?'png':'jpg';
+   const safeName=String(p.full_name||'pilgrim').replace(/[^\u0600-\u06FF\w\s-]/g,' ').trim().replace(/\s+/g,'_').slice(0,60)||'pilgrim';
+   const safePass=String(p.passport_number||'passport').replace(/[^A-Za-z0-9_-]/g,'').slice(0,30)||'passport';
+   const fileName='NUSUK_'+safePass+'_'+safeName+'.'+ext;
+   const url=URL.createObjectURL(ready);
+   const a=document.createElement('a');a.href=url;a.download=fileName;document.body.appendChild(a);a.click();a.remove();
+   setTimeout(()=>URL.revokeObjectURL(url),60000);
+   try{await db.rpc('log_audit_event',{p_action:'prepare_nusuk_passport',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:p.full_name,p_details:{file_name:fileName,size_bytes:ready.size,nusuk_url:'https://masar.nusuk.sa/umrah/mutamer/mutamer-list'},p_page:'pilgrims.html'});}catch(e){}
+   alert('تم تجهيز جواز '+(p.full_name||'المعتمر')+' لنسك ✅\n\nتم تنزيل الملف باسم:\n'+fileName+'\n\nالآن في نسك اضغط «إضافة معتمر» ثم «اختر الملف» واختر هذا الملف من التنزيلات.');
+ }catch(e){
+   if(popup)try{popup.close();}catch(_){ }
+   alert('تعذر تجهيز الجواز لنسك:\n'+(e?.message||e));
+ }
+}
+async function makeNusukPassport(blob){
+ if(blob.size<=900*1024)return blob;
+ const dataUrl=await new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=reject;r.readAsDataURL(blob);});
+ const img=await new Promise((resolve,reject)=>{const i=new Image();i.onload=()=>resolve(i);i.onerror=()=>reject(new Error('تعذر قراءة صورة الجواز.'));i.src=dataUrl;});
+ let scale=Math.min(1,2200/Math.max(img.naturalWidth,img.naturalHeight));
+ for(let pass=0;pass<5;pass++){
+   const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(img.naturalWidth*scale));canvas.height=Math.max(1,Math.round(img.naturalHeight*scale));
+   const ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(img,0,0,canvas.width,canvas.height);
+   for(const q of [0.9,0.82,0.75,0.68]){
+     const out=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',q));
+     if(out&&out.size<=950*1024)return out;
+   }
+   scale*=0.82;
+ }
+ throw new Error('تعذر تجهيز صورة الجواز ضمن حد 1 ميجابايت مع الحفاظ على جودة مناسبة.');
+}
+
 async function openProfile(id){
  const p=P.find(x=>x.id===id);if(!p)return;
  const b=B.find(x=>x.id===p.booking_id),pr=PR.find(x=>x.id===b?.program_id),ins=I.filter(x=>x.booking_id===b?.id);
  $('profile').classList.remove('hide');
- $('profile').innerHTML='<h2>ملف المعتمر: '+esc(p.full_name)+'</h2><div class="section noPrint" style="display:flex;gap:8px;flex-wrap:wrap"><button id="editPilgrimBtn" class="btn p">✏️ تعديل بيانات المعتمر</button></div>'+
+ $('profile').innerHTML='<h2>ملف المعتمر: '+esc(p.full_name)+'</h2><div class="section noPrint" style="display:flex;gap:8px;flex-wrap:wrap"><button id="editPilgrimBtn" class="btn p">✏️ تعديل بيانات المعتمر</button><button id="nusukPassportBtn" class="btn nusuk-btn" '+(p.passport_image_path?'':'disabled')+'>🟢 تجهيز الجواز لنسك</button></div><div class="nusuk-box noPrint"><h3>🛂 رفع الجواز في نسك</h3><p>يُجهّز النظام صورة الجواز المحفوظة في قوافل الحرمين بصيغة JPG/PNG وبحجم مناسب لنسك، ثم يفتح قائمة المعتمرين في نسك. يبقى اختيار الملف والرفع داخل نسك بيد الموظف.</p><div class="nusuk-actions"><button id="nusukPassportBtn2" class="btn nusuk-btn" '+(p.passport_image_path?'':'disabled')+'>🟢 تجهيز وفتح نسك</button></div><p class="nusuk-note">بعد التنزيل: في نسك اضغط «إضافة معتمر» → «اختر الملف» واختر ملف NUSUK الذي تم تنزيله.</p></div>'+
  '<div class="cols"><div>رمز الملف<br><b>'+esc(p.profile_code||'—')+'</b></div><div>الهاتف<br>'+esc(p.phone||'—')+'</div><div>محل السكن الحالي<br>'+esc(p.current_residence||'—')+'</div><div>المحافظة<br>'+esc(p.governorate||'—')+'</div><div>الجواز<br>'+esc(p.passport_number||'—')+'</div><div>انتهاء الجواز<br>'+esc(p.passport_expiry||'—')+'</div><div>الفيزا<br>'+badge(p.visa_status)+' '+esc(p.visa_number||'')+'</div></div>'+
  '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج<br><b>'+esc(pr?.title||'—')+'</b></div><div>نوع البرنامج<br><b>'+(b?.payment_type==='installment'?'قسط':'نقد')+'</b></div>'+(b?.payment_type==='cash'?'<div>حالة الدفع<br><b>'+(b?.cash_payment_status==='partial'?'دفعة مقدمة — المتبقي قبل السفر':'تم دفع المبلغ كاملًا')+'</b>'+(b?.cash_payment_status==='partial'&&b?.cash_due_date?'<br><small>موعد المتبقي: '+esc(b.cash_due_date)+'</small>':'')+'</div>':'')+'<div>الإجمالي<br><span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع<br><span class="money">'+money(b?.paid_amount)+'</span></div><div>المتبقي<br><span class="money">'+money(b?.remaining_amount)+'</span></div><div>الحالة<br>'+badge(b?.status)+'</div></div></div>'+
  (p?.birth_date && calcAge(p.birth_date)<18 ? '<div class="section"><h3>👨‍👦 وكالة ولي الأمر</h3><div style="padding:12px;border-radius:12px;border:1px solid '+(p.guardian_accompanied?'#b8dec9':(p.guardian_authorization_path?'#b8dec9':'#ead9b5'))+';background:'+(p.guardian_accompanied||p.guardian_authorization_path?'#edf8f3':'#fff8e7')+'"><b>'+(p.guardian_accompanied?'✅ ولي الأمر مرافق — لا تحتاج وكالة.':(p.guardian_authorization_path?'✅ تم إرفاق وكالة ولي الأمر.':'⚠️ القاصر غير مرافق ولم تُرفع الوكالة بعد.'))+'</b>'+(p.guardian_accompanied?'':'<div style="margin-top:9px;display:flex;gap:8px;flex-wrap:wrap"><label class="btn p noPrint" style="display:inline-block;margin:0">📁 رفع الوكالة الآن<input id="profileGuardianUpload" type="file" accept="image/*,application/pdf" style="display:none"></label></div><small class="noPrint" style="display:block;margin-top:6px;color:#795b16">عند رفع الوكالة يختفي التنبيه تلقائيًا.</small>')+'</div></div>' : '')+
  ((b?.payment_type==='installment'||(b?.payment_type==='cash'&&b?.cash_payment_status==='partial'))?'<div class="section"><h3>'+(b?.payment_type==='cash'?'المبلغ المتبقي قبل السفر':'الأقساط')+'</h3><div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+((ins.length?ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join(''):'<tr><td colspan="5">لا توجد أقساط.</td></tr>'))+'</tbody></table></div><button id="manageBtn" class="btn p noPrint">💰 إدارة الدفعات والأقساط</button><div id="manager" class="section hide"></div></div>':'<div class="section"><span class="badge ok">برنامج نقدي — لا توجد أقساط</span></div>')+
  ((p?.food_subscribed)?'<div class="section"><h3>🍽️ اشتراك الطعام</h3><div class="cols"><div>الحالة<br><b>مشترك بالطعام</b></div><div>المبلغ المستلم<br><span class="money">'+money(p.food_amount)+'</span></div><div>عدد الوجبات<br><b>'+esc(p.food_meals_count||0)+'</b></div><div>نوع الوجبات<br><b>'+esc(({all:'جميع الوجبات',breakfast:'فطور',lunch:'غداء',dinner:'عشاء',custom:'اشتراك مخصص'})[p.food_meal_type]||'—')+'</b></div><div>حالة الدفع<br><b>'+esc(({paid:'تم الدفع',unpaid:'غير مدفوع',partial:'مدفوع جزئيًا'})[p.food_payment_status]||'—')+'</b></div></div><div style="margin-top:8px;color:#795b16;font-weight:800;font-size:12px">هذا المبلغ مستلم من المعتمر لصالح المطعم ولا يدخل ضمن إيرادات أو أرباح الشركة.</div></div>':'')+'<div class="section"><button class="btn w noPrint" onclick="window.print()">طباعة الملف</button> <button class="btn danger noPrint" id="deleteTripBtn">حذف المعتمر من الرحلة</button></div>';
  if(b?.payment_type==='installment'||(b?.payment_type==='cash'&&b?.cash_payment_status==='partial'))$('manageBtn').onclick=()=>managePayments(b);
- $('deleteTripBtn').onclick=()=>deletePilgrimFromTrip(p.id); $('editPilgrimBtn').onclick=()=>updatePilgrimProfile(p);
+ $('deleteTripBtn').onclick=()=>deletePilgrimFromTrip(p.id); $('editPilgrimBtn').onclick=()=>updatePilgrimProfile(p); $('nusukPassportBtn')?.addEventListener('click',()=>prepareNusukPassport(p)); $('nusukPassportBtn2')?.addEventListener('click',()=>prepareNusukPassport(p));
  const profileGuardianUpload=$('profileGuardianUpload');
  if(profileGuardianUpload){ profileGuardianUpload.onchange=async()=>{ const file=profileGuardianUpload.files?.[0]; if(!file)return; const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; const path='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; profileGuardianUpload.disabled=true; try{ const up=await db.storage.from('pilgrim-photos').upload(path,file,{upsert:false,contentType:file.type||'application/octet-stream'}); if(up.error)throw up.error; const ur=await db.from('pilgrims').update({guardian_authorization_path:path}).eq('id',p.id); if(ur.error)throw ur.error; p.guardian_authorization_path=path; alert('تم رفع وكالة ولي الأمر بنجاح، وسيختفي التنبيه.'); await load(); openProfile(p.id); }catch(e){ alert('تعذر رفع الوكالة: '+(e?.message||e)); }finally{profileGuardianUpload.disabled=false;} }; }
  $('profile').scrollIntoView({behavior:'smooth'});
