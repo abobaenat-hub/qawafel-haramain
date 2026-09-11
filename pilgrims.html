@@ -535,7 +535,7 @@ async function load(){
  $('pc').textContent=P.length;$('bc').textContent=B.length;
  $('paid').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('rem').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
- $('program').innerHTML='<option value="">اختر البرنامج</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+' — نقد: '+money(x.price)+' | قسط: '+money(x.installment_price??x.price)+'</option>').join('');
+ $('program').innerHTML='<option value="">اختر البرنامج</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  render();
 }
 

@@ -1,3 +1,3 @@
-Qawafel Haramain V141 — package-first program structure
-V138 remains GOLD MASTER; V141 is a derived test build from V140.
-Changes: program no longer stores/display hotel or base sale prices; all hotels/prices/installments are managed inside one or more packages. Land bus/driver fields are hidden and cleared for flight programs.
+Qawafel Haramain V142 — remove program-level price from pilgrim selection
+V138 remains GOLD MASTER; V142 is a derived test build from V141.
+Program price is no longer displayed in the program dropdown; package prices remain inside package selection.
