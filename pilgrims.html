@@ -366,6 +366,14 @@ function applyArchiveData(a){
  if($('pex'))$('pex').value=a.passport_expiry||'';
  if($('birthDate'))$('birthDate').value=a.birth_date||'';
  if($('notes') && a.notes && !$('notes').value)$('notes').value=a.notes;
+ // استرجاع الصور والمستندات المحفوظة في الأرشيف، وليس طلب إعادة رفعها
+ if(a.photo_path){
+   const st=$('passportPhotoStatus'); if(st)st.textContent='✅ تم استرجاع صورة المعتمر من الأرشيف.';
+   photoUrl(a.photo_path).then(u=>{ if(u && $('photoPreview')){ $('photoPreview').src=u; $('photoPreview').classList.remove('hide'); $('photoPreviewWrap')?.classList.remove('hide'); } });
+ }
+ if(a.passport_image_path){
+   const hint=$('photoHint'); if(hint)hint.textContent='✅ تم استرجاع صورة الجواز من الأرشيف. يمكنك استبدالها إذا رغبت.';
+ }
  clearNameDuplicate();
  const box=$('archiveMatchBox'), text=$('archiveMatchText');
  if(box&&text){box.classList.remove('hide');text.innerHTML='✅ تم اختيار العميل السابق <b>'+esc(a.full_name)+'</b>. أكمل بيانات الرحلة والدفع فقط.';box.style.background='#e9f7ef';box.style.borderColor='#b8dec9';}
@@ -712,8 +720,12 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
  const age=calcAge($('birthDate').value); if(age===null)return msg('formMsg','أدخل تاريخ ميلاد المعتمر.',true);
  const accompanied=age<18 && guardianAccompanied(); const guardianFile=$('guardianCamera').files?.[0] || $('guardianUpload').files?.[0];
  // القاصر غير المرافق يمكن حفظه بدون وكالة مؤقتًا؛ يظهر تنبيه تشغيلي حتى تُرفع الوكالة لاحقًا.
- const passportFile=$('passportCamera').files?.[0] || $('passportUpload').files?.[0]; if(!passportFile)return msg('formMsg','أرفق صورة الجواز: صوّر بالكاميرا أو حمّل ملفًا من الهاتف.',true);
- const manualPhotoFile=$('photoCamera').files?.[0] || $('photoUpload').files?.[0]; const photoFile=editedPhotoFile || manualPhotoFile || (usePassportPhoto?passportPhotoFile:null); if(!photoFile)return msg('formMsg','أرفق الصورة الشخصية أو استخدم الصورة المستخرجة من الجواز.',true);
+ const passportFile=$('passportCamera').files?.[0] || $('passportUpload').files?.[0];
+ const archivePassportPath=archiveConfirmed?(archiveMatch?.passport_image_path||null):null;
+ if(!passportFile && !archivePassportPath)return msg('formMsg','أرفق صورة الجواز: صوّر بالكاميرا أو حمّل ملفًا من الهاتف.',true);
+ const manualPhotoFile=$('photoCamera').files?.[0] || $('photoUpload').files?.[0]; const photoFile=editedPhotoFile || manualPhotoFile || (usePassportPhoto?passportPhotoFile:null);
+ const archivePhotoPath=archiveConfirmed?(archiveMatch?.photo_path||null):null;
+ if(!photoFile && !archivePhotoPath)return msg('formMsg','أرفق الصورة الشخصية أو استخدم الصورة المستخرجة من الجواز.',true);
  saveInProgress=true; const submitBtn=$('form').querySelector('button[type=submit]'); if(submitBtn)submitBtn.disabled=true;
  try{
   const booking={program_id:pr.id,package_id:chosenPackage?.id||null,full_name:$('name').value.trim(),phone:$('phone').value.trim()||'',passengers_count:1,base_price:basePrice,discount_amount:discountAmount,discount_reason:discountReason,total_amount:total,paid_amount:paid,status:remaining?'pending':'confirmed',notes:'حجز من إدارة المعتمرين',payment_type:paymentType,cash_payment_status:paymentType==='cash'?cashStatus:null,cash_due_date:paymentType==='cash'&&cashStatus==='partial'?($('cashDueDate').value||null):null};

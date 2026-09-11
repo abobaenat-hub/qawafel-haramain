@@ -1,6 +1,3 @@
-Qawafel Haramain V146 — minor pending authorization + staff package access
-V138 remains GOLD MASTER; V146 is a derived test build from V145.
-Changes:
-- A minor under 18 can be saved when the guardian is not accompanying and the authorization is not ready; the case remains a visible operational alert until the authorization is uploaded.
-- The minor form wording now clearly states that authorization can be completed later.
-- Supabase package access was updated so staff with the booking_staff permission can read/manage program packages, not only users whose role field is exactly booking_staff.
+Qawafel Haramain V148 — archive image restore fix
+V138 remains GOLD MASTER. V148 is a derived test build from V147.
+Fix: when adding an existing pilgrim from the archive, preserve and reuse the archived personal photo and passport image without requiring re-upload; show a preview/status when available.

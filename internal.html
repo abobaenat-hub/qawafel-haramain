@@ -411,15 +411,16 @@ function render(){
  const docs=P.filter(x=>!x.passport_number||!x.passport_expiry).length;
  const calcAgeLocal=d=>{if(!d)return null;const b=new Date(d+'T00:00:00');if(Number.isNaN(b.getTime()))return null;const t=new Date();let a=t.getFullYear()-b.getFullYear();const m=t.getMonth()-b.getMonth();if(m<0||(m===0&&t.getDate()<b.getDate()))a--;return a;};
  const pendingGuardians=P.filter(x=>{const a=calcAgeLocal(x.birth_date);return a!==null&&a<18&&!x.guardian_accompanied&&!x.guardian_authorization_path;});
+ const pendingVisas=P.filter(x=>!x.visa_status||x.visa_status!=='issued');
  const alerts=[];
- if(overdue)alerts.push('يوجد '+overdue+' قسط متأخر يحتاج متابعة.');
- if(visa)alerts.push('يوجد '+visa+' ملف تأشيرة غير مكتمل.');
- if(docs)alerts.push('يوجد '+docs+' ملف جواز يحتاج استكمالاً.');
+ if(overdue)alerts.push({kind:'generic',text:'يوجد '+overdue+' قسط متأخر يحتاج متابعة.'});
+ if(pendingVisas.length)pendingVisas.forEach(x=>alerts.push({kind:'visa',id:x.id,name:x.full_name||'معتمر',text:(x.visa_status==='rejected'?'التأشيرة مرفوضة / غير صادرة.':'التأشيرة لم تُصدر بعد.')}));
+ if(docs)alerts.push({kind:'generic',text:'يوجد '+docs+' ملف جواز يحتاج استكمالاً.'});
  if(pendingGuardians.length)pendingGuardians.forEach(x=>alerts.push({kind:'guardian',id:x.id,name:x.full_name||'معتمر',text:'لم تُرفع وكالة ولي الأمر بعد.'}));
  const alertHtml=alerts.map(x=>{
-   if(typeof x==='string') return '<div class="alert">'+esc(x)+'</div>';
    if(x.kind==='guardian') return '<a class="alert alert-link" href="./pilgrims.html?open='+encodeURIComponent(x.id)+'#profile" style="display:block;text-decoration:none;color:inherit;cursor:pointer"><b>⚠️ وكالة ولي الأمر</b><br><span>'+esc(x.name)+'</span> — '+esc(x.text)+'<small style="display:block;margin-top:5px;color:#0c3b63;font-weight:900">اضغط هنا لمعالجة التنبيه ←</small></a>';
-   return '<div class="alert">'+esc(String(x))+'</div>';
+   if(x.kind==='visa') return '<a class="alert alert-link" href="./visa.html?open='+encodeURIComponent(x.id)+'" style="display:block;text-decoration:none;color:inherit;cursor:pointer"><b>🔴 متابعة التأشيرة</b><br><span>'+esc(x.name)+'</span> — '+esc(x.text)+'<small style="display:block;margin-top:5px;color:#0c3b63;font-weight:900">اضغط هنا لمعالجة التأشيرة ←</small></a>';
+   return '<div class="alert">'+esc(x.text||String(x))+'</div>';
  }).join('');
  $('alerts').innerHTML=alerts.length?alertHtml:'<div class="alert ok">لا توجد تنبيهات حرجة حاليًا.</div>';
 
