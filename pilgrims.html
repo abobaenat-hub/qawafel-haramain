@@ -709,17 +709,67 @@ async function openProfile(id){
  const p=P.find(x=>x.id===id);if(!p)return;
  const b=B.find(x=>x.id===p.booking_id),pr=PR.find(x=>x.id===b?.program_id),ins=I.filter(x=>x.booking_id===b?.id);
  $('profile').classList.remove('hide');
- $('profile').innerHTML='<h2>ملف المعتمر: '+esc(p.full_name)+'</h2><div class="section noPrint" style="display:flex;gap:8px;flex-wrap:wrap"><button id="editPilgrimBtn" class="btn p">✏️ تعديل بيانات المعتمر</button><button id="nusukPassportBtn" class="btn nusuk-btn" '+(p.passport_image_path?'':'disabled')+'>🟢 تجهيز الجواز لنسك</button></div><div class="nusuk-box noPrint"><h3>🛂 رفع الجواز في نسك</h3><p>يُجهّز النظام صورة الجواز المحفوظة في قوافل الحرمين بصيغة JPG/PNG وبحجم مناسب لنسك، ثم يفتح قائمة المعتمرين في نسك. يبقى اختيار الملف والرفع داخل نسك بيد الموظف.</p><div class="nusuk-actions"><button id="nusukPassportBtn2" class="btn nusuk-btn" '+(p.passport_image_path?'':'disabled')+'>🟢 تجهيز وفتح نسك</button></div><p class="nusuk-note">بعد التنزيل: في نسك اضغط «إضافة معتمر» → «اختر الملف» واختر ملف NUSUK الذي تم تنزيله.</p></div>'+
+ $('profile').innerHTML='<h2>ملف المعتمر: '+esc(p.full_name)+'</h2><div class="section noPrint" style="display:flex;gap:8px;flex-wrap:wrap"><button id="editPilgrimBtn" class="btn p">✏️ تعديل بيانات المعتمر</button><button id="editPilgrimPhotoBtn" class="btn w">👤 تعديل صورة المعتمر</button><button id="editPassportImageBtn" class="btn w">📄 تعديل صورة الجواز</button><button id="nusukPassportBtn" class="btn nusuk-btn" '+(p.passport_image_path?'':'disabled')+'>🟢 تجهيز الجواز لنسك</button></div><div class="nusuk-box noPrint"><h3>🛂 رفع الجواز في نسك</h3><p>يُجهّز النظام صورة الجواز المحفوظة في قوافل الحرمين بصيغة JPG/PNG وبحجم مناسب لنسك، ثم يفتح قائمة المعتمرين في نسك. يبقى اختيار الملف والرفع داخل نسك بيد الموظف.</p><div class="nusuk-actions"><button id="nusukPassportBtn2" class="btn nusuk-btn" '+(p.passport_image_path?'':'disabled')+'>🟢 تجهيز وفتح نسك</button></div><p class="nusuk-note">بعد التنزيل: في نسك اضغط «إضافة معتمر» → «اختر الملف» واختر ملف NUSUK الذي تم تنزيله.</p></div>'+
  '<div class="cols"><div>رمز الملف<br><b>'+esc(p.profile_code||'—')+'</b></div><div>الهاتف<br>'+esc(p.phone||'—')+'</div><div>محل السكن الحالي<br>'+esc(p.current_residence||'—')+'</div><div>المحافظة<br>'+esc(p.governorate||'—')+'</div><div>الجواز<br>'+esc(p.passport_number||'—')+'</div><div>انتهاء الجواز<br>'+esc(p.passport_expiry||'—')+'</div><div>الفيزا<br>'+badge(p.visa_status)+' '+esc(p.visa_number||'')+'</div></div>'+
  '<div class="section"><h3>الرحلة والحساب</h3><div class="cols"><div>البرنامج<br><b>'+esc(pr?.title||'—')+'</b></div><div>نوع البرنامج<br><b>'+(b?.payment_type==='installment'?'قسط':'نقد')+'</b></div>'+(b?.payment_type==='cash'?'<div>حالة الدفع<br><b>'+(b?.cash_payment_status==='partial'?'دفعة مقدمة — المتبقي قبل السفر':'تم دفع المبلغ كاملًا')+'</b>'+(b?.cash_payment_status==='partial'&&b?.cash_due_date?'<br><small>موعد المتبقي: '+esc(b.cash_due_date)+'</small>':'')+'</div>':'')+'<div>الإجمالي<br><span class="money">'+money(b?.total_amount)+'</span></div><div>المدفوع<br><span class="money">'+money(b?.paid_amount)+'</span></div><div>المتبقي<br><span class="money">'+money(b?.remaining_amount)+'</span></div><div>الحالة<br>'+badge(b?.status)+'</div></div></div>'+
  (p?.birth_date && calcAge(p.birth_date)<18 ? '<div class="section"><h3>👨‍👦 وكالة ولي الأمر</h3><div style="padding:12px;border-radius:12px;border:1px solid '+(p.guardian_accompanied?'#b8dec9':(p.guardian_authorization_path?'#b8dec9':'#ead9b5'))+';background:'+(p.guardian_accompanied||p.guardian_authorization_path?'#edf8f3':'#fff8e7')+'"><b>'+(p.guardian_accompanied?'✅ ولي الأمر مرافق — لا تحتاج وكالة.':(p.guardian_authorization_path?'✅ تم إرفاق وكالة ولي الأمر.':'⚠️ القاصر غير مرافق ولم تُرفع الوكالة بعد.'))+'</b>'+(p.guardian_accompanied?'':'<div style="margin-top:9px;display:flex;gap:8px;flex-wrap:wrap"><label class="btn p noPrint" style="display:inline-block;margin:0">📁 رفع الوكالة الآن<input id="profileGuardianUpload" type="file" accept="image/*,application/pdf" style="display:none"></label></div><small class="noPrint" style="display:block;margin-top:6px;color:#795b16">عند رفع الوكالة يختفي التنبيه تلقائيًا.</small>')+'</div></div>' : '')+
  ((b?.payment_type==='installment'||(b?.payment_type==='cash'&&b?.cash_payment_status==='partial'))?'<div class="section"><h3>'+(b?.payment_type==='cash'?'المبلغ المتبقي قبل السفر':'الأقساط')+'</h3><div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>الحالة</th></tr></thead><tbody>'+((ins.length?ins.map(x=>'<tr><td>'+esc(x.installment_number)+'</td><td>'+esc(x.due_date||'—')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+badge(x.status)+'</td></tr>').join(''):'<tr><td colspan="5">لا توجد أقساط.</td></tr>'))+'</tbody></table></div><button id="manageBtn" class="btn p noPrint">💰 إدارة الدفعات والأقساط</button><div id="manager" class="section hide"></div></div>':'<div class="section"><span class="badge ok">برنامج نقدي — لا توجد أقساط</span></div>')+
  ((p?.food_subscribed)?'<div class="section"><h3>🍽️ اشتراك الطعام</h3><div class="cols"><div>الحالة<br><b>مشترك بالطعام</b></div><div>المبلغ المستلم<br><span class="money">'+money(p.food_amount)+'</span></div><div>عدد الوجبات<br><b>'+esc(p.food_meals_count||0)+'</b></div><div>نوع الوجبات<br><b>'+esc(({all:'جميع الوجبات',breakfast:'فطور',lunch:'غداء',dinner:'عشاء',custom:'اشتراك مخصص'})[p.food_meal_type]||'—')+'</b></div><div>حالة الدفع<br><b>'+esc(({paid:'تم الدفع',unpaid:'غير مدفوع',partial:'مدفوع جزئيًا'})[p.food_payment_status]||'—')+'</b></div></div><div style="margin-top:8px;color:#795b16;font-weight:800;font-size:12px">هذا المبلغ مستلم من المعتمر لصالح المطعم ولا يدخل ضمن إيرادات أو أرباح الشركة.</div></div>':'')+'<div class="section"><button class="btn w noPrint" onclick="window.print()">طباعة الملف</button> <button class="btn danger noPrint" id="deleteTripBtn">حذف المعتمر من الرحلة</button></div>';
  if(b?.payment_type==='installment'||(b?.payment_type==='cash'&&b?.cash_payment_status==='partial'))$('manageBtn').onclick=()=>managePayments(b);
- $('deleteTripBtn').onclick=()=>deletePilgrimFromTrip(p.id); $('editPilgrimBtn').onclick=()=>updatePilgrimProfile(p); $('nusukPassportBtn')?.addEventListener('click',()=>prepareNusukPassport(p)); $('nusukPassportBtn2')?.addEventListener('click',()=>prepareNusukPassport(p));
+ $('deleteTripBtn').onclick=()=>deletePilgrimFromTrip(p.id); $('editPilgrimBtn').onclick=()=>updatePilgrimProfile(p); $('editPilgrimPhotoBtn')?.addEventListener('click',()=>openStoredPilgrimImageEditor(p,'photo')); $('editPassportImageBtn')?.addEventListener('click',()=>openStoredPilgrimImageEditor(p,'passport')); $('nusukPassportBtn')?.addEventListener('click',()=>prepareNusukPassport(p)); $('nusukPassportBtn2')?.addEventListener('click',()=>prepareNusukPassport(p));
  const profileGuardianUpload=$('profileGuardianUpload');
  if(profileGuardianUpload){ profileGuardianUpload.onchange=async()=>{ const file=profileGuardianUpload.files?.[0]; if(!file)return; const ext=(file.name.split('.').pop()||'jpg').toLowerCase().replace(/[^a-z0-9]/g,'')||'jpg'; const path='guardian-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.'+ext; profileGuardianUpload.disabled=true; try{ const up=await db.storage.from('pilgrim-photos').upload(path,file,{upsert:false,contentType:file.type||'application/octet-stream'}); if(up.error)throw up.error; const ur=await db.from('pilgrims').update({guardian_authorization_path:path}).eq('id',p.id); if(ur.error)throw ur.error; p.guardian_authorization_path=path; alert('تم رفع وكالة ولي الأمر بنجاح، وسيختفي التنبيه.'); await load(); openProfile(p.id); }catch(e){ alert('تعذر رفع الوكالة: '+(e?.message||e)); }finally{profileGuardianUpload.disabled=false;} }; }
  $('profile').scrollIntoView({behavior:'smooth'});
+}
+
+
+
+async function openStoredPilgrimImageEditor(p,kind){
+ const allowed=await isAdmin();
+ if(!allowed){alert('لا تملك صلاحية تعديل صور المعتمرين.');return;}
+ const field=kind==='passport'?'passport_image_path':'photo_path';
+ const label=kind==='passport'?'صورة الجواز':'صورة المعتمر';
+ const path=p?.[field];
+ if(!path)return alert('لا توجد '+label+' محفوظة لهذا المعتمر.');
+ try{
+  const sr=await db.storage.from('pilgrim-photos').createSignedUrl(path,3600);
+  const signed=sr.data?.signedUrl;
+  if(!signed)throw new Error('تعذر الوصول إلى الصورة المحفوظة.');
+  await loadStoredImageCropper();
+  const resp=await fetch(signed,{cache:'no-store'}); if(!resp.ok)throw new Error('تعذر تحميل الصورة.');
+  const blob=await resp.blob();
+  const srcUrl=URL.createObjectURL(blob);
+  const modal=document.createElement('div'); modal.className='crop-modal'; modal.innerHTML='<div class="crop-card"><h3 style="margin:0 0 8px;color:#072b49">✂️ تعديل '+label+'</h3><p style="margin:0 0 12px;color:#687984;font-size:12px">اسحب الإطار وحدد الجزء المطلوب، ويمكنك تدوير الصورة ثم اعتماد التعديل.</p><div class="crop-stage" style="max-height:68vh"><img id="storedCropImage" style="display:block;max-width:100%;max-height:68vh;margin:auto"></div><div class="crop-controls"><button type="button" class="btn w" id="storedRotL">↶ تدوير يسار</button><button type="button" class="btn w" id="storedRotR">↷ تدوير يمين</button><button type="button" class="btn w" id="storedReset">إعادة ضبط</button><button type="button" class="btn p" id="storedApply">✓ اعتماد التعديل</button><button type="button" class="btn w" id="storedClose">إلغاء</button></div><div class="crop-help">الصورة الأصلية لا تُحذف؛ يُحفظ الإصدار المعدل كنسخة جديدة.</div></div>';
+  document.body.appendChild(modal);
+  const image=modal.querySelector('#storedCropImage'); image.src=srcUrl; let cp=null;
+  const close=()=>{cp?.destroy();cp=null;URL.revokeObjectURL(srcUrl);modal.remove();};
+  image.onload=()=>{cp=new Cropper(image,{viewMode:1,dragMode:'move',autoCropArea:.92,aspectRatio:kind==='photo'?3/4:NaN,background:false,responsive:true,restore:false,checkOrientation:true});};
+  modal.querySelector('#storedRotL').onclick=()=>cp?.rotate(-90); modal.querySelector('#storedRotR').onclick=()=>cp?.rotate(90); modal.querySelector('#storedReset').onclick=()=>cp?.reset(); modal.querySelector('#storedClose').onclick=close;
+  modal.querySelector('#storedApply').onclick=async()=>{
+   if(!cp)return;
+   const out=cp.getCroppedCanvas({maxWidth:2200,maxHeight:2800,imageSmoothingEnabled:true,imageSmoothingQuality:'high'});
+   const edited=await new Promise(res=>out.toBlob(res,'image/jpeg',.95)); if(!edited)return;
+   const newPath=(kind==='passport'?'passport-':'pilgrim-')+'edited-'+Date.now()+'-'+Math.random().toString(36).slice(2)+'.jpg';
+   const btn=modal.querySelector('#storedApply'); btn.disabled=true; btn.textContent='جارٍ الحفظ…';
+   try{
+    const up=await db.storage.from('pilgrim-photos').upload(newPath,edited,{upsert:false,contentType:'image/jpeg'}); if(up.error)throw up.error;
+    const patch={[field]:newPath};
+    const ur=await db.from('pilgrims').update(patch).eq('id',p.id); if(ur.error)throw ur.error;
+    if(p.archive_id){const ar=await db.from('pilgrim_archive').update(patch).eq('id',p.archive_id); if(ar.error)console.warn('archive image sync',ar.error);}
+    try{await db.rpc('log_audit_event',{p_action:kind==='passport'?'edit_passport_image':'edit_pilgrim_image',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:p.full_name,p_details:{field,old_path:path,new_path:newPath},p_page:'pilgrims.html'});}catch(e){}
+    close(); alert('تم تعديل '+label+' وحفظ الصورة الجديدة بنجاح ✅'); await load(); const np=P.find(x=>x.id===p.id); if(np)openProfile(np.id);
+   }catch(e){btn.disabled=false;btn.textContent='✓ اعتماد التعديل';alert('تعذر حفظ الصورة المعدلة: '+(e?.message||e));}
+  };
+ }catch(e){alert('تعذر فتح محرر الصورة: '+(e?.message||e));}
+}
+
+function loadStoredImageCropper(){
+ if(window.Cropper)return Promise.resolve();
+ return new Promise((resolve,reject)=>{
+  if(!document.getElementById('qawafelCropperCss')){const css=document.createElement('link');css.id='qawafelCropperCss';css.rel='stylesheet';css.href='https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css';document.head.appendChild(css);}
+  const existing=document.getElementById('qawafelCropperJs'); if(existing){existing.addEventListener('load',resolve,{once:true});existing.addEventListener('error',reject,{once:true});return;}
+  const sc=document.createElement('script');sc.id='qawafelCropperJs';sc.src='https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js';sc.onload=resolve;sc.onerror=reject;document.head.appendChild(sc);
+ });
 }
 
 async function deletePilgrimFromTrip(pilgrimId){

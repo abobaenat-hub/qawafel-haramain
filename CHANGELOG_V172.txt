@@ -1,0 +1,4 @@
+V172
+- Added editable/croppable stored pilgrim and passport images from pilgrim profile.
+- Added editable/croppable stored pilgrim and passport images from archive profile.
+- Saves edited image as a new JPG, keeps original as backup, syncs archive/current pilgrim records, and logs the action.
