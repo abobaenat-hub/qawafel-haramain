@@ -1,2 +1,3 @@
-Qawafel Haramain V140 — package loading fix
-V138 remains GOLD MASTER; V140 is a derived test build.
+Qawafel Haramain V141 — package-first program structure
+V138 remains GOLD MASTER; V141 is a derived test build from V140.
+Changes: program no longer stores/display hotel or base sale prices; all hotels/prices/installments are managed inside one or more packages. Land bus/driver fields are hidden and cleared for flight programs.
