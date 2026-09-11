@@ -416,7 +416,6 @@ function render(){
    if(!String(x.phone||'').trim()) missing.push('رقم الهاتف');
    if(!String(x.current_residence||'').trim()) missing.push('محل السكن الحالي');
    if(!String(x.governorate||'').trim()) missing.push('المحافظة');
-   if(!String(x.madhhab||'').trim()) missing.push('المذهب');
    const a=calcAgeLocal(x.birth_date);
    if(a!==null&&a<18&&!x.guardian_accompanied&&!x.guardian_authorization_path) missing.push('وكالة ولي الأمر للقاصر');
    return missing.length?{id:x.id,name:x.full_name||'معتمر',missing}:null;
@@ -425,7 +424,7 @@ function render(){
  if(overdue)alerts.push({kind:'generic',text:'يوجد '+overdue+' قسط متأخر يحتاج متابعة.'});
  if(pendingVisas.length)pendingVisas.forEach(x=>alerts.push({kind:'visa',id:x.id,name:x.full_name||'معتمر',text:(x.visa_status==='rejected'?'التأشيرة مرفوضة / غير صادرة.':'التأشيرة لم تُصدر بعد.')}));
  if(docs)alerts.push({kind:'generic',text:'يوجد '+docs+' ملف جواز يحتاج استكمالاً.'});
- if(incompletePilgrims.length)incompletePilgrims.forEach(x=>x.missing.forEach(m=>alerts.push({kind:'incomplete',id:x.id,name:x.name,text:m,issue:m==='رقم الهاتف'?'phone':m==='محل السكن الحالي'?'residence':m==='المحافظة'?'governorate':m==='المذهب'?'madhhab':m==='وكالة ولي الأمر للقاصر'?'guardian':'general'})));
+ if(incompletePilgrims.length)incompletePilgrims.forEach(x=>x.missing.forEach(m=>alerts.push({kind:'incomplete',id:x.id,name:x.name,text:m,issue:m==='رقم الهاتف'?'phone':m==='محل السكن الحالي'?'residence':m==='المحافظة'?'governorate':m==='وكالة ولي الأمر للقاصر'?'guardian':'general'})));
  const alertHtml=alerts.map(x=>{
    if(x.kind==='incomplete') return '<a class="alert alert-link" href="./pilgrims.html?open='+encodeURIComponent(x.id)+'&issue='+encodeURIComponent(x.issue)+'#profile" style="display:block;text-decoration:none;color:inherit;cursor:pointer"><b>⚠️ نقص في معلومات المعتمر</b><br><span>'+esc(x.name)+'</span><br><span>المطلوب استكماله: <b>'+esc(x.text)+'</b></span><small style="display:block;margin-top:5px;color:#0c3b63;font-weight:900">اضغط هنا لإضافة هذا الحقل مباشرة ←</small></a>';
    if(x.kind==='visa') return '<a class="alert alert-link" href="./visa.html?open='+encodeURIComponent(x.id)+'" style="display:block;text-decoration:none;color:inherit;cursor:pointer"><b>🔴 متابعة التأشيرة</b><br><span>'+esc(x.name)+'</span> — '+esc(x.text)+'<small style="display:block;margin-top:5px;color:#0c3b63;font-weight:900">اضغط هنا لمعالجة التأشيرة ←</small></a>';
