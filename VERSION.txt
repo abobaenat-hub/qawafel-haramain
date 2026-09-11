@@ -1,6 +1,6 @@
-Qawafel Haramain V145 — clickable operational alerts
-V138 remains GOLD MASTER; V145 is a derived test build from V144.
+Qawafel Haramain V146 — minor pending authorization + staff package access
+V138 remains GOLD MASTER; V146 is a derived test build from V145.
 Changes:
-- Guardian authorization alerts are shown as individual clickable alerts in the Internal Dashboard.
-- Clicking a guardian alert opens the exact pilgrim profile and scrolls to the authorization section for immediate handling.
-- Uploading the authorization clears the alert automatically after refresh.
+- A minor under 18 can be saved when the guardian is not accompanying and the authorization is not ready; the case remains a visible operational alert until the authorization is uploaded.
+- The minor form wording now clearly states that authorization can be completed later.
+- Supabase package access was updated so staff with the booking_staff permission can read/manage program packages, not only users whose role field is exactly booking_staff.
