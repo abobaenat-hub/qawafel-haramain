@@ -545,6 +545,14 @@ async function load(){
  $('rem').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
  $('program').innerHTML='<option value="">اختر البرنامج</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  render();
+ const requestedId=new URLSearchParams(window.location.search).get('open');
+ if(requestedId){
+   const target=P.find(x=>String(x.id)===String(requestedId));
+   if(target){
+     await openProfile(target.id);
+     history.replaceState(null,'',window.location.pathname+'#profile');
+   }
+ }
 }
 
 function archiveAlreadyInProgram(archiveId,programId){return P.some(p=>p.archive_id===archiveId && B.some(b=>b.id===p.booking_id && b.program_id===programId && b.status!=='cancelled'));}

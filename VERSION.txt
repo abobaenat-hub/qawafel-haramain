@@ -1,4 +1,4 @@
-Qawafel Al-Haramain — V150
-Based on V149.
-V138 remains the untouched GOLD MASTER.
-V150 adds operational alerts for incomplete pilgrim information (phone, current residence, and minor guardian authorization), with clickable links to the pilgrim profile.
+Qawafel Haramain V152
+Based on V151.
+Fix: notification links with ?open=<pilgrim_id> now automatically load and open the correct pilgrim profile after data loading.
+V138 remains GOLD MASTER.
