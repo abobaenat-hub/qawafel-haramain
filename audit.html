@@ -128,7 +128,13 @@
       }catch(e){show(session.user.email||'المستخدم','');}
     }
     function show(name,role){
-      const n=name||'المستخدم'; document.getElementById('qgaName').textContent=n; document.getElementById('qgaRole').textContent=labels[role]||role||''; document.getElementById('qgaAvatar').textContent=(n.trim()[0]||'ق'); bar.style.display='block';
+      const n=name||'المستخدم';
+      document.getElementById('qgaName').textContent=n;
+      document.getElementById('qgaRole').textContent=labels[role]||role||'';
+      document.getElementById('qgaAvatar').textContent=(n.trim()[0]||'ق');
+      const auditLink=document.querySelector('#qawafelAdminDrawer .qad-link[data-page=\"audit.html\"]');
+      if(auditLink) auditLink.style.display=(role==='super_admin')?'flex':'none';
+      bar.style.display='block';
     }
     try{const s=await db.auth.getSession(); await load(s.data?.session);}catch(e){bar.style.display='none';}
     db.auth.onAuthStateChange(function(event,session){setTimeout(()=>load(session),0);});
@@ -141,7 +147,7 @@
 <header class="top"><div class="topin"><div class="brand"><div class="mark"><img src="./logo.png" alt="قوافل الحرمين"></div><div><b>قوافل الحرمين</b><small>سجل نشاط الموظفين</small></div></div><div class="actions"><a class="btn ghost backbtn" href="./internal.html">← لوحة الشركة</a><button id="logout" class="btn ghost">تسجيل الخروج</button></div></div></header>
 <main id="app" class="wrap hide">
 <a class="back" href="./internal.html">← العودة إلى لوحة الشركة</a>
-<div class="head"><div><div class="eyebrow">الأمان والرقابة</div><h1>سجل نشاط الموظفين</h1><p>سجل مركزي للعمليات التي تتم داخل المركز الإداري، مع حفظ اسم الموظف والوقت والصفحة.</p></div></div>
+<div class="head"><div><div class="eyebrow">الأمان والرقابة</div><h1>سجل نشاط الموظفين</h1><p>هذه الصفحة خاصة بالمدير العام فقط لمتابعة جميع نشاطات الموظفين، مع حفظ اسم المنفّذ والوقت والصفحة والتفاصيل.</p></div></div>
 <div id="msg" class="msg hide"></div>
 <section class="stats"><div class="stat"><span>إجمالي السجلات المعروضة</span><b id="count">0</b></div><div class="stat"><span>دخول</span><b id="logins">0</b></div><div class="stat"><span>عمليات داخل النظام</span><b id="actions">0</b></div></section>
 <section class="card"><div class="filters"><div class="field"><label>الموظف</label><select id="staff"><option value="">كل الموظفين</option></select></div><div class="field"><label>نوع النشاط</label><select id="action"><option value="">كل الأنشطة</option><option value="login">تسجيل دخول</option><option value="page_view">فتح صفحة</option><option value="ui_action">عملية داخل النظام</option></select></div><button id="refresh" class="btn primary">تحديث السجل</button></div></section>

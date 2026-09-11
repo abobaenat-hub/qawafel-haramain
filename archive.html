@@ -116,7 +116,13 @@
       }catch(e){show(session.user.email||'المستخدم','');}
     }
     function show(name,role){
-      const n=name||'المستخدم'; document.getElementById('qgaName').textContent=n; document.getElementById('qgaRole').textContent=labels[role]||role||''; document.getElementById('qgaAvatar').textContent=(n.trim()[0]||'ق'); bar.style.display='block';
+      const n=name||'المستخدم';
+      document.getElementById('qgaName').textContent=n;
+      document.getElementById('qgaRole').textContent=labels[role]||role||'';
+      document.getElementById('qgaAvatar').textContent=(n.trim()[0]||'ق');
+      const auditLink=document.querySelector('#qawafelAdminDrawer .qad-link[data-page=\"audit.html\"]');
+      if(auditLink) auditLink.style.display=(role==='super_admin')?'flex':'none';
+      bar.style.display='block';
     }
     try{const s=await db.auth.getSession(); await load(s.data?.session);}catch(e){bar.style.display='none';}
     db.auth.onAuthStateChange(function(event,session){setTimeout(()=>load(session),0);});

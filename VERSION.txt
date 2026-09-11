@@ -1,4 +1,1 @@
-Qawafel Haramain Platform
-Build: V164
-Base: V163
-Change: Added a dedicated Nusuk passport upload tracking page (nusuk.html), with clear pending/uploaded lists, one-click passport preparation + Nusuk opening, and manual uploaded confirmation. Added Nusuk tracking fields to pilgrims. GOLD MASTER: V138 (untouched)
+V167
