@@ -409,10 +409,13 @@ function render(){
  const overdue=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today).length;
  const visa=P.filter(x=>x.visa_status&&x.visa_status!=='issued').length;
  const docs=P.filter(x=>!x.passport_number||!x.passport_expiry).length;
+ const calcAgeLocal=d=>{if(!d)return null;const b=new Date(d+'T00:00:00');if(Number.isNaN(b.getTime()))return null;const t=new Date();let a=t.getFullYear()-b.getFullYear();const m=t.getMonth()-b.getMonth();if(m<0||(m===0&&t.getDate()<b.getDate()))a--;return a;};
+ const pendingGuardians=P.filter(x=>{const a=calcAgeLocal(x.birth_date);return a!==null&&a<18&&!x.guardian_accompanied&&!x.guardian_authorization_path;});
  const alerts=[];
  if(overdue)alerts.push('يوجد '+overdue+' قسط متأخر يحتاج متابعة.');
  if(visa)alerts.push('يوجد '+visa+' ملف تأشيرة غير مكتمل.');
  if(docs)alerts.push('يوجد '+docs+' ملف جواز يحتاج استكمالاً.');
+ if(pendingGuardians.length)alerts.push('⚠️ وكالة ولي الأمر: '+pendingGuardians.map(x=>x.full_name||'معتمر').join('، ')+' — لم تُرفع الوكالة بعد. <a href="pilgrims.html" style="font-weight:900;color:#0c3b63">فتح ملفات المعتمرين</a>');
  $('alerts').innerHTML=alerts.length?alerts.map(x=>'<div class="alert">'+esc(x)+'</div>').join(''):'<div class="alert ok">لا توجد تنبيهات حرجة حاليًا.</div>';
 
  $('programList').innerHTML=PR.map(x=>'<div class="program"><b>'+esc(x.title)+'</b><small>'+esc(x.departure_date||'—')+' · المقاعد المتاحة: '+Number(x.seats_available||0)+' · '+esc(x.status)+'</small></div>').join('')||'<div class="empty">لا توجد رحلات مسجلة.</div>';
