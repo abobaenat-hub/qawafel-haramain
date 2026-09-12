@@ -393,7 +393,7 @@ function tripBadgePrintCSS(){return `
 async function waitBadgeImages(w){const imgs=Array.from(w.document.images);await Promise.all(imgs.map(img=>new Promise(resolve=>{if(img.complete)return resolve();img.onload=img.onerror=resolve;})));}
 async function openBadgePrintWindow(cards,title){
  const w=window.open('about:blank','_blank');if(!w)return null;
- w.document.open();w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title||'باجات قوافل الحرمين')+'</title><style>'+tripBadgePrintCSS()+'</style></head><body><div id="printArea" class="badge-grid"></div></body></html>');w.document.close();
+ w.document.open();w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title||'باجات قوافل الحرمين')+'</title><style>'+tripBadgePrintCSS()+'</style></head><body><div id="printArea"></div></body></html>');w.document.close();
  const area=w.document.getElementById('printArea');if(area){area.innerHTML='';for(let i=0;i<cards.length;i+=4){const page=w.document.createElement('section');page.className='a4-page';const grid=w.document.createElement('div');grid.className='badge-grid';grid.innerHTML=cards.slice(i,i+4).join('');page.appendChild(grid);area.appendChild(page);}}await waitBadgeImages(w);setTimeout(()=>{w.focus();w.print()},700);return w;
 }
 async function printIndividualBadge(id){
