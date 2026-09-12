@@ -300,7 +300,7 @@ async function openTripPilgrims(id){
  $('tripPilgrimSearch').value='';
  $('tripModal').classList.remove('hidden');$('tripModal').setAttribute('aria-hidden','false');$('visaPanel').classList.add('hidden');
  $('tripPilgrimGrid').innerHTML='<div class="empty-pilgrims" style="grid-column:1/-1">جاري تحميل المعتمرين…</div>';
- const [{data:bs,error:be},{data:ps,error:pe}]=await Promise.all([db.from('bookings').select('id,program_id,status,total_amount,paid_amount,payment_type,package_id,agent_id').eq('program_id',id),db.from('pilgrims').select('id,booking_id,full_name,phone,passport_number,profile_code,visa_status,photo_path,gender,gender_ar,birth_date').order('full_name')]);
+ const [{data:bs,error:be},{data:ps,error:pe}]=await Promise.all([db.from('bookings').select('id,program_id,status,total_amount,paid_amount,payment_type,package_id,agent_id').eq('program_id',id),db.from('pilgrims').select('id,booking_id,full_name,phone,passport_number,profile_code,visa_status,photo_path,gender,birth_date').order('full_name')]);
  if(be||pe){$('tripPilgrimGrid').innerHTML='<div class="empty-pilgrims" style="grid-column:1/-1;color:#a03434">تعذر تحميل بيانات المعتمرين.</div>';return}
  const bookings=(bs||[]).filter(x=>x.status!=='cancelled');
  const map=new Map(bookings.map(x=>[x.id,x]));
@@ -395,7 +395,7 @@ function calcAgeForReport(birth){
 function escReport(v){return String(v??'—').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 function genderReportLabel(g){return g==='ذكر'?'ذكر':g==='أنثى'?'أنثى':'غير محدد'}
 function normalizeReportGender(x){
-  const g=String(x?.gender_ar||x?.gender||'').trim().toLowerCase();
+  const g=String(x?.gender||'').trim().toLowerCase();
   if(g==='ذكر'||g==='male'||g==='m')return 'ذكر';
   if(g==='أنثى'||g==='female'||g==='f')return 'أنثى';
   return 'غير محدد';
