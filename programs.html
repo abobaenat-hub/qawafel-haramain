@@ -412,25 +412,88 @@ function openTripReport(){
  });
  const rows=people.map((x,i)=>{
    const age=calcAgeForReport(x.birth_date), g=normalizeReportGender(x);
-   return `<tr><td>${i+1}</td><td class="name">${escReport(x.full_name)}</td><td>${escReport(g)}</td><td>${age===null?'—':age}</td><td>${escReport(x.passport_number)}</td><td>${escReport(x.medina_hotel||'—')}</td><td>${escReport(x.makkah_hotel||'—')}</td></tr>`;
+   return `<tr><td class="num">${i+1}</td><td class="name">${escReport(x.full_name)}</td><td>${escReport(g)}</td><td>${age===null?'—':age}</td><td class="passport">${escReport(x.passport_number)}</td><td class="hotel">${escReport(x.medina_hotel||'—')}</td><td class="hotel">${escReport(x.makkah_hotel||'—')}</td></tr>`;
  }).join('');
  const tripDate=activeTrip.departure_date||activeTrip.departure||activeTrip.start_date||'غير محدد';
  const driver=activeTrip.driver_name||'غير محدد', assistant=activeTrip.assistant_driver_name||'غير محدد';
  const supervisor=activeTrip.supervisor_name||'غير محدد', bus=activeTrip.bus_number||'غير محدد';
- const w=window.open('about:blank','_blank','width=1200,height=900');
+ const logo='logo.png';
+ const w=window.open('about:blank','_blank','width=900,height=1200');
  if(!w){alert('المتصفح منع نافذة الكشف. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');return;}
  w.document.open();
  w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>كشف رحلة - ${escReport(activeTrip.title)}</title><style>
- @page{size:A4 landscape;margin:10mm}*{box-sizing:border-box}body{font-family:Arial,"Tahoma",sans-serif;color:#12344f;margin:0;background:#fff}.head{border-bottom:4px solid #c79a3b;padding:0 0 10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.brand{font-size:23px;font-weight:900;color:#0c3b63}.sub{font-size:12px;color:#687985;margin-top:4px}.title{font-size:21px;font-weight:900;margin:9px 0 3px;color:#0c3b63}.meta{font-size:11px;color:#526775;line-height:1.8}.ops{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin:10px 0}.op{border:1px solid #dbe4e9;border-radius:9px;padding:8px;background:#f8fafc}.op span{display:block;font-size:9px;color:#71808b}.op b{display:block;font-size:12px;color:#0c3b63;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.box{border:1px solid #dbe4e9;border-radius:10px;padding:8px;background:#f8fafc;text-align:center}.box span{display:block;font-size:9px;color:#71808b}.box b{display:block;font-size:20px;color:#0c3b63;margin-top:3px}.note{font-size:10px;color:#697984;margin:7px 0 9px}table{width:100%;border-collapse:collapse;font-size:9px}th{background:#0c3b63;color:#fff;padding:6px 5px;border:1px solid #0c3b63}td{padding:5px 4px;border:1px solid #dce4e9;text-align:center}td.name{text-align:right;font-weight:700}tr:nth-child(even) td{background:#f8fafc}.footer{margin-top:10px;border-top:2px solid #c79a3b;padding-top:6px;display:flex;justify-content:space-between;font-size:9px;color:#657681}.print{position:fixed;left:12px;top:12px;border:0;border-radius:8px;background:#c79a3b;color:#fff;padding:8px 12px;font-weight:800;cursor:pointer}@media print{.print{display:none}}
+ @page{size:A4 portrait;margin:8mm 7mm 9mm}
+ *{box-sizing:border-box}
+ html,body{margin:0;padding:0;background:#fff;color:#12344f;font-family:Tahoma,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+ body{font-size:11px}
+ .page{width:100%;margin:0 auto}
+ .top-head{display:grid;grid-template-columns:155px 1fr 155px;align-items:center;gap:10px;margin-bottom:7px}
+ .brand-logo-wrap{display:flex;align-items:center;justify-content:flex-start;height:72px}
+ .brand-logo{width:145px;height:70px;object-fit:contain}
+ .title-wrap{text-align:center}
+ .main-title{display:inline-block;background:#072f52;color:#fff;border-radius:8px;padding:8px 18px 9px;font-size:19px;font-weight:900;line-height:1.35;white-space:nowrap;max-width:100%}
+ .brand-slogan{text-align:right;font-size:15px;line-height:1.5;font-weight:900;color:#072f52}
+ .brand-slogan small{display:block;color:#b18a31;font-size:10px;font-weight:800;margin-top:1px}
+ .gold-rule{height:2px;background:#c79a3b;margin:4px 0 7px}
+ .trip-info{display:grid;grid-template-columns:1.05fr .95fr;gap:8px;margin-bottom:7px}
+ .info-box{border:1px solid #a9d4ef;border-radius:7px;overflow:hidden;background:#fff;min-height:46px}
+ .info-label{background:linear-gradient(#f8fcff,#eef7fc);color:#123f67;font-size:10px;font-weight:900;padding:5px 8px;border-bottom:1px solid #d4e9f7}
+ .info-value{padding:5px 8px;font-size:13px;font-weight:900;color:#17364e;min-height:27px;display:flex;align-items:center;justify-content:center;text-align:center;overflow-wrap:anywhere;line-height:1.25}
+ .ops{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:7px}
+ .ops .info-box{min-height:52px}
+ .ops .info-value{font-size:11.5px}
+ .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:7px 0 8px}
+ .summary .box{border:1px solid #a9d4ef;border-radius:7px;background:#fff;text-align:center;overflow:hidden;min-height:52px}
+ .summary .box .lbl{background:linear-gradient(#f8fcff,#eef7fc);color:#123f67;font-size:10px;font-weight:900;padding:5px 4px;border-bottom:1px solid #d4e9f7}
+ .summary .box b{display:block;color:#072f52;font-size:19px;padding:4px 3px 6px}
+ .warning{font-size:9px;color:#8a641c;background:#fff8e7;border:1px solid #ecd79f;border-radius:5px;padding:4px 7px;margin:4px 0 7px}
+ .table-frame{border:1px solid #a9d4ef;border-radius:5px;overflow:hidden}
+ table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10.5px}
+ thead{display:table-header-group}
+ th{background:#07365d;color:#fff;border:1px solid #315a78;padding:6px 4px;font-size:10.5px;font-weight:900;line-height:1.2}
+ td{border:1px solid #b9d4e5;padding:4.5px 4px;text-align:center;vertical-align:middle;line-height:1.25;height:28px;overflow-wrap:anywhere}
+ tbody tr:nth-child(even) td{background:#f1f7fb}
+ td.num{width:5%;font-weight:900}
+ td.name{width:29%;text-align:right;font-weight:900;font-size:12.2px;color:#0b3152;white-space:normal}
+ td.passport{width:16%;font-size:9.5px;direction:ltr;unicode-bidi:plaintext}
+ td.hotel{font-size:9.7px;white-space:normal}
+ th:nth-child(1){width:5%}th:nth-child(2){width:29%}th:nth-child(3){width:9%}th:nth-child(4){width:7%}th:nth-child(5){width:16%}th:nth-child(6){width:17%}th:nth-child(7){width:17%}
+ tr{page-break-inside:avoid}
+ .footer{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:2px solid #c79a3b;margin-top:7px;padding-top:5px;color:#526775;font-size:8.5px}
+ .footer strong{color:#072f52;font-size:10px}
+ .print{position:fixed;left:12px;top:12px;border:0;border-radius:7px;background:#c79a3b;color:#fff;padding:8px 12px;font-weight:900;cursor:pointer;z-index:10}
+ @media screen{body{background:#eef1f3}.page{background:#fff;max-width:794px;min-height:1123px;padding:8mm 7mm 9mm;box-shadow:0 8px 30px rgba(0,0,0,.12)}}
+ @media print{.print{display:none}.page{box-shadow:none}}
  </style></head><body><button class="print" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
- <div class="head"><div><div class="brand">قوافل الحرمين للحج والعمرة</div><div class="sub">كشف رسمي لمعتمري الرحلة</div></div><div style="text-align:left;font-size:11px;color:#526775">بغداد - العامرية</div></div>
- <div class="title">كشف رحلة: ${escReport(activeTrip.title)}</div><div class="meta">📅 تاريخ الرحلة: <b>${escReport(tripDate)}</b> &nbsp; | &nbsp; 🚌 نوع السفر: ${escReport(activeTrip.travel_type||'—')}</div>
- <div class="ops"><div class="op"><span>المشرف</span><b>${escReport(supervisor)}</b></div><div class="op"><span>السائق الرئيسي</span><b>${escReport(driver)}</b></div><div class="op"><span>السائق المساعد</span><b>${escReport(assistant)}</b></div><div class="op"><span>رقم الباص</span><b>${escReport(bus)}</b></div><div class="op"><span>العودة</span><b>${escReport(activeTrip.return_date||'غير محدد')}</b></div></div>
- <div class="summary"><div class="box"><span>إجمالي المعتمرين</span><b>${people.length}</b></div><div class="box"><span>الرجال</span><b>${men}</b></div><div class="box"><span>النساء</span><b>${women}</b></div><div class="box"><span>الأطفال (دون 12 سنة)</span><b>${children}</b></div></div>
- ${unknown?`<div class="note">⚠️ يوجد ${unknown} معتمر بعمر 12 سنة فأكثر والجنس غير محدد في السجل.</div>`:''}
- <table><thead><tr><th>#</th><th>اسم المعتمر</th><th>الجنس</th><th>العمر</th><th>رقم الجواز</th><th>فندق المدينة</th><th>فندق مكة</th></tr></thead><tbody>${rows||'<tr><td colspan="7">لا يوجد معتمرون في هذه الرحلة.</td></tr>'}</tbody></table>
- <div class="footer"><span>أُعدّ من نظام قوافل الحرمين</span><span>تاريخ الرحلة: ${escReport(tripDate)} | الباص: ${escReport(bus)}</span></div>
- <script>window.onload=()=>setTimeout(()=>window.print(),350)<\/script></body></html>`);
+ <main class="page">
+  <div class="top-head">
+   <div class="brand-logo-wrap"><img class="brand-logo" src="${logo}" alt="قوافل الحرمين" onerror="this.style.visibility='hidden'"></div>
+   <div class="title-wrap"><div class="main-title">كشف رحلة: ${escReport(activeTrip.title)}</div></div>
+   <div class="brand-slogan">رحلة إيمانية<br>تجمعنا على الخير<small>قوافل الحرمين للحج والعمرة</small></div>
+  </div>
+  <div class="gold-rule"></div>
+  <div class="trip-info">
+   <div class="info-box"><div class="info-label">📅 تاريخ الرحلة</div><div class="info-value">${escReport(tripDate)}</div></div>
+   <div class="info-box"><div class="info-label">🚌 نوع السفر</div><div class="info-value">${escReport(activeTrip.travel_type||'—')}</div></div>
+  </div>
+  <div class="ops">
+   <div class="info-box"><div class="info-label">👤 المشرف</div><div class="info-value">${escReport(supervisor)}</div></div>
+   <div class="info-box"><div class="info-label">👤 السائق الرئيسي</div><div class="info-value">${escReport(driver)}</div></div>
+   <div class="info-box"><div class="info-label">👤 السائق المساعد</div><div class="info-value">${escReport(assistant)}</div></div>
+   <div class="info-box"><div class="info-label">🚌 رقم الباص</div><div class="info-value">${escReport(bus)}</div></div>
+   <div class="info-box"><div class="info-label">↩️ العودة</div><div class="info-value">${escReport(activeTrip.return_date||'غير محدد')}</div></div>
+  </div>
+  <div class="summary">
+   <div class="box"><div class="lbl">👥 المجموع</div><b>${people.length}</b></div>
+   <div class="box"><div class="lbl">👨 عدد الرجال</div><b>${men}</b></div>
+   <div class="box"><div class="lbl">👩 عدد النساء</div><b>${women}</b></div>
+   <div class="box"><div class="lbl">👧 عدد الأطفال</div><b>${children}</b></div>
+  </div>
+  ${unknown?`<div class="warning">⚠️ يوجد ${unknown} معتمر بعمر 12 سنة فأكثر والجنس غير محدد في السجل.</div>`:''}
+  <div class="table-frame"><table><thead><tr><th>ت</th><th>اسم المعتمر</th><th>الجنس</th><th>العمر</th><th>رقم الجواز</th><th>فندق المدينة</th><th>فندق مكة</th></tr></thead><tbody>${rows||'<tr><td colspan="7">لا يوجد معتمرون في هذه الرحلة.</td></tr>'}</tbody></table></div>
+  <div class="footer"><strong>قوافل الحرمين للحج والعمرة</strong><span>معًا .. لرحلة مباركة وآمنة</span><span>تاريخ الطباعة: ${new Date().toLocaleDateString('en-CA')}</span></div>
+ </main>
+ <script>window.onload=()=>setTimeout(()=>window.print(),450)<\/script></body></html>`);
  w.document.close();
 }
 $('tripReportTrip')?.addEventListener('click',openTripReport);
