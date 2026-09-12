@@ -663,7 +663,7 @@ async function openFocusedIssue(p,issue){
 async function prepareNusukPassport(p){
  const passportPath=p?.passport_image_path||'';
  if(!passportPath){alert('لا توجد صورة جواز محفوظة لهذا المعتمر في قوافل الحرمين.');return;}
- const popup=window.open('https://masar.nusuk.sa/umrah/mutamer/mutamer-list','_blank');
+ const popup=window.open('https://masar.nusuk.sa/','_blank');
  try{
    if(popup){try{popup.opener=null;}catch(e){}}
    const signed=await photoUrl(passportPath);
@@ -681,7 +681,7 @@ async function prepareNusukPassport(p){
    const url=URL.createObjectURL(ready);
    const a=document.createElement('a');a.href=url;a.download=fileName;document.body.appendChild(a);a.click();a.remove();
    setTimeout(()=>URL.revokeObjectURL(url),60000);
-   try{await db.from('pilgrims').update({nusuk_passport_status:'prepared',nusuk_passport_prepared_at:new Date().toISOString()}).eq('id',p.id);}catch(e){} try{await db.rpc('log_audit_event',{p_action:'prepare_nusuk_passport',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:p.full_name,p_details:{file_name:fileName,size_bytes:ready.size,nusuk_url:'https://masar.nusuk.sa/umrah/mutamer/mutamer-list'},p_page:'pilgrims.html'});}catch(e){}
+   try{await db.from('pilgrims').update({nusuk_passport_status:'prepared',nusuk_passport_prepared_at:new Date().toISOString()}).eq('id',p.id);}catch(e){} try{await db.rpc('log_audit_event',{p_action:'prepare_nusuk_passport',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:p.full_name,p_details:{file_name:fileName,size_bytes:ready.size,nusuk_url:'https://masar.nusuk.sa/'},p_page:'pilgrims.html'});}catch(e){}
    alert('تم تجهيز جواز '+(p.full_name||'المعتمر')+' لنسك ✅\n\nتم تنزيل الملف باسم:\n'+fileName+'\n\nالآن في نسك اضغط «إضافة معتمر» ثم «اختر الملف» واختر هذا الملف من التنزيلات.');
  }catch(e){
    if(popup)try{popup.close();}catch(_){ }
