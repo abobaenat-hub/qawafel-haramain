@@ -402,7 +402,8 @@ function normalizeReportGender(x){
 }
 function openTripReport(){
  if(!activeTrip)return;
- const people=allProgramPilgrims||[];
+ let people=[...(allProgramPilgrims||[])];
+ people.sort((a,b)=>String(a.full_name||'').localeCompare(String(b.full_name||''),'ar',{sensitivity:'base'}));
  let men=0,women=0,children=0,unknown=0;
  people.forEach(x=>{
    const age=calcAgeForReport(x.birth_date), g=normalizeReportGender(x);
@@ -411,10 +412,9 @@ function openTripReport(){
  });
  const medina=[...new Set(people.map(x=>x.medina_hotel).filter(Boolean))];
  const makkah=[...new Set(people.map(x=>x.makkah_hotel).filter(Boolean))];
- const contractors=[...new Set(people.map(x=>x.agent_name).filter(Boolean))];
  const rows=people.map((x,i)=>{
    const age=calcAgeForReport(x.birth_date), g=normalizeReportGender(x);
-   return `<tr><td>${i+1}</td><td class="name">${escReport(x.full_name)}</td><td>${escReport(g)}</td><td>${age===null?'—':age}</td><td>${escReport(x.profile_code)}</td><td>${escReport(x.passport_number)}</td><td>${escReport(x.medina_hotel||'—')}</td><td>${escReport(x.makkah_hotel||'—')}</td><td>${escReport(x.agent_name||'—')}</td></tr>`;
+   return `<tr><td>${i+1}</td><td><b>${escReport(x.profile_code||'—')}</b></td><td class="name">${escReport(x.full_name)}</td><td>${escReport(g)}</td><td>${age===null?'—':age}</td><td>${escReport(x.passport_number)}</td></tr>`;
  }).join('');
  const tripDate=activeTrip.departure_date||activeTrip.departure||activeTrip.start_date||'غير محدد';
  const driver=activeTrip.driver_name||'غير محدد', assistant=activeTrip.assistant_driver_name||'غير محدد';
@@ -427,11 +427,11 @@ function openTripReport(){
  </style></head><body><button class="print" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
  <div class="head"><div><div class="brand">قوافل الحرمين للحج والعمرة</div><div class="sub">كشف رسمي لمعتمري الرحلة</div></div><div style="text-align:left;font-size:11px;color:#526775">بغداد - العامرية</div></div>
  <div class="title">كشف رحلة: ${escReport(activeTrip.title)}</div><div class="meta">📅 تاريخ الرحلة: <b>${escReport(tripDate)}</b> &nbsp; | &nbsp; 🚌 نوع السفر: ${escReport(activeTrip.travel_type||'—')}</div>
- <div class="ops"><div class="op"><span>الفندق في المدينة</span><b>${escReport(medina.join('، ')||'حسب الباقة')}</b></div><div class="op"><span>الفندق في مكة</span><b>${escReport(makkah.join('، ')||'حسب الباقة')}</b></div><div class="op"><span>المتعهد</span><b>${escReport(contractors.join('، ')||'غير محدد')}</b></div><div class="op"><span>المشرف</span><b>${escReport(supervisor)}</b></div><div class="op"><span>السائق الرئيسي</span><b>${escReport(driver)}</b></div><div class="op"><span>السائق المساعد</span><b>${escReport(assistant)}</b></div></div>
+ <div class="ops"><div class="op"><span>الفندق في المدينة</span><b>${escReport(medina.join('، ')||'حسب الباقة')}</b></div><div class="op"><span>الفندق في مكة</span><b>${escReport(makkah.join('، ')||'حسب الباقة')}</b></div><div class="op"><span>المشرف</span><b>${escReport(supervisor)}</b></div><div class="op"><span>السائق الرئيسي</span><b>${escReport(driver)}</b></div><div class="op"><span>السائق المساعد</span><b>${escReport(assistant)}</b></div></div>
  <div class="meta">🔢 رقم الباص: <b>${escReport(bus)}</b></div>
  <div class="summary"><div class="box"><span>إجمالي المعتمرين</span><b>${people.length}</b></div><div class="box"><span>الرجال</span><b>${men}</b></div><div class="box"><span>النساء</span><b>${women}</b></div><div class="box"><span>الأطفال (دون 12 سنة)</span><b>${children}</b></div></div>
  ${unknown?`<div class="note">⚠️ يوجد ${unknown} معتمر بعمر 12 سنة فأكثر والجنس غير محدد في السجل.</div>`:''}
- <table><thead><tr><th>#</th><th>اسم المعتمر</th><th>الجنس</th><th>العمر</th><th>رقم المعتمر</th><th>رقم الجواز</th><th>فندق المدينة</th><th>فندق مكة</th><th>المتعهد</th></tr></thead><tbody>${rows||'<tr><td colspan="9">لا يوجد معتمرون في هذه الرحلة.</td></tr>'}</tbody></table>
+ <table><thead><tr><th>#</th><th>رقم المعتمر</th><th>اسم المعتمر</th><th>الجنس</th><th>العمر</th><th>رقم الجواز</th></tr></thead><tbody>${rows||'<tr><td colspan="6">لا يوجد معتمرون في هذه الرحلة.</td></tr>'}</tbody></table>
  <div class="footer"><span>أُعدّ من نظام قوافل الحرمين</span><span>تاريخ الرحلة: ${escReport(tripDate)} | الباص: ${escReport(bus)}</span></div>
  <script>window.onload=()=>setTimeout(()=>window.print(),350)<\/script></body></html>`);
  w.document.close();
