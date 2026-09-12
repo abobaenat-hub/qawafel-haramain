@@ -283,6 +283,7 @@ function renderTripPilgrims(){
       <div class="status-row">${visaLabel(x.visa_status||'قيد الإجراء')}${paymentLabel(b)}</div>
     </div>
     <div class="pilgrim-actions">
+      <button class="btn gold" onclick="printIndividualBadge('${x.id}')">🪪 سحب الباج</button>
       <button class="btn primary" onclick="openPilgrimFromTrip('${x.id}')">👁️ عرض البيانات</button>
       <button class="btn ghost" onclick="openPilgrimFromTrip('${x.id}')">💰 الدفعات</button>
     </div>
@@ -368,95 +369,45 @@ async function loadPrograms(){
 }
 $('tripPilgrimSearch')?.addEventListener('input',renderTripPilgrims);
 async function tripBadgeData(p){
- const b=p._booking||{};
- return {
-  id:p.id||'', name:p.full_name||'—', photo:p.photo_url||'', passport:p.passport_number||'—',
-  makkah:p.makkah_hotel||'حسب الباقة', medina:p.medina_hotel||'حسب الباقة'
- };
+ const d={name:p.full_name||'—',photo:p.photo_url||'',passport:p.passport_number||'—',makkah:p.makkah_hotel||'—',medina:p.medina_hotel||'—'};
+ return d;
 }
-
-function badgeHtml(d,i){
- const qrId='badgeQR_'+i+'_'+Date.now();
- const photo=d.photo?`<img class="badge-photo" src="${esc(d.photo)}" alt="صورة المعتمر" onerror="this.style.visibility='hidden'">`:'';
+function badgeQrUrl(){return 'https://www.qawafialharamainiq.com/';}
+function badgeHtml(d){
+ const photo=d.photo||'';
+ const qr='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data='+encodeURIComponent(badgeQrUrl());
  return `<article class="print-badge">
-  <div class="badge-bg madina-bg"></div><div class="badge-bg makkah-bg"></div><div class="badge-pattern"></div>
-  <div class="badge-top"><div class="badge-tagline">رحلة إيمانية<br><span>تجمعنا على الخير</span></div><div class="badge-dua">لبيك اللهم لبيك</div></div>
-  <div class="badge-brand"><img src="logo.png" alt="قوافل الحرمين" onerror="this.style.visibility='hidden'"><div>للحج والعمرة</div><small>معكم إلى أقدس البقاع</small></div>
-  <div class="badge-person">${photo}<div class="badge-namebox"><div class="badge-name">${esc(d.name)}</div><div class="badge-role">معتمر</div></div></div>
-  <div class="badge-hotels">
-   <div class="badge-hotel medina"><b>السكن في المدينة</b><strong>${esc(d.medina)}</strong><small>المدينة المنورة</small></div>
-   <div class="badge-hotel makkah"><b>السكن في مكة</b><strong>${esc(d.makkah)}</strong><small>مكة المكرمة</small></div>
-  </div>
-  <div class="badge-passport"><b>رقم الجواز</b><strong>${esc(d.passport)}</strong></div>
-  <div class="badge-qr"><div id="${qrId}" class="qr-box"></div><div class="qr-note">امسح الكود لزيارة موقعنا</div><small>www.qawafialharamainiq.com</small></div>
-  <div class="badge-footer"><div>+964 778 007 7122</div><span>•</span><div>+964 781 479 9623</div><div class="badge-web">www.qawafialharamainiq.com</div></div>
-  <div class="badge-bottom">معكم .. لرحلة مباركة وآمنة</div>
+   <div class="badge-top"><div class="tagline">رحلة إيمانية<br><b>تجمعنا على الخير</b></div><div class="labbaik">لبيك اللهم لبيك</div></div>
+   <div class="landmarks"><img class="madina-bg" src="madina.jpg"><img class="makkah-bg" src="makkah.jpg"></div>
+   <div class="brand"><img class="brand-logo" src="logo.png" alt="قوافل الحرمين"><div>للحج والعمرة</div><small>معكم إلى القدس البقاع</small></div>
+   <div class="photo-wrap"><img class="photo" src="${photo}" onerror="this.style.visibility='hidden'" alt=""></div>
+   <div class="namebox"><div class="name">${esc(d.name)}</div><div class="role">معتمر</div></div>
+   <div class="hotel-row">
+     <div class="hotel medina"><b>السكن في المدينة</b><span>${esc(d.medina)}</span><small>المدينة المنورة</small></div>
+     <div class="hotel makkah"><b>السكن في مكة</b><span>${esc(d.makkah)}</span><small>مكة المكرمة</small></div>
+   </div>
+   <div class="passport"><b>رقم الجواز</b><span>${esc(d.passport)}</span></div>
+   <div class="qrbox"><img src="${qr}" alt="QR"><b>امسح الكود لزيارة موقعنا</b><small>www.qawafialharamainiq.com</small></div>
+   <div class="badge-footer"><div>+964 778 007 7122</div><div>+964 781 479 9623</div><div class="slogan">معكم .. لرحلة مباركة وآمنة</div></div>
  </article>`;
 }
-
 function tripBadgePrintCSS(){return `
-*{box-sizing:border-box}
-html,body{margin:0;padding:0;background:#fff;font-family:Tahoma,Arial,sans-serif;color:#072b49}
-body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-.badge-grid{display:grid;grid-template-columns:repeat(2,70mm);grid-auto-rows:105mm;gap:7mm 7mm;width:100%;padding:10mm 5mm;justify-content:center;align-content:start}
-.print-badge{width:70mm;height:105mm;position:relative;overflow:hidden;background:#fff;border:.45mm solid #b8c9d5;border-radius:3.5mm;page-break-inside:avoid;break-inside:avoid;box-shadow:none;color:#072b49}
-.badge-bg{position:absolute;inset:0;background-position:center;background-size:cover;opacity:.14}
-.madina-bg{background-image:url('madina.jpg');clip-path:polygon(0 0,50% 0,50% 64%,0 78%)}
-.makkah-bg{background-image:url('makkah.jpg');clip-path:polygon(50% 0,100% 0,100% 78%,50% 64%)}
-.badge-pattern{position:absolute;inset:0;background:radial-gradient(circle at 50% 45%,rgba(255,255,255,.82),rgba(255,255,255,.94) 58%,rgba(255,255,255,.98));}
-.print-badge:before{content:"";position:absolute;left:0;right:0;top:0;height:29mm;background:#072b49;clip-path:polygon(0 0,100% 0,100% 74%,78% 100%,22% 100%,0 74%)}
-.print-badge:after{content:"";position:absolute;left:0;right:0;bottom:0;height:13mm;background:#072b49;border-top:.7mm solid #c79a3b}
-.badge-top{position:absolute;z-index:3;top:4mm;left:4mm;right:4mm;display:flex;justify-content:space-between;align-items:flex-start;color:#fff;font-weight:900}
-.badge-tagline{font-size:2.6mm;line-height:1.35;text-align:right}.badge-tagline span{font-size:2.15mm}.badge-dua{font-family:Georgia,serif;color:#e1bd67;font-size:3.4mm;line-height:1.2;margin-top:1mm}
-.badge-brand{position:absolute;z-index:4;top:9mm;left:0;right:0;text-align:center;color:#072b49;font-weight:900}
-.badge-brand img{width:27mm;height:17mm;object-fit:contain;background:rgba(255,255,255,.86);border-radius:8mm;padding:1mm}.badge-brand div{font-size:2.4mm;margin-top:-1mm}.badge-brand small{font-size:1.7mm;font-weight:800}
-.badge-person{position:absolute;z-index:4;top:31mm;left:5mm;right:5mm;display:flex;flex-direction:column;align-items:center}
-.badge-photo{width:29mm;height:31mm;border-radius:2.7mm;object-fit:cover;border:.6mm solid #c79a3b;background:#eef2f4;box-shadow:0 0 0 1mm rgba(255,255,255,.75)}
-.badge-namebox{margin-top:2mm;width:100%;text-align:center}.badge-name{background:#072b49;color:#fff;border-radius:2.5mm;padding:1.7mm 2mm;font-size:4.25mm;font-weight:900;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge-role{margin:1mm auto 0;background:#edf1f4;border-radius:2mm;width:30mm;padding:1mm;font-size:2.4mm;font-weight:900;color:#17364e}
-.badge-hotels{position:absolute;z-index:4;top:68mm;left:4mm;right:4mm;display:grid;grid-template-columns:1fr 1fr;gap:2mm;direction:rtl}
-.badge-hotel{border:.35mm solid #b9d3df;border-radius:2mm;background:rgba(255,255,255,.93);padding:1.5mm 1.4mm;text-align:center;min-height:16mm;display:flex;flex-direction:column;justify-content:center;overflow:hidden}.badge-hotel b{font-size:2.15mm;color:#123f67}.badge-hotel strong{font-size:2.55mm;line-height:1.25;margin-top:.7mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.badge-hotel small{font-size:1.7mm;color:#526775;margin-top:.4mm}.badge-hotel.medina{border-color:#6db58d;background:rgba(239,250,244,.94)}.badge-hotel.makkah{border-color:#78a9d8;background:rgba(239,247,255,.94)}
-.badge-passport{position:absolute;z-index:4;top:85.5mm;left:7mm;right:7mm;height:8mm;background:rgba(245,248,250,.96);border:.35mm solid #d2dde4;border-radius:2mm;display:flex;align-items:center;justify-content:center;gap:3mm}.badge-passport b{font-size:2mm;color:#123f67}.badge-passport strong{font-size:3.1mm;direction:ltr;unicode-bidi:plaintext}
-.badge-qr{position:absolute;z-index:5;bottom:9mm;left:50%;transform:translateX(-50%);width:25mm;height:24mm;background:#fff;border:.55mm solid #c79a3b;border-radius:2.5mm;text-align:center;padding:1.2mm}.qr-box{width:15mm;height:15mm;margin:0 auto;background:#fff}.qr-box img,.qr-box canvas{width:15mm!important;height:15mm!important}.qr-note{font-size:1.65mm;font-weight:900;margin-top:.5mm;color:#072b49}.badge-qr small{font-size:1.35mm;color:#17364e;white-space:nowrap}
-.badge-footer{position:absolute;z-index:6;bottom:3.2mm;left:2.5mm;right:2.5mm;color:#fff;display:flex;align-items:center;justify-content:center;gap:1.4mm;font-size:1.65mm;direction:ltr;white-space:nowrap}.badge-footer span{color:#e1bd67}.badge-footer .badge-web{display:none}.badge-bottom{position:absolute;z-index:6;bottom:.65mm;left:0;right:0;text-align:center;color:#e1bd67;font-size:1.45mm;font-weight:900}
-@page{size:A4 portrait;margin:0}
-@media print{body{background:#fff}.badge-grid{padding:9mm 5mm 8mm}}
-@media screen{body{background:#eef1f3}.badge-grid{width:210mm;min-height:297mm;margin:0 auto;background:#fff;padding:9mm 5mm;box-shadow:0 8px 30px rgba(0,0,0,.12)}}
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;font-family:Tahoma,Arial,sans-serif}.badge-grid{display:grid;grid-template-columns:repeat(2,70mm);grid-auto-rows:105mm;gap:5mm 8mm;padding:10mm;justify-content:center;align-content:start}.print-badge{width:70mm;height:105mm;position:relative;overflow:hidden;border:0.35mm solid #c79a3b;border-radius:3.2mm;background:#fdfcf8;color:#072b49;page-break-inside:avoid;break-inside:avoid}.print-badge:before{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(255,255,255,.96),rgba(250,248,241,.93));z-index:0}.badge-top{position:absolute;top:0;left:0;right:0;height:20mm;background:#072b49;color:#fff;z-index:1;border-bottom:0.7mm solid #c79a3b}.badge-top:after{content:"";position:absolute;left:-7mm;top:-4mm;width:27mm;height:26mm;background:#0c3b63;border-radius:0 0 14mm 0;transform:skewX(-8deg)}.tagline{position:absolute;left:5mm;top:4mm;font-size:2.35mm;line-height:1.25;z-index:2;color:#fff}.tagline b{color:#e4c878}.labbaik{position:absolute;right:4mm;top:4.2mm;color:#e4c878;font-weight:900;font-size:3mm;z-index:2}.landmarks{position:absolute;top:18mm;left:0;right:0;height:30mm;display:grid;grid-template-columns:1fr 1fr;opacity:.82;z-index:0;overflow:hidden}.landmarks img{width:100%;height:100%;object-fit:cover}.landmarks:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.35),rgba(255,255,255,.8),rgba(255,255,255,.35))}.brand{position:absolute;top:17.5mm;left:0;right:0;text-align:center;z-index:2;font-weight:900;font-size:2.9mm;color:#072b49}.brand-logo{display:block;width:25mm;height:17mm;object-fit:contain;margin:0 auto -1mm}.brand small{display:block;font-size:1.65mm;font-weight:700}.photo-wrap{position:absolute;top:32mm;left:50%;transform:translateX(-50%);width:28mm;height:31mm;border:0.7mm solid #c79a3b;border-radius:3mm;background:#eef2f4;z-index:3;overflow:hidden}.photo{width:100%;height:100%;object-fit:cover}.namebox{position:absolute;top:62.5mm;left:5mm;right:5mm;height:11mm;background:#072b49;border-radius:3mm;z-index:3;text-align:center;padding:1.4mm}.name{font-weight:900;color:#fff;font-size:4.1mm;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.role{color:#e4c878;font-weight:900;font-size:2mm;margin-top:.7mm}.hotel-row{position:absolute;top:75mm;left:4mm;right:4mm;display:grid;grid-template-columns:1fr 1fr;gap:2.2mm;z-index:3}.hotel{height:10.8mm;border:0.35mm solid;border-radius:2.2mm;padding:1mm;text-align:center;background:#fff;overflow:hidden}.hotel b{display:block;font-size:1.75mm}.hotel span{display:block;font-weight:900;font-size:2.2mm;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:.5mm}.hotel small{display:block;font-size:1.55mm;margin-top:.3mm}.hotel.medina{border-color:#2b9b62}.hotel.makkah{border-color:#3285c7}.passport{position:absolute;top:87.2mm;left:12mm;right:12mm;height:6.5mm;border:0.3mm solid #d7e0e6;border-radius:1.8mm;background:#f6f8fa;z-index:3;text-align:center;padding:1mm}.passport b{font-size:1.6mm;display:block;color:#0c3b63}.passport span{font-weight:900;font-size:2.3mm;direction:ltr;display:block;margin-top:.2mm}.qrbox{position:absolute;top:88mm;left:50%;transform:translateX(-50%);width:23mm;height:16mm;background:#fff;border:0.55mm solid #c79a3b;border-radius:2.5mm;z-index:5;text-align:center;padding:1mm}.qrbox img{width:9.5mm;height:9.5mm;display:block;margin:-3.2mm auto .2mm;background:#fff}.qrbox b{font-size:1.25mm;display:block}.qrbox small{font-size:1.05mm;display:block;margin-top:.2mm}.badge-footer{position:absolute;bottom:0;left:0;right:0;height:10mm;background:#072b49;color:#fff;z-index:4;border-top:0.7mm solid #c79a3b;text-align:center;padding:1.2mm 2mm;font-size:1.65mm;display:flex;justify-content:center;gap:2.5mm;flex-wrap:wrap}.badge-footer .slogan{width:100%;color:#e4c878;font-weight:900;font-size:1.65mm;margin-top:-.4mm}@page{size:A4 portrait;margin:0}@media print{html,body{width:210mm;min-height:297mm}.badge-grid{padding:10mm;gap:5mm 8mm;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 `}
-
+async function waitBadgeImages(w){const imgs=Array.from(w.document.images);await Promise.all(imgs.map(img=>new Promise(resolve=>{if(img.complete)return resolve();img.onload=img.onerror=resolve;})));}
+async function openBadgePrintWindow(cards,title){
+ const w=window.open('about:blank','_blank');if(!w)return null;
+ w.document.open();w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title||'باجات قوافل الحرمين')+'</title><style>'+tripBadgePrintCSS()+'</style></head><body><div id="printArea" class="badge-grid"></div></body></html>');w.document.close();
+ const area=w.document.getElementById('printArea');if(area)area.innerHTML=cards.join('');await waitBadgeImages(w);setTimeout(()=>{w.focus();w.print()},300);return w;
+}
+async function printIndividualBadge(id){
+ const x=(allProgramPilgrims||[]).find(p=>p.id===id);if(!x)return alert('تعذر العثور على المعتمر.');
+ const d=await tripBadgeData(x);await openBadgePrintWindow([badgeHtml(d)],'باج معتمر — '+(x.full_name||''));
+}
 async function printTripBadges(){
- const list=allProgramPilgrims||[];
- if(!activeTrip||!list.length)return alert('لا يوجد معتمرون في هذه الرحلة.');
- const w=window.open('', '_blank', 'width=900,height=1200');
- if(!w)return alert('المتصفح منع نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');
- const base=new URL('./', window.location.href).href;
- const css=tripBadgePrintCSS()
-   .replaceAll("url('logo.png')", `url('${base}logo.png')`)
-   .replaceAll("url('madina.jpg')", `url('${base}madina.jpg')`)
-   .replaceAll("url('makkah.jpg')", `url('${base}makkah.jpg')`);
- const cards=[];
- for(let i=0;i<list.length;i++) cards.push(badgeHtml(await tripBadgeData(list[i]),i));
- const html='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باجات — '+esc(activeTrip.title||'قوافل الحرمين')+'</title><style>'+css+'</style></head><body><div id="printArea" class="badge-grid">'+cards.join('')+'</div></body></html>';
- w.document.open();
- w.document.write(html);
- w.document.close();
- const imgs=Array.from(w.document.images);
- await Promise.all(imgs.map(img=>new Promise(resolve=>{
-   if(img.complete) return resolve();
-   img.onload=img.onerror=resolve;
- })));
- await new Promise(resolve=>setTimeout(resolve,300));
- // إنشاء QR محليًا إن كانت مكتبة QRCode متاحة في الصفحة الأصلية، وإلا نستخدم صورة QR من خدمة عامة.
- const qrBoxes=Array.from(w.document.querySelectorAll('.qr-box'));
- const qrUrl='https://www.qawafialharamainiq.com/';
- const qrImgSrc='https://api.qrserver.com/v1/create-qr-code/?size=120x120&data='+encodeURIComponent(qrUrl);
- qrBoxes.forEach(el=>{
-   el.innerHTML='<img src="'+qrImgSrc+'" alt="QR" style="width:15mm;height:15mm;display:block;margin:auto;object-fit:contain">';
- });
- const qrImgs=Array.from(w.document.querySelectorAll('.qr-box img'));
- await Promise.all(qrImgs.map(img=>new Promise(resolve=>{if(img.complete)return resolve();img.onload=img.onerror=resolve;})));
- await new Promise(resolve=>setTimeout(resolve,400));
- w.focus();
- w.print();
+ const list=allProgramPilgrims||[];if(!activeTrip||!list.length)return alert('لا يوجد معتمرون في هذه الرحلة.');
+ const cards=[];for(const x of list)cards.push(badgeHtml(await tripBadgeData(x)));
+ await openBadgePrintWindow(cards,'باجات — '+(activeTrip.title||'قوافل الحرمين'));
 }
 
 $('printBadgesTrip')?.addEventListener('click',printTripBadges);

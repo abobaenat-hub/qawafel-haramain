@@ -1,0 +1,5 @@
+V205
+- Restored the complete project file set from V201 (44 files) so no platform files are lost.
+- Kept the latest programs.html badge implementation from V204.
+- Preserved the approved trip report and all existing platform pages/assets.
+- Badge features: individual badge printing and group printing, A4 portrait layout with 4 badges per page, QR to qawafialharamainiq.com, pilgrim photo, hotels, passport number, and contact numbers.
