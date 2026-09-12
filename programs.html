@@ -291,7 +291,7 @@ function renderTripPilgrims(){
  }).join(''):'<div class="empty-pilgrims" style="grid-column:1/-1">لا يوجد معتمرون مطابقون للبحث في هذه الرحلة.</div>';
 }
 
-function openPilgrimFromTrip(id){window.location.href='./pilgrims.html?program='+encodeURIComponent(activeTrip.id)+'&pilgrim='+encodeURIComponent(id)}
+function openPilgrimFromTrip(id){window.location.href='./pilgrims.html?open='+encodeURIComponent(id)+'#profile'}
 async function openTripPilgrims(id){
  const p=window.__programs?.find(x=>x.id===id); if(!p)return;
  activeTrip=p;

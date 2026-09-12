@@ -1,2 +1,2 @@
-Qawafel Haramain V216
-Badge rendering refinement: preserves original design, improves data overlay clarity and A4 print stability.
+Qawafel Haramain - V218
+Fix: عرض البيانات من الرحلة يفتح ملف المعتمر مباشرة عبر open=id.
