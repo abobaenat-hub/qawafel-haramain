@@ -322,7 +322,12 @@ async function loadTeamLists(){
   const savedSupervisor=$('supervisor_id')?.value||'';
   const savedDriver=$('driver_id')?.value||'';
   const savedAssistant=$('assistant_driver_id')?.value||'';
-  const [{data:s},{data:d}]=await Promise.all([db.from('supervisors').select('id,full_name,phone,commission_rate').eq('active',true).order('full_name'),db.from('drivers').select('id,full_name,full_name_ar,phone,vehicle_type,vehicle_number').eq('active',true).order('full_name_ar',{nullsFirst:false}).order('full_name')]);
+  const [{data:s},{data:d}]=await Promise.all([db.from('supervisors').select('id,full_name,phone,commission_rate,passport_image_path').eq('active',true).order('full_name'),db.from('drivers').select('id,full_name,full_name_ar,phone,vehicle_type,vehicle_number,photo_path').eq('active',true).order('full_name_ar',{nullsFirst:false}).order('full_name')]);
+  try{
+    const ss=await Promise.all((s||[]).map(async x=>{x._photo_url='';if(x.passport_image_path){try{const r=await db.storage.from('pilgrim-photos').createSignedUrl(x.passport_image_path,3600);x._photo_url=r.data?.signedUrl||''}catch(e){}}return x;}));
+    const dd=await Promise.all((d||[]).map(async x=>{x._photo_url='';if(x.photo_path){try{const r=await db.storage.from('pilgrim-photos').createSignedUrl(x.photo_path,3600);x._photo_url=r.data?.signedUrl||''}catch(e){}}return x;}));
+    window.__tripTeamPhotos={supervisors:new Map(ss.map(x=>[x.id,x._photo_url])),drivers:new Map(dd.map(x=>[x.id,x._photo_url]))};
+  }catch(e){window.__tripTeamPhotos={supervisors:new Map(),drivers:new Map()};}
   $('supervisor_id').innerHTML='<option value="">اختر المشرف...</option>'+(s||[]).map(x=>`<option value="${x.id}">${esc(x.full_name)} — ${Number(x.commission_rate||1.5)}%</option>`).join('');
   const driverLabel=x=>`${esc(x.full_name_ar||x.full_name||'—')}${x.vehicle_number?' — '+esc(x.vehicle_number):''}`;
   $('driver_id').innerHTML='<option value="">اختر السائق الرئيسي...</option>'+(d||[]).map(x=>`<option value="${x.id}">${driverLabel(x)}</option>`).join('');
@@ -410,13 +415,19 @@ function openTripReport(){
    if(age!==null && age<12){children++;return;}
    if(g==='ذكر')men++; else if(g==='أنثى')women++; else unknown++;
  });
+ const hotelClass=(hotel)=>{const h=String(hotel||'').trim().toLowerCase();if(h.includes('إيلاف')||h.includes('إيلاف')||h.includes('elaf'))return 'hotel-elaf';if(h.includes('أركان')||h.includes('اركان')||h.includes('arkan'))return 'hotel-arkan';if(h.includes('بركة الرفاع')||h.includes('الرفاع')||h.includes('barakat'))return 'hotel-rifaa';if(h.includes('برج الساعة')||h.includes('الساعة')||h.includes('clock'))return 'hotel-clock';if(h.includes('جبل عمر')||h.includes('جبل')||h.includes('jabal'))return 'hotel-jabal';return 'hotel-other';};
  const rows=people.map((x,i)=>{
    const age=calcAgeForReport(x.birth_date), g=normalizeReportGender(x);
-   return `<tr><td class="num">${i+1}</td><td class="name">${escReport(x.full_name)}</td><td>${escReport(g)}</td><td>${age===null?'—':age}</td><td class="passport">${escReport(x.passport_number)}</td><td class="hotel">${escReport(x.medina_hotel||'—')}</td><td class="hotel">${escReport(x.makkah_hotel||'—')}</td></tr>`;
+   return `<tr class="${hotelClass(x.makkah_hotel)}"><td class="num">${i+1}</td><td class="name">${escReport(x.full_name)}</td><td>${escReport(g)}</td><td>${age===null?'—':age}</td><td class="passport">${escReport(x.passport_number)}</td><td class="hotel">${escReport(x.medina_hotel||'—')}</td><td class="hotel">${escReport(x.makkah_hotel||'—')}</td></tr>`;
  }).join('');
  const tripDate=activeTrip.departure_date||activeTrip.departure||activeTrip.start_date||'غير محدد';
  const driver=activeTrip.driver_name||'غير محدد', assistant=activeTrip.assistant_driver_name||'غير محدد';
  const supervisor=activeTrip.supervisor_name||'غير محدد', bus=activeTrip.bus_number||'غير محدد';
+ const teamPhotos=window.__tripTeamPhotos||{supervisors:new Map(),drivers:new Map()};
+ const supervisorPhoto=teamPhotos.supervisors?.get(activeTrip.supervisor_id)||'';
+ const driverPhoto=teamPhotos.drivers?.get(activeTrip.driver_id)||'';
+ const assistantPhoto=teamPhotos.drivers?.get(activeTrip.assistant_driver_id)||'';
+ const staffHtml=(name,photo)=>`<div class="staff-value">${photo?`<img class="staff-photo" src="${escReport(photo)}" alt="">`:''}<span>${escReport(name)}</span></div>`;
  const logo='logo.png';
  const w=window.open('about:blank','_blank','width=900,height=1200');
  if(!w){alert('المتصفح منع نافذة الكشف. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');return;}
@@ -442,6 +453,9 @@ function openTripReport(){
  .ops{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:7px}
  .ops .info-box{min-height:52px}
  .ops .info-value{font-size:11.5px}
+ .staff-value{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-width:0}
+ .staff-value span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .staff-photo{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid #b8cbd8;background:#eef3f6;flex:0 0 auto}
  .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:7px 0 8px}
  .summary .box{border:1px solid #a9d4ef;border-radius:7px;background:#fff;text-align:center;overflow:hidden;min-height:52px}
  .summary .box .lbl{background:linear-gradient(#f8fcff,#eef7fc);color:#123f67;font-size:10px;font-weight:900;padding:5px 4px;border-bottom:1px solid #d4e9f7}
@@ -457,6 +471,12 @@ function openTripReport(){
  td.name{width:29%;text-align:right;font-weight:900;font-size:12.2px;color:#0b3152;white-space:normal}
  td.passport{width:16%;font-size:9.5px;direction:ltr;unicode-bidi:plaintext}
  td.hotel{font-size:9.7px;white-space:normal}
+ tbody tr.hotel-elaf td{background:#dff0ff !important}
+ tbody tr.hotel-arkan td{background:#e2f5d4 !important}
+ tbody tr.hotel-rifaa td{background:#ffe6c8 !important}
+ tbody tr.hotel-clock td{background:#ffd8ec !important}
+ tbody tr.hotel-jabal td{background:#e6ddff !important}
+ tbody tr.hotel-other td{background:#f0f4f7 !important}
  th:nth-child(1){width:5%}th:nth-child(2){width:29%}th:nth-child(3){width:9%}th:nth-child(4){width:7%}th:nth-child(5){width:16%}th:nth-child(6){width:17%}th:nth-child(7){width:17%}
  tr{page-break-inside:avoid}
  .footer{display:flex;justify-content:space-between;align-items:center;gap:10px;border-top:2px solid #c79a3b;margin-top:7px;padding-top:5px;color:#526775;font-size:8.5px}
@@ -477,9 +497,9 @@ function openTripReport(){
    <div class="info-box"><div class="info-label">🚌 نوع السفر</div><div class="info-value">${escReport(activeTrip.travel_type||'—')}</div></div>
   </div>
   <div class="ops">
-   <div class="info-box"><div class="info-label">👤 المشرف</div><div class="info-value">${escReport(supervisor)}</div></div>
-   <div class="info-box"><div class="info-label">👤 السائق الرئيسي</div><div class="info-value">${escReport(driver)}</div></div>
-   <div class="info-box"><div class="info-label">👤 السائق المساعد</div><div class="info-value">${escReport(assistant)}</div></div>
+   <div class="info-box"><div class="info-label">👤 المشرف</div><div class="info-value">${staffHtml(supervisor,supervisorPhoto)}</div></div>
+   <div class="info-box"><div class="info-label">👤 السائق الرئيسي</div><div class="info-value">${staffHtml(driver,driverPhoto)}</div></div>
+   <div class="info-box"><div class="info-label">👤 السائق المساعد</div><div class="info-value">${staffHtml(assistant,assistantPhoto)}</div></div>
    <div class="info-box"><div class="info-label">🚌 رقم الباص</div><div class="info-value">${escReport(bus)}</div></div>
    <div class="info-box"><div class="info-label">↩️ العودة</div><div class="info-value">${escReport(activeTrip.return_date||'غير محدد')}</div></div>
   </div>
