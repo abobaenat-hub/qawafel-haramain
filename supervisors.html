@@ -89,7 +89,7 @@
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
-    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=192"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="visa.html" href="./visa.html?v=127"><span class="qad-ico">🛂</span><span>إدارة التأشيرات</span></a><a class="qad-link" data-page="nusuk.html" href="./nusuk.html"><span class="qad-ico">🟢</span><span>رفع الجوازات إلى نسك</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html?v=114"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=194"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="visa.html" href="./visa.html?v=127"><span class="qad-ico">🛂</span><span>إدارة التأشيرات</span></a><a class="qad-link" data-page="nusuk.html" href="./nusuk.html"><span class="qad-ico">🟢</span><span>رفع الجوازات إلى نسك</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html?v=114"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
@@ -143,25 +143,35 @@ $('rotL').onclick=()=>cropState.cropper?.rotate(-90);$('rotR').onclick=()=>cropS
 async function guard(){let r=await db.auth.getUser();if(!r.data?.user){location.href='internal.html';return false}currentUser=r.data.user;let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',currentUser.id).maybeSingle();if(!s.error&&s.data?.active!==false&&['super_admin','manager'].includes(s.data?.role)){return 'manager'}if(!s.error&&s.data?.active!==false&&Array.isArray(s.data?.permissions)&&s.data.permissions.includes('supervisors')){return 'manager'}if(!s.error&&s.data?.active!==false&&s.data?.role==='driver'){document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');let dr=await db.from('drivers').select('*').eq('user_id',currentUser.id).maybeSingle();if(!dr.error&&dr.data){currentDriver=dr.data;return 'driver'}}if(!s.error&&s.data?.active!==false&&s.data?.role==='supervisor'){document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');let sp=await db.from('supervisors').select('*').eq('user_id',currentUser.id).maybeSingle();if(!sp.error&&sp.data){currentSupervisor=sp.data;return 'supervisor'}}let a=await db.from('admin_users').select('role').eq('user_id',currentUser.id).maybeSingle();if(!a.error&&['super_admin'].includes(a.data?.role))return 'manager';location.href='internal.html';return false}
 async function loadData(){
   let errors=[];
-  const sRes=await db.from('supervisors').select('id,user_id,full_name,phone,nationality,birth_date,passport_number,passport_expiry,passport_image_path,notes,commission_rate,active,created_at,updated_at').order('full_name');
-  if(sRes.error){console.error('supervisors load error',sRes.error);errors.push('المشرفون: '+(sRes.error.message||'تعذر التحميل'));supervisors=[];}else supervisors=sRes.data||[];
-
-  const dRes=await db.from('drivers').select('id,user_id,full_name,full_name_ar,phone,nationality,birth_date,passport_number,passport_expiry,passport_image_path,license_number,vehicle_type,vehicle_number,notes,active,photo_path,created_at,updated_at').order('full_name');
-  if(dRes.error){console.error('drivers load error',dRes.error);errors.push('السائقون: '+(dRes.error.message||'تعذر التحميل'));drivers=[];}else drivers=dRes.data||[];
-
-  const pRes=await db.from('programs').select('id,title,departure_date,supervisor_id,driver_id,driver_fee,assistant_driver_id').order('departure_date');
-  programs=pRes.error ? [] : (pRes.data||[]);
-  if(pRes.error) console.warn('تعذر تحميل ربط الرحلات:',pRes.error);
-
-  drivers=await Promise.all(drivers.map(async x=>{
-    x._photo_url='';
-    if(x.photo_path){
-      try{const r=await db.storage.from('pilgrim-photos').createSignedUrl(x.photo_path,3600);x._photo_url=r.data?.signedUrl||'';}catch(e){console.warn('driver photo',x.id,e);}
-    }
-    return x;
-  }));
-  renderSup();renderDrv();
-  if(errors.length) msg('تم تحميل الصفحة مع وجود مشكلة في: '+errors.join(' | '),true);
+  // تحميل فريق الإدارة عبر RPC آمن مخصص للمديرين، حتى لا تمنع RLS أو استعلامات الرحلات ظهور البيانات.
+  try{
+    const r=await db.rpc('get_management_team');
+    if(r.error) throw r.error;
+    const data=r.data||{};
+    supervisors=Array.isArray(data.supervisors)?data.supervisors:[];
+    drivers=Array.isArray(data.drivers)?data.drivers:[];
+  }catch(e){
+    console.error('management team load error',e);
+    errors.push('بيانات المشرفين والسائقين: '+(e.message||'تعذر التحميل'));
+    supervisors=[]; drivers=[];
+  }
+  try{
+    let r=await db.from('programs').select('id,title,departure_date,supervisor_id,driver_id,driver_fee,assistant_driver_id').order('departure_date');
+    if(r.error) console.warn('تعذر تحميل ربط الرحلات:',r.error);
+    programs=r.error?[]:(r.data||[]);
+  }catch(e){ programs=[]; console.warn('تعذر تحميل ربط الرحلات:',e); }
+  // تجهيز روابط الصور دون تعطيل القوائم إذا فشل التخزين.
+  try{
+    drivers=await Promise.all(drivers.map(async x=>{
+      x._photo_url='';
+      if(x.photo_path){
+        try{const r=await db.storage.from('pilgrim-photos').createSignedUrl(x.photo_path,3600);x._photo_url=r.data?.signedUrl||'';}catch(e){console.warn('driver photo',x.id,e);}
+      }
+      return x;
+    }));
+  }catch(e){ console.warn('driver photo processing',e); }
+  renderSup(); renderDrv();
+  if(errors.length) msg('تعذر تحميل بعض البيانات: '+errors.join(' | '),true);
 }
 function switchSection(id,btn){
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
