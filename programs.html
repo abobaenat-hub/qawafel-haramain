@@ -426,18 +426,37 @@ body{-webkit-print-color-adjust:exact;print-color-adjust:exact}
 async function printTripBadges(){
  const list=allProgramPilgrims||[];
  if(!activeTrip||!list.length)return alert('لا يوجد معتمرون في هذه الرحلة.');
- const w=window.open('about:blank','_blank','width=900,height=1200');
+ const w=window.open('', '_blank', 'width=900,height=1200');
  if(!w)return alert('المتصفح منع نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');
+ const base=new URL('./', window.location.href).href;
+ const css=tripBadgePrintCSS()
+   .replaceAll("url('logo.png')", `url('${base}logo.png')`)
+   .replaceAll("url('madina.jpg')", `url('${base}madina.jpg')`)
+   .replaceAll("url('makkah.jpg')", `url('${base}makkah.jpg')`);
+ const cards=[];
+ for(let i=0;i<list.length;i++) cards.push(badgeHtml(await tripBadgeData(list[i]),i));
+ const html='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باجات — '+esc(activeTrip.title||'قوافل الحرمين')+'</title><style>'+css+'</style></head><body><div id="printArea" class="badge-grid">'+cards.join('')+'</div></body></html>';
  w.document.open();
- w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>باجات — '+esc(activeTrip.title||'قوافل الحرمين')+'</title><script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"><\/script><style>'+tripBadgePrintCSS()+'</style></head><body><div id="printArea" class="badge-grid"></div></body></html>');
+ w.document.write(html);
  w.document.close();
- const cards=[]; for(let i=0;i<list.length;i++) cards.push(badgeHtml(await tripBadgeData(list[i]),i));
- const area=w.document.getElementById('printArea'); if(area)area.innerHTML=cards.join('');
- const imgs=Array.from(w.document.images); await Promise.all(imgs.map(img=>new Promise(resolve=>{if(img.complete)return resolve();img.onload=img.onerror=resolve;})));
- await new Promise(resolve=>setTimeout(resolve,900));
+ const imgs=Array.from(w.document.images);
+ await Promise.all(imgs.map(img=>new Promise(resolve=>{
+   if(img.complete) return resolve();
+   img.onload=img.onerror=resolve;
+ })));
+ await new Promise(resolve=>setTimeout(resolve,300));
+ // إنشاء QR محليًا إن كانت مكتبة QRCode متاحة في الصفحة الأصلية، وإلا نستخدم صورة QR من خدمة عامة.
  const qrBoxes=Array.from(w.document.querySelectorAll('.qr-box'));
- qrBoxes.forEach(el=>{try{if(w.QRCode) new w.QRCode(el,{text:'https://www.qawafialharamainiq.com/',width:120,height:120,colorDark:'#000000',colorLight:'#ffffff',correctLevel:w.QRCode.CorrectLevel.M});}catch(e){el.innerHTML='<div style="font-size:8px;padding-top:18px">QR</div>'}});
- setTimeout(()=>{w.focus();w.print();},700);
+ const qrUrl='https://www.qawafialharamainiq.com/';
+ const qrImgSrc='https://api.qrserver.com/v1/create-qr-code/?size=120x120&data='+encodeURIComponent(qrUrl);
+ qrBoxes.forEach(el=>{
+   el.innerHTML='<img src="'+qrImgSrc+'" alt="QR" style="width:15mm;height:15mm;display:block;margin:auto;object-fit:contain">';
+ });
+ const qrImgs=Array.from(w.document.querySelectorAll('.qr-box img'));
+ await Promise.all(qrImgs.map(img=>new Promise(resolve=>{if(img.complete)return resolve();img.onload=img.onerror=resolve;})));
+ await new Promise(resolve=>setTimeout(resolve,400));
+ w.focus();
+ w.print();
 }
 
 $('printBadgesTrip')?.addEventListener('click',printTripBadges);
