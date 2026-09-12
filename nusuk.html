@@ -32,6 +32,23 @@ async function photoUrl(path){if(!path)return '';const r=await db.storage.from('
 async function makeNusukPassport(blob){if(blob.size<=900*1024)return blob;const data=await new Promise((res,rej)=>{const r=new FileReader();r.onload=()=>res(r.result);r.onerror=rej;r.readAsDataURL(blob)});const img=await new Promise((res,rej)=>{const i=new Image();i.onload=()=>res(i);i.onerror=rej;i.src=data});let scale=Math.min(1,2200/Math.max(img.naturalWidth,img.naturalHeight));for(let pass=0;pass<5;pass++){const c=document.createElement('canvas');c.width=Math.max(1,Math.round(img.naturalWidth*scale));c.height=Math.max(1,Math.round(img.naturalHeight*scale));const ctx=c.getContext('2d',{alpha:false});ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(img,0,0,c.width,c.height);for(const q of [.9,.82,.75,.68]){const out=await new Promise(r=>c.toBlob(r,'image/jpeg',q));if(out&&out.size<=950*1024)return out}scale*=.82}throw Error('تعذر تجهيز الصورة ضمن حد 1 ميجابايت.')}
 const FS_DB='qawafel_nusuk_fs';
 function idbOpen(){return new Promise((res,rej)=>{const r=indexedDB.open(FS_DB,2);r.onupgradeneeded=()=>{const d=r.result;if(!d.objectStoreNames.contains('handles'))d.createObjectStore('handles');if(!d.objectStoreNames.contains('hotelFolders'))d.createObjectStore('hotelFolders')};r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)})}
+async function ensureFolderPermission(handle){
+  if(!handle) return false;
+  try{
+    if(typeof handle.queryPermission==='function'){
+      const current=await handle.queryPermission({mode:'readwrite'});
+      if(current==='granted') return true;
+    }
+    if(typeof handle.requestPermission==='function'){
+      const granted=await handle.requestPermission({mode:'readwrite'});
+      return granted==='granted';
+    }
+    return true;
+  }catch(e){
+    if(e?.name==='NotAllowedError') return false;
+    throw e;
+  }
+}
 async function saveFolderHandle(handle){try{const dbx=await idbOpen();await new Promise((res,rej)=>{const tx=dbx.transaction('handles','readwrite');tx.objectStore('handles').put(handle,'nusukFolder');tx.oncomplete=res;tx.onerror=()=>rej(tx.error)});dbx.close()}catch(e){}}
 async function getFolderHandle(){try{const dbx=await idbOpen();const h=await new Promise((res,rej)=>{const tx=dbx.transaction('handles','readonly');const q=tx.objectStore('handles').get('nusukFolder');q.onsuccess=()=>res(q.result||null);q.onerror=()=>rej(q.error)});dbx.close();return h}catch(e){return null}}
 function hotelKey(hotel){return normalizeHotelName(hotel)}
