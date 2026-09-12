@@ -1,1 +1,2 @@
-V214
+Qawafel Haramain V216
+Badge rendering refinement: preserves original design, improves data overlay clarity and A4 print stability.

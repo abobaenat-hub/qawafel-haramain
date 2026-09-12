@@ -1,0 +1,5 @@
+V216
+- Keep the original badge design/template unchanged.
+- Use the cleaned badge template as the static background.
+- Strengthen opaque overlays for photo, hotel names, passport number, and QR so template placeholders cannot show through.
+- Keep 70x105 mm badge size and 4 badges per A4 with cutting clearance.
