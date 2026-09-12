@@ -446,6 +446,10 @@ function openTripReport(){
  const driverPhoto=teamPhotos.drivers?.get(activeTrip.driver_id)||'';
  const assistantPhoto=teamPhotos.drivers?.get(activeTrip.assistant_driver_id)||'';
  const staffHtml=(name,photo)=>`<div class="staff-value">${photo?`<img class="staff-photo" src="${escReport(photo)}" alt="">`:''}<span>${escReport(name)}</span></div>`;
+ const isAir=activeTrip.travel_type==='جو';
+ const opsHtml=isAir
+   ? `<div class="info-box"><div class="info-label">👤 المشرف</div><div class="info-value">${staffHtml(supervisor,supervisorPhoto)}</div></div><div class="info-box"><div class="info-label">✈️ نوع السفر</div><div class="info-value">طيران</div></div><div class="info-box"><div class="info-label">↩️ العودة</div><div class="info-value">${escReport(activeTrip.return_date||'غير محدد')}</div></div>`
+   : `<div class="info-box"><div class="info-label">👤 المشرف</div><div class="info-value">${staffHtml(supervisor,supervisorPhoto)}</div></div><div class="info-box"><div class="info-label">👤 السائق الرئيسي</div><div class="info-value">${staffHtml(driver,driverPhoto)}</div></div><div class="info-box"><div class="info-label">👤 السائق المساعد</div><div class="info-value">${staffHtml(assistant,assistantPhoto)}</div></div><div class="info-box"><div class="info-label">🚌 رقم الباص</div><div class="info-value">${escReport(bus)}</div></div><div class="info-box"><div class="info-label">↩️ العودة</div><div class="info-value">${escReport(activeTrip.return_date||'غير محدد')}</div></div>`;
  const logo='logo.png';
  const w=window.open('about:blank','_blank','width=900,height=1200');
  if(!w){alert('المتصفح منع نافذة الكشف. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');return;}
@@ -468,7 +472,7 @@ function openTripReport(){
  .info-box{border:1px solid #a9d4ef;border-radius:7px;overflow:hidden;background:#fff;min-height:46px}
  .info-label{background:linear-gradient(#f8fcff,#eef7fc);color:#123f67;font-size:10px;font-weight:900;padding:5px 8px;border-bottom:1px solid #d4e9f7}
  .info-value{padding:5px 8px;font-size:13px;font-weight:900;color:#17364e;min-height:27px;display:flex;align-items:center;justify-content:center;text-align:center;overflow-wrap:anywhere;line-height:1.25}
- .ops{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:7px}
+ .ops{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-bottom:7px}.ops.air{grid-template-columns:repeat(3,1fr)}
  .ops .info-box{min-height:52px}
  .ops .info-value{font-size:11.5px}
  .staff-value{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;min-width:0}
@@ -514,13 +518,7 @@ function openTripReport(){
    <div class="info-box"><div class="info-label">📅 تاريخ الرحلة</div><div class="info-value">${escReport(tripDate)}</div></div>
    <div class="info-box"><div class="info-label">🚌 نوع السفر</div><div class="info-value">${escReport(activeTrip.travel_type||'—')}</div></div>
   </div>
-  <div class="ops">
-   <div class="info-box"><div class="info-label">👤 المشرف</div><div class="info-value">${staffHtml(supervisor,supervisorPhoto)}</div></div>
-   <div class="info-box"><div class="info-label">👤 السائق الرئيسي</div><div class="info-value">${staffHtml(driver,driverPhoto)}</div></div>
-   <div class="info-box"><div class="info-label">👤 السائق المساعد</div><div class="info-value">${staffHtml(assistant,assistantPhoto)}</div></div>
-   <div class="info-box"><div class="info-label">🚌 رقم الباص</div><div class="info-value">${escReport(bus)}</div></div>
-   <div class="info-box"><div class="info-label">↩️ العودة</div><div class="info-value">${escReport(activeTrip.return_date||'غير محدد')}</div></div>
-  </div>
+  <div class="ops ${isAir?'air':''}">${opsHtml}</div>
   <div class="summary">
    <div class="box"><div class="lbl">👥 المجموع</div><b>${people.length}</b></div>
    <div class="box"><div class="lbl">👨 عدد الرجال</div><b>${men}</b></div>
