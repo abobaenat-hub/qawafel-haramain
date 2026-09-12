@@ -114,7 +114,7 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
-    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=194"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html?v=114"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=196"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html?v=114"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
@@ -300,11 +300,16 @@ async function openTripPilgrims(id){
  $('tripPilgrimSearch').value='';
  $('tripModal').classList.remove('hidden');$('tripModal').setAttribute('aria-hidden','false');$('visaPanel').classList.add('hidden');
  $('tripPilgrimGrid').innerHTML='<div class="empty-pilgrims" style="grid-column:1/-1">جاري تحميل المعتمرين…</div>';
- const [{data:bs,error:be},{data:ps,error:pe}]=await Promise.all([db.from('bookings').select('id,program_id,status,total_amount,paid_amount,payment_type').eq('program_id',id),db.from('pilgrims').select('id,booking_id,full_name,phone,passport_number,profile_code,visa_status,photo_path,gender,birth_date').order('full_name')]);
+ const [{data:bs,error:be},{data:ps,error:pe}]=await Promise.all([db.from('bookings').select('id,program_id,status,total_amount,paid_amount,payment_type,package_id,agent_id').eq('program_id',id),db.from('pilgrims').select('id,booking_id,full_name,phone,passport_number,profile_code,visa_status,photo_path,gender,gender_ar,birth_date').order('full_name')]);
  if(be||pe){$('tripPilgrimGrid').innerHTML='<div class="empty-pilgrims" style="grid-column:1/-1;color:#a03434">تعذر تحميل بيانات المعتمرين.</div>';return}
  const bookings=(bs||[]).filter(x=>x.status!=='cancelled');
  const map=new Map(bookings.map(x=>[x.id,x]));
- const people=(ps||[]).filter(x=>map.has(x.booking_id)).map(x=>({...x,_booking:map.get(x.booking_id)}));
+ const packageIds=[...new Set(bookings.map(x=>x.package_id).filter(Boolean))];
+ const agentIds=[...new Set(bookings.map(x=>x.agent_id).filter(Boolean))];
+ const [{data:pkgRows},{data:agentRows}]=await Promise.all([packageIds.length?db.from('program_packages').select('id,city_hotel,makkah_hotel').in('id',packageIds):Promise.resolve({data:[]}),agentIds.length?db.from('agents').select('id,full_name').in('id',agentIds):Promise.resolve({data:[]})]);
+ const pkgMap=new Map((pkgRows||[]).map(x=>[x.id,x]));
+ const agentMap=new Map((agentRows||[]).map(x=>[x.id,x.full_name]));
+ const people=(ps||[]).filter(x=>map.has(x.booking_id)).map(x=>{const b=map.get(x.booking_id)||{},pk=pkgMap.get(b.package_id)||{};return {...x,_booking:b,medina_hotel:pk.city_hotel||'',makkah_hotel:pk.makkah_hotel||'',agent_name:agentMap.get(b.agent_id)||''};});
  const total=people.length, cap=Number(p.seats_total||0), available=Math.max(cap-total,0), used=cap?Math.min(100,Math.round(total/cap*100)):0;
  $('tripSummary').innerHTML=`<div class="box"><span>المعتمرون</span><b>${total}</b></div><div class="box"><span>إجمالي المقاعد</span><b>${cap}</b></div><div class="box"><span>المقاعد المتاحة</span><b>${available}</b></div><div class="box"><span>نسبة الإشغال</span><b>${used}%</b></div>`; $('tripOps').innerHTML=`<div class="box"><span>مشرف الرحلة</span><b style="font-size:15px">${esc(p.supervisor_name||'غير محدد')}</b><small>${esc(p.supervisor_phone||'')}</small></div>${p.travel_type==='بر'||p.travel_type==='مختلط'?`<div class="box"><span>الباص</span><b style="font-size:15px">${esc(p.bus_number||'غير محدد')}</b><small>${esc(p.bus_company||'')}</small></div><div class="box"><span>السائق الرئيسي</span><b style="font-size:15px">${esc(p.driver_name||'غير محدد')}</b><small>${esc(p.driver_phone||'')}</small></div><div class="box"><span>السائق المساعد</span><b style="font-size:15px">${esc(p.assistant_driver_name||'غير محدد')}</b><small>${esc(p.assistant_driver_phone||'')}</small></div>`:''}<div class="box"><span>معلومات التشغيل</span><b style="font-size:15px">${esc(p.travel_type||'—')}</b><small>${esc(p.return_date||'')}</small></div>`;
  const paths=people.filter(x=>x.photo_path);
@@ -389,62 +394,46 @@ function calcAgeForReport(birth){
 }
 function escReport(v){return String(v??'—').replace(/[&<>'"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[c]));}
 function genderReportLabel(g){return g==='ذكر'?'ذكر':g==='أنثى'?'أنثى':'غير محدد'}
+function normalizeReportGender(x){
+  const g=String(x?.gender_ar||x?.gender||'').trim().toLowerCase();
+  if(g==='ذكر'||g==='male'||g==='m')return 'ذكر';
+  if(g==='أنثى'||g==='female'||g==='f')return 'أنثى';
+  return 'غير محدد';
+}
 function openTripReport(){
  if(!activeTrip)return;
  const people=allProgramPilgrims||[];
  let men=0,women=0,children=0,unknown=0;
  people.forEach(x=>{
-   const age=calcAgeForReport(x.birth_date);
-   if(age!==null && age<12){children++; return;}
-   if(x.gender==='ذكر')men++; else if(x.gender==='أنثى')women++; else unknown++;
+   const age=calcAgeForReport(x.birth_date), g=normalizeReportGender(x);
+   if(age!==null && age<12){children++;return;}
+   if(g==='ذكر')men++; else if(g==='أنثى')women++; else unknown++;
  });
+ const medina=[...new Set(people.map(x=>x.medina_hotel).filter(Boolean))];
+ const makkah=[...new Set(people.map(x=>x.makkah_hotel).filter(Boolean))];
+ const contractors=[...new Set(people.map(x=>x.agent_name).filter(Boolean))];
  const rows=people.map((x,i)=>{
-   const age=calcAgeForReport(x.birth_date);
-   return `<tr><td>${i+1}</td><td class="name">${escReport(x.full_name)}</td><td>${genderReportLabel(x.gender)}</td><td>${age===null?'—':age}</td><td>${escReport(x.profile_code)}</td><td>${escReport(x.passport_number)}</td></tr>`;
+   const age=calcAgeForReport(x.birth_date), g=normalizeReportGender(x);
+   return `<tr><td>${i+1}</td><td class="name">${escReport(x.full_name)}</td><td>${escReport(g)}</td><td>${age===null?'—':age}</td><td>${escReport(x.profile_code)}</td><td>${escReport(x.passport_number)}</td><td>${escReport(x.medina_hotel||'—')}</td><td>${escReport(x.makkah_hotel||'—')}</td><td>${escReport(x.agent_name||'—')}</td></tr>`;
  }).join('');
- const w=window.open('about:blank','_blank','width=1000,height=800');
+ const tripDate=activeTrip.departure_date||activeTrip.departure||activeTrip.start_date||'غير محدد';
+ const driver=activeTrip.driver_name||'غير محدد', assistant=activeTrip.assistant_driver_name||'غير محدد';
+ const supervisor=activeTrip.supervisor_name||'غير محدد', bus=activeTrip.bus_number||'غير محدد';
+ const w=window.open('about:blank','_blank','width=1200,height=900');
  if(!w){alert('المتصفح منع نافذة الكشف. اسمح بالنوافذ المنبثقة ثم حاول مرة أخرى.');return;}
  w.document.open();
  w.document.write(`<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>كشف رحلة - ${escReport(activeTrip.title)}</title><style>
- @page{size:A4;margin:14mm}*{box-sizing:border-box}body{font-family:Arial,"Tahoma",sans-serif;color:#12344f;margin:0;background:#fff}.head{border-bottom:4px solid #c79a3b;padding:0 0 14px;margin-bottom:14px;display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.brand{font-size:25px;font-weight:900;color:#0c3b63}.sub{font-size:13px;color:#687985;margin-top:5px}.title{font-size:24px;font-weight:900;margin:12px 0 4px;color:#0c3b63}.meta{font-size:12px;color:#526775;line-height:1.9}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin:14px 0}.box{border:1px solid #dbe4e9;border-radius:12px;padding:10px;background:#f8fafc}.box span{display:block;font-size:11px;color:#71808b}.box b{display:block;font-size:22px;color:#0c3b63;margin-top:4px}.note{font-size:11px;color:#697984;margin:8px 0 12px}table{width:100%;border-collapse:collapse;font-size:11px}th{background:#0c3b63;color:#fff;padding:8px;border:1px solid #0c3b63}td{padding:7px 6px;border:1px solid #dce4e9;text-align:center}td.name{text-align:right;font-weight:700}tr:nth-child(even) td{background:#f8fafc}.footer{margin-top:18px;border-top:2px solid #c79a3b;padding-top:8px;display:flex;justify-content:space-between;font-size:10px;color:#657681}.print{position:fixed;left:18px;top:18px;border:0;border-radius:10px;background:#c79a3b;color:#fff;padding:10px 16px;font-weight:800;cursor:pointer}@media print{.print{display:none}}
+ @page{size:A4 landscape;margin:10mm}*{box-sizing:border-box}body{font-family:Arial,"Tahoma",sans-serif;color:#12344f;margin:0;background:#fff}.head{border-bottom:4px solid #c79a3b;padding:0 0 10px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:flex-start;gap:20px}.brand{font-size:23px;font-weight:900;color:#0c3b63}.sub{font-size:12px;color:#687985;margin-top:4px}.title{font-size:21px;font-weight:900;margin:9px 0 3px;color:#0c3b63}.meta{font-size:11px;color:#526775;line-height:1.8}.ops{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin:10px 0}.op{border:1px solid #dbe4e9;border-radius:9px;padding:8px;background:#f8fafc}.op span{display:block;font-size:9px;color:#71808b}.op b{display:block;font-size:12px;color:#0c3b63;margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}.box{border:1px solid #dbe4e9;border-radius:10px;padding:8px;background:#f8fafc;text-align:center}.box span{display:block;font-size:9px;color:#71808b}.box b{display:block;font-size:20px;color:#0c3b63;margin-top:3px}.hotels{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0}.hotelbox{border:1px solid #dbe4e9;border-radius:9px;padding:8px;background:#fff}.hotelbox b{color:#0c3b63;font-size:11px}.hotelbox span{font-size:10px;color:#526775}.note{font-size:10px;color:#697984;margin:7px 0 9px}table{width:100%;border-collapse:collapse;font-size:9px}th{background:#0c3b63;color:#fff;padding:6px 5px;border:1px solid #0c3b63}td{padding:5px 4px;border:1px solid #dce4e9;text-align:center}td.name{text-align:right;font-weight:700}tr:nth-child(even) td{background:#f8fafc}.footer{margin-top:10px;border-top:2px solid #c79a3b;padding-top:6px;display:flex;justify-content:space-between;font-size:9px;color:#657681}.print{position:fixed;left:12px;top:12px;border:0;border-radius:8px;background:#c79a3b;color:#fff;padding:8px 12px;font-weight:800;cursor:pointer}@media print{.print{display:none}}
  </style></head><body><button class="print" onclick="window.print()">🖨️ طباعة / حفظ PDF</button>
- <div class="head"><div><div class="brand">قوافل الحرمين للحج والعمرة</div><div class="sub">كشف رسمي لمعتمري الرحلة</div></div><div style="text-align:left;font-size:12px;color:#526775">بغداد - العامرية</div></div>
- <div class="title">كشف رحلة: ${escReport(activeTrip.title)}</div><div class="meta">📅 تاريخ الرحلة: ${escReport(activeTrip.departure_date||'غير محدد')} &nbsp; | &nbsp; 🚌 نوع السفر: ${escReport(activeTrip.travel_type||'—')}<br>🏨 السكن والأسعار: حسب الباقة المختارة</div>
- <div class="summary"><div class="box"><span>إجمالي المعتمرين</span><b>${people.length}</b></div><div class="box"><span>الرجال (12 سنة فأكثر)</span><b>${men}</b></div><div class="box"><span>النساء (12 سنة فأكثر)</span><b>${women}</b></div><div class="box"><span>الأطفال (دون 12 سنة)</span><b>${children}</b></div></div>
- ${unknown?`<div class="note">⚠️ يوجد ${unknown} معتمر/معتمرين من عمر 12 سنة فأكثر لم يُحدد الجنس لهم بعد، لذلك لم يدخلوا ضمن عدد الرجال أو النساء.</div>`:''}
- <table><thead><tr><th>#</th><th>اسم المعتمر</th><th>الجنس</th><th>العمر</th><th>رقم المعتمر</th><th>رقم الجواز</th></tr></thead><tbody>${rows||'<tr><td colspan="6">لا يوجد معتمرون في هذه الرحلة.</td></tr>'}</tbody></table>
- <div class="footer"><span>أُعدّ من نظام قوافل الحرمين</span><span>للاستفسار: +964 778 007 7122 &nbsp; | &nbsp; +966 54 876 9707</span></div>
- <script>window.onload=()=>setTimeout(()=>window.print(),350)<\/script><script>
-/* V65 Audit Trail */
-(function(){
-  const AUDIT_KEY='qawafel_audit_session_logged_v65';
-  async function audit(action, entity_type=null, entity_id=null, entity_label=null, details={}){
-    try{
-      if(!window.db) return;
-      const {data}=await window.db.auth.getUser(); const u=data?.user; if(!u) return;
-      await window.db.rpc('log_audit_event',{p_action:action,p_entity_type:entity_type,p_entity_id:entity_id,p_entity_label:entity_label,p_details:details||{},p_page:location.pathname.split('/').pop()||'index.html'});
-    }catch(e){ console.debug('audit',e); }
-  }
-  window.qawafelAudit=audit;
-  window.qawafelAuditPage=async()=>{ await audit('page_view','page',location.pathname,document.title); };
-  document.addEventListener('click',function(e){
-    const el=e.target.closest('button,a,.nav'); if(!el) return;
-    const txt=(el.innerText||el.getAttribute('aria-label')||el.title||'').trim().replace(/\s+/g,' ').slice(0,120);
-    if(!txt) return;
-    const id=el.id||null;
-    setTimeout(()=>audit('ui_action','ui',id,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null}),0);
-  },true);
-  if(window.db){
-    window.db.auth.onAuthStateChange((event,session)=>{
-      if(event==='SIGNED_IN' && session?.user){
-        if(!sessionStorage.getItem(AUDIT_KEY)){sessionStorage.setItem(AUDIT_KEY,'1');audit('login','auth',session.user.id,'تسجيل دخول');}
-      }
-    });
-    setTimeout(()=>window.qawafelAuditPage(),700);
-  }
-})();
-<\/script>
-</body></html>`);
+ <div class="head"><div><div class="brand">قوافل الحرمين للحج والعمرة</div><div class="sub">كشف رسمي لمعتمري الرحلة</div></div><div style="text-align:left;font-size:11px;color:#526775">بغداد - العامرية</div></div>
+ <div class="title">كشف رحلة: ${escReport(activeTrip.title)}</div><div class="meta">📅 تاريخ الرحلة: <b>${escReport(tripDate)}</b> &nbsp; | &nbsp; 🚌 نوع السفر: ${escReport(activeTrip.travel_type||'—')}</div>
+ <div class="ops"><div class="op"><span>الفندق في المدينة</span><b>${escReport(medina.join('، ')||'حسب الباقة')}</b></div><div class="op"><span>الفندق في مكة</span><b>${escReport(makkah.join('، ')||'حسب الباقة')}</b></div><div class="op"><span>المتعهد</span><b>${escReport(contractors.join('، ')||'غير محدد')}</b></div><div class="op"><span>المشرف</span><b>${escReport(supervisor)}</b></div><div class="op"><span>السائق الرئيسي</span><b>${escReport(driver)}</b></div><div class="op"><span>السائق المساعد</span><b>${escReport(assistant)}</b></div></div>
+ <div class="meta">🔢 رقم الباص: <b>${escReport(bus)}</b></div>
+ <div class="summary"><div class="box"><span>إجمالي المعتمرين</span><b>${people.length}</b></div><div class="box"><span>الرجال</span><b>${men}</b></div><div class="box"><span>النساء</span><b>${women}</b></div><div class="box"><span>الأطفال (دون 12 سنة)</span><b>${children}</b></div></div>
+ ${unknown?`<div class="note">⚠️ يوجد ${unknown} معتمر بعمر 12 سنة فأكثر والجنس غير محدد في السجل.</div>`:''}
+ <table><thead><tr><th>#</th><th>اسم المعتمر</th><th>الجنس</th><th>العمر</th><th>رقم المعتمر</th><th>رقم الجواز</th><th>فندق المدينة</th><th>فندق مكة</th><th>المتعهد</th></tr></thead><tbody>${rows||'<tr><td colspan="9">لا يوجد معتمرون في هذه الرحلة.</td></tr>'}</tbody></table>
+ <div class="footer"><span>أُعدّ من نظام قوافل الحرمين</span><span>تاريخ الرحلة: ${escReport(tripDate)} | الباص: ${escReport(bus)}</span></div>
+ <script>window.onload=()=>setTimeout(()=>window.print(),350)<\/script></body></html>`);
  w.document.close();
 }
 $('tripReportTrip')?.addEventListener('click',openTripReport);
