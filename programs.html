@@ -314,11 +314,26 @@ async function openTripPilgrims(id){
 
 async function loadTeamLists(){
  try{
-  const [{data:s},{data:d}]=await Promise.all([db.from('supervisors').select('id,full_name,phone,commission_rate').eq('active',true).order('full_name'),db.from('drivers').select('id,full_name,phone,vehicle_type,vehicle_number').eq('active',true).order('full_name')]);
+  const savedSupervisor=$('supervisor_id')?.value||'';
+  const savedDriver=$('driver_id')?.value||'';
+  const savedAssistant=$('assistant_driver_id')?.value||'';
+  const [{data:s},{data:d}]=await Promise.all([db.from('supervisors').select('id,full_name,phone,commission_rate').eq('active',true).order('full_name'),db.from('drivers').select('id,full_name,full_name_ar,phone,vehicle_type,vehicle_number').eq('active',true).order('full_name_ar',{nullsFirst:false}).order('full_name')]);
   $('supervisor_id').innerHTML='<option value="">اختر المشرف...</option>'+(s||[]).map(x=>`<option value="${x.id}">${esc(x.full_name)} — ${Number(x.commission_rate||1.5)}%</option>`).join('');
-  $('driver_id').innerHTML='<option value="">اختر السائق...</option>'+(d||[]).map(x=>`<option value="${x.id}">${esc(x.full_name)}${x.vehicle_number?' — '+esc(x.vehicle_number):''}</option>`).join('');
-  $('supervisor_id').onchange=()=>{const x=(s||[]).find(v=>v.id===$('supervisor_id').value);$('supervisor_name').value=x?.full_name||'';$('supervisor_phone').value=x?.phone||'';$('supervisorRateHint').textContent=(x?Number(x.commission_rate||1.5):1.5)+'% من سعر بيع كل معتمر';};
-  $('driver_id').onchange=()=>{const x=(d||[]).find(v=>v.id===$('driver_id').value);$('driver_name').value=x?.full_name||'';$('driver_phone').value=x?.phone||'';}; $('assistant_driver_id').innerHTML='<option value="">اختر السائق المساعد...</option>'+(d||[]).map(x=>`<option value="${x.id}">${esc(x.full_name)}${x.vehicle_number?' — '+esc(x.vehicle_number):''}</option>`).join(''); $('assistant_driver_id').onchange=()=>{const x=(d||[]).find(v=>v.id===$('assistant_driver_id').value);$('assistant_driver_name').value=x?.full_name||'';$('assistant_driver_phone').value=x?.phone||'';};
+  const driverLabel=x=>`${esc(x.full_name_ar||x.full_name||'—')}${x.vehicle_number?' — '+esc(x.vehicle_number):''}`;
+  $('driver_id').innerHTML='<option value="">اختر السائق الرئيسي...</option>'+(d||[]).map(x=>`<option value="${x.id}">${driverLabel(x)}</option>`).join('');
+  $('assistant_driver_id').innerHTML='<option value="">اختر السائق المساعد...</option>'+(d||[]).map(x=>`<option value="${x.id}">${driverLabel(x)}</option>`).join('');
+  if(savedSupervisor) $('supervisor_id').value=savedSupervisor;
+  if(savedDriver) $('driver_id').value=savedDriver;
+  if(savedAssistant) $('assistant_driver_id').value=savedAssistant;
+  const syncSupervisor=()=>{const x=(s||[]).find(v=>v.id===$('supervisor_id').value);$('supervisor_name').value=x?.full_name||'';$('supervisor_phone').value=x?.phone||'';$('supervisorRateHint').textContent=(x?Number(x.commission_rate||1.5):1.5)+'% من سعر بيع كل معتمر';};
+  const syncDriver=()=>{const x=(d||[]).find(v=>v.id===$('driver_id').value);$('driver_name').value=x?.full_name_ar||x?.full_name||'';$('driver_phone').value=x?.phone||'';};
+  const syncAssistant=()=>{const x=(d||[]).find(v=>v.id===$('assistant_driver_id').value);$('assistant_driver_name').value=x?.full_name_ar||x?.full_name||'';$('assistant_driver_phone').value=x?.phone||'';};
+  $('supervisor_id').onchange=syncSupervisor;
+  $('driver_id').onchange=syncDriver;
+  $('assistant_driver_id').onchange=syncAssistant;
+  if(savedSupervisor) syncSupervisor();
+  if(savedDriver) syncDriver();
+  if(savedAssistant) syncAssistant();
  }catch(e){console.warn('team lists',e)}
 }
 async function loadPrograms(){
