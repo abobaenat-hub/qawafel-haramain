@@ -80,11 +80,23 @@ async function exportAirlineExcel(){
    vals.forEach((v,c)=>{const cell=XLSX.utils.encode_cell({r:dataStart-1+i,c});ws[cell]={t:'s',v:String(v||'')};});
   });
   // The airline template has seven required columns. Hide any trailing sample-only columns from the old example.
-  if(ws['!cols']) ws['!cols']=ws['!cols'].slice(0,7);
+  // Widen the columns so every value is fully visible in Excel without manual resizing.
+  ws['!cols']=[
+    {wch:18}, // FirstName
+    {wch:20}, // LastName
+    {wch:10}, // Gender
+    {wch:20}, // DOB
+    {wch:14}, // Nationality
+    {wch:22}, // PassportNumber
+    {wch:27}  // PassportExpiry
+  ];
+  ws['!autofilter']={ref:`A1:G${Math.max(2,rows.length+1)}`};
+  ws['!freeze']={xSplit:0,ySplit:1};
   ws['!ref']=XLSX.utils.encode_range({s:{r:0,c:0},e:{r:Math.max(1,dataStart-1+rows.length-1),c:6}});
   const p=programOf(list[0]);
   const safe=String(p?.title||'AIR').replace(/[^\w\u0600-\u06FF-]+/g,'_');
-  XLSX.writeFile(wb,`Qawafel_Haramain_Airline_${safe}_${new Date().toISOString().slice(0,10)}.xlsx`,{bookType:'xlsx'});
+  const fileDate=new Date().toISOString().slice(0,10);
+  XLSX.writeFile(wb,`Qawafel_AlHaramain_Hajj_Umrah_Airline_${safe}_${fileDate}.xlsx`,{bookType:'xlsx'});
   toast(`تم تعبئة ملف شركة الطيران بـ ${rows.length} معتمر وتنزيله على الحاسبة ✅`);
  }catch(e){console.error(e);alert('تعذر إنشاء ملف شركة الطيران: '+(e?.message||e));}
 }

@@ -1,0 +1,5 @@
+V221 - Airline Excel presentation fix
+- Widened all airline Excel columns so generated values are fully visible.
+- Added autofilter and frozen header row.
+- Changed generated filename to clearly identify Qawafel AlHaramain Hajj & Umrah.
+- No other platform functions or badge design changed.
