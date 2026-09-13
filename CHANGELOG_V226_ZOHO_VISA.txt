@@ -1,0 +1,10 @@
+V226 – ربط تأشيرات البريد مع Zoho
+- اعتماد business@qawafialharamainiq.com كمصدر بريد التأشيرات.
+- إضافة خدمة Supabase Edge Function: zoho-visa-mail.
+- استقبال إشعار Zoho ثم قراءة الرسائل ذات المرفقات عبر Zoho Mail API.
+- تنزيل PDF من البريد وحفظه في bucket pilgrim-photos وربطه تلقائياً بملف المعتمر عند المطابقة.
+- المطابقة بالأولوية: رقم الجواز، ثم الاسم.
+- إضافة سجل visa_email_events للمراجعة ومنع التكرار.
+- إضافة لوحة داخل إدارة التأشيرات لفحص حالة الربط وفحص البريد يدويًا.
+- رابط استعلام الوزارة المعتمد: https://visa.mofa.gov.sa/visaservices/searchvisa
+ملاحظة: تفعيل Zoho OAuth وOutgoing Webhook يحتاج إعدادًا مرة واحدة من حساب Zoho ولا يتم تخزين كلمة مرور البريد داخل المنصة.
