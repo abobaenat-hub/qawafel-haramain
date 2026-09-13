@@ -1,0 +1,1 @@
+V223: Visa Saver helper. Select pilgrim, open MOFA printed visa, click Qawafel Visa Saver browser extension; visible visa is captured as PDF and sent to platform for automatic archival. Manual PDF upload remains available as fallback.
