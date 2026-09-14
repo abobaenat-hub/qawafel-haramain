@@ -16,7 +16,7 @@
 <input id="visaPdfInput" type="file" accept="application/pdf,.pdf" style="display:none"><script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=supabase.createClient(U,K);let all=[],current=null;
-const ZOHO_FN=U+'/functions/v1/zoho-visa-mail';
+const ZOHO_FN=U+'/functions/v1/zoho-visa-mail-cors';
 async function zohoStatus(){try{const r=await fetch(ZOHO_FN);const j=await r.json();$('zohoStatus').textContent=j.configured?'🟢 الربط البرمجي جاهز':'🟡 يحتاج إعداد Zoho مرة واحدة';$('zohoStatus').className='badge '+(j.configured?'b-issued':'b-processing');$('zohoCopyWebhook').dataset.url=j.webhook||ZOHO_FN+'?action=webhook';$('zohoResult').textContent=j.configured?'تم تجهيز خدمة استقبال البريد.':'باقي فقط إعداد OAuth في Zoho ثم تفعيل Webhook.'}catch(e){$('zohoStatus').textContent='🔴 تعذر فحص الخدمة';$('zohoStatus').className='badge b-rejected';$('zohoResult').textContent=e.message||String(e)}}
 async function zohoSync(){const b=$('zohoSync');b.disabled=true;b.textContent='جاري الفحص...';try{const r=await fetch(ZOHO_FN+'?action=sync',{method:'POST'});const j=await r.json();if(!j.ok)throw new Error(j.error||'تعذر الفحص');const saved=(j.processed||[]).filter(x=>x?.status==='matched_saved').length;const unmatched=(j.processed||[]).filter(x=>x?.status==='unmatched').length;$('zohoResult').textContent=`تم فحص البريد: ${j.processed?.length||0} رسالة — تم ربط ${saved} تأشيرة — غير مطابقة ${unmatched}.`;await load();}catch(e){$('zohoResult').textContent='لم يكتمل الفحص: '+(e.message||String(e))}finally{b.disabled=false;b.textContent='🔄 فحص البريد الآن'}}
 
