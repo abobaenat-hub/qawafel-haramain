@@ -1,0 +1,5 @@
+V230 — Independent hotel agreement selection per pilgrim
+- Added per-pilgrim agreement linker for the selected trip.
+- Madinah and Makkah hotel agreements are selected independently per pilgrim.
+- A ground traveler and an air traveler can share the same Madinah agreement while using different Makkah agreements.
+- Preserves existing slot, reservation, transfer-to-visa, and agreement capacity logic.
