@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>إدارة الاتفاقيات | قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--n:#0b3556;--g:#c99a32;--bg:#f4f6f8;--card:#fff;--line:#e2e8ec;--text:#17384f;--muted:#718390;--green:#18734e;--red:#a43b3b;--orange:#956b12}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:Tahoma,Arial;color:var(--text)}button,input,select,textarea{font:inherit}
+.top{background:var(--n);color:#fff;padding:12px 22px}.topin{max-width:1400px;margin:auto;display:flex;justify-content:space-between;align-items:center;gap:10px}.brand{display:flex;align-items:center;gap:10px}.logo{width:48px;height:44px;object-fit:contain;background:#fff;border:1px solid var(--g);border-radius:9px}.brand b{display:block;font-size:18px}.brand small{display:block;color:#e5c878;font-size:10px;margin-top:3px}.top a,.top button{color:#fff;text-decoration:none;border:1px solid #ffffff35;background:#ffffff10;border-radius:9px;padding:8px 11px;font-weight:800;cursor:pointer}
+.wrap{max-width:1400px;margin:auto;padding:22px}.head{display:flex;justify-content:space-between;align-items:end;gap:12px;margin-bottom:15px}.head h1{margin:0;color:var(--n);font-size:25px}.head p{margin:6px 0 0;color:var(--muted);font-size:11px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:17px;margin-bottom:15px;box-shadow:0 6px 24px rgba(11,53,86,.06)}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:11px;font-weight:900;margin-bottom:5px;color:var(--n)}input,select,textarea{width:100%;padding:10px;border:1px solid #ccd8df;border-radius:10px;background:#fff}textarea{min-height:70px}
+.btn{border:0;border-radius:9px;padding:10px 13px;font-weight:900;cursor:pointer}.primary{background:var(--n);color:#fff}.gold{background:var(--g);color:#fff}.green{background:var(--green);color:#fff}.gray{background:#edf3f6;color:var(--n)}.red{background:#fff0f0;color:var(--red);border:1px solid #efcaca}.orange{background:#fff6df;color:var(--orange);border:1px solid #ecd59a}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.toolbar input{max-width:380px}.msg{padding:10px;border-radius:10px;margin-top:10px;font-size:11px}.ok{background:#edf8f3;color:#116342}.err{background:#fff0f0;color:#a03434}.hide{display:none!important}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff}.stat b{display:block;font-size:23px;color:var(--n);margin-top:4px}.stat span{font-size:10px;color:var(--muted)}
+.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:950px}th,td{text-align:right;padding:10px 8px;border-bottom:1px solid var(--line);font-size:11px;vertical-align:middle}th{background:#f4f7f9;color:var(--n)}
+.badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}.b-green{background:#e8f7ef;color:var(--green)}.b-orange{background:#fff4d9;color:#7b5b0e}.b-gray{background:#edf3f6;color:#526671}.b-red{background:#fff0f0;color:var(--red)}
+.agreement-row{cursor:pointer}.agreement-row:hover td{background:#fbfdfe}
+.detail{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:13px;margin-top:10px}.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}.slot{background:#fff;border:1px solid #dce5ea;border-radius:12px;padding:10px;min-height:75px}.slot.empty{border-style:dashed;text-align:center}.slot b{display:block;color:var(--n);font-size:11px}.slot small{display:block;color:var(--muted);margin-top:4px;font-size:9px}.slot .slot-actions{display:flex;gap:5px;margin-top:7px}.slot .slot-actions button{font-size:9px;padding:6px 7px}
+.candidate{position:fixed;inset:0;background:#072b49a8;display:flex;align-items:center;justify-content:center;padding:14px;z-index:100}.candidate-card{width:min(700px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:18px}.candidate-list{display:grid;gap:7px;margin-top:10px}.candidate-item{display:flex;justify-content:space-between;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:10px}.candidate-item b{font-size:11px}.candidate-item small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
+.notice{background:#fff9ec;border:1px solid #efd9a6;color:#72551a;padding:11px;border-radius:11px;font-size:10px;line-height:1.8}
+@media(max-width:850px){.grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.slots{grid-template-columns:1fr 1fr}.topin{align-items:flex-start;flex-wrap:wrap}}
+@media(max-width:550px){.grid,.grid2,.stats,.slots{grid-template-columns:1fr}.wrap{padding:13px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><div class="brand"><img src="./logo.png" class="logo"><div><b>قوافل الحرمين</b><small>إدارة الاتفاقيات</small></div></div><div class="toolbar"><a href="./internal.html">⌂ لوحة الإدارة</a><a href="./nusuk.html">🛂 نسك</a><button id="logout">تسجيل الخروج</button></div></div></header>
+<main class="wrap">
+<div class="head"><div><h1>📑 إدارة الاتفاقيات</h1><p>اتفاقيات الفندق والطيران والبر مستقلة عن الرحلات، ويمكن مشاركة اتفاقية الفندق بين البر والطيران.</p></div><button class="btn gray" id="refresh">↻ تحديث</button></div>
+
+<section class="card">
+<h3 style="margin-top:0;color:var(--n)">إضافة اتفاقية جديدة</h3>
+<div class="grid">
+<div class="field"><label>نوع الاتفاقية</label><select id="kind"><option value="hotel">🏨 فندق</option><option value="air">✈️ طيران</option><option value="ground">🚌 بر</option></select></div>
+<div class="field"><label>رقم الاتفاقية</label><input id="number" placeholder="رقم الاتفاقية"></div>
+<div class="field hotelOnly"><label>المدينة</label><select id="city"><option value="madinah">المدينة المنورة</option><option value="makkah">مكة المكرمة</option></select></div>
+<div class="field hotelOnly"><label>اسم الفندق</label><input id="hotel" placeholder="اسم الفندق"></div>
+<div class="field hotelOnly"><label>تاريخ الدخول</label><input id="checkin" type="date"></div>
+<div class="field hotelOnly"><label>تاريخ الخروج</label><input id="checkout" type="date"></div>
+<div class="field hotelOnly"><label>عدد الأسرّة</label><input id="capacity" type="number" min="0" step="1" placeholder="مثلاً 6"></div>
+<div class="field"><label>ملاحظات</label><input id="notes" placeholder="ملاحظات اختيارية"></div>
+</div>
+<div class="toolbar" style="margin-top:11px"><button class="btn primary" id="add">+ إضافة الاتفاقية</button></div>
+<div id="msg" class="msg hide"></div>
+</section>
+
+<section class="stats">
+<div class="stat"><span>كل الاتفاقيات</span><b id="stAll">0</b></div>
+<div class="stat"><span>اتفاقيات الفنادق</span><b id="stHotel">0</b></div>
+<div class="stat"><span>أسرة الفنادق</span><b id="stBeds">0</b></div>
+<div class="stat"><span>المتبقي من الأسرة</span><b id="stRemain">0</b></div>
+</section>
+
+<section class="card">
+<div class="toolbar"><input id="search" placeholder="بحث برقم الاتفاقية أو الفندق"><select id="filter"><option value="all">كل الأنواع</option><option value="hotel">فنادق</option><option value="air">طيران</option><option value="ground">بر</option></select></div>
+<div class="table"><table><thead><tr><th>النوع</th><th>رقم الاتفاقية</th><th>المدينة</th><th>الفندق</th><th>الدخول</th><th>الخروج</th><th>السعة</th><th>المستخدم</th><th>المتبقي</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="rows"><tr><td colspan="11">جاري التحميل...</td></tr></tbody></table></div>
+</section>
+</main>
+
+<div id="candidateModal" class="candidate hide"><div class="candidate-card"><div class="toolbar" style="justify-content:space-between"><h3 style="margin:0;color:var(--n)">اختيار معتمر للخانة <span id="slotLabel"></span></h3><button class="btn gray" onclick="closeCandidate()">إغلاق</button></div><div class="notice" style="margin-top:10px">تظهر هنا المعتمرون الذين لم يتم ترحيلهم إلى الفيزا بعد. اختيار المعتمر يحجز الخانة فقط، ولا يعتبره مرحّلًا. الترحيل يتم لاحقًا من زر «ترحيل إلى الفيزا».</div><input id="candidateSearch" style="margin-top:10px" placeholder="بحث بالاسم أو الجواز أو رمز الملف"><div id="candidateList" class="candidate-list"></div></div></div>
+
+<script>
+const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+const db=window.supabase.createClient(U,K);
+let A=[],AS=[],P=[],selectedAgreement=null,selectedSlot=null;
+
+const $=id=>document.getElementById(id);
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function toast(text,ok=true){$('msg').className='msg '+(ok?'ok':'err');$('msg').textContent=text;$('msg').classList.remove('hide');setTimeout(()=>$('msg').classList.add('hide'),4500);}
+function kindLabel(k){return k==='hotel'?'🏨 فندق':k==='air'?'✈️ طيران':'🚌 بر';}
+function cityLabel(c){return c==='madinah'?'المدينة المنورة':c==='makkah'?'مكة المكرمة':'—';}
+function assigned(aid){return AS.filter(x=>x.agreement_id===aid);}
+function remaining(a){return a.agreement_kind==='hotel'?Math.max(0,(a.capacity||0)-assigned(a.id).length):null;}
+
+async function auth(){
+ const r=await db.auth.getUser(); if(!r.data?.user){location.href='./index.html';return false;}
+ return true;
+}
+async function load(){
+ const [ar,sr,pr]=await Promise.all([
+   db.from('travel_agreements').select('*').order('created_at',{ascending:false}),
+   db.from('travel_agreement_assignments').select('*').order('slot_number'),
+   db.from('pilgrims').select('id,full_name,passport_number,profile_code,visa_status,visa_transferred_at,booking_id').order('created_at',{ascending:false})
+ ]);
+ const bad=[ar,sr,pr].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
+ A=ar.data||[];AS=sr.data||[];P=pr.data||[];render();
+}
+function render(){
+ const q=($('search').value||'').trim().toLowerCase(),f=$('filter').value;
+ const arr=A.filter(a=>(f==='all'||a.agreement_kind===f)&&(!q||[a.agreement_number,a.hotel_name,cityLabel(a.city)].join(' ').toLowerCase().includes(q)));
+ $('stAll').textContent=A.length;$('stHotel').textContent=A.filter(a=>a.agreement_kind==='hotel').length;
+ $('stBeds').textContent=A.filter(a=>a.agreement_kind==='hotel').reduce((n,a)=>n+(a.capacity||0),0);
+ $('stRemain').textContent=A.filter(a=>a.agreement_kind==='hotel').reduce((n,a)=>n+remaining(a),0);
+ $('rows').innerHTML=arr.map(a=>{
+   const used=assigned(a.id).length,rem=remaining(a);
+   const status=a.active===false?'<span class="badge b-red">متوقفة</span>':a.agreement_kind==='hotel'&&rem===0?'<span class="badge b-orange">مكتملة</span>':'<span class="badge b-green">متاحة</span>';
+   return `<tr class="agreement-row"><td>${kindLabel(a.agreement_kind)}</td><td><b>${esc(a.agreement_number)}</b></td><td>${cityLabel(a.city)}</td><td>${esc(a.hotel_name||'—')}</td><td>${esc(a.check_in||'—')}</td><td>${esc(a.check_out||'—')}</td><td>${a.capacity??'—'}</td><td>${a.agreement_kind==='hotel'?used:'—'}</td><td>${rem??'—'}</td><td>${status}</td><td><div class="toolbar">${a.agreement_kind==='hotel'?`<button class="btn primary" onclick="event.stopPropagation();openAgreement('${a.id}')">فتح الخانات</button>`:''}<button class="btn red" onclick="event.stopPropagation();toggleAgreement('${a.id}',${a.active!==false})">${a.active===false?'تفعيل':'إيقاف'}</button></div></td></tr>`;
+ }).join('')||'<tr><td colspan="11" style="text-align:center;color:var(--muted)">لا توجد اتفاقيات.</td></tr>';
+}
+async function addAgreement(){
+ const kind=$('kind').value,num=$('number').value.trim();
+ if(!num){toast('أدخل رقم الاتفاقية.',false);return;}
+ const payload={agreement_number:num,agreement_kind:kind,city:kind==='hotel'?$('city').value:null,hotel_name:kind==='hotel'?($('hotel').value.trim()||null):null,check_in:kind==='hotel'?($('checkin').value||null):null,check_out:kind==='hotel'?($('checkout').value||null):null,capacity:kind==='hotel'?Number($('capacity').value||0):null,notes:$('notes').value.trim()||null};
+ if(kind==='hotel' && !payload.capacity){toast('أدخل عدد الأسرة للاتفاقية الفندقية.',false);return;}
+ const r=await db.from('travel_agreements').insert(payload).select().single();
+ if(r.error){toast(r.error.message,false);return;}
+ try{await db.rpc('log_audit_event',{p_action:'create_travel_agreement',p_entity_type:'travel_agreement',p_entity_id:r.data.id,p_entity_label:num,p_details:payload,p_page:'agreements.html'});}catch(e){}
+ $('number').value='';$('hotel').value='';$('checkin').value='';$('checkout').value='';$('capacity').value='';$('notes').value='';
+ toast('تمت إضافة الاتفاقية ✅');await load();
+}
+function toggleHotelFields(){document.querySelectorAll('.hotelOnly').forEach(x=>x.style.display=$('kind').value==='hotel'?'':'none');}
+async function toggleAgreement(id,wasActive){
+ const r=await db.from('travel_agreements').update({active:!wasActive,updated_at:new Date().toISOString()}).eq('id',id);
+ if(r.error){toast(r.error.message,false);return;}await load();
+}
+function openAgreement(id){
+ const a=A.find(x=>x.id===id);if(!a)return;selectedAgreement=id;
+ const box=document.createElement('div');box.className='card';box.id='agreementDetail';
+ box.innerHTML=`<div class="detail"><div class="toolbar" style="justify-content:space-between"><div><b style="color:var(--n);font-size:15px">${kindLabel(a.agreement_kind)} — ${esc(a.agreement_number)}</b><div style="font-size:10px;color:var(--muted);margin-top:4px">${cityLabel(a.city)} ${a.hotel_name?'— '+esc(a.hotel_name):''}</div></div><button class="btn gray" onclick="document.getElementById('agreementDetail')?.remove()">إغلاق</button></div><div class="notice" style="margin-top:10px">السعة: <b>${a.capacity}</b> | المستخدم: <b>${assigned(a.id).length}</b> | المتبقي: <b>${remaining(a)}</b>. اختيار المعتمر يحجز الخانة فقط، أما عداد الترحيل فيتثبت عند تنفيذ «ترحيل إلى الفيزا».</div><div class="slots">${slotHtml(a)}</div></div>`;
+ const main=document.querySelector('.wrap');main.insertBefore(box,main.children[3]||null);
+ box.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function slotHtml(a){
+ const map=new Map(assigned(a.id).map(x=>[x.slot_number,x]));
+ return Array.from({length:a.capacity||0},(_,i)=>{
+   const n=i+1,x=map.get(n),p=x?P.find(z=>z.id===x.pilgrim_id):null;
+   if(!x)return `<div class="slot empty"><b>الخانة ${n}</b><small>فارغة</small><div class="slot-actions"><button class="btn green" onclick="chooseCandidate('${a.id}',${n})">+ اختر معتمر</button></div></div>`;
+   const transferred=x.status==='transferred';
+   return `<div class="slot"><b>الخانة ${n}</b><div style="margin-top:5px"><b>${esc(p?.full_name||'معتمر')}</b><small>${esc(p?.passport_number||p?.profile_code||'—')}</small></div><small>${transferred?'🔵 تم الترحيل إلى الفيزا':'🟡 محجوز ولم يُرحّل'}</small><div class="slot-actions">${!transferred?`<button class="btn orange" onclick="transferOne('${x.id}')">ترحيل إلى الفيزا</button><button class="btn red" onclick="removeAssignment('${x.id}')">إخلاء</button>`:''}</div></div>`;
+ }).join('');
+}
+function chooseCandidate(aid,slot){
+ selectedAgreement=aid;selectedSlot=slot;$('slotLabel').textContent=slot;$('candidateSearch').value='';$('candidateModal').classList.remove('hide');renderCandidates();
+}
+function closeCandidate(){$('candidateModal').classList.add('hide');}
+window.closeCandidate=closeCandidate;
+function renderCandidates(){
+ const q=($('candidateSearch').value||'').trim().toLowerCase();
+ const already=new Set(AS.filter(x=>x.agreement_id===selectedAgreement).map(x=>x.pilgrim_id));
+ const list=P.filter(p=>!p.visa_transferred_at&&!already.has(p.id)&&(!q||[p.full_name,p.passport_number,p.profile_code].join(' ').toLowerCase().includes(q)));
+ $('candidateList').innerHTML=list.map(p=>`<div class="candidate-item"><div><b>${esc(p.full_name)}</b><small>${esc(p.passport_number||'—')} · ${esc(p.profile_code||'—')} · حالة الفيزا: ${esc(p.visa_status||'pending')}</small></div><button class="btn green" onclick="assignCandidate('${p.id}')">اختيار</button></div>`).join('')||'<div style="text-align:center;color:var(--muted);padding:20px">لا يوجد معتمرون غير مرحّلين متاحون لهذه الخانة.</div>';
+}
+async function assignCandidate(pid){
+ const a=A.find(x=>x.id===selectedAgreement);if(!a)return;
+ if(assigned(a.id).length>=a.capacity){toast('الاتفاقية ممتلئة.',false);closeCandidate();return;}
+ const r=await db.from('travel_agreement_assignments').insert({agreement_id:a.id,pilgrim_id:pid,slot_number:selectedSlot,travel_type:null,status:'reserved'});
+ if(r.error){toast(r.error.message,false);return;}
+ closeCandidate();toast('تم حجز المعتمر في الخانة. لم يتم ترحيله إلى الفيزا بعد.');await load();document.getElementById('agreementDetail')?.remove();openAgreement(a.id);
+}
+async function removeAssignment(id){
+ const x=AS.find(z=>z.id===id);if(!x)return;if(x.status==='transferred'){toast('لا يمكن إخلاء معتمر تم ترحيله إلى الفيزا.',false);return;}
+ if(!confirm('إخلاء المعتمر من هذه الخانة؟'))return;
+ const r=await db.from('travel_agreement_assignments').delete().eq('id',id);if(r.error){toast(r.error.message,false);return;}
+ const a=A.find(z=>z.id===x.agreement_id);await load();document.getElementById('agreementDetail')?.remove();if(a)openAgreement(a.id);
+}
+async function transferOne(id){
+ const x=AS.find(z=>z.id===id);if(!x)return;const p=P.find(z=>z.id===x.pilgrim_id);if(!p)return;
+ if(p.visa_transferred_at){toast('هذا المعتمر مرحّل مسبقًا إلى الفيزا.',false);return;}
+ const allForPilgrim=AS.filter(z=>z.pilgrim_id===p.id);
+ const cities=new Set(allForPilgrim.map(z=>A.find(a=>a.id===z.agreement_id)?.city).filter(Boolean));
+ if(!cities.has('madinah')||!cities.has('makkah')){toast('لا يمكن الترحيل بعد: المعتمر يحتاج اتفاقية مدينة واتفاقية مكة أولًا.',false);return;}
+ if(!confirm('تأكيد ترحيل '+(p.full_name||'المعتمر')+' إلى الفيزا؟'))return;
+ const now=new Date().toISOString();
+ const u=await db.from('pilgrims').update({visa_transferred_at:now}).eq('id',p.id).is('visa_transferred_at',null);
+ if(u.error){toast(u.error.message,false);return;}
+ const ar=await db.from('travel_agreement_assignments').update({status:'transferred',transferred_at:now,updated_at:now}).eq('pilgrim_id',p.id).eq('status','reserved');
+ if(ar.error){toast('تم تسجيل الترحيل لكن تعذر تحديث حالة الخانات: '+ar.error.message,false);return;}
+ try{await db.rpc('log_audit_event',{p_action:'transfer_pilgrim_to_visa',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:p.full_name,p_details:{agreement_ids:allForPilgrim.map(z=>z.agreement_id)},p_page:'agreements.html'});}catch(e){}
+ toast('تم ترحيل '+(p.full_name||'المعتمر')+' إلى الفيزا وتثبيت الاتفاقيات ✅');await load();document.getElementById('agreementDetail')?.remove();openAgreement(selectedAgreement);
+}
+async function start(){
+ if(!await auth())return;
+ $('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('candidateSearch').oninput=renderCandidates;
+ $('add').onclick=addAgreement;$('refresh').onclick=load;$('logout').onclick=async()=>{await db.auth.signOut();location.href='./index.html'};
+ toggleHotelFields();await load();
+}
+start();
+</script>
+</body></html>

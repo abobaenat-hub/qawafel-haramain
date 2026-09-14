@@ -14,7 +14,7 @@
 <body>
 <div id="login" class="login hide"><img src="./logo.png" style="width:72px;height:72px;object-fit:contain;display:block;margin:auto"><h2>رفع الجوازات إلى نسك</h2><p style="color:var(--muted);font-size:11px">تسجيل الدخول إلى لوحة قوافل الحرمين</p><input id="email" type="email" placeholder="البريد الإلكتروني"><input id="password" type="password" placeholder="كلمة المرور"><button id="loginBtn" class="btn primary">دخول</button><div id="loginMsg" class="msg hide"></div></div>
 <div id="app" class="hide">
-<header class="top"><div class="topin"><div class="brand"><img src="./logo.png" class="logo"><div><b>قوافل الحرمين</b><small>رفع الجوازات إلى نسك</small></div></div><div class="topActions"><a href="./internal.html">⌂ لوحة الإدارة</a><a href="./pilgrims.html">♙ المعتمرين</a><button id="logout">تسجيل الخروج</button></div></div></header>
+<header class="top"><div class="topin"><div class="brand"><img src="./logo.png" class="logo"><div><b>قوافل الحرمين</b><small>رفع الجوازات إلى نسك</small></div></div><div class="topActions"><a href="./internal.html">⌂ لوحة الإدارة</a><a href="./pilgrims.html">♙ المعتمرين</a><a href="./agreements.html">📑 الاتفاقيات</a><button id="logout">تسجيل الخروج</button></div></div></header>
 <main class="wrap">
 <div class="head"><div><div style="color:var(--gold);font-size:11px;font-weight:900;margin-bottom:6px">قسم التأشيرات</div><h1>🛂 رفع الجوازات إلى نسك</h1><p>هنا تشوف فورًا منو تم رفع جوازه في نسك ومنو بعده، وتجهز الجواز وتفتح نسك مباشرة.</p></div><button id="refresh" class="btn gray">↻ تحديث</button></div>
 <section class="card hero"><h2>مكان العمل الرئيسي لرفع الجوازات</h2><p>كل فندق مكة له <b>مجموعة مستقلة ومجلد حفظ مستقل</b>. اضغط على اسم الفندق لفتح التفاصيل، ثم حدّد مجلد المجموعة. جميع المعتمرين الذين فندقهم واحد سيظهرون في مجموعة واحدة حتى لو اختلفت الباقة أو كان أحدهم برًا والآخر طيرانًا، وحتى اختلافات الكتابة البسيطة لاسم الفندق لا تنشئ مجموعة ثانية.</p></section>
@@ -132,7 +132,7 @@ initFolderStatus();boot();
 <script id="qawafel-permission-menu-v174">
 (function(){
  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
- const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
+ const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',agreements:'trips',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
  let perms=null, busy=false;
  function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
  function apply(){
@@ -172,7 +172,7 @@ initFolderStatus();boot();
   const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const map={
     'programs.html':'trips','pilgrims.html':'booking_staff','agents.html':'agents','supervisors.html':'supervisors',
-    'visa.html':'visa','nusuk.html':'nusuk','archive.html':'archive','financial.html':'finance','employees.html':'manager','audit.html':'super_admin'
+    'visa.html':'visa','nusuk.html':'nusuk','agreements.html':'trips','archive.html':'archive','financial.html':'finance','employees.html':'manager','audit.html':'super_admin'
   };
   const sensitive=Object.keys(map);
   let applied=false;
