@@ -373,6 +373,45 @@ async function tripBadgeData(p){
  return d;
 }
 function badgeQrUrl(){return 'https://www.qawafialharamainiq.com/';}
+function zamzamQrUrl(){return 'https://www.qawafialharamainiq.com/';}
+function zamzamHtml(d){
+ const name=esc(d.name||'—');
+ const qr='https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=8&data='+encodeURIComponent(zamzamQrUrl());
+ const template=new URL('zamzam_sticker_half_a4_template_clean.png',location.href).href;
+ return `<article class="zamzam-sticker" style="background-image:url('${template}')">
+   <div class="zamzam-name">${name}</div>
+   <div class="zamzam-qr"><img loading="eager" src="${qr}" alt="QR"></div>
+ </article>`;
+}
+function zamzamPrintCSS(){return `
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;font-family:Tahoma,Arial,sans-serif}
+.a4-zamzam-page{width:210mm;height:297mm;background:#fff;margin:0 auto;display:flex;align-items:stretch;justify-content:center;page-break-after:always;break-after:page}
+.zamzam-grid{display:grid;grid-template-columns:repeat(2,105mm);grid-template-rows:297mm;gap:0;width:210mm;height:297mm}
+.zamzam-sticker{width:105mm;height:297mm;position:relative;overflow:hidden;background-repeat:no-repeat;background-position:center;background-size:105mm 297mm;page-break-inside:avoid;break-inside:avoid}
+.zamzam-name{position:absolute;left:12mm;top:194.5mm;width:66mm;height:12mm;display:flex;align-items:center;justify-content:center;text-align:center;color:#072b49;font-weight:900;font-size:4.5mm;line-height:1.15;direction:rtl;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.zamzam-qr{position:absolute;left:61mm;top:216mm;width:38mm;height:42mm;background:#fff;border:.4mm solid #c9952f;border-radius:3mm;display:flex;align-items:flex-start;justify-content:center;padding-top:3mm;overflow:hidden}
+.zamzam-qr img{width:30mm;height:30mm;display:block}
+@page{size:A4 portrait;margin:0}
+@media print{html,body{width:210mm;height:297mm;background:#fff}.a4-zamzam-page{width:210mm;height:297mm;margin:0;box-shadow:none}.zamzam-sticker{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+`; }
+async function openZamzamPrintWindow(cards,title){
+ const w=window.open('about:blank','_blank');if(!w)return null;
+ w.document.open();w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+esc(title||'ستيكرات ماء زمزم')+'</title><style>'+zamzamPrintCSS()+'</style></head><body><div id="zamzamPrintArea"></div></body></html>');w.document.close();
+ const area=w.document.getElementById('zamzamPrintArea');
+ if(area){for(let i=0;i<cards.length;i+=2){const page=w.document.createElement('section');page.className='a4-zamzam-page';const grid=w.document.createElement('div');grid.className='zamzam-grid';grid.innerHTML=cards.slice(i,i+2).join('');page.appendChild(grid);area.appendChild(page);}}
+ await waitBadgeImages(w);setTimeout(()=>{w.focus();w.print()},700);return w;
+}
+async function printTripZamzamStickers(){
+ const list=allProgramPilgrims||[];
+ if(!activeTrip||!list.length)return alert('لا يوجد معتمرون في هذه الرحلة.');
+ const cards=list.map(x=>zamzamHtml({name:x.full_name||'—'}));
+ await openZamzamPrintWindow(cards,'ستيكرات ماء زمزم — '+(activeTrip.title||'قوافل الحرمين'));
+}
+async function printIndividualZamzamSticker(id){
+ const x=(allProgramPilgrims||[]).find(p=>p.id===id);
+ if(!x)return alert('تعذر العثور على المعتمر.');
+ await openZamzamPrintWindow([zamzamHtml({name:x.full_name||'—'})],'ستيكر زمزم — '+(x.full_name||''));
+}
 function badgeHtml(d){
  const photo=d.photo||'';
  const qr='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=8&data='+encodeURIComponent(badgeQrUrl());
@@ -408,7 +447,7 @@ async function printTripBadges(){
 
 $('printBadgesTrip')?.addEventListener('click',printTripBadges);
 $('passportStickersTrip')?.addEventListener('click',()=>alert('ستيكر الجواز سنربطه بطباعة جماعية من هذه الرحلة في المرحلة التالية.'));
-$('zamzamStickersTrip')?.addEventListener('click',()=>alert('ستيكر زمزم سنربطه بطباعة جماعية من هذه الرحلة في المرحلة التالية.'));
+$('zamzamStickersTrip')?.addEventListener('click',printTripZamzamStickers);
 function calcAgeForReport(birth){
  const d=birth?new Date(birth+'T00:00:00'):null; if(!d||Number.isNaN(d.getTime())) return null;
  const now=new Date(); let age=now.getFullYear()-d.getFullYear();
