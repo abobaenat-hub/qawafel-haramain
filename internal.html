@@ -729,10 +729,16 @@ setToday();
   async function allowed(db){
     const r=await db.auth.getUser(); const u=r.data&&r.data.user;
     if(!u) return false;
+    // V237: support both staff_profiles and the existing admin_users login system.
     const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
     const s=q.data;
-    if(!s || s.active===false) return false;
-    return ['super_admin','manager'].includes(s.role);
+    if(!q.error && s && s.active!==false && ['super_admin','manager'].includes(s.role)) return true;
+    const a=await db.from('admin_users').select('role,active').eq('user_id',u.id).maybeSingle();
+    if(!a.error && a.data && a.data.active!==false) {
+      const role=a.data.role;
+      return ['super_admin','manager','admin'].includes(role);
+    }
+    return false;
   }
   async function readTable(db,name){
     const rows=[];
