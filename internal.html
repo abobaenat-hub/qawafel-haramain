@@ -49,6 +49,12 @@
 #qawafelGlobalAdminBar .qga-dashboard{background:#ffffff12;color:#fff}
 #qawafelGlobalAdminBar .qga-home{background:#c99a32;color:#082f50;border-color:#c99a32}
 #qawafelGlobalAdminBar .qga-logout{background:#ffffff12;color:#fff}
+
+/* V235: one-click platform data backup */
+#qawafelBackupBtn{background:#18734e;color:#fff;border-color:#18734e}
+#qawafelBackupBtn:hover{background:#145f40}
+#qawafelBackupBtn:disabled{opacity:.65;cursor:wait}
+@media(max-width:560px){#qawafelBackupBtn{display:inline-flex!important;padding:7px 7px}}
 #qawafelGlobalAdminBar .qga-menu{display:inline-flex;background:#ffffff12;color:#fff}
 .top{display:none!important}
 @media(max-width:800px){
@@ -116,6 +122,7 @@
       <div class="qga-user"><div class="qga-avatar" id="qgaAvatar">ق</div><div class="qga-text"><div class="qga-name" id="qgaName">جاري التحميل...</div><div class="qga-role" id="qgaRole"></div></div></div>
       <div class="qga-actions">
         <a class="qga-btn qga-dashboard" id="qgaDashboard" href="./internal.html">⌂ لوحة الإدارة</a>
+        <button type="button" class="qga-btn" id="qawafelBackupBtn" title="نسخ احتياطي لبيانات المنصة">💾 نسخ احتياطي</button>
         <a class="qga-btn qga-home" href="./index.html">🌐 الموقع العام</a>
         <button type="button" class="qga-btn qga-logout" id="qgaLogout">تسجيل الخروج</button>
       </div>
@@ -703,5 +710,76 @@ setToday();
   obs.observe(document.documentElement,{childList:true,subtree:true});
   setTimeout(()=>obs.disconnect(),20000);
 })();
-</script></body>
+</script>
+<script id="qawafel-backup-v235">
+(function(){
+  const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co';
+  const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  const TABLES=[
+    'admin_users','agent_applications','agent_program_pricing','agent_receipts','agent_settlements','agent_transactions',
+    'agents','audit_logs','bookings','driver_payments','drivers','expense_allocations','expenses','installment_plans',
+    'payments','pilgrim_archive','pilgrims','program_packages','programs','staff_profiles','supervisor_earnings',
+    'supervisor_payments','supervisors','supplier_payments','suppliers','travel_agreement_assignments','travel_agreements',
+    'visa_email_events','zoho_mail_integration'
+  ];
+  const PAGE=1000;
+  function stamp(){return new Date().toISOString().replace(/[:.]/g,'-').replace('T','_').replace('Z','');}
+  async function allowed(db){
+    const r=await db.auth.getUser(); const u=r.data&&r.data.user;
+    if(!u) return false;
+    const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+    const s=q.data;
+    if(!s || s.active===false) return false;
+    return ['super_admin','manager'].includes(s.role);
+  }
+  async function readTable(db,name){
+    const rows=[];
+    for(let offset=0;;offset+=PAGE){
+      const r=await db.from(name).select('*').range(offset,offset+PAGE-1);
+      if(r.error) throw new Error(r.error.message);
+      const batch=r.data||[];
+      rows.push(...batch);
+      if(batch.length<PAGE) break;
+    }
+    return rows;
+  }
+  async function backup(){
+    const btn=document.getElementById('qawafelBackupBtn'); if(!btn||btn.disabled)return;
+    const old=btn.innerHTML; btn.disabled=true; btn.textContent='⏳ جاري النسخ...';
+    try{
+      if(!window.supabase||!window.supabase.createClient) throw new Error('تعذر الاتصال بقاعدة البيانات');
+      const db=window.supabase.createClient(U,K);
+      if(!(await allowed(db))) throw new Error('ليس لديك صلاحية إنشاء النسخة الاحتياطية');
+      const tables={}, errors={};
+      for(const name of TABLES){
+        try{tables[name]=await readTable(db,name)}catch(e){errors[name]=e?.message||String(e)}
+      }
+      const payload={
+        backup_type:'qawafel_platform_data',
+        platform:'قوافل الحرمين',
+        version:'V235',
+        created_at:new Date().toISOString(),
+        table_count:Object.keys(tables).length,
+        row_count:Object.values(tables).reduce((n,a)=>n+a.length,0),
+        tables,
+        skipped_tables:errors,
+        note:'نسخة بيانات المنصة بصيغة JSON. لا تشمل ملفات Supabase Storage أو إعدادات المشروع أو كلمات المرور.'
+      };
+      const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
+      const url=URL.createObjectURL(blob); const a=document.createElement('a');
+      a.href=url; a.download='qawafel-backup-'+stamp()+'.json'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      const ok=Object.keys(tables).length, skipped=Object.keys(errors).length, rows=payload.row_count;
+      btn.textContent='✅ تم النسخ — '+rows+' سجل';
+      if(skipped) console.warn('Backup skipped tables',errors);
+      setTimeout(()=>{btn.innerHTML=old;btn.disabled=false},5000);
+    }catch(e){
+      alert('تعذر إنشاء النسخة الاحتياطية:\n'+(e?.message||String(e)));
+      btn.innerHTML=old; btn.disabled=false;
+    }
+  }
+  document.addEventListener('click',e=>{if(e.target.closest('#qawafelBackupBtn')) backup();});
+})();
+</script>
+</body>
 </html>
