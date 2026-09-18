@@ -321,7 +321,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <div><label>سعر التحويل</label><input id="walletFxRate" type="number" min="0" step="0.000001" placeholder="مثلاً 3.75"></div>
 <div><label>البيان</label><input id="walletDescription" placeholder="مثلاً إيداع رصيد للرحلات القادمة"></div>
 </div></div>
-<button id="saveWalletTx" class="p" style="margin-top:12px">💾 حفظ حركة الخزينة</button>
+<button id="saveWalletTx" class="p" style="margin-top:12px">💾 حفظ حركة الخزينة</button><div id="walletReadyHint" class="walletMuted" style="margin-top:8px"></div>
 </section>
 <section class="panel"><h2>💰 أرصدة الموردين</h2><div id="walletBalances"></div></section>
 <section class="panel"><h2>📒 كشف حركات الخزينة</h2><div class="table"><table><thead><tr><th>التاريخ</th><th>المورد</th><th>الحركة</th><th>العملة</th><th>المبلغ</th><th>المصدر</th><th>الرحلة</th><th>البيان</th></tr></thead><tbody id="walletRows"></tbody></table></div></section>
@@ -583,7 +583,8 @@ function walletMoney(amount,currency){const n=Number(amount||0);return n.toLocal
 function renderSupplierWallet(){
  const ss=$('walletSupplier'); if(ss) ss.innerHTML='<option value="">اختر المورّد...</option>'+S.map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
  const wp=$('walletProgram'); if(wp) wp.innerHTML='<option value="">بدون رحلة</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
- const save=$('saveWalletTx'); if(save){save.disabled=!WALLET_READY;save.title=WALLET_READY?'':'تحتاج تهيئة جدول خزينة الموردين مرة واحدة';}
+ const save=$('saveWalletTx'); if(save){save.disabled=false;save.title='حفظ حركة الخزينة';}
+ const hint=$('walletReadyHint'); if(hint) hint.innerHTML=WALLET_READY?'✅ خزينة الموردين جاهزة للحفظ.':'⚠️ جدول حركات الخزينة غير متاح حاليًا؛ زر الحفظ بقي فعالًا ليظهر الخطأ بدل أن يكون صامتًا.';
  if(!WALLET_READY){$('walletBalances').innerHTML='<div class="walletMuted">⚠️ نظام خزينة الموردين جاهز، لكن جدول الحركات يحتاج تهيئة مرة واحدة في قاعدة البيانات.</div>';$('walletRows').innerHTML='<tr><td colspan="8">لم تتم تهيئة جدول خزينة الموردين بعد.</td></tr>';return;}
  const grouped={}; WTX.forEach(x=>{const key=x.supplier_id+'|'+x.currency;grouped[key]=(grouped[key]||0)+(x.transaction_type==='deposit'?1:-1)*Number(x.amount||0)});
  const cards=Object.entries(grouped).map(([k,v])=>{const [sid,c]=k.split('|'),sup=S.find(x=>x.id===sid);return '<div class="walletBalanceCard"><small>'+esc(sup?.name||'مورد غير معروف')+' — '+esc({SAR:'ريال سعودي',USD:'دولار',IQD:'دينار عراقي'}[c]||c)+'</small><b class="'+(v>=0?'walletPositive':'walletNegative')+'">'+walletMoney(v,c)+'</b><div class="walletMuted">'+(v>=0?'رصيد لنا عند المورد':'رصيد علينا للمورد')+'</div></div>'}).join('');
@@ -593,12 +594,11 @@ function renderSupplierWallet(){
 }
 $('walletType')?.addEventListener('change',()=>{const dep=$('walletType').value==='deposit';$('walletSourceCurrency').disabled=!dep;$('walletSourceAmount').disabled=!dep;$('walletFxRate').disabled=!dep;});
 $('saveWalletTx')?.addEventListener('click',async()=>{
- if(!WALLET_READY)return msg('walletMsg','خزينة الموردين تحتاج تهيئة جدولها في قاعدة البيانات مرة واحدة قبل التسجيل.',true);
- const supplier_id=$('walletSupplier').value,type=$('walletType').value,currency=$('walletCurrency').value,amount=Number($('walletAmount').value||0),date=$('walletDate').value,program_id=$('walletProgram').value||null,description=$('walletDescription').value.trim()||null;
+  const supplier_id=$('walletSupplier').value,type=$('walletType').value,currency=$('walletCurrency').value,amount=Number($('walletAmount').value||0),date=$('walletDate').value,program_id=$('walletProgram').value||null,description=$('walletDescription').value.trim()||null;
  const source_currency=$('walletSourceCurrency').value||currency,source_amount=Number($('walletSourceAmount').value||0),fx_rate=Number($('walletFxRate').value||0);
  if(!supplier_id||!date||!amount)return msg('walletMsg','أكمل المورد والتاريخ والمبلغ.',true);
  if(type==='deposit' && source_currency!==currency && (!source_amount||!fx_rate))return msg('walletMsg','عند اختلاف العملة أدخل مبلغ المصدر وسعر التحويل.',true);
- const {data:{user}}=await db.auth.getUser();$('saveWalletTx').disabled=true;
+ const {data:{user}}=await db.auth.getUser();$('saveWalletTx').disabled=true;msg('walletMsg','جاري حفظ حركة الخزينة...');
  try{
   const payload={supplier_id,transaction_type:type,currency,amount,transaction_date:date,program_id,description,source_currency:source_currency===currency?null:source_currency,source_amount:source_currency===currency?null:source_amount,fx_rate:source_currency===currency?null:fx_rate,created_by:user?.id||null};
   const {error}=await db.from('supplier_wallet_transactions').insert(payload);if(error)throw error;
