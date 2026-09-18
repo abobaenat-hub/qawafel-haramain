@@ -82,7 +82,7 @@
 <body>
 <script id="qawafel-global-admin-js">
 (function(){
-  const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+  const SUPABASE_URL='https://ymjkzvdjpuuxxkgkmbtc.supabase.co';
   const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const PAGE_TITLE='إدارة المتعهدين';
   function boot(){
@@ -151,7 +151,7 @@
 <div id="ledgerTab" class="panel hide"><div class="sect"><div><h2>الحسابات المالية للمتعهدين</h2><p>الحساب على المجموعة كاملة. عند استلام أي مبلغ من المتعهد نصدر له وصل قبض، ويمكن إصدار تسوية حساب.</p></div></div><div class="summary"><div><span>إجمالي مستحقات المتعهد</span><b id="sumDue">0 د.ع</b></div><div><span>إجمالي المقبوض منه</span><b id="sumReceived">0 د.ع</b></div><div><span>الرصيد المتبقي عليه</span><b id="sumAgentBalance">0 د.ع</b></div></div><div class="toolbar"><select id="financeAgent"><option value="">اختر المتعهد</option></select><select id="financeBooking"><option value="">على حساب المتعهد (اختياري)</option></select><input id="receiptAmount" type="number" min="1" placeholder="مبلغ المستلم"><select id="receiptMethod"><option value="cash">نقداً</option><option value="bank">تحويل مصرفي</option><option value="transfer">حوالة</option><option value="other">أخرى</option></select><input id="receiptNotes" placeholder="بيان الوصل (اختياري)"><button id="issueReceipt" class="btn gold">إصدار وصل استلام</button><button id="makeSettlement" class="btn primary">إصدار تسوية حساب</button></div><div id="financeMsg" class="msg hide"></div><div class="card" style="margin-top:12px"><div class="sect"><div><h2>إيصالات الاستلام</h2><p>كل إيصال صادر عند استلام مبلغ من المتعهد.</p></div></div><div class="table"><table><thead><tr><th>رقم الوصل</th><th>التاريخ</th><th>المتعهد</th><th>المبلغ</th><th>طريقة الدفع</th><th>الحجز</th><th>البيان</th><th>إجراء</th></tr></thead><tbody id="receiptRows"></tbody></table></div></div><div class="card" style="margin-top:12px"><div class="sect"><div><h2>التسويات</h2><p>كشف مختصر لحساب المتعهد حتى تاريخ التسوية.</p></div></div><div class="table"><table><thead><tr><th>رقم التسوية</th><th>التاريخ</th><th>المتعهد</th><th>المستحق</th><th>المقبوض</th><th>الرصيد</th><th>إجراء</th></tr></thead><tbody id="settlementRows"></tbody></table></div></div></div></section></main></div>
 <div id="modal" class="modal"><div class="modalbox"><div class="modalhead"><h3 id="modalTitle">إضافة متعهد</h3><button class="x" id="closeModal">✕</button></div><div class="formgrid"><div class="field"><label>اسم المتعهد *</label><input id="fName"></div><div class="field"><label>رقم الهاتف *</label><input id="fPhone"></div><div class="field"><label>المحافظة</label><input id="fGov"></div><div class="field"><label>المدينة</label><input id="fCity"></div><div class="field"><label>اسم المكتب</label><input id="fOffice"></div><div class="field"><label>رقم الترخيص</label><input id="fLicense"></div><div class="field"><label>نوع المتعهد</label><select id="fType"><option value="office">مكتب سفر/سياحة</option><option value="individual">متعهد مستقل</option><option value="office">مكتب سفر/سياحة</option><option value="company">شركة</option></select></div><div class="field"><label>الحالة</label><select id="fStatus"><option value="active">فعال</option><option value="pending">قيد المراجعة</option><option value="suspended">موقوف</option><option value="inactive">غير فعال</option></select></div><div class="field full"><label>ملاحظات</label><textarea id="fNotes"></textarea></div></div><div id="modalMsg" class="msg hide"></div><div class="modalactions"><button id="saveAgent" class="btn primary">حفظ</button><button id="cancelModal" class="btn light">إلغاء</button></div></div></div>
 <script>
-const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const $=id=>document.getElementById(id);let agents=[],apps=[],prices=[],programs=[],bookings=[],tx=[],receipts=[],settlements=[];let editingAgent=null;
+const SUPABASE_URL='https://ymjkzvdjpuuxxkgkmbtc.supabase.co';const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);const $=id=>document.getElementById(id);let agents=[],apps=[],prices=[],programs=[],bookings=[],tx=[],receipts=[],settlements=[];let editingAgent=null;
 const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));const money=n=>Number(n||0).toLocaleString('ar-IQ')+' د.ع';
 function badge(s){const map={active:['فعال','ok'],pending:['قيد المراجعة','pending'],suspended:['موقوف','red'],inactive:['غير فعال','off'],contacted:['تم التواصل','pending'],approved:['مقبول','ok'],rejected:['مرفوض','red']};const x=map[s]||[s||'—','off'];return `<span class="badge ${x[1]}">${esc(x[0])}</span>`}
 const roleLabels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة'};
@@ -186,7 +186,7 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelect
 boot();
 </script><script id="qawafel-audit-v169">
 (function(){
-  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+  const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co';
   const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   let started=false, wrapped=false;
   const page=()=>location.pathname.split('/').pop()||'index.html';
@@ -270,7 +270,7 @@ boot();
 </script>
 <script id="qawafel-permission-menu-v174">
 (function(){
- const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
  const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
  let perms=null, busy=false;
  function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
@@ -308,7 +308,7 @@ boot();
 })();
 </script><script id="qawafel-permission-guard-v175">
 (function(){
-  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const map={
     'programs.html':'trips','pilgrims.html':'booking_staff','agents.html':'agents','supervisors.html':'supervisors',
     'visa.html':'visa','nusuk.html':'nusuk','archive.html':'archive','financial.html':'finance','employees.html':'manager','audit.html':'super_admin'

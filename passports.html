@@ -15,7 +15,7 @@
 </main><div id="toast" class="toast"></div>
 <div id="confirm" class="modal"><div class="modal-card"><h3>تأكيد تحميل الجوازات</h3><p id="confirmText"></p><div class="modal-actions"><button class="btn outline" onclick="closeConfirm()">إلغاء</button><button class="btn gold" onclick="confirmDownload()">نعم، إنشاء PDF</button></div></div></div>
 <script>
-const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K);
+const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K);
 let programs=[],pilgrims=[],currentType='بر',filtered=[],selected=new Set(),pendingIds=[];
 const $=id=>document.getElementById(id), esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
 function toast(t){$('toast').textContent=t;$('toast').classList.add('show');clearTimeout(window.__toast);window.__toast=setTimeout(()=>$('toast').classList.remove('show'),3200)}

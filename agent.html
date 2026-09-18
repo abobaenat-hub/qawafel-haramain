@@ -17,7 +17,7 @@ window.__supabaseReady=new Promise(function(resolve){
 <div class="card"><div class="sect"><div><h2>حجوزاتي الجماعية</h2><small>كل حجز يمثل مجموعة، والدفعات تُسجل على الحجز ككل.</small></div></div><div class="table"><table><thead><tr><th>الحجز</th><th>البرنامج</th><th>المعتمرون</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>إدارة</th></tr></thead><tbody id="bookingRows"></tbody></table></div></div>
 <div class="card"><div class="sect"><div><h2>حسابي المالي</h2><small>الحركات المالية الخاصة بحسابك فقط.</small></div></div><div class="table"><table><thead><tr><th>التاريخ</th><th>النوع</th><th>المبلغ</th><th>البيان</th></tr></thead><tbody id="txRows"></tbody></table></div></div><div class="card"><div class="sect"><div><h2>إيصالات استلام أموالي</h2><small>الإيصالات التي تصدرها قوافل الحرمين عند استلام الدفعات منك.</small></div></div><div class="table"><table><thead><tr><th>رقم الوصل</th><th>التاريخ</th><th>المبلغ</th><th>طريقة الدفع</th><th>الحجز</th></tr></thead><tbody id="receiptRows"></tbody></table></div></div><div class="card"><div class="sect"><div><h2>تسويات الحساب</h2><small>كشوف التسوية الصادرة من الشركة.</small></div></div><div class="table"><table><thead><tr><th>رقم التسوية</th><th>التاريخ</th><th>المستحق</th><th>المقبوض</th><th>الرصيد</th></tr></thead><tbody id="settlementRows"></tbody></table></div></div></section><div id="bookingModal" class="modal"><div class="modalbox"><div class="modalhead"><h2 id="bookingTitle">إنشاء حجز جماعي</h2><button id="closeBooking" class="close">إغلاق</button></div><div id="bookingMsg"></div><div id="groupSummary" class="group-summary hidden"></div><form id="bookingForm"><div class="grid"><div class="field full"><label>البرنامج <span class="req">*</span></label><select id="bProgram" required><option value="">اختر البرنامج</option></select></div><div class="field full"><div class="msg">المتعهد لا يحتاج إلى إدخال بيانات المعتمر. <strong>ارفع صورة الجواز فقط</strong>، وقوافل الحرمين تتولى إدخال بقية البيانات وتجهيز المعاملة.</div></div><div class="field full photo-upload"><label>صورة الجواز / المستمسك <span class="req">*</span></label><input id="bDoc" type="file" accept="image/*" required><div id="docPreviewBox" class="photo-note"></div><div class="photo-note">صورة واضحة وكاملة للجواز. لا حاجة للصورة الشخصية أو كتابة البيانات هنا.</div></div><div class="field full"><label>ملاحظة للموظف (اختياري)</label><textarea id="bNotes" rows="2" style="width:100%;padding:12px;border:1px solid #ccd8df;border-radius:10px;resize:vertical" placeholder="مثلاً: المعتمر يريد السفر مع العائلة..." ></textarea></div></div><div id="bPrice" class="msg hidden"></div><button id="savePilgrim" class="btn gold" style="width:100%;margin-top:8px">حفظ الجواز وإضافة المعتمر</button></form><div id="groupActions" class="group-actions hidden"><button id="addAnother" class="btn gold">＋ إضافة جواز آخر</button><button id="paymentBtn" class="btn light">فتح الحساب المالي</button><button id="finishGroup" class="btn light">تم — إغلاق</button></div></div></div></main><div class="footer">قوافل الحرمين للحج والعمرة — بوابة المتعهدين</div>
 <script>
-const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';let db;(async function(){const ok=await window.__supabaseReady;const $=id=>document.getElementById(id);if(!ok||!window.supabase){$('msg').className='msg err';$('msg').textContent='تعذر تحميل خدمة الدخول. حدّث الصفحة أو تحقق من الاتصال بالإنترنت.';return;}db=supabase.createClient(U,K);const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));const money=n=>Number(n||0).toLocaleString('ar-IQ')+' د.ع';
+const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';let db;(async function(){const ok=await window.__supabaseReady;const $=id=>document.getElementById(id);if(!ok||!window.supabase){$('msg').className='msg err';$('msg').textContent='تعذر تحميل خدمة الدخول. حدّث الصفحة أو تحقق من الاتصال بالإنترنت.';return;}db=supabase.createClient(U,K);const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));const money=n=>Number(n||0).toLocaleString('ar-IQ')+' د.ع';
 function msg(t,err=false){$('msg').className='msg'+(err?' err':'');$('msg').textContent=t||''}
 function tabs(login){$('loginTab').classList.toggle('active',login);$('signupTab').classList.toggle('active',!login);$('loginForm').classList.toggle('hidden',!login);$('signupForm').classList.toggle('hidden',login);$('msg').textContent='';}
 $('loginTab').onclick=()=>tabs(true);$('signupTab').onclick=()=>tabs(false);
@@ -50,7 +50,7 @@ const wantsApply=new URLSearchParams(location.search).get('apply')==='1'||locati
 })();
 </script><script id="qawafel-audit-v169">
 (function(){
-  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+  const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co';
   const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   let started=false, wrapped=false;
   const page=()=>location.pathname.split('/').pop()||'index.html';
@@ -134,7 +134,7 @@ const wantsApply=new URLSearchParams(location.search).get('apply')==='1'||locati
 </script>
 <script id="qawafel-permission-menu-v174">
 (function(){
- const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
  const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
  let perms=null, busy=false;
  function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
@@ -172,7 +172,7 @@ const wantsApply=new URLSearchParams(location.search).get('apply')==='1'||locati
 })();
 </script><script id="qawafel-permission-guard-v175">
 (function(){
-  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const map={
     'programs.html':'trips','pilgrims.html':'booking_staff','agents.html':'agents','supervisors.html':'supervisors',
     'visa.html':'visa','nusuk.html':'nusuk','archive.html':'archive','financial.html':'finance','employees.html':'manager','audit.html':'super_admin'

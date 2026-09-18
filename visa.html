@@ -14,7 +14,7 @@
 <div id="inquiryModal" class="hide" style="position:fixed;inset:0;background:#0008;z-index:10001;display:flex;align-items:center;justify-content:center;padding:18px"><div class="card" style="width:min(650px,100%);margin:0"><h3 id="inquiryTitle">بيانات استعلام التأشيرة</h3><div class="notice">هذه هي القيم التي سيستخدمها الموظف في منصة وزارة الخارجية. اختر «جهاز باركود»، ثم <b>القيمة الأولى: رقم الجواز</b> و<b>القيمة الثانية: الاسم الأول</b>، واختر الجنسية «العراق». رمز الصورة CAPTCHA يُكتب يدويًا.</div><div class="copybox" style="margin-top:12px"><div class="copyrow"><b>رقم الجواز</b><span id="inqPassport" class="copyval">—</span><button class="copybtn" onclick="copyInquiry('inqPassport')">نسخ</button></div><div class="copyrow"><b>الاسم الأول</b><span id="inqFirstName" class="copyval">—</span><button class="copybtn" onclick="copyInquiry('inqFirstName')">نسخ</button></div><div class="copyrow"><b>الجنسية</b><span id="inqNationality" class="copyval" dir="rtl">العراق</span><button class="copybtn" onclick="copyInquiry('inqNationality')">نسخ</button></div></div><div id="inqWarning" class="notice" style="margin-top:10px;display:none;background:#fff0f0;border-color:#f0c9c9;color:#8f3030"></div><div id="inqFirstNameEditor" class="copybox" style="margin-top:10px;display:none"><b>الاسم الأول من الجواز</b><div class="actions" style="margin-top:8px"><input id="inqFirstNameInput" class="input" dir="ltr" placeholder="مثال: MOHAMMED" style="flex:1;min-width:180px"><button class="btn primary" id="saveInquiryFirstName">حفظ</button></div><small class="muted">اكتب الاسم الأول كما هو في الجواز بالإنكليزي. سيُحفظ في ملف المعتمر لاستخدامه لاحقًا.</small></div><div class="actions" style="margin-top:12px"><button class="btn primary" id="openMofa">فتح منصة التأشيرات الرسمية</button><button class="btn" id="closeInquiry">إغلاق</button></div></div></div>
 <div id="modal" class="hide" style="position:fixed;inset:0;background:#0008;z-index:10000;display:flex;align-items:center;justify-content:center;padding:18px"><div class="card" style="width:min(520px,100%);margin:0"><h3 id="modalTitle">تحديث التأشيرة</h3><input id="visaNumber" class="input" style="width:100%;margin:6px 0" placeholder="رقم التأشيرة (اختياري)"><input id="visaDate" type="date" class="input" style="width:100%;margin:6px 0"><div class="actions" style="margin-top:10px"><button class="btn green" id="saveIssued">حفظ: تم إصدار التأشيرة</button><button class="btn orange" id="savePending">حفظ: بانتظار الفحص</button><button class="btn" id="saveProcessing">حفظ: قيد الإجراء</button><button class="btn danger" id="saveRejected">حفظ: مرفوضة / غير صادرة</button><button class="btn" id="closeModal">إلغاء</button></div></div></div>
 <input id="visaPdfInput" type="file" accept="application/pdf,.pdf" style="display:none"><script>
-const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=supabase.createClient(U,K);let all=[],current=null;
 const ZOHO_FN=U+'/functions/v1/zoho-visa-mail-cors';
 async function zohoStatus(){try{const r=await fetch(ZOHO_FN);const j=await r.json();$('zohoStatus').textContent=j.configured?'🟢 الربط البرمجي جاهز':'🟡 يحتاج إعداد Zoho مرة واحدة';$('zohoStatus').className='badge '+(j.configured?'b-issued':'b-processing');$('zohoCopyWebhook').dataset.url=j.webhook||ZOHO_FN+'?action=webhook';$('zohoResult').textContent=j.configured?'تم تجهيز خدمة استقبال البريد.':'باقي فقط إعداد OAuth في Zoho ثم تفعيل Webhook.'}catch(e){$('zohoStatus').textContent='🔴 تعذر فحص الخدمة';$('zohoStatus').className='badge b-rejected';$('zohoResult').textContent=e.message||String(e)}}
@@ -51,7 +51,7 @@ $('search').addEventListener('input',render);document.querySelectorAll('.stat[da
 </script>
 <script id="qawafel-audit-v169">
 (function(){
-  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+  const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co';
   const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   let started=false, wrapped=false;
   const page=()=>location.pathname.split('/').pop()||'index.html';
@@ -135,7 +135,7 @@ $('search').addEventListener('input',render);document.querySelectorAll('.stat[da
 </script>
 <script id="qawafel-permission-menu-v174">
 (function(){
- const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
  const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
  let perms=null, busy=false;
  function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
@@ -173,7 +173,7 @@ $('search').addEventListener('input',render);document.querySelectorAll('.stat[da
 })();
 </script><script id="qawafel-permission-guard-v175">
 (function(){
-  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const map={
     'programs.html':'trips','pilgrims.html':'booking_staff','agents.html':'agents','supervisors.html':'supervisors',
     'visa.html':'visa','nusuk.html':'nusuk','archive.html':'archive','financial.html':'finance','employees.html':'manager','audit.html':'super_admin'
