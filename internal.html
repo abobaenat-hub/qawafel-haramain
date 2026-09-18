@@ -299,13 +299,16 @@ async function signIn(){
  if(!email||!password)return showLoginMsg('أدخل البريد الإلكتروني وكلمة المرور.',true);
  $('loginBtn').disabled=true;showLoginMsg('جاري التحقق...');
  try{
-   await db.auth.signOut();
    const r=await db.auth.signInWithPassword({email,password});
    if(r.error)throw r.error;
+   if(!r.data?.user)throw Error('تعذر إنشاء جلسة الدخول.');
    if(!await isAdmin()){await db.auth.signOut();throw Error('هذا الحساب غير مخول للدخول إلى الإدارة.')}
    if(await routeStaffPortal()) return;
    $('login').classList.add('hide');$('app').classList.remove('hide');await load();
- }catch(e){showLoginMsg(e.message||'تعذر تسجيل الدخول.',true)}
+ }catch(e){
+   const raw=String(e?.message||e||'');
+   showLoginMsg(raw.includes('Failed to fetch')||raw.includes('fetch')?'تعذر الاتصال بخدمة تسجيل الدخول. تحقق من اتصال الإنترنت ثم حاول مرة أخرى.':(raw||'تعذر تسجيل الدخول.'),true)
+ }
  finally{$('loginBtn').disabled=false}
 }
 $('loginBtn').onclick=signIn;
