@@ -122,7 +122,7 @@
       <div class="qga-user"><div class="qga-avatar" id="qgaAvatar">ق</div><div class="qga-text"><div class="qga-name" id="qgaName">جاري التحميل...</div><div class="qga-role" id="qgaRole"></div></div></div>
       <div class="qga-actions">
         <a class="qga-btn qga-dashboard" id="qgaDashboard" href="./internal.html">⌂ لوحة الإدارة</a>
-        <button type="button" class="qga-btn" id="qawafelBackupBtn" title="نسخ احتياطي لبيانات المنصة">💾 نسخ احتياطي</button>
+        <button type="button" class="qga-btn" id="qawafelBackupBtn" title="نسخ احتياطي شامل للبيانات والملفات">💾 نسخ احتياطي شامل</button>
         <a class="qga-btn qga-home" href="./index.html">🌐 الموقع العام</a>
         <button type="button" class="qga-btn qga-logout" id="qgaLogout">تسجيل الخروج</button>
       </div>
@@ -711,7 +711,7 @@ setToday();
   setTimeout(()=>obs.disconnect(),20000);
 })();
 </script>
-<script id="qawafel-backup-v235">
+<script id="qawafel-backup-v236">
 (function(){
   const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co';
   const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
@@ -722,8 +722,10 @@ setToday();
     'supervisor_payments','supervisors','supplier_payments','suppliers','travel_agreement_assignments','travel_agreements',
     'visa_email_events','zoho_mail_integration'
   ];
-  const PAGE=1000;
+  const BUCKETS=['program-images','pilgrim-photos'];
+  const PAGE=1000, STORAGE_PAGE=100;
   function stamp(){return new Date().toISOString().replace(/[:.]/g,'-').replace('T','_').replace('Z','');}
+  function safeName(s){return String(s||'').replace(/[\\/:*?"<>|]/g,'_').trim()||'file';}
   async function allowed(db){
     const r=await db.auth.getUser(); const u=r.data&&r.data.user;
     if(!u) return false;
@@ -743,38 +745,99 @@ setToday();
     }
     return rows;
   }
+  async function listFiles(storage,bucket,path='',out=[]){
+    for(let offset=0;;offset+=STORAGE_PAGE){
+      const r=await storage.from(bucket).list(path,{limit:STORAGE_PAGE,offset,sortBy:{column:'name',order:'asc'}});
+      if(r.error) throw new Error(r.error.message);
+      const batch=r.data||[];
+      for(const item of batch){
+        const child=path ? path+'/'+item.name : item.name;
+        const isFolder=item.id==null && item.metadata==null;
+        if(isFolder) await listFiles(storage,bucket,child,out);
+        else out.push({bucket,path:child,name:item.name});
+      }
+      if(batch.length<STORAGE_PAGE) break;
+    }
+    return out;
+  }
+  function crc32(bytes){
+    let c=0xffffffff;
+    for(let i=0;i<bytes.length;i++){
+      c^=bytes[i];
+      for(let k=0;k<8;k++) c=(c>>>1)^((c&1)?0xedb88320:0);
+    }
+    return (c^0xffffffff)>>>0;
+  }
+  function u16(v){const a=new Uint8Array(2);new DataView(a.buffer).setUint16(0,v,true);return a}
+  function u32(v){const a=new Uint8Array(4);new DataView(a.buffer).setUint32(0,v>>>0,true);return a}
+  function concat(parts){let n=0;for(const p of parts)n+=p.length;const o=new Uint8Array(n);let x=0;for(const p of parts){o.set(p,x);x+=p.length}return o}
+  async function makeZip(entries){
+    const enc=new TextEncoder(), parts=[], central=[]; let offset=0;
+    for(const e of entries){
+      const name=enc.encode(e.name), data=new Uint8Array(await e.data.arrayBuffer()), crc=crc32(data), size=data.length;
+      if(size>0xffffffff) throw new Error('ملف أكبر من 4GB غير مدعوم: '+e.name);
+      const local=concat([new Uint8Array([80,75,3,4]),u16(20),u16(0x800),u16(0),u16(0),u16(0),u32(crc),u32(size),u32(size),u16(name.length),u16(0),name,data]);
+      parts.push(local);
+      const cent=concat([new Uint8Array([80,75,1,2]),u16(20),u16(20),u16(0x800),u16(0),u16(0),u16(0),u32(crc),u32(size),u32(size),u16(name.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset),name]);
+      central.push(cent); offset+=local.length;
+    }
+    const centralSize=central.reduce((n,a)=>n+a.length,0);
+    const end=concat([new Uint8Array([80,75,5,6]),u16(0),u16(0),u16(central.length),u16(central.length),u32(centralSize),u32(offset),u16(0)]);
+    return new Blob([...parts,...central,end],{type:'application/zip'});
+  }
   async function backup(){
     const btn=document.getElementById('qawafelBackupBtn'); if(!btn||btn.disabled)return;
-    const old=btn.innerHTML; btn.disabled=true; btn.textContent='⏳ جاري النسخ...';
+    const old=btn.innerHTML; btn.disabled=true; btn.textContent='⏳ جاري النسخ الشامل...';
     try{
       if(!window.supabase||!window.supabase.createClient) throw new Error('تعذر الاتصال بقاعدة البيانات');
       const db=window.supabase.createClient(U,K);
       if(!(await allowed(db))) throw new Error('ليس لديك صلاحية إنشاء النسخة الاحتياطية');
-      const tables={}, errors={};
+      const tables={}, tableErrors={};
       for(const name of TABLES){
-        try{tables[name]=await readTable(db,name)}catch(e){errors[name]=e?.message||String(e)}
+        try{tables[name]=await readTable(db,name)}catch(e){tableErrors[name]=e?.message||String(e)}
       }
-      const payload={
-        backup_type:'qawafel_platform_data',
-        platform:'قوافل الحرمين',
-        version:'V235',
-        created_at:new Date().toISOString(),
-        table_count:Object.keys(tables).length,
-        row_count:Object.values(tables).reduce((n,a)=>n+a.length,0),
-        tables,
-        skipped_tables:errors,
-        note:'نسخة بيانات المنصة بصيغة JSON. لا تشمل ملفات Supabase Storage أو إعدادات المشروع أو كلمات المرور.'
+      const files=[], fileErrors=[];
+      for(const bucket of BUCKETS){
+        try{
+          const found=await listFiles(db.storage,bucket);
+          for(const f of found) files.push(f);
+        }catch(e){fileErrors.push({bucket,error:e?.message||String(e)})}
+      }
+      const entries=[];
+      const created=new Date().toISOString();
+      const dataPayload={
+        backup_type:'qawafel_platform_full_data',platform:'قوافل الحرمين',version:'V236',created_at:created,
+        table_count:Object.keys(tables).length,row_count:Object.values(tables).reduce((n,a)=>n+a.length,0),tables,
+        skipped_tables:tableErrors,
+        note:'نسخة بيانات قاعدة البيانات. ملفات Supabase Storage محفوظة داخل مجلد storage في نفس النسخة.'
       };
-      const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
-      const url=URL.createObjectURL(blob); const a=document.createElement('a');
-      a.href=url; a.download='qawafel-backup-'+stamp()+'.json'; document.body.appendChild(a); a.click(); a.remove();
-      setTimeout(()=>URL.revokeObjectURL(url),1000);
-      const ok=Object.keys(tables).length, skipped=Object.keys(errors).length, rows=payload.row_count;
-      btn.textContent='✅ تم النسخ — '+rows+' سجل';
-      if(skipped) console.warn('Backup skipped tables',errors);
+      entries.push({name:'database/data.json',data:new Blob([JSON.stringify(dataPayload,null,2)],{type:'application/json;charset=utf-8'})});
+      const manifest={backup_type:'qawafel_platform_full',platform:'قوافل الحرمين',version:'V236',created_at:created,buckets:BUCKETS,files_found:files.length,table_count:Object.keys(tables).length,row_count:dataPayload.row_count,skipped_tables:tableErrors,storage_errors:fileErrors,files:files.map(f=>({bucket:f.bucket,path:f.path}))};
+      entries.push({name:'BACKUP-MANIFEST.json',data:new Blob([JSON.stringify(manifest,null,2)],{type:'application/json;charset=utf-8'})});
+      let downloaded=0;
+      for(const f of files){
+        try{
+          const r=await db.storage.from(f.bucket).download(f.path);
+          if(r.error) throw r.error;
+          if(!r.data) throw new Error('الملف فارغ أو تعذر تنزيله');
+          entries.push({name:'storage/'+safeName(f.bucket)+'/'+f.path,data:r.data}); downloaded++;
+          btn.textContent='📦 جاري حفظ الملفات '+downloaded+'/'+files.length;
+        }catch(e){fileErrors.push({bucket:f.bucket,path:f.path,error:e?.message||String(e)})}
+      }
+      manifest.storage_errors=fileErrors;
+      const manifestEntry=entries.find(e=>e.name==='BACKUP-MANIFEST.json');
+      manifestEntry.data=new Blob([JSON.stringify(manifest,null,2)],{type:'application/json;charset=utf-8'});
+      btn.textContent='🗜️ جاري تجهيز النسخة...';
+      const zip=await makeZip(entries);
+      const url=URL.createObjectURL(zip), a=document.createElement('a');
+      a.href=url; a.download='qawafel-backup-'+stamp()+'.zip'; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),5000);
+      const rows=dataPayload.row_count, skipped=Object.keys(tableErrors).length+fileErrors.length;
+      btn.textContent='✅ تم النسخ الشامل';
+      if(skipped) alert('تم إنشاء النسخة الاحتياطية، لكن تعذر نسخ '+skipped+' عنصر. راجع BACKUP-MANIFEST.json داخل الملف لمعرفة التفاصيل.');
       setTimeout(()=>{btn.innerHTML=old;btn.disabled=false},5000);
     }catch(e){
-      alert('تعذر إنشاء النسخة الاحتياطية:\n'+(e?.message||String(e)));
+      alert('تعذر إنشاء النسخة الاحتياطية الشاملة:\n'+(e?.message||String(e)));
       btn.innerHTML=old; btn.disabled=false;
     }
   }
