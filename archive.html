@@ -73,7 +73,7 @@
 <body>
 <script id="qawafel-global-admin-js">
 (function(){
-  const SUPABASE_URL='https://ymjkzvdjpuuxxkgkmbtc.supabase.co';
+  const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
   const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const PAGE_TITLE='أرشيف المعتمرين';
   function boot(){
@@ -132,7 +132,7 @@
 </script>
 
 <header class="top"><div class="brand"><img src="./logo.png?v=32" alt="قوافل الحرمين"><span>— الأرشيف</span></div><a class="back" href="./internal.html">← لوحة الشركة</a></header><main class="wrap"><section class="hero"><h1>🗃️ أرشيف المعتمرين</h1><p>قاعدة المعلومات التاريخية لكل من سافر مع قوافل الحرمين، مع سجل الرحلات والحجوزات.</p></section><section class="stats"><div class="stat"><b id="s1">—</b><small>إجمالي المعتمرين</small></div><div class="stat"><b id="s2">—</b><small>إجمالي الرحلات المسجلة</small></div><div class="stat"><b id="s3">—</b><small>معتمرون سافروا أكثر من مرة</small></div><div class="stat"><b id="s4">—</b><small>إجمالي المبالغ المسجلة</small></div></section><section class="panel"><div class="tools"><input id="q" placeholder="ابحث بالاسم أو الهاتف أو رقم الجواز…"><select id="sort"><option value="new">الأحدث إضافة</option><option value="name">الاسم</option><option value="many">الأكثر سفرًا</option></select><button id="refresh">تحديث</button></div><div class="table"><table><thead><tr><th>صورة المعتمر</th><th>صورة الجواز</th><th>المعتمر</th><th>المحافظة</th><th>الهاتف</th><th>الجواز</th><th>عدد الرحلات</th><th>آخر رحلة</th><th>إجمالي المدفوع</th><th></th></tr></thead><tbody id="rows"><tr><td colspan="10" class="empty">جاري تحميل الأرشيف…</td></tr></tbody></table></div></section></main><div class="modal" id="modal"><div class="box"><div class="mh"><b id="mtitle">ملف المعتمر</b><button class="close" id="close">إغلاق</button></div><div class="mc" id="detail"></div></div></div><script>
-const SUPABASE_URL='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);let archives=[];const money=n=>Number(n||0).toLocaleString('ar-IQ')+' د.ع';const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';const sb=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);let archives=[];const money=n=>Number(n||0).toLocaleString('ar-IQ')+' د.ع';const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 function setLoading(){document.getElementById('rows').innerHTML='<tr><td colspan="10" class="empty">جاري تحميل الأرشيف…</td></tr>'}
 function setError(msg){document.getElementById('rows').innerHTML='<tr><td colspan="9"><div class="error">تعذر تحميل الأرشيف<br><small>'+esc(msg||'خطأ غير معروف')+'</small><br><button class="btn" style="margin-top:12px" onclick="loadArchive()">إعادة المحاولة</button></div></td></tr>'}
 async function loadArchive(){setLoading();try{const {data:{session},error:se}=await sb.auth.getSession();if(se)throw se;if(!session){location.href='internal.html';return}const {data:me}=await sb.from('staff_profiles').select('role,permissions,active').eq('user_id',session.user.id).maybeSingle();const {data:legacy}=await sb.from('admin_users').select('role').eq('user_id',session.user.id).maybeSingle();const allowed=!!(me?.active&&(me.role==='super_admin'||me.role==='manager'||(me.permissions||[]).includes('archive'))) || legacy?.role==='super_admin';if(!allowed){location.href='internal.html';return}window.__superAdmin=!!(me?.active&&me.role==='super_admin')||legacy?.role==='super_admin';const {data,error}=await sb.rpc('get_pilgrim_archive_v3');if(error)throw error;archives=(data||[]).map(a=>{const bs=Array.isArray(a.bookings)?a.bookings:[];return {...a,_bookings:bs,_paid:bs.reduce((n,b)=>n+Number(b.paid_amount||0),0),_photo_url:'',_passport_url:''}});await Promise.all(archives.map(async a=>{await Promise.all([(async()=>{if(!a.photo_path)return;try{const r=await sb.storage.from('pilgrim-photos').createSignedUrl(a.photo_path,3600);a._photo_url=r.data?.signedUrl||'';}catch(e){a._photo_url='';}})(),(async()=>{if(!a.passport_image_path)return;try{const r=await sb.storage.from('pilgrim-photos').createSignedUrl(a.passport_image_path,3600);a._passport_url=r.data?.signedUrl||'';}catch(e){a._passport_url='';}})()]);}));render()}catch(e){console.error('archive load',e);['s1','s2','s3','s4'].forEach(id=>document.getElementById(id).textContent='—');setError(e?.message||String(e))}}
@@ -191,7 +191,7 @@ document.getElementById('close').onclick=()=>document.getElementById('modal').st
 </script>
 <script id="qawafel-audit-v169">
 (function(){
-  const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co';
+  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
   const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   let started=false, wrapped=false;
   const page=()=>location.pathname.split('/').pop()||'index.html';
@@ -275,7 +275,7 @@ document.getElementById('close').onclick=()=>document.getElementById('modal').st
 </script>
 <script id="qawafel-permission-menu-v174">
 (function(){
- const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
  const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
  let perms=null, busy=false;
  function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
@@ -313,7 +313,7 @@ document.getElementById('close').onclick=()=>document.getElementById('modal').st
 })();
 </script><script id="qawafel-permission-guard-v175">
 (function(){
-  const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const map={
     'programs.html':'trips','pilgrims.html':'booking_staff','agents.html':'agents','supervisors.html':'supervisors',
     'visa.html':'visa','nusuk.html':'nusuk','archive.html':'archive','financial.html':'finance','employees.html':'manager','audit.html':'super_admin'

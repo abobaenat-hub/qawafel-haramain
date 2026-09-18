@@ -1,0 +1,7 @@
+V253 - Correct Supabase Project URL
+
+The production Supabase project URL shown in Supabase Data API is:
+https://ymjkzvdjpuuxkcgkmbtc.supabase.co
+
+Replaced the incorrect project reference/URL in the platform files so authentication and API requests target the actual Supabase project.
+No database data was changed.
