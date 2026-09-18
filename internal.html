@@ -711,7 +711,7 @@ setToday();
   setTimeout(()=>obs.disconnect(),20000);
 })();
 </script>
-<script id="qawafel-backup-v236">
+<script id="qawafel-backup-v238">
 (function(){
   const U='https://ymjkzvdjpuuxxkgkmbtc.supabase.co';
   const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
@@ -733,10 +733,11 @@ setToday();
     const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
     const s=q.data;
     if(!q.error && s && s.active!==false && ['super_admin','manager'].includes(s.role)) return true;
-    const a=await db.from('admin_users').select('role,active').eq('user_id',u.id).maybeSingle();
-    if(!a.error && a.data && a.data.active!==false) {
-      const role=a.data.role;
-      return ['super_admin','manager','admin'].includes(role);
+    // V238: admin_users in the current platform exposes role (not active).
+    // Keep this fallback compatible with the existing login/authorization code.
+    const a=await db.from('admin_users').select('role').eq('user_id',u.id).maybeSingle();
+    if(!a.error && a.data) {
+      return ['super_admin','manager','admin'].includes(a.data.role);
     }
     return false;
   }
@@ -812,13 +813,13 @@ setToday();
       const entries=[];
       const created=new Date().toISOString();
       const dataPayload={
-        backup_type:'qawafel_platform_full_data',platform:'قوافل الحرمين',version:'V236',created_at:created,
+        backup_type:'qawafel_platform_full_data',platform:'قوافل الحرمين',version:'V238',created_at:created,
         table_count:Object.keys(tables).length,row_count:Object.values(tables).reduce((n,a)=>n+a.length,0),tables,
         skipped_tables:tableErrors,
         note:'نسخة بيانات قاعدة البيانات. ملفات Supabase Storage محفوظة داخل مجلد storage في نفس النسخة.'
       };
       entries.push({name:'database/data.json',data:new Blob([JSON.stringify(dataPayload,null,2)],{type:'application/json;charset=utf-8'})});
-      const manifest={backup_type:'qawafel_platform_full',platform:'قوافل الحرمين',version:'V236',created_at:created,buckets:BUCKETS,files_found:files.length,table_count:Object.keys(tables).length,row_count:dataPayload.row_count,skipped_tables:tableErrors,storage_errors:fileErrors,files:files.map(f=>({bucket:f.bucket,path:f.path}))};
+      const manifest={backup_type:'qawafel_platform_full',platform:'قوافل الحرمين',version:'V238',created_at:created,buckets:BUCKETS,files_found:files.length,table_count:Object.keys(tables).length,row_count:dataPayload.row_count,skipped_tables:tableErrors,storage_errors:fileErrors,files:files.map(f=>({bucket:f.bucket,path:f.path}))};
       entries.push({name:'BACKUP-MANIFEST.json',data:new Blob([JSON.stringify(manifest,null,2)],{type:'application/json;charset=utf-8'})});
       let downloaded=0;
       for(const f of files){
