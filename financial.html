@@ -466,6 +466,7 @@ async function load(){
  try{const xr=await db.from('external_services').select('*').order('service_date',{ascending:false}).order('created_at',{ascending:false}); if(xr.error){EXT_READY=false;console.warn('External services table is not ready:',xr.error.message)}else{ext=xr;EXT_READY=true}}catch(_){EXT_READY=false}
  B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];S=sup.data||[];SP=sp.data||[];WTX=wallet.data||[];A=a.data||[];SUP_E=supE.data||[];DRV_PAY=drvP.data||[];SUP=ss.data||[];DRV=dd.data||[]; EXT_SERVICES=ext.data||[];
  refreshExternalSupplierOptions();
+ hydrateExternalItemRates();
  $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
  $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
@@ -650,8 +651,8 @@ function externalItemHtml(idx){
    <div><label>عملة تكلفة المورّد</label><select class="extItemCostCurrency"><option value="SAR">ريال سعودي</option><option value="USD">دولار</option><option value="IQD">دينار عراقي</option></select></div>
    <div><label>المبلغ المقبوض من العميل</label><input class="extItemCustomer" type="number" min="0" step="0.01" placeholder="مثلاً 130"></div>
    <div><label>عملة مبلغ العميل</label><select class="extItemCustomerCurrency"><option value="USD">دولار</option><option value="SAR">ريال سعودي</option><option value="IQD">دينار عراقي</option></select></div>
-   <div><label>سعر التحويل إلى عملة تكلفة المورد</label><input class="extItemFx" type="number" min="0" step="0.000001" placeholder="مثلاً 3.73"></div>
-   <div><label>سعر عملة تكلفة المورد مقابل الدينار</label><input class="extItemIqd" type="number" min="0" step="0.000001" placeholder="مثلاً 415"></div>
+   <div><label>سعر التحويل إلى عملة تكلفة المورد <small>(يُجلب تلقائيًا من آخر حركة للمورّد)</small></label><input class="extItemFx" type="number" min="0" step="0.000001" placeholder="مثلاً 3.73"></div>
+   <div><label>سعر عملة تكلفة المورد مقابل الدينار <small>(يُجلب تلقائيًا من آخر حركة للمورّد)</small></label><input class="extItemIqd" type="number" min="0" step="0.000001" placeholder="مثلاً 415"></div>
   </div>
   <label>بيان الخدمة (اختياري)</label><input class="extItemNotes" placeholder="مثلاً تأشيرة 6 أفراد">
   <div class="externalPreview extItemPreview" style="margin-top:8px"></div>
@@ -669,12 +670,39 @@ function addExternalItem(){
  const idx=wrap.querySelectorAll('.externalItem').length;
  wrap.insertAdjacentHTML('beforeend',externalItemHtml(idx));
  const item=wrap.lastElementChild; item.querySelector('.extItemDate').value=$('extDate')?.value||new Date().toISOString().slice(0,10);
- bindExternalItem(item); refreshExternalSupplierOptions(); updateExternalItemPreview(item);
+ bindExternalItem(item); refreshExternalSupplierOptions(); hydrateExternalItemRates(item); updateExternalItemPreview(item);
+}
+function getSupplierRateSnapshot(supplierId,currency){
+ if(!supplierId)return null;
+ const rows=(WTX||[]).filter(x=>x.supplier_id===supplierId);
+ if(!rows.length)return null;
+ return rows.find(x=>x.currency===currency && Number(x.exchange_rate_to_iqd||0)>0) || rows.find(x=>x.currency===currency) || null;
+}
+function getSupplierFxSnapshot(supplierId,fromCurrency,toCurrency){
+ if(!supplierId||fromCurrency===toCurrency)return null;
+ const rows=(WTX||[]).filter(x=>x.supplier_id===supplierId);
+ return rows.find(x=>x.source_currency===fromCurrency && x.currency===toCurrency && Number(x.fx_rate||0)>0) || null;
+}
+function hydrateExternalItemRates(item){
+ if(!item)return;
+ const supplierId=item.querySelector('.extItemSupplier')?.value;
+ const ccur=item.querySelector('.extItemCostCurrency')?.value;
+ const ucur=item.querySelector('.extItemCustomerCurrency')?.value;
+ if(!supplierId)return;
+ const fx=getSupplierFxSnapshot(supplierId,ucur,ccur);
+ const fxInput=item.querySelector('.extItemFx');
+ if(fxInput && ucur!==ccur && fx && Number(fx.fx_rate)>0) fxInput.value=Number(fx.fx_rate);
+ const snap=getSupplierRateSnapshot(supplierId,ccur);
+ const iqdInput=item.querySelector('.extItemIqd');
+ if(iqdInput && ccur==='IQD'){iqdInput.value='1';iqdInput.disabled=true;}
+ else if(iqdInput && snap && Number(snap.exchange_rate_to_iqd)>0){iqdInput.value=Number(snap.exchange_rate_to_iqd);iqdInput.disabled=false;}
+ updateExternalItemPreview(item);
 }
 function bindExternalItem(item){
  ['.extItemCostCurrency','.extItemCustomerCurrency','.extItemCost','.extItemCustomer','.extItemFx','.extItemIqd'].forEach(sel=>item.querySelector(sel)?.addEventListener('input',()=>updateExternalItemPreview(item)));
- item.querySelector('.extItemCostCurrency')?.addEventListener('change',()=>updateExternalItemPreview(item));
- item.querySelector('.extItemCustomerCurrency')?.addEventListener('change',()=>updateExternalItemPreview(item));
+ item.querySelector('.extItemSupplier')?.addEventListener('change',()=>hydrateExternalItemRates(item));
+ item.querySelector('.extItemCostCurrency')?.addEventListener('change',()=>hydrateExternalItemRates(item));
+ item.querySelector('.extItemCustomerCurrency')?.addEventListener('change',()=>hydrateExternalItemRates(item));
  item.querySelector('.removeExternalItem')?.addEventListener('click',()=>{item.remove();renumberExternalItems();});
 }
 function renumberExternalItems(){document.querySelectorAll('#externalItems .externalItem').forEach((x,i)=>{const h=x.querySelector('h3');if(h)h.textContent='الخدمة رقم '+(i+1);});}
