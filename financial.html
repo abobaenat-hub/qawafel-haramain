@@ -708,23 +708,26 @@ function bindExternalItem(item){
 function renumberExternalItems(){document.querySelectorAll('#externalItems .externalItem').forEach((x,i)=>{const h=x.querySelector('h3');if(h)h.textContent='الخدمة رقم '+(i+1);});}
 function updateExternalItemPreview(item){
  const ccur=item.querySelector('.extItemCostCurrency')?.value, ucur=item.querySelector('.extItemCustomerCurrency')?.value;
- const cost=Number(item.querySelector('.extItemCost')?.value||0), cust=Number(item.querySelector('.extItemCustomer')?.value||0), rate=Number(item.querySelector('.extItemFx')?.value||0), iqd=Number(item.querySelector('.extItemIqd')?.value||0), box=item.querySelector('.extItemPreview');
+ const count=Math.max(1,Math.floor(Number($('extBeneficiaryCount')?.value||1)));
+ const costPer=Number(item.querySelector('.extItemCost')?.value||0), custPer=Number(item.querySelector('.extItemCustomer')?.value||0), rate=Number(item.querySelector('.extItemFx')?.value||0), iqd=Number(item.querySelector('.extItemIqd')?.value||0), box=item.querySelector('.extItemPreview');
  if(ccur==='IQD'){item.querySelector('.extItemIqd').value='1';item.querySelector('.extItemIqd').disabled=true}else item.querySelector('.extItemIqd').disabled=false;
  if(!box)return;
- if(!cost||!cust){box.innerHTML='أدخل تكلفة المورد والمبلغ المقبوض لمعاينة الربح.';return;}
- if(ucur===ccur){box.innerHTML='<b>المعاينة:</b> الإيراد '+externalMoney(cust,ccur)+' — الربح <strong>'+externalMoney(cust-cost,ccur)+'</strong>';return;}
+ if(!costPer||!custPer){box.innerHTML='أدخل تكلفة الفرد ومبلغ الفرد لمعاينة الربح.';return;}
+ const cost=costPer*count, cust=custPer*count;
+ if(ucur===ccur){const profit=cust-cost;box.innerHTML='<b>المعاينة:</b> لكل مستفيد: تكلفة '+externalMoney(costPer,ccur)+' — قبض '+externalMoney(custPer,ucur)+'<br>الإجمالي ('+count+' مستفيد): الإيراد <b>'+externalMoney(cust,ccur)+'</b> — الربح <strong>'+externalMoney(profit,ccur)+'</strong>'+(iqd?(' — الربح بالدينار <strong>'+externalMoney(profit*iqd,'IQD')+'</strong>'):'');return;}
  if(!rate){box.innerHTML='أدخل سعر التحويل من عملة العميل إلى عملة تكلفة المورد.';return;}
  const revenue=cust*rate,profit=revenue-cost;
- box.innerHTML='<b>المعاينة:</b> '+externalMoney(cust,ucur)+' = <b>'+externalMoney(revenue,ccur)+'</b> — الربح <strong>'+externalMoney(profit,ccur)+'</strong>'+(iqd?(' — '+externalMoney(profit*iqd,'IQD')):'');
+ box.innerHTML='<b>المعاينة:</b> لكل مستفيد: تكلفة '+externalMoney(costPer,ccur)+' — قبض '+externalMoney(custPer,ucur)+'<br>الإجمالي ('+count+' مستفيد): '+externalMoney(cust,ucur)+' = <b>'+externalMoney(revenue,ccur)+'</b> — الربح <strong>'+externalMoney(profit,ccur)+'</strong>'+(iqd?(' — الربح بالدينار <strong>'+externalMoney(profit*iqd,'IQD')+'</strong>'):'');
 }
 function renderExternalServices(){
  const hint=$('externalReadyHint'); if(hint)hint.innerHTML=EXT_READY?'✅ ملف الخدمات الخارجية جاهز.':'⚠️ جدول الخدمات الخارجية يحتاج تهيئة مرة واحدة في قاعدة البيانات.';
- const rows=(EXT_SERVICES||[]).map(x=>{const sup=S.find(z=>z.id===x.supplier_id);const who=(x.customer_type==='family'?'👨‍👩‍👧‍👦 ':'')+esc(x.customer_name||'—')+(x.beneficiary_count>1?' ('+esc(x.beneficiary_count)+' مستفيد)':'');return '<tr><td>'+esc(x.service_date||'—')+'</td><td><b>'+who+'</b>'+(x.case_id?'<br><small>📁 ملف متعدد الخدمات</small>':'')+'</td><td>'+esc(x.service_type||'—')+'</td><td>'+esc(sup?.name||'—')+'</td><td>'+externalMoney(x.supplier_cost_amount,x.supplier_cost_currency)+'</td><td>'+externalMoney(x.customer_amount,x.customer_currency)+'</td><td><b>'+externalMoney(x.profit_in_cost_currency,x.supplier_cost_currency)+'</b></td></tr>'}).join('');
+ const rows=(EXT_SERVICES||[]).map(x=>{const sup=S.find(z=>z.id===x.supplier_id);const who=(x.customer_type==='family'?'👨‍👩‍👧‍👦 ':'')+esc(x.customer_name||'—')+(x.beneficiary_count>1?' ('+esc(x.beneficiary_count)+' مستفيد)':'');const profitCost=externalMoney(x.profit_in_cost_currency,x.supplier_cost_currency);const profitIqd=Number(x.profit_iqd||0);const profitHtml=profitIqd?('<b>'+profitCost+'</b><br><small style="color:#176b3a">'+externalMoney(profitIqd,'IQD')+'</small>'):('<b>'+profitCost+'</b>');return '<tr><td>'+esc(x.service_date||'—')+'</td><td><b>'+who+'</b>'+(x.case_id?'<br><small>📁 ملف متعدد الخدمات</small>':'')+'</td><td>'+esc(x.service_type||'—')+'</td><td>'+esc(sup?.name||'—')+'</td><td>'+externalMoney(x.supplier_cost_amount,x.supplier_cost_currency)+'</td><td>'+externalMoney(x.customer_amount,x.customer_currency)+'</td><td>'+profitHtml+'</td></tr>'}).join('');
  if($('externalServiceRows'))$('externalServiceRows').innerHTML=rows||'<tr><td colspan="7">لا توجد خدمات خارجية مسجلة بعد.</td></tr>';
 }
 $('addExternalItem')?.addEventListener('click',addExternalItem);
 $('extDate')?.addEventListener('change',()=>document.querySelectorAll('.extItemDate').forEach(x=>{if(!x.value)x.value=$('extDate').value}));
-$('extCustomerType')?.addEventListener('change',()=>{const t=$('extCustomerType').value;$('extBeneficiaryCount').min=t==='family'?'2':'1';if(t==='family'&&Number($('extBeneficiaryCount').value||1)<2)$('extBeneficiaryCount').value='2';});
+$('extCustomerType')?.addEventListener('change',()=>{const t=$('extCustomerType').value;$('extBeneficiaryCount').min=t==='family'?'2':'1';if(t==='family'&&Number($('extBeneficiaryCount').value||1)<2)$('extBeneficiaryCount').value='2';document.querySelectorAll('#externalItems .externalItem').forEach(updateExternalItemPreview);});
+$('extBeneficiaryCount')?.addEventListener('input',()=>document.querySelectorAll('#externalItems .externalItem').forEach(updateExternalItemPreview));
 $('saveExternalCase')?.addEventListener('click',async()=>{
  if(!EXT_READY)return msg('externalServiceMsg','جدول الخدمات الخارجية يحتاج تهيئة في قاعدة البيانات أولًا.',true);
  const customer_type=$('extCustomerType').value, customer_name=$('extCustomer').value.trim(), beneficiary_count=Math.max(1,Math.floor(Number($('extBeneficiaryCount').value||1))), beneficiaries=$('extBeneficiaries').value.trim()||null, case_date=$('extDate').value, case_notes=$('extCaseNotes').value.trim()||null;
@@ -752,7 +755,9 @@ $('saveExternalCase')?.addEventListener('click',async()=>{
  try{
   const {error}=await db.rpc('record_external_service_case_v1',{p_customer_name:customer_name,p_customer_type:customer_type,p_beneficiary_count:beneficiary_count,p_beneficiaries:beneficiaries,p_case_date:case_date,p_case_notes:case_notes,p_items:items,p_created_by:user?.id||null});
   if(error)throw error;
-  $('extCustomer').value='';$('extBeneficiaries').value='';$('extCaseNotes').value='';$('extBeneficiaryCount').value=customer_type==='family'?'2':'1';$('extCustomerType').value='individual';$('externalItems').innerHTML='';addExternalItem();msg('externalServiceMsg','تم حفظ ملف العميل وكل الخدمات بنجاح، وتم حسم تكاليف الموردين من أرصدتهم.');await load();
+  $('extCustomer').value='';$('extBeneficiaries').value='';$('extCaseNotes').value='';$('extBeneficiaryCount').value=customer_type==='family'?'2':'1';$('extCustomerType').value='individual';$('externalItems').innerHTML='';addExternalItem();
+  try{await load();}catch(loadErr){console.warn('External service saved, but financial refresh failed:',loadErr);}
+  msg('externalServiceMsg','تم حفظ ملف العميل وكل الخدمات بنجاح، وتم حسم تكاليف الموردين من أرصدتهم.');
  }catch(e){msg('externalServiceMsg',e.message||'تعذر حفظ ملف الخدمات.',true)}finally{$('saveExternalCase').disabled=false}
 });
 if($('externalItems')&&!$('externalItems').children.length)addExternalItem();
