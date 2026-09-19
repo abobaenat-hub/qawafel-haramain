@@ -345,7 +345,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <button id="saveExternalCase" class="p" style="margin-top:12px">💾 حفظ الملف وكل الخدمات</button>
 <div id="externalReadyHint" class="walletMuted" style="margin-top:8px"></div>
 </section>
-<section class="panel"><h2>📋 ملفات وخدمات العملاء</h2><div class="table"><table><thead><tr><th>التاريخ</th><th>العميل / الملف</th><th>الخدمة</th><th>المورد</th><th>تكلفة المورد</th><th>المقبوض</th><th>الربح</th></tr></thead><tbody id="externalServiceRows"></tbody></table></div></section>
+<section class="panel"><h2>📋 ملفات وخدمات العملاء</h2><div class="table"><table><thead><tr><th>التاريخ</th><th>العميل / الملف</th><th>الخدمة</th><th>المورد</th><th>تكلفة المورد</th><th>المقبوض</th><th>الربح</th><th>إجراء</th></tr></thead><tbody id="externalServiceRows"></tbody></table></div></section>
 </div>
 <div class="financeSection" data-section-id="expenses"><div class="sectionTop"><div><h2>💸 إدارة المصروفات</h2><small>المصروفات والفواتير والمستندات</small></div><button class="w backFinance">← القائمة المالية</button></div>
 <section class="panel">
@@ -721,8 +721,22 @@ function updateExternalItemPreview(item){
 }
 function renderExternalServices(){
  const hint=$('externalReadyHint'); if(hint)hint.innerHTML=EXT_READY?'✅ ملف الخدمات الخارجية جاهز.':'⚠️ جدول الخدمات الخارجية يحتاج تهيئة مرة واحدة في قاعدة البيانات.';
- const rows=(EXT_SERVICES||[]).map(x=>{const sup=S.find(z=>z.id===x.supplier_id);const who=(x.customer_type==='family'?'👨‍👩‍👧‍👦 ':'')+esc(x.customer_name||'—')+(x.beneficiary_count>1?' ('+esc(x.beneficiary_count)+' مستفيد)':'');const profitCost=externalMoney(x.profit_in_cost_currency,x.supplier_cost_currency);const profitIqd=Number(x.profit_iqd||0);const profitHtml=profitIqd?('<b>'+profitCost+'</b><br><small style="color:#176b3a">'+externalMoney(profitIqd,'IQD')+'</small>'):('<b>'+profitCost+'</b>');return '<tr><td>'+esc(x.service_date||'—')+'</td><td><b>'+who+'</b>'+(x.case_id?'<br><small>📁 ملف متعدد الخدمات</small>':'')+'</td><td>'+esc(x.service_type||'—')+'</td><td>'+esc(sup?.name||'—')+'</td><td>'+externalMoney(x.supplier_cost_amount,x.supplier_cost_currency)+'</td><td>'+externalMoney(x.customer_amount,x.customer_currency)+'</td><td>'+profitHtml+'</td></tr>'}).join('');
- if($('externalServiceRows'))$('externalServiceRows').innerHTML=rows||'<tr><td colspan="7">لا توجد خدمات خارجية مسجلة بعد.</td></tr>';
+ const rows=(EXT_SERVICES||[]).map(x=>{const sup=S.find(z=>z.id===x.supplier_id);const who=(x.customer_type==='family'?'👨‍👩‍👧‍👦 ':'')+esc(x.customer_name||'—')+(x.beneficiary_count>1?' ('+esc(x.beneficiary_count)+' مستفيد)':'');const profitCost=externalMoney(x.profit_in_cost_currency,x.supplier_cost_currency);const profitIqd=Number(x.profit_iqd||0);const profitHtml='<b>'+profitCost+'</b><br><small style="color:#176b3a;font-weight:700">الربح بالدينار: '+externalMoney(profitIqd,'IQD')+'</small>';return '<tr><td>'+esc(x.service_date||'—')+'</td><td><b>'+who+'</b>'+(x.case_id?'<br><small>📁 ملف متعدد الخدمات</small>':'')+'</td><td>'+esc(x.service_type||'—')+'</td><td>'+esc(sup?.name||'—')+'</td><td>'+externalMoney(x.supplier_cost_amount,x.supplier_cost_currency)+'</td><td>'+externalMoney(x.customer_amount,x.customer_currency)+'</td><td>'+profitHtml+'</td><td><button type="button" class="btn danger externalServiceDeleteBtn" data-id="'+x.id+'">🗑️ حذف</button></td></tr>'}).join('');
+ if($('externalServiceRows'))$('externalServiceRows').innerHTML=rows||'<tr><td colspan="8">لا توجد خدمات خارجية مسجلة بعد.</td></tr>';
+ document.querySelectorAll('.externalServiceDeleteBtn').forEach(btn=>btn.onclick=()=>deleteExternalService(btn.dataset.id));
+}
+async function deleteExternalService(id){
+ const item=(EXT_SERVICES||[]).find(x=>x.id===id);
+ if(!item)return;
+ const sup=S.find(z=>z.id===item.supplier_id);
+ const ok=confirm('هل أنت متأكد من حذف هذه الخدمة؟\n\n'+(item.service_type||'خدمة')+' — '+(item.customer_name||'—')+'\nتكلفة المورد: '+externalMoney(item.supplier_cost_amount,item.supplier_cost_currency)+'\nالمورد: '+(sup?.name||'—')+'\n\nسيتم إلغاء خصم تكلفة الخدمة من محفظة المورد.');
+ if(!ok)return;
+ try{
+  const {error}=await db.rpc('delete_external_service_v1',{p_service_id:id});
+  if(error)throw error;
+  msg('externalServiceMsg','تم حذف الخدمة وإرجاع تكلفتها إلى رصيد المورد.');
+  await load();
+ }catch(e){msg('externalServiceMsg',e.message||'تعذر حذف الخدمة.',true)}
 }
 $('addExternalItem')?.addEventListener('click',addExternalItem);
 $('extDate')?.addEventListener('change',()=>document.querySelectorAll('.extItemDate').forEach(x=>{if(!x.value)x.value=$('extDate').value}));
@@ -833,7 +847,7 @@ async function deleteSupplierPayment(id){
  if(!confirm('حذف هذه الدفعة نهائيًا؟\nالمورد: '+(supplier?.name||'—')+'\nالمبلغ: '+money(x.amount||0)+'\nالتاريخ: '+(x.payment_date||'—')+'\n'+(pr?'الرحلة: '+pr.title:'دفعة عامة')))return;
  try{const {error}=await db.rpc('delete_supplier_payment',{p_payment_id:id});if(error)throw error;msg('supplierPayMsg','تم حذف الدفعة بنجاح.');await load();}catch(e){msg('supplierPayMsg',e.message||'تعذر حذف الدفعة.',true)}
 }
-window.editSupplierPayment=editSupplierPayment;window.deleteSupplierPayment=deleteSupplierPayment;
+window.editSupplierPayment=editSupplierPayment;window.deleteSupplierPayment=deleteSupplierPayment;window.deleteExternalService=deleteExternalService;
 $('saveSupplierPayment').onclick=async()=>{
  const supplier_id=$('supplierPaySupplier').value,program_id=$('supplierPayProgram').value||null,amount=Number($('supplierPayAmount').value||0),payment_date=$('supplierPayDate').value, payment_method=$('supplierPayMethod').value,reference=$('supplierPayReference').value.trim()||null,notes=$('supplierPayNotes').value.trim()||null;
  if(!supplier_id||!amount||amount<=0||!payment_date)return msg('supplierPayMsg','أكمل المورّد والمبلغ والتاريخ.',true);
