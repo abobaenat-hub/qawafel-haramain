@@ -424,7 +424,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);
-let B=[],P=[],PR=[],I=[],E=[],S=[],SP=[],WTX=[],A=[],SUP_E=[],DRV_PAY=[],SUP=[],DRV=[],EXT_SERVICES=[];let WALLET_READY=false,EXT_READY=false;let EXT_EDIT_CASE_ID=null;
+let B=[],P=[],PR=[],I=[],E=[],S=[],SP=[],WTX=[],A=[],SUP_E=[],DRV_PAY=[],SUP=[],DRV=[],EXT_SERVICES=[];let WALLET_READY=false,EXT_READY=false;let EXT_EDIT_CASE_ID=null,EXT_EDIT_SERVICE_ID=null;
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function msg(id,t,e=false){$(id).className='msg'+(e?' err':'');$(id).textContent=t||''}
@@ -672,7 +672,7 @@ function addExternalItem(){
  const wrap=$('externalItems'); if(!wrap)return;
  const idx=wrap.querySelectorAll('.externalItem').length;
  wrap.insertAdjacentHTML('beforeend',externalItemHtml(idx));
- const item=wrap.lastElementChild; item.querySelector('.extItemDate').value=$('extDate')?.value||new Date().toISOString().slice(0,10);
+ const item=wrap.lastElementChild; const title=item.querySelector('h3'); if(title)title.textContent=EXT_EDIT_SERVICE_ID?'تعديل الخدمة المحفوظة':(EXT_EDIT_CASE_ID?'الخدمة الجديدة':'الخدمة رقم '+(idx+1)); item.querySelector('.extItemDate').value=$('extDate')?.value||new Date().toISOString().slice(0,10);
  bindExternalItem(item); refreshExternalSupplierOptions(); hydrateExternalItemRates(item); updateExternalItemPreview(item);
 }
 function getSupplierRateSnapshot(supplierId,currency){
@@ -718,7 +718,7 @@ function bindExternalItem(item){
  item.querySelector('.removeExternalItem')?.addEventListener('click',()=>{item.remove();renumberExternalItems();});
  defaultExternalBilling(item);
 }
-function renumberExternalItems(){document.querySelectorAll('#externalItems .externalItem').forEach((x,i)=>{const h=x.querySelector('h3');if(h)h.textContent='الخدمة رقم '+(i+1);});}
+function renumberExternalItems(){document.querySelectorAll('#externalItems .externalItem').forEach((x,i)=>{const h=x.querySelector('h3');if(h)h.textContent=EXT_EDIT_SERVICE_ID?'تعديل الخدمة المحفوظة':(EXT_EDIT_CASE_ID?'الخدمة الجديدة':'الخدمة رقم '+(i+1));});}
 function updateExternalItemPreview(item){
  const ccur=item.querySelector('.extItemCostCurrency')?.value, ucur=item.querySelector('.extItemCustomerCurrency')?.value;
  const count=Math.max(1,Math.floor(Number($('extBeneficiaryCount')?.value||1)));
@@ -737,28 +737,48 @@ function updateExternalItemPreview(item){
 }
 function renderExternalServices(){
  const hint=$('externalReadyHint'); if(hint)hint.innerHTML=EXT_READY?'✅ ملف الخدمات الخارجية جاهز.':'⚠️ جدول الخدمات الخارجية يحتاج تهيئة مرة واحدة في قاعدة البيانات.';
- const rows=(EXT_SERVICES||[]).map(x=>{const sup=S.find(z=>z.id===x.supplier_id);const who=(x.customer_type==='family'?'👨‍👩‍👧‍👦 ':'')+esc(x.customer_name||'—')+(x.beneficiary_count>1?' ('+esc(x.beneficiary_count)+' مستفيد)':'');const profitCost=externalMoney(x.profit_in_cost_currency,x.supplier_cost_currency);const profitIqd=Number(x.profit_iqd||0);const profitHtml='<b>'+profitCost+'</b><br><small style="color:#176b3a;font-weight:700">الربح بالدينار: '+externalMoney(profitIqd,'IQD')+'</small>';const addBtn=x.case_id?'<button type="button" class="btn externalServiceAddBtn" data-case-id="'+esc(x.case_id)+'">➕ إضافة خدمة للملف</button>':'';return '<tr><td>'+esc(x.service_date||'—')+'</td><td><b>'+who+'</b>'+(x.case_id?'<br><small>📁 ملف متعدد الخدمات</small>':'')+'</td><td>'+esc(x.service_type||'—')+'</td><td>'+esc(sup?.name||'—')+'</td><td>'+externalMoney(x.supplier_cost_amount,x.supplier_cost_currency)+'</td><td>'+externalMoney(x.customer_amount,x.customer_currency)+'</td><td>'+profitHtml+'</td><td>'+addBtn+'<button type="button" class="btn danger externalServiceDeleteBtn" data-id="'+x.id+'">🗑️ حذف</button></td></tr>'}).join('');
+ const rows=(EXT_SERVICES||[]).map(x=>{const sup=S.find(z=>z.id===x.supplier_id);const who=(x.customer_type==='family'?'👨‍👩‍👧‍👦 ':'')+esc(x.customer_name||'—')+(x.beneficiary_count>1?' ('+esc(x.beneficiary_count)+' مستفيد)':'');const profitCost=externalMoney(x.profit_in_cost_currency,x.supplier_cost_currency);const profitIqd=Number(x.profit_iqd||0);const profitHtml='<b>'+profitCost+'</b><br><small style="color:#176b3a;font-weight:700">الربح بالدينار: '+externalMoney(profitIqd,'IQD')+'</small>';const addBtn=x.case_id?'<button type="button" class="btn externalServiceAddBtn" data-case-id="'+esc(x.case_id)+'">➕ إضافة خدمة للملف</button>':'';const editBtn='<button type="button" class="btn externalServiceEditBtn" data-id="'+esc(x.id)+'">✏️ تعديل</button>';return '<tr><td>'+esc(x.service_date||'—')+'</td><td><b>'+who+'</b>'+(x.case_id?'<br><small>📁 ملف متعدد الخدمات</small>':'')+'</td><td>'+esc(x.service_type||'—')+'</td><td>'+esc(sup?.name||'—')+'</td><td>'+externalMoney(x.supplier_cost_amount,x.supplier_cost_currency)+'</td><td>'+externalMoney(x.customer_amount,x.customer_currency)+'</td><td>'+profitHtml+'</td><td>'+editBtn+addBtn+'<button type="button" class="btn danger externalServiceDeleteBtn" data-id="'+x.id+'">🗑️ حذف</button></td></tr>'}).join('');
  if($('externalServiceRows'))$('externalServiceRows').innerHTML=rows||'<tr><td colspan="8">لا توجد خدمات خارجية مسجلة بعد.</td></tr>';
  document.querySelectorAll('.externalServiceDeleteBtn').forEach(btn=>btn.onclick=()=>deleteExternalService(btn.dataset.id));
  document.querySelectorAll('.externalServiceAddBtn').forEach(btn=>btn.onclick=()=>startExternalCaseAdd(btn.dataset.caseId));
+ document.querySelectorAll('.externalServiceEditBtn').forEach(btn=>btn.onclick=()=>startExternalServiceEdit(btn.dataset.id));
 }
 function setExternalCaseMode(caseId=null){
  EXT_EDIT_CASE_ID=caseId||null;
+ EXT_EDIT_SERVICE_ID=null;
  const btn=$('saveExternalCase'), cancel=$('cancelExternalCaseEdit'), mode=$('externalCaseMode');
  if(EXT_EDIT_CASE_ID){
   if(btn)btn.textContent='💾 حفظ الخدمة في الملف الحالي';
   if(cancel)cancel.style.display='block';
-  if(mode)mode.innerHTML='📁 <b>وضع إضافة خدمة لملف موجود</b> — لن يتم إنشاء ملف عميل جديد.';
+  if(mode)mode.innerHTML='📁 <b>وضع إضافة خدمة لملف موجود</b> — الخدمة السابقة تبقى كما هي.';
  }else{
   if(btn)btn.textContent='💾 حفظ الملف وكل الخدمات';
   if(cancel)cancel.style.display='none';
   if(mode)mode.textContent='';
  }
 }
+function setExternalServiceEditMode(serviceId=null){
+ EXT_EDIT_CASE_ID=null;
+ EXT_EDIT_SERVICE_ID=serviceId||null;
+ const btn=$('saveExternalCase'), cancel=$('cancelExternalCaseEdit'), mode=$('externalCaseMode');
+ if(EXT_EDIT_SERVICE_ID){
+  if(btn)btn.textContent='💾 حفظ تعديل الخدمة';
+  if(cancel)cancel.style.display='block';
+  if(mode)mode.innerHTML='✏️ <b>وضع تعديل خدمة محفوظة</b> — لن يتم تعديلها إلا بعد الضغط على حفظ التعديل.';
+ }else{
+  if(btn)btn.textContent='💾 حفظ الملف وكل الخدمات';
+  if(cancel)cancel.style.display='none';
+  if(mode)mode.textContent='';
+ }
+}
+function setExternalFormLocked(locked){
+ ['extCustomerType','extCustomer','extBeneficiaryCount','extBeneficiaries','extDate','extCaseNotes'].forEach(id=>{const el=$(id);if(el)el.disabled=!!locked;});
+}
 function startExternalCaseAdd(caseId){
  const item=(EXT_SERVICES||[]).find(x=>x.case_id===caseId);
  if(!item)return msg('externalServiceMsg','تعذر العثور على ملف العميل.',true);
  setExternalCaseMode(caseId);
+ setExternalFormLocked(false);
  $('extCustomerType').value=item.customer_type||'individual';
  $('extCustomer').value=item.customer_name||'';
  $('extBeneficiaryCount').value=Math.max(1,Number(item.beneficiary_count||1));
@@ -768,15 +788,51 @@ function startExternalCaseAdd(caseId){
  $('extCaseNotes').value='';
  $('externalItems').innerHTML='';
  addExternalItem();
- msg('externalServiceMsg','تم فتح ملف '+(item.customer_name||'العميل')+' لإضافة خدمة جديدة.');
+ msg('externalServiceMsg','تم فتح ملف '+(item.customer_name||'العميل')+' لإضافة خدمة جديدة. الخدمة السابقة لن تتغير.');
+ $('extCustomer').scrollIntoView({behavior:'smooth',block:'center'});
+}
+function startExternalServiceEdit(serviceId){
+ const item=(EXT_SERVICES||[]).find(x=>x.id===serviceId);
+ if(!item)return msg('externalServiceMsg','تعذر العثور على الخدمة.',true);
+ setExternalServiceEditMode(serviceId);
+ setExternalFormLocked(true);
+ $('extCustomerType').value=item.customer_type||'individual';
+ $('extCustomer').value=item.customer_name||'';
+ $('extBeneficiaryCount').value=Math.max(1,Number(item.beneficiary_count||1));
+ $('extBeneficiaryCount').min=item.customer_type==='family'?'2':'1';
+ $('extBeneficiaries').value=item.beneficiaries||'';
+ $('extDate').value=item.service_date||new Date().toISOString().slice(0,10);
+ $('extCaseNotes').value='';
+ $('externalItems').innerHTML='';
+ addExternalItem();
+ const formItem=$('externalItems')?.querySelector('.externalItem');
+ if(formItem){
+  const count=Math.max(1,Number(item.beneficiary_count||1));
+  const basis=item.billing_basis||'per_person';
+  formItem.querySelector('.extItemType').value=item.service_type||'خدمة أخرى';
+  formItem.querySelector('.extItemBilling').value=basis;
+  formItem.querySelector('.extItemSupplier').value=item.supplier_id||'';
+  formItem.querySelector('.extItemDate').value=item.service_date||'';
+  formItem.querySelector('.extItemCost').value=(Number(item.supplier_cost_amount||0)/(basis==='per_person'?count:1)).toFixed(2).replace(/\.00$/,'');
+  formItem.querySelector('.extItemCostCurrency').value=item.supplier_cost_currency||'SAR';
+  formItem.querySelector('.extItemCustomer').value=(Number(item.customer_amount||0)/(basis==='per_person'?count:1)).toFixed(2).replace(/\.00$/,'');
+  formItem.querySelector('.extItemCustomerCurrency').value=item.customer_currency||'USD';
+  formItem.querySelector('.extItemFx').value=item.fx_rate||'';
+  formItem.querySelector('.extItemIqd').value=item.supplier_iqd_rate||'';
+  formItem.querySelector('.extItemNotes').value=item.notes||'';
+  hydrateExternalItemRates(formItem);
+  updateExternalItemPreview(formItem);
+ }
+ msg('externalServiceMsg','تم فتح الخدمة للتعديل. الخدمة لن تتغير في قاعدة البيانات حتى تضغط «حفظ تعديل الخدمة».');
  $('extCustomer').scrollIntoView({behavior:'smooth',block:'center'});
 }
 function cancelExternalCaseAdd(){
  setExternalCaseMode(null);
+ setExternalFormLocked(false);
  $('extCustomer').value='';$('extBeneficiaries').value='';$('extCaseNotes').value='';$('extBeneficiaryCount').value='1';$('extCustomerType').value='individual';
  $('extDate').value=new Date().toISOString().slice(0,10);
  $('externalItems').innerHTML='';addExternalItem();
- msg('externalServiceMsg','تم إلغاء إضافة الخدمة للملف.');
+ msg('externalServiceMsg',EXT_EDIT_SERVICE_ID?'تم إلغاء تعديل الخدمة.':'تم إلغاء إضافة الخدمة للملف.');
 }
 async function deleteExternalService(id){
  const item=(EXT_SERVICES||[]).find(x=>x.id===id);
@@ -816,23 +872,28 @@ $('saveExternalCase')?.addEventListener('click',async()=>{
  if(customer_type==='family'&&beneficiary_count<2)return msg('externalServiceMsg','للعائلة/المجموعة أدخل عدد المستفيدين 2 فأكثر.',true);
  if(!items.length)return msg('externalServiceMsg','أضف خدمة واحدة على الأقل للملف.',true);
  for(const [i,it] of items.entries()){
-  if(!it.supplier_id||!it.service_date||!it.supplier_cost_amount||!it.customer_amount)return msg('externalServiceMsg','أكمل بيانات الخدمة رقم '+(i+1)+'.',true);
-  if(it.customer_currency!==it.supplier_cost_currency&&!it.fx_rate)return msg('externalServiceMsg','أدخل سعر التحويل في الخدمة رقم '+(i+1)+'.',true);
-  if(it.supplier_cost_currency!=='IQD'&&!it.supplier_iqd_rate)return msg('externalServiceMsg','أدخل سعر العملة مقابل الدينار في الخدمة رقم '+(i+1)+'.',true);
+  if(!it.supplier_id||!it.service_date||!it.supplier_cost_amount||!it.customer_amount)return msg('externalServiceMsg',EXT_EDIT_SERVICE_ID?'أكمل بيانات الخدمة المراد تعديلها.':'أكمل بيانات الخدمة الجديدة.',true);
+  if(it.customer_currency!==it.supplier_cost_currency&&!it.fx_rate)return msg('externalServiceMsg','أدخل سعر التحويل في الخدمة الجديدة.',true);
+  if(it.supplier_cost_currency!=='IQD'&&!it.supplier_iqd_rate)return msg('externalServiceMsg','أدخل سعر العملة مقابل الدينار في الخدمة الجديدة.',true);
  }
- const {data:{user}}=await db.auth.getUser();$('saveExternalCase').disabled=true;msg('externalServiceMsg',EXT_EDIT_CASE_ID?'جاري إضافة الخدمة إلى الملف الحالي وحسم تكلفة المورد...':'جاري حفظ ملف العميل وكل الخدمات وحسم تكاليف الموردين...');
+ const {data:{user}}=await db.auth.getUser();$('saveExternalCase').disabled=true;
+ const statusText=EXT_EDIT_SERVICE_ID?'جاري حفظ تعديل الخدمة وتحديث خصم المورد...':(EXT_EDIT_CASE_ID?'جاري إضافة الخدمة إلى الملف الحالي وحسم تكلفة المورد...':'جاري حفظ ملف العميل وكل الخدمات وحسم تكاليف الموردين...');
+ msg('externalServiceMsg',statusText);
  try{
   let error=null;
-  if(EXT_EDIT_CASE_ID){
+  if(EXT_EDIT_SERVICE_ID){
+   ({error}=await db.rpc('update_external_service_v1',{p_service_id:EXT_EDIT_SERVICE_ID,p_item:items[0],p_updated_by:user?.id||null}));
+  }else if(EXT_EDIT_CASE_ID){
    ({error}=await db.rpc('append_external_service_to_case_v1',{p_case_id:EXT_EDIT_CASE_ID,p_items:items,p_created_by:user?.id||null}));
   }else{
    ({error}=await db.rpc('record_external_service_case_v1',{p_customer_name:customer_name,p_customer_type:customer_type,p_beneficiary_count:beneficiary_count,p_beneficiaries:beneficiaries,p_case_date:case_date,p_case_notes:case_notes,p_items:items,p_created_by:user?.id||null}));
   }
   if(error)throw error;
-  setExternalCaseMode(null);
+  setExternalCaseMode(null);setExternalFormLocked(false);
   $('extCustomer').value='';$('extBeneficiaries').value='';$('extCaseNotes').value='';$('extBeneficiaryCount').value='1';$('extCustomerType').value='individual';$('extDate').value=new Date().toISOString().slice(0,10);$('externalItems').innerHTML='';addExternalItem();
   try{await load();}catch(loadErr){console.warn('External service saved, but financial refresh failed:',loadErr);}
-  msg('externalServiceMsg',EXT_EDIT_CASE_ID?'تمت إضافة الخدمة إلى ملف العميل بنجاح.':'تم حفظ ملف العميل وكل الخدمات بنجاح، وتم حسم تكاليف الموردين من أرصدتهم.');
+  msg('externalServiceMsg',EXT_EDIT_SERVICE_ID?'تم تعديل الخدمة بنجاح وتحديث تكلفة المورد والربح.':(EXT_EDIT_CASE_ID?'تمت إضافة الخدمة إلى ملف العميل بنجاح.':'تم حفظ ملف العميل وكل الخدمات بنجاح، وتم حسم تكاليف الموردين من أرصدتهم.'));
+  EXT_EDIT_SERVICE_ID=null;
  }catch(e){msg('externalServiceMsg',e.message||'تعذر حفظ الخدمة.',true)}finally{$('saveExternalCase').disabled=false}
 });
 if($('externalItems')&&!$('externalItems').children.length)addExternalItem();
