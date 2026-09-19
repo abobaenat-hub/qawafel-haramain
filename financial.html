@@ -1041,7 +1041,8 @@ function initReport(){
  const now=new Date(), y=now.getFullYear(), m=String(now.getMonth()+1).padStart(2,'0');
  $('reportFrom').value=`${y}-${m}-01`; $('reportTo').value=now.toISOString().slice(0,10);
  $('reportProgram').innerHTML='<option value="">كل الرحلات</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
- renderAdvancedReport();
+ try{renderAdvancedReport();}catch(e){console.warn('Main report render failed:',e)}
+ try{renderExternalServicesReport($('reportFrom').value,$('reportTo').value);}catch(e){console.warn('External report render failed:',e)}
 }
 function renderExternalServicesReport(from,to){
  const list=(EXT_SERVICES||[]).filter(x=>{
@@ -1106,7 +1107,7 @@ document.querySelectorAll('.presetBtn').forEach(btn=>btn.onclick=()=>{
  if(btn.dataset.preset==='year'){from=y+'-01-01';to=y+'-12-31';}
  $('reportFrom').value=from;$('reportTo').value=to;renderAdvancedReport();
 });
-$('runReport').onclick=renderAdvancedReport;
+$('runReport').onclick=()=>{try{renderAdvancedReport();}catch(e){console.warn('Main report render failed:',e)} try{renderExternalServicesReport($('reportFrom').value,$('reportTo').value);}catch(e){console.warn('External report render failed:',e)}};
 $('printReport').onclick=()=>{renderAdvancedReport();window.print()};
 
 async function renderExpenses(){
