@@ -249,6 +249,11 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
   <div class="visualCard"><h3>💰 قراءة سريعة للنتيجة</h3><div id="reportDonut" class="donutWrap"></div></div>
 </div>
 <div class="table reportTable"><table><thead><tr><th>الرحلة</th><th>المعتمرون</th><th>المبيعات</th><th>المقبوض</th><th>الجملة</th><th>الربح الإجمالي</th><th>مصروفات الرحلة</th><th>صافي الربح</th><th>هامش الربح</th></tr></thead><tbody id="advancedReportRows"></tbody></table></div>
+<div class="panel externalReportPanel" style="margin-top:16px">
+  <h3 style="margin:0 0 10px">🌐 الخدمات خارج الرحلات — ضمن التقرير</h3>
+  <div class="reportKpis externalReportKpis" id="externalReportKpis"></div>
+  <div class="table reportTable"><table><thead><tr><th>التاريخ</th><th>العميل</th><th>الخدمة</th><th>المورد</th><th>تكلفة المورد</th><th>مبيعات الخدمة</th><th>الربح</th></tr></thead><tbody id="externalReportRows"></tbody></table></div>
+</div>
 </section>
 </div>
 
@@ -1038,6 +1043,30 @@ function initReport(){
  $('reportProgram').innerHTML='<option value="">كل الرحلات</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  renderAdvancedReport();
 }
+function renderExternalServicesReport(from,to){
+ const list=(EXT_SERVICES||[]).filter(x=>{
+   const d=dateOnly(x.service_date||x.created_at);
+   return (!from||d>=from)&&(!to||d<=to);
+ });
+ const salesIqd=list.reduce((s,x)=>s+Number(x.revenue_iqd||0),0);
+ const costIqd=list.reduce((s,x)=>s+Number(x.supplier_cost_iqd||0),0);
+ const profitIqd=list.reduce((s,x)=>s+Number(x.profit_iqd||0),0);
+ const kpis=[
+  ['مبيعات الخدمات الخارجية',salesIqd,''],
+  ['تكلفة الموردين',costIqd,''],
+  ['ربح الخدمات الخارجية',profitIqd,profitIqd>=0?'profit':'loss'],
+  ['عدد الخدمات',list.length,'']
+ ];
+ const k=$('externalReportKpis');
+ if(k) k.innerHTML=kpis.map(x=>'<div class="reportKpi '+x[2]+'"><small>'+x[0]+'</small><b>'+((typeof x[1]==='number'&&x[0]!=='عدد الخدمات')?money(x[1]):Number(x[1]||0).toLocaleString('ar-IQ'))+'</b></div>').join('');
+ const rows=list.map(x=>{
+   const sup=S.find(z=>z.id===x.supplier_id);
+   const sales=Number(x.revenue_iqd||0), cost=Number(x.supplier_cost_iqd||0), profit=Number(x.profit_iqd||0);
+   return '<tr><td>'+esc(x.service_date||'—')+'</td><td><b>'+esc(x.customer_name||'—')+'</b>'+(Number(x.beneficiary_count||1)>1?' <small>('+Number(x.beneficiary_count)+' مستفيد)</small>':'')+'</td><td>'+esc(x.service_type||'—')+'</td><td>'+esc(sup?.name||'—')+'</td><td>'+money(cost)+'</td><td>'+money(sales)+'</td><td><b class="'+(profit>=0?'marginGood':'marginBad')+'">'+money(profit)+'</b></td></tr>';
+ }).join('');
+ if($('externalReportRows')) $('externalReportRows').innerHTML=rows||'<tr><td colspan="7" class="reportEmpty">لا توجد خدمات خارج الرحلات ضمن الفترة المحددة.</td></tr>';
+ return {salesIqd,costIqd,profitIqd,count:list.length};
+}
 function renderAdvancedReport(){
  const from=$('reportFrom').value,to=$('reportTo').value,pid=$('reportProgram').value;
  const bookings=B.filter(b=>{const d=dateOnly(b.created_at);return (!from||d>=from)&&(!to||d<=to)&&(!pid||b.program_id===pid)});
@@ -1067,6 +1096,7 @@ function renderAdvancedReport(){
  $('advancedReportRows').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.pr.title)+'</b></td><td>'+x.n+'</td><td>'+money(x.s)+'</td><td>'+money(x.r)+'</td><td>'+money(x.c)+'</td><td>'+money(x.g)+'</td><td>'+money(x.ex)+'</td><td><b class="'+(x.net>=0?'marginGood':'marginBad')+'">'+money(x.net)+'</b></td><td>'+x.margin.toFixed(1)+'%</td></tr>').join('')||'<tr><td colspan="9" class="reportEmpty">لا توجد رحلات ضمن الفترة المحددة.</td></tr>';
  $('printReportPeriod').textContent='الفترة: '+(from||'—')+' إلى '+(to||'—')+(pid?' — '+(PR.find(x=>x.id===pid)?.title||''):'');
  renderReportVisuals(sales,cost,tripExp,generalExp,net,rows);
+ renderExternalServicesReport(from,to);
 }
 document.querySelectorAll('.presetBtn').forEach(btn=>btn.onclick=()=>{
  const now=new Date(), y=now.getFullYear(), m=now.getMonth(); let from='',to='';
@@ -1460,4 +1490,5 @@ input,select,textarea{border:1px solid #dce5eb!important;border-radius:12px!impo
  .reportCollectionNote{font-size:9px!important;padding:7px!important}.reportTable{margin-top:8px!important}.reportTable table{min-width:0!important;font-size:8px!important}.reportTable th,.reportTable td{padding:5px!important}.reportTable th{background:#eef3f6!important}.expenseDeleteBtn{display:none!important}
  @page{size:A4 landscape;margin:8mm}
 }
+.externalReportPanel{background:#fff}.externalReportKpis{grid-template-columns:repeat(4,1fr)!important}.externalReportKpis .reportKpi{min-height:72px}@media(max-width:700px){.externalReportKpis{grid-template-columns:repeat(2,1fr)!important}}
 </style>
