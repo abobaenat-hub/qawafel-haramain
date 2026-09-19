@@ -457,7 +457,9 @@ async function load(){
   db.from('supervisors').select('*').order('full_name'),
   db.from('drivers').select('*').order('full_name')
  ]);
- const er=[b,p,pr,i,e,sup,sp,a,supE,drvP,ss,dd].find(x=>x.error);if(er)return msg('tableMsg',er.error.message,true);
+ const er=[b,p,pr,i,e,sup,sp,a,supE,drvP,ss,dd].find(x=>x.error);
+ if(sup?.data) S=sup.data||[];
+ if(er){ refreshExternalSupplierOptions(); return msg('tableMsg',er.error.message,true); }
  let wallet={data:[],error:null};
  try{const wr=await db.from('supplier_wallet_transactions').select('*').order('transaction_date',{ascending:false}).order('created_at',{ascending:false});if(wr.error){WALLET_READY=false;console.warn('Supplier wallet table is not ready:',wr.error.message)}else{wallet=wr;WALLET_READY=true}}catch(_){WALLET_READY=false}
  let ext={data:[],error:null};
@@ -667,7 +669,7 @@ function addExternalItem(){
  const idx=wrap.querySelectorAll('.externalItem').length;
  wrap.insertAdjacentHTML('beforeend',externalItemHtml(idx));
  const item=wrap.lastElementChild; item.querySelector('.extItemDate').value=$('extDate')?.value||new Date().toISOString().slice(0,10);
- bindExternalItem(item); updateExternalItemPreview(item);
+ bindExternalItem(item); refreshExternalSupplierOptions(); updateExternalItemPreview(item);
 }
 function bindExternalItem(item){
  ['.extItemCostCurrency','.extItemCustomerCurrency','.extItemCost','.extItemCustomer','.extItemFx','.extItemIqd'].forEach(sel=>item.querySelector(sel)?.addEventListener('input',()=>updateExternalItemPreview(item)));
