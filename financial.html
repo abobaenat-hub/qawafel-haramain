@@ -463,6 +463,7 @@ async function load(){
  let ext={data:[],error:null};
  try{const xr=await db.from('external_services').select('*').order('service_date',{ascending:false}).order('created_at',{ascending:false}); if(xr.error){EXT_READY=false;console.warn('External services table is not ready:',xr.error.message)}else{ext=xr;EXT_READY=true}}catch(_){EXT_READY=false}
  B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];S=sup.data||[];SP=sp.data||[];WTX=wallet.data||[];A=a.data||[];SUP_E=supE.data||[];DRV_PAY=drvP.data||[];SUP=ss.data||[];DRV=dd.data||[]; EXT_SERVICES=ext.data||[];
+ refreshExternalSupplierOptions();
  $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
  $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
@@ -653,6 +654,13 @@ function externalItemHtml(idx){
   <label>بيان الخدمة (اختياري)</label><input class="extItemNotes" placeholder="مثلاً تأشيرة 6 أفراد">
   <div class="externalPreview extItemPreview" style="margin-top:8px"></div>
  </div>`;
+}
+function refreshExternalSupplierOptions(){
+ document.querySelectorAll('#externalItems .extItemSupplier').forEach(sel=>{
+  const current=sel.value;
+  sel.innerHTML='<option value="">اختر المورّد...</option>'+S.filter(x=>x.active!==false).map(x=>`<option value="${esc(x.id)}">${esc(x.name)}</option>`).join('');
+  if(current && S.some(x=>x.id===current)) sel.value=current;
+ });
 }
 function addExternalItem(){
  const wrap=$('externalItems'); if(!wrap)return;
