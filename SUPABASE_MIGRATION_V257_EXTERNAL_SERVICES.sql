@@ -21,6 +21,10 @@ create table if not exists public.external_services (
   created_by uuid null,
   created_at timestamptz not null default now()
 );
+alter table public.external_services add column if not exists customer_type text not null default 'individual' check (customer_type in ('individual','family'));
+alter table public.external_services add column if not exists beneficiary_count integer not null default 1 check (beneficiary_count > 0);
+alter table public.external_services add column if not exists beneficiaries text null;
+
 create index if not exists external_services_date_idx on public.external_services(service_date, created_at desc);
 create index if not exists external_services_supplier_idx on public.external_services(supplier_id);
 alter table public.external_services enable row level security;
@@ -88,5 +92,70 @@ begin
   return v_service_id;
 end;
 $$;
+
+
+create or replace function public.record_external_service_v2(
+  p_customer_name text,
+  p_customer_type text,
+  p_beneficiary_count integer,
+  p_beneficiaries text,
+  p_service_type text,
+  p_supplier_id uuid,
+  p_service_date date,
+  p_supplier_cost_amount numeric,
+  p_supplier_cost_currency text,
+  p_customer_amount numeric,
+  p_customer_currency text,
+  p_fx_rate numeric,
+  p_supplier_iqd_rate numeric,
+  p_revenue_in_cost_currency numeric,
+  p_profit_in_cost_currency numeric,
+  p_supplier_cost_iqd numeric,
+  p_revenue_iqd numeric,
+  p_profit_iqd numeric,
+  p_notes text,
+  p_created_by uuid
+) returns uuid
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_wallet_id uuid;
+  v_service_id uuid;
+begin
+  if p_customer_name is null or trim(p_customer_name)='' then raise exception 'اسم العميل أو العائلة مطلوب'; end if;
+  if p_customer_type not in ('individual','family') then raise exception 'نوع العميل غير مدعوم'; end if;
+  if p_customer_type='family' and p_beneficiary_count < 2 then raise exception 'عدد المستفيدين للعائلة يجب أن يكون 2 فأكثر'; end if;
+  if p_supplier_cost_amount <= 0 or p_customer_amount <= 0 then raise exception 'المبالغ يجب أن تكون أكبر من صفر'; end if;
+  if p_supplier_cost_currency not in ('SAR','USD','IQD') or p_customer_currency not in ('SAR','USD','IQD') then raise exception 'عملة غير مدعومة'; end if;
+  insert into public.supplier_wallet_transactions(
+    supplier_id, transaction_type, currency, amount, amount_iqd,
+    transaction_date, source_currency, source_amount, fx_rate,
+    exchange_rate_to_iqd, description, created_by
+  ) values (
+    p_supplier_id, 'withdrawal', p_supplier_cost_currency, p_supplier_cost_amount, p_supplier_cost_iqd,
+    p_service_date, null, null, null,
+    p_supplier_iqd_rate,
+    'خدمة خارجية: ' || p_service_type || ' — ' || p_customer_name,
+    p_created_by
+  ) returning id into v_wallet_id;
+
+  insert into public.external_services(
+    customer_name, customer_type, beneficiary_count, beneficiaries, service_type, supplier_id, service_date,
+    supplier_cost_amount, supplier_cost_currency, customer_amount, customer_currency,
+    fx_rate, supplier_iqd_rate, revenue_in_cost_currency, profit_in_cost_currency,
+    supplier_cost_iqd, revenue_iqd, profit_iqd, wallet_tx_id, notes, created_by
+  ) values (
+    p_customer_name, p_customer_type, greatest(1,p_beneficiary_count), p_beneficiaries, p_service_type, p_supplier_id, p_service_date,
+    p_supplier_cost_amount, p_supplier_cost_currency, p_customer_amount, p_customer_currency,
+    p_fx_rate, p_supplier_iqd_rate, p_revenue_in_cost_currency, p_profit_in_cost_currency,
+    p_supplier_cost_iqd, p_revenue_iqd, p_profit_iqd, v_wallet_id, p_notes, p_created_by
+  ) returning id into v_service_id;
+  return v_service_id;
+end;
+$$;
+
+grant execute on function public.record_external_service_v2(text,text,integer,text,text,uuid,date,numeric,text,numeric,text,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,uuid) to authenticated;
 
 grant execute on function public.record_external_service(text,text,uuid,date,numeric,text,numeric,text,numeric,numeric,numeric,numeric,numeric,numeric,numeric,text,uuid) to authenticated;
