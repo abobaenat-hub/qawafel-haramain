@@ -60,7 +60,7 @@ $('search').addEventListener('input',render);document.querySelectorAll('.stat[da
     if(started||!window.supabase||!window.supabase.createClient)return false;
     started=true;
     const db=window.supabase.createClient(U,K);
-    const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:page()}).catch(()=>{});
+    const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:page()}).then(()=>{},()=>{});
     window.qawafelAudit=log;
     window.qawafelAuditV169=log;
 
@@ -71,7 +71,7 @@ $('search').addEventListener('input',render);document.querySelectorAll('.stat[da
         const key='qawafel_audit_login_logged_v169';
         if(!sessionStorage.getItem(key)){sessionStorage.setItem(key,'1');log('login','auth',data.session.user.id,'تسجيل دخول');}
       }
-    }).catch(()=>{});
+    }).then(()=>{},()=>{});
     db.auth.onAuthStateChange((event,session)=>{
       if(event==='SIGNED_IN'&&session&&session.user) log('login','auth',session.user.id,'تسجيل دخول');
       if(event==='SIGNED_OUT') log('logout','auth',null,'تسجيل خروج');
