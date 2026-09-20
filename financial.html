@@ -1104,17 +1104,25 @@ function renderAdvancedReport(){
    rows.push({pr,n,s,r,c,g,ex,net,margin});
  });
  const generalExp=E.filter(e=>!e.program_id&&!e.is_shared&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((x,e)=>x+Number(e.amount||0),0);
- const gross=sales-cost, net=gross-tripExp-generalExp, remaining=sales-received, margin=sales?(net/s*100):0;
- const supplierPaid=SP.filter(x=>(!from||dateOnly(x.payment_date)>=from)&&(!to||dateOnly(x.payment_date)<=to)&&(!pid||x.program_id===pid)).reduce((x,e)=>x+Number(e.amount||0),0);
- const supplierObligation=Math.max(cost-supplierPaid,0);
- const collectionRate=sales?Math.min(Math.max(received/sales*100,0),100):0;
- $('reportKpis').innerHTML=[['المبيعات الفعلية',sales,''],['المقبوض',received,''],['نسبة التحصيل',collectionRate.toFixed(1)+' %',collectionRate>=80?'profit':''],['المتبقي',remaining,''],['تكلفة الجملة',cost,''],['المدفوع للمورّد',supplierPaid,''],['التزامات المورّدين',supplierObligation,supplierObligation?'':'profit'],['الربح الإجمالي',gross,'profit'],['مصروفات الرحلات',tripExp,''],['مصروفات عامة',generalExp,''],['صافي الربح',net,net>=0?'profit':'loss'],['هامش صافي الربح',margin.toFixed(1)+' %',net>=0?'profit':'loss']].map(x=>'<div class="reportKpi '+x[2]+'"><small>'+x[0]+'</small><b>'+((typeof x[1]==='number')?money(x[1]):x[1])+'</b></div>').join('');
- $('reportCollectionNote').innerHTML='<b>قراءة إدارية:</b> تم تحصيل <strong>'+collectionRate.toFixed(1)+'%</strong> من المبيعات خلال الفترة. التزام المورّدين المتبقي حسب تكلفة الجملة المسجلة هو <strong>'+money(supplierObligation)+'</strong>.';
+ // V277: بطاقات التقرير الاحترافي تعتمد نفس أرقام التقرير الموحد (الرحلات + الخدمات الخارجية).
+ let unified={internalSales:0,externalSales:0,totalSales:0,totalCost:0,totalExpenses:0,totalNet:0};
+ try{unified=renderUnifiedFinancialReport(from,to,pid)||unified;}catch(e){console.warn('Unified summary source failed:',e)}
+ const externalList=(EXT_SERVICES||[]).filter(x=>{const d=dateOnly(x.service_date||x.created_at);return (!from||d>=from)&&(!to||d<=to)});
+ const externalSales=Number(unified.externalSales||externalList.reduce((z,x)=>z+Number(x.revenue_iqd||0),0));
+ const externalCost=externalList.reduce((z,x)=>z+Number(x.supplier_cost_iqd||0),0);
+ const totalSales=Number(unified.totalSales||0), totalCost=Number(unified.totalCost||0);
+ const collected=Number(received||0)+externalSales;
+ const gross=totalSales-totalCost, net=Number(unified.totalNet||0), remaining=Math.max(totalSales-collected,0), margin=totalSales?(net/totalSales*100):0;
+ const supplierPaidInternal=SP.filter(x=>(!from||dateOnly(x.payment_date)>=from)&&(!to||dateOnly(x.payment_date)<=to)&&(!pid||x.program_id===pid)).reduce((x,e)=>x+Number(e.amount||0),0);
+ const supplierPaid=supplierPaidInternal+externalCost;
+ const supplierObligation=Math.max(totalCost-supplierPaid,0);
+ const collectionRate=totalSales?Math.min(Math.max(collected/totalSales*100,0),100):0;
+ $('reportKpis').innerHTML=[['المبيعات الفعلية',totalSales,''],['المقبوض',collected,''],['نسبة التحصيل',collectionRate.toFixed(1)+' %',collectionRate>=80?'profit':''],['المتبقي',remaining,''],['تكلفة الجملة',totalCost,''],['المدفوع للمورّد',supplierPaid,''],['التزامات المورّدين',supplierObligation,supplierObligation?'':'profit'],['الربح الإجمالي',gross,gross>=0?'profit':'loss'],['مصروفات الرحلات',tripExp,''],['مصروفات عامة',generalExp,''],['صافي الربح',net,net>=0?'profit':'loss'],['هامش صافي الربح',margin.toFixed(1)+' %',net>=0?'profit':'loss']].map(x=>'<div class="reportKpi '+x[2]+'"><small>'+x[0]+'</small><b>'+((typeof x[1]==='number')?money(x[1]):x[1])+'</b></div>').join('');
+ $('reportCollectionNote').innerHTML='<b>قراءة إدارية:</b> تم تحصيل <strong>'+collectionRate.toFixed(1)+'%</strong> من إجمالي المبيعات (الرحلات + الخدمات الخارجية). التزام المورّدين المتبقي حسب التكاليف المسجلة هو <strong>'+money(supplierObligation)+'</strong>.';
  $('advancedReportRows').innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.pr.title)+'</b></td><td>'+x.n+'</td><td>'+money(x.s)+'</td><td>'+money(x.r)+'</td><td>'+money(x.c)+'</td><td>'+money(x.g)+'</td><td>'+money(x.ex)+'</td><td><b class="'+(x.net>=0?'marginGood':'marginBad')+'">'+money(x.net)+'</b></td><td>'+x.margin.toFixed(1)+'%</td></tr>').join('')||'<tr><td colspan="9" class="reportEmpty">لا توجد رحلات ضمن الفترة المحددة.</td></tr>';
  $('printReportPeriod').textContent='الفترة: '+(from||'—')+' إلى '+(to||'—')+(pid?' — '+(PR.find(x=>x.id===pid)?.title||''):'');
- renderReportVisuals(sales,cost,tripExp,generalExp,net,rows);
+ renderReportVisuals(totalSales,totalCost,tripExp,generalExp,net,rows);
  renderExternalServicesReport(from,to);
- try{renderUnifiedFinancialReport(from,to,pid);}catch(e){console.warn('Unified financial report render failed:',e)}
 }
 document.querySelectorAll('.presetBtn').forEach(btn=>btn.onclick=()=>{
  const now=new Date(), y=now.getFullYear(), m=now.getMonth(); let from='',to='';
