@@ -144,22 +144,15 @@ async function guard(){let r=await db.auth.getUser();if(!r.data?.user){location.
 async function loadData(){
   let errors=[];
   try{
-    const r=await db.from('supervisors').select('*').order('full_name');
+    const r=await db.rpc('get_team_directory');
     if(r.error) throw r.error;
-    supervisors=r.data||[];
+    supervisors=Array.isArray(r.data?.supervisors)?r.data.supervisors:[];
+    drivers=Array.isArray(r.data?.drivers)?r.data.drivers:[];
   }catch(e){
-    console.error('supervisors load error',e);
+    console.error('team directory load error',e);
     supervisors=[];
-    errors.push('المشرفون: '+(e.message||'تعذر التحميل'));
-  }
-  try{
-    const r=await db.from('drivers').select('*').order('full_name_ar',{ascending:true});
-    if(r.error) throw r.error;
-    drivers=r.data||[];
-  }catch(e){
-    console.error('drivers load error',e);
     drivers=[];
-    errors.push('السائقون: '+(e.message||'تعذر التحميل'));
+    errors.push('المشرفون والسائقون: '+(e.message||'تعذر تحميل بيانات الفريق'));
   }
   try{
     let r=await db.from('programs').select('id,title,departure_date,supervisor_id,driver_id,driver_fee,assistant_driver_id').order('departure_date');
