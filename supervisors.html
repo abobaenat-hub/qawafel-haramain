@@ -146,8 +146,9 @@ async function loadData(){
   try{
     const r=await db.rpc('get_team_directory');
     if(r.error) throw r.error;
-    supervisors=Array.isArray(r.data?.supervisors)?r.data.supervisors:[];
-    drivers=Array.isArray(r.data?.drivers)?r.data.drivers:[];
+    const teamData=typeof r.data==='string'?JSON.parse(r.data):r.data;
+    supervisors=Array.isArray(teamData?.supervisors)?teamData.supervisors:[];
+    drivers=Array.isArray(teamData?.drivers)?teamData.drivers:[];
   }catch(e){
     console.error('team directory RPC error',e);
     // fallback مباشر حتى لا تتعطل القائمة إذا تأخر تحديث RPC في Supabase
@@ -181,7 +182,14 @@ async function loadData(){
       return x;
     }));
   }catch(e){ console.warn('driver photo processing',e); }
-  renderSup(); renderDrv();
+  try{
+    renderSup();
+    renderDrv();
+    console.log('TEAM DIRECTORY COUNTS', {supervisors:supervisors.length, drivers:drivers.length, programs:programs.length});
+  }catch(e){
+    console.error('team directory render error',e);
+    msg('خطأ في عرض القائمة: '+(e.message||e),true);
+  }
   if(errors.length) msg('تعذر تحميل البيانات: '+errors.join(' | '),true);
 }
 
