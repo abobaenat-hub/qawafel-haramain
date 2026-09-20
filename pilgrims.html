@@ -808,7 +808,6 @@ async function payCashInFull(b){
  if(!ok)return;
  const r=await db.from('bookings').update({
    paid_amount:total,
-   remaining_amount:0,
    cash_payment_status:'paid',
    status:'confirmed',
    updated_at:new Date().toISOString()
