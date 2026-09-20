@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V286-ANALYTICS-AR-EVENTS">
+<meta name="qawafel-build" content="V287-ANALYTICS-AR-EVENTS">
 <title>إحصائيات الموقع | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -67,19 +67,27 @@ function bars(rows,labelIndex=0,valueIndex=1){
 }
 function cleanPath(v){return String(v||'/').replace(/^https?:\\/\\/[^/]+/,'')||'/';}
 const EVENT_LABELS={
+  scroll:'التمرير في الصفحة',
+  click:'نقرة',
+  file_download:'تنزيل ملف',
+  video_start:'بدء فيديو',
+  video_progress:'تقدم الفيديو',
+  video_complete:'اكتمال الفيديو',
+  view_search_results:'عرض نتائج البحث',
+  form_start:'بدء تعبئة النموذج',
+  form_submit:'إرسال النموذج',
+  generate_lead:'إنشاء طلب',
+  sign_up:'إنشاء حساب',
+  login:'تسجيل الدخول',
+  search:'بحث',
   page_view:'مشاهدة صفحة',
   first_visit:'أول زيارة',
   session_start:'بداية جلسة',
   user_engagement:'تفاعل المستخدم',
-  whatsapp_click:'ضغط على واتساب',
-  programs_section_click:'فتح قسم البرامج',
-  visa_section_click:'فتح قسم التأشيرة',
-  pilgrim_login_click:'دخول المعتمر',
-  agent_login_click:'دخول الوكيل',
-  admin_login_click:'دخول الإدارة',
-  program_search:'البحث عن برنامج',
-  visa_tracking_attempt:'محاولة تتبع التأشيرة',
-  program_view:'مشاهدة برنامج'
+  language_change:'تغيير اللغة',
+  outbound_click:'نقرة إلى موقع خارجي',
+  exception:'خطأ في الصفحة',
+  timing_complete:'اكتمال التحميل'
 };
 function eventLabel(v){return EVENT_LABELS[String(v||'')]||String(v||'حدث آخر');}
 async function load(){
