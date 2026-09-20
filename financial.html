@@ -1114,6 +1114,7 @@ function renderAdvancedReport(){
  $('printReportPeriod').textContent='الفترة: '+(from||'—')+' إلى '+(to||'—')+(pid?' — '+(PR.find(x=>x.id===pid)?.title||''):'');
  renderReportVisuals(sales,cost,tripExp,generalExp,net,rows);
  renderExternalServicesReport(from,to);
+ try{renderUnifiedFinancialReport(from,to,pid);}catch(e){console.warn('Unified financial report render failed:',e)}
 }
 document.querySelectorAll('.presetBtn').forEach(btn=>btn.onclick=()=>{
  const now=new Date(), y=now.getFullYear(), m=now.getMonth(); let from='',to='';
@@ -1123,7 +1124,7 @@ document.querySelectorAll('.presetBtn').forEach(btn=>btn.onclick=()=>{
  if(btn.dataset.preset==='year'){from=y+'-01-01';to=y+'-12-31';}
  $('reportFrom').value=from;$('reportTo').value=to;renderAdvancedReport();
 });
-$('runReport').onclick=()=>{try{renderAdvancedReport();}catch(e){console.warn('Main report render failed:',e)} try{renderExternalServicesReport($('reportFrom').value,$('reportTo').value);}catch(e){console.warn('External report render failed:',e)}};
+$('runReport').onclick=()=>{try{renderAdvancedReport();}catch(e){console.warn('Main report render failed:',e)} try{renderExternalServicesReport($('reportFrom').value,$('reportTo').value);}catch(e){console.warn('External report render failed:',e)} try{renderUnifiedFinancialReport($('reportFrom').value,$('reportTo').value,$('reportProgram').value);}catch(e){console.warn('Unified report render failed:',e)}};
 $('printReport').onclick=()=>{renderAdvancedReport();window.print()};
 
 async function renderExpenses(){
