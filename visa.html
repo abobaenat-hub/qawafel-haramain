@@ -17,12 +17,220 @@
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=supabase.createClient(U,K);let all=[],current=null;
 const ZOHO_FN=U+'/functions/v1/zoho-visa-mail-cors';
-async function zohoStatus(){try{const r=await fetch(ZOHO_FN);const j=await r.json();$('zohoStatus').textContent=j.configured?'🟢 الربط البرمجي جاهز':'🟡 يحتاج إعداد Zoho مرة واحدة';$('zohoStatus').className='badge '+(j.configured?'b-issued':'b-processing');$('zohoCopyWebhook').dataset.url=j.webhook||ZOHO_FN+'?action=webhook';$('zohoResult').textContent=j.configured?'تم تجهيز خدمة استقبال البريد.':'باقي فقط إعداد OAuth في Zoho ثم تفعيل Webhook.'}catch(e){$('zohoStatus').textContent='🔴 تعذر فحص الخدمة';$('zohoStatus').className='badge b-rejected';$('zohoResult').textContent=e.message||String(e)}}
-async function zohoSync(){const b=$('zohoSync');b.disabled=true;b.textContent='جاري الفحص...';try{const r=await fetch(ZOHO_FN+'?action=sync',{method:'POST'});const j=await r.json();if(!j.ok)throw new Error(j.error||'تعذر الفحص');const saved=(j.processed||[]).filter(x=>x?.status==='matched_saved').length;const unmatched=(j.processed||[]).filter(x=>x?.status==='unmatched').length;$('zohoResult').textContent=`تم فحص البريد: ${j.processed?.length||0} رسالة — تم ربط ${saved} تأشيرة — غير مطابقة ${unmatched}.`;await load();}catch(e){$('zohoResult').textContent='لم يكتمل الفحص: '+(e.message||String(e))}finally{b.disabled=false;b.textContent='🔄 فحص البريد الآن'}}
+function withTimeout(p,ms=8000){return Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة الاتصال')),ms))])}
+async function zohoStatus(){try{const r=await withTimeout(fetch(ZOHO_FN),8000);const j=await r.json();$('zohoStatus').textContent=j.configured?'🟢 الربط البرمجي جاهز':'🟡 يحتاج إعداد Zoho مرة واحدة';$('zohoStatus').className='badge '+(j.configured?'b-issued':'b-processing');$('zohoCopyWebhook').dataset.url=j.webhook||ZOHO_FN+'?action=webhook';$('zohoResult').textContent=j.configured?'تم تجهيز خدمة استقبال البريد.':'باقي فقط إعداد OAuth في Zoho ثم تفعيل Webhook.'}catch(e){$('zohoStatus').textContent='⚪ لم يتم فحص الربط بعد';$('zohoStatus').className='badge b-processing';$('zohoCopyWebhook').dataset.url=ZOHO_FN+'?action=webhook';$('zohoResult').textContent='يمكنك استخدام المنصة بشكل طبيعي؛ فحص الربط التلقائي لم يكتمل.'}}
+async function zohoSync(){const b=$('zohoSync');b.disabled=true;b.textContent='جاري الفحص...';try{const r=await withTimeout(fetch(ZOHO_FN+'?action=sync',{method:'POST'}),15000);const j=await r.json();if(!j.ok)throw new Error(j.error||'تعذر الفحص');const saved=(j.processed||[]).filter(x=>x?.status==='matched_saved').length;const unmatched=(j.processed||[]).filter(x=>x?.status==='unmatched').length;$('zohoResult').textContent=`تم فحص البريد: ${j.processed?.length||0} رسالة — تم ربط ${saved} تأشيرة — غير مطابقة ${unmatched}.`;await load();await loadVisaEmailLog();}catch(e){$('zohoResult').textContent='لم يكتمل الفحص: '+(e.message||String(e))}finally{b.disabled=false;b.textContent='🔄 فحص البريد الآن'}}
 
 const $=id=>document.getElementById(id);let activeFilter='all';const esc=s=>String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
 function badge(v){const x=v||'pending';let c=x==='issued'?'b-issued':x==='rejected'?'b-rejected':x==='processing'?'b-processing':'b-pending';let t=x==='issued'?'تم إصدار التأشيرة':x==='rejected'?'مرفوضة / غير صادرة':x==='processing'?'قيد الإجراء':'بانتظار الفحص';return `<span class="badge ${c}">${t}</span>`}
-async function loadVisaEmailLog(){const body=$('visaEmailRows');if(!body)return;body.innerHTML='<tr><td colspan="10" class="muted">جاري تحميل سجل البريد...</td></tr>';try{const r=await db.from('visa_email_events').select('id,sender,subject,received_at,attachment_name,matched_pilgrim_id,match_method,match_confidence,status,error_message,created_at').order('created_at',{ascending:false}).limit(30);if(r.error)throw r.error;const events=r.data||[];const matched=events.filter(e=>!!e.matched_pilgrim_id).length;$('emailLogTotal').textContent=events.length;$('emailLogMatched').textContent=matched;$('emailLogUnmatched').textContent=events.filter(e=>!e.matched_pilgrim_id||e.status==='unmatched').length;if(!events.length){body.innerHTML='<tr><td colspan="10" class="muted">لا توجد رسائل مسجلة حتى الآن.</td></tr>';return}const method=x=>x==='passport'?'رقم الجواز':x==='name'?'الاسم':'—';const result=x=>x==='matched_saved'?'<span class="badge b-issued">تم الربط والحفظ</span>':x==='unmatched'?'<span class="badge b-rejected">غير مطابقة</span>':x==='no_pdf'?'<span class="badge b-processing">لا يوجد PDF</span>':'<span class="badge b-processing">'+esc(x||'غير معروف')+'</span>';body.innerHTML=events.map(e=>{const p=e.matched_pilgrim_id?all.find(x=>x.id===e.matched_pilgrim_id):null;const dt=e.received_at||e.created_at;const conf=e.match_confidence!=null?Math.round(Number(e.match_confidence)*100)+'%':'—';const pdf=p?.visa_document_path?'<button class="btn green" style="padding:6px 9px" onclick="viewVisaPdf(\''+p.id+'\')">عرض PDF</button>':esc(e.attachment_name||'—');return '<tr><td dir="ltr">'+esc(dt?new Date(dt).toLocaleString('ar-IQ'):'—')+'</td><td dir="ltr">'+esc(e.sender||'—')+'</td><td>'+esc(e.subject||'—')+'</td><td>'+pdf+'</td><td><b>'+esc(p?.full_name||'غير مطابقة')+'</b></td><td dir="ltr">'+esc(p?.passport_number||'—')+'</td><td dir="ltr">'+esc(p?.visa_number||'—')+'</td><td>'+method(e.match_method)+'</td><td>'+conf+'</td><td>'+result(e.status)+'</td></tr>}).join('')}catch(e){body.innerHTML='<tr><td colspan="10" class="muted">تعذر تحميل سجل البريد: '+esc(e?.message||e)+'</td></tr>'}}async function load(){const {data,error}=await db.from('pilgrims').select('id,full_name,profile_code,passport_number,passport_first_name,nationality,visa_status,visa_number,visa_issued_at,visa_document_path,bookings(program_id,programs(title))').order('created_at',{ascending:false}).limit(5000);if(error){$('rows').innerHTML=`<tr><td colspan="9">تعذر تحميل البيانات: ${esc(error.message)}</td></tr>`;return}all=data||[];render();}
+async function loadVisaEmailLog(){const body=$('visaEmailRows');if(!body)return;body.innerHTML='<tr><td colspan="10" class="muted">جاري تحميل سجل البريد...</td></tr>';try{const r=await withTimeout(db.from('visa_email_events').select('id,sender,subject,received_at,attachment_name,matched_pilgrim_id,match_method,match_confidence,status,error_message,created_at').order('created_at',{ascending:false}).limit(30),8000);if(r.error)throw r.error;const events=r.data||[];const matched=events.filter(e=>!!e.matched_pilgrim_id).length;$('emailLogTotal').textContent=events.length;$('emailLogMatched').textContent=matched;$('emailLogUnmatched').textContent=events.filter(e=>!e.matched_pilgrim_id||e.status==='unmatched').length;if(!events.length){body.innerHTML='<tr><td colspan="10" class="muted">لا توجد رسائل تأشيرات واردة حتى الآن.</td></tr>';return}const method=x=>x==='passport'?'رقم الجواز':x==='name'?'الاسم':'—';const result=x=>x==='matched_saved'?'<span class="badge b-issued">تم الربط والحفظ</span>':x==='unmatched'?'<span class="badge b-rejected">غير مطابقة</span>':x==='no_pdf'?'<span class="badge b-processing">لا يوجد PDF</span>':'<span class="badge b-processing">'+esc(x||'غير معروف')+'</span>';body.innerHTML=events.map(e=>{const p=e.matched_pilgrim_id?all.find(x=>x.id===e.matched_pilgrim_id):null;const dt=e.received_at||e.created_at;const conf=e.match_confidence!=null?Math.round(Number(e.match_confidence)*100)+'%':'—';const pdf=p?.visa_document_path?'<button class="btn green" style="padding:6px 9px" onclick="viewVisaPdf(\\''+p.id+'\\')">عرض PDF</button>':esc(e.attachment_name||'—');return '<tr><td dir="ltr">'+esc(dt?new Date(dt).toLocaleString('ar-IQ'):'—')+'</td><td dir="ltr">'+esc(e.sender||'—')+'</td><td>'+esc(e.subject||'—')+'</td><td>'+pdf+'</td><td><b>'+esc(p?.full_name||'غير مطابقة')+'</b></td><td dir="ltr">'+esc(p?.passport_number||'—')+'</td><td dir="ltr">'+esc(p?.visa_number||'—')+'</td><td>'+method(e.match_method)+'</td><td>'+conf+'</td><td>'+result(e.status)+'</td></tr>}).join('')}catch(e){$('emailLogTotal').textContent='0';$('emailLogMatched').textContent='0';$('emailLogUnmatched').textContent='0';body.innerHTML='<tr><td colspan="10" class="muted">لا توجد بيانات بريد متاحة حاليًا.</td></tr>'}}
+function statusMatches(x){const v=x.visa_status||'pending';if(activeFilter==='pending')return v==='pending'||v==='processing';if(activeFilter==='issued')return v==='issued';if(activeFilter==='rejected')return v==='rejected';return true}function setVisaFilter(f){activeFilter=f||'all';document.querySelectorAll('.stat[data-filter]').forEach(el=>el.classList.toggle('active',el.dataset.filter===activeFilter));const labels={all:'عرض جميع المعتمرين',pending:'عرض الجوازات بانتظار إصدار التأشيرة',issued:'عرض الجوازات التي صدرت تأشيرتها',rejected:'عرض الجوازات المرفوضة / غير الصادرة'};$('filterLabel').textContent=labels[activeFilter]||labels.all;render()}function render(){const q=($('search').value||'').trim().toLowerCase();const list=all.filter(x=>statusMatches(x)&&(!q||[x.full_name,x.profile_code,x.passport_number,x.visa_number].some(v=>String(v||'').toLowerCase().includes(q))));$('total').textContent=all.length;$('pending').textContent=all.filter(x=>{const v=x.visa_status||'pending';return v==='pending'||v==='processing'}).length;$('issued').textContent=all.filter(x=>x.visa_status==='issued').length;$('rejected').textContent=all.filter(x=>x.visa_status==='rejected').length;if(!list.length){$('rows').innerHTML='<tr><td colspan="9" class="muted">لا توجد نتائج ضمن هذا التصنيف.</td></tr>';return}$('rows').innerHTML=list.map(x=>{const p=x.bookings?.[0]?.programs?.title||'—';return `<tr><td><b>${esc(x.full_name)}</b></td><td>${esc(x.profile_code||'—')}</td><td>${esc(x.passport_number||'—')}</td><td>${esc(p)}</td><td>${badge(x.visa_status)}</td><td>${esc(x.visa_number||'—')}</td><td>${esc(x.visa_issued_at||'—')}</td><td>${x.visa_document_path?'<span class="badge b-issued">PDF محفوظ</span>':'<span class="muted">غير محفوظ</span>'}</td><td><div class="actions"><button class="btn gold" onclick="openInquiry('${x.id}')">استعلام الوزارة</button><button class="btn primary" onclick="openUpdate('${x.id}')">تحديث الحالة</button><button class="btn green" onclick="uploadVisaPdf('${x.id}')">📄 حفظ PDF</button>${x.visa_document_path?'<button class="btn" onclick="viewVisaPdf(\''+x.id+'\')">عرض PDF</button>':''}</div></td></tr>`}).join('')}
+function openInquiry(id){current=all.find(x=>x.id===id);if(!current)return;$('inquiryTitle').textContent='استعلام التأشيرة: '+current.full_name;$('inqPassport').textContent=current.passport_number||'غير محفوظ';$('inqFirstName').textContent=current.passport_first_name||'غير محفوظ';$('inqNationality').textContent='العراق';const w=$('inqWarning'),ed=$('inqFirstNameEditor'),inp=$('inqFirstNameInput');const missing=[];if(!current.passport_number)missing.push('رقم الجواز');if(!current.passport_first_name)missing.push('الاسم الأول بالإنكليزي من الجواز');if(missing.length){w.style.display='block';w.textContent='⚠️ البيانات الناقصة: '+missing.join('، ')+'.';}else w.style.display='none';if(!current.passport_first_name){ed.style.display='block';inp.value='';$('saveInquiryFirstName').onclick=async()=>{const value=((inp.value||'').trim().replace(/[<_]+/g,' ').replace(/[^A-Za-z\s'-]/g,' ').split(/\s+/)[0]||'').toUpperCase();if(!value)return alert('أدخل الاسم الأول كما هو في الجواز.');const r=await db.from('pilgrims').update({passport_first_name:value}).eq('id',current.id);if(r.error)return alert('تعذر حفظ الاسم الأول: '+r.error.message);current.passport_first_name=value;$('inqFirstName').textContent=value;ed.style.display='none';const missing2=[];if(!current.passport_number)missing2.push('رقم الجواز');if(missing2.length){w.style.display='block';w.textContent='⚠️ البيانات الناقصة: '+missing2.join('، ')+'.';}else w.style.display='none';alert('تم حفظ الاسم الأول بنجاح ✅');};}else ed.style.display='none';$('openMofa').onclick=()=>window.open('https://visa.mofa.gov.sa/visaservices/searchvisa','_blank','noopener');$('inquiryModal').classList.remove('hide')}
+function copyInquiry(id){const v=$(id)?.textContent?.trim()||'';if(!v||v==='—'||v==='غير محفوظ')return alert('لا توجد قيمة محفوظة للنسخ.');navigator.clipboard?.writeText(v).then(()=>alert('تم النسخ ✅')).catch(()=>{const ta=document.createElement('textarea');ta.value=v;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('تم النسخ ✅')})}
+async function uploadVisaPdf(id){
+ current=all.find(x=>x.id===id); if(!current)return;
+ const input=$('visaPdfInput'); input.value='';
+ input.onchange=async()=>{const file=input.files?.[0];if(!file)return;
+   if(file.type!=='application/pdf' && !/\.pdf$/i.test(file.name)){alert('يرجى اختيار ملف PDF فقط.');return;}
+   const safePassport=String(current.passport_number||'NO-PASSPORT').replace(/[^A-Za-z0-9_-]/g,'');
+   const path='visa-'+safePassport+'-'+Date.now()+'.pdf';
+   try{
+    const up=await db.storage.from('pilgrim-photos').upload(path,file,{upsert:false,contentType:'application/pdf'});
+    if(up.error)throw up.error;
+    const ur=await db.from('pilgrims').update({visa_document_path:path,visa_status:'issued',visa_issued_at:current.visa_issued_at||new Date().toISOString().slice(0,10)}).eq('id',current.id);
+    if(ur.error)throw ur.error;
+    alert('تم حفظ التأشيرة PDF وربطها بالمعتمر بنجاح ✅'); await load();
+   }catch(e){alert('تعذر حفظ ملف التأشيرة: '+(e?.message||e));}
+ }; input.click();
+}
+async function viewVisaPdf(id){const x=all.find(v=>v.id===id);if(!x?.visa_document_path)return alert('لا يوجد ملف تأشيرة محفوظ.');try{const r=await db.storage.from('pilgrim-photos').createSignedUrl(x.visa_document_path,3600);if(r.error||!r.data?.signedUrl)throw r.error||new Error('تعذر إنشاء رابط الملف');window.open(r.data.signedUrl,'_blank','noopener');}catch(e){alert('تعذر فتح التأشيرة: '+(e?.message||e));}}
+function openMofaForSave(){window.open('https://visa.mofa.gov.sa/visaservices/searchvisa','_blank','noopener');}
+function openUpdate(id){current=all.find(x=>x.id===id);if(!current)return;$('modalTitle').textContent='تحديث تأشيرة: '+current.full_name;$('visaNumber').value=current.visa_number||'';$('visaDate').value=current.visa_issued_at||'';$('modal').classList.remove('hide')}
+function close(){current=null;$('modal').classList.add('hide')}
+async function update(status){if(!current)return;const patch={visa_status:status,visa_number:status==='issued'?($('visaNumber').value.trim()||null):null,visa_issued_at:status==='issued'?($('visaDate').value||new Date().toISOString().slice(0,10)):null};const {error}=await db.from('pilgrims').update(patch).eq('id',current.id);if(error){alert('تعذر حفظ الحالة: '+error.message);return}close();await load()}
+$('search').addEventListener('input',render);document.querySelectorAll('.stat[data-filter]').forEach(el=>el.addEventListener('click',()=>setVisaFilter(el.dataset.filter)));$('refresh').onclick=()=>{load();loadVisaEmailLog()};$('refreshVisaEmailLog').onclick=loadVisaEmailLog;$('zohoSync').onclick=zohoSync;$('zohoCopyWebhook').onclick=()=>{const v=$('zohoCopyWebhook').dataset.url||ZOHO_FN+'?action=webhook';navigator.clipboard?.writeText(v).then(()=>alert('تم نسخ رابط الربط ✅')).catch(()=>alert(v))};zohoStatus();$('closeModal').onclick=close;$('closeInquiry').onclick=()=>{$('inquiryModal').classList.add('hide');current=null};$('saveIssued').onclick=()=>update('issued');$('savePending').onclick=()=>update('pending');$('saveProcessing').onclick=()=>update('processing');$('saveRejected').onclick=()=>update('rejected');load().then(()=>{loadVisaEmailLog();const id=new URLSearchParams(location.search).get('open');if(id)openUpdate(id)});
+</script>
+<script id="qawafel-audit-v169">
+(function(){
+  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+  const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  let started=false, wrapped=false;
+  const page=()=>location.pathname.split('/').pop()||'index.html';
+  const safe=(v)=>String(v??'').replace(/\s+/g,' ').trim().slice(0,180);
+  function start(){
+    if(started||!window.supabase||!window.supabase.createClient)return false;
+    started=true;
+    const db=window.supabase.createClient(U,K);
+    const log=(a,t=null,i=null,l=null,d={})=>db.rpc('log_audit_event',{p_action:a,p_entity_type:t,p_entity_id:i,p_entity_label:l,p_details:d,p_page:page()}).then(()=>{},()=>{});
+    window.qawafelAudit=log;
+    window.qawafelAuditV169=log;
+
+    // تسجيل فتح الصفحة وتسجيل الدخول من هوية الجلسة الحقيقية.
+    db.auth.getSession().then(({data})=>{
+      if(data&&data.session&&data.session.user){
+        log('page_view','page',page(),document.title);
+        const key='qawafel_audit_login_logged_v169';
+        if(!sessionStorage.getItem(key)){sessionStorage.setItem(key,'1');log('login','auth',data.session.user.id,'تسجيل دخول');}
+      }
+    }).then(()=>{},()=>{});
+    db.auth.onAuthStateChange((event,session)=>{
+      if(event==='SIGNED_IN'&&session&&session.user) log('login','auth',session.user.id,'تسجيل دخول');
+      if(event==='SIGNED_OUT') log('logout','auth',null,'تسجيل خروج');
+    });
+
+    if(!window.__qawafelAuditV169Bound){
+      window.__qawafelAuditV169Bound=true;
+      document.addEventListener('click',e=>{
+        const el=e.target.closest('button,a,[role="button"],input[type="submit"],input[type="button"]');
+        if(!el)return;
+        const txt=safe(el.innerText||el.value||el.getAttribute('aria-label')||el.title||el.id||'زر');
+        if(txt) log('ui_action','ui',el.id||null,txt,{tag:el.tagName.toLowerCase(),href:el.getAttribute('href')||null});
+      },true);
+      document.addEventListener('submit',e=>{
+        const f=e.target; if(!f)return;
+        log('form_submit','form',f.id||null,safe(f.getAttribute('aria-label')||f.getAttribute('name')||f.id||'إرسال نموذج'),{action:f.getAttribute('action')||null});
+      },true);
+      document.addEventListener('change',e=>{
+        const el=e.target; if(!el||!el.matches('select,input[type="file"],input[type="checkbox"],input[type="radio"]'))return;
+        const label=el.id||el.name||el.getAttribute('aria-label')||el.type||'حقل';
+        let detail={type:el.type||el.tagName.toLowerCase()};
+        if(el.type==='file') detail.files=Array.from(el.files||[]).map(f=>f.name).slice(0,10);
+        else if(el.type==='checkbox'||el.type==='radio') detail.checked=!!el.checked;
+        else detail.value=safe(el.value);
+        log(el.type==='file'?'file_select':'field_change','field',el.id||null,safe(label),detail);
+      },true);
+    }
+
+    // التقاط عمليات الكتابة/التعديل الفعلية إلى Supabase، حتى لو لم يكن للزر
+    // أي تسجيل يدوي داخل الصفحة. نتجاهل استدعاء سجل النشاط نفسه.
+    if(!wrapped){
+      wrapped=true;
+      const nativeFetch=window.fetch.bind(window);
+      window.fetch=async function(input,init){
+        const reqUrl=typeof input==='string'?input:(input&&input.url)||'';
+        const method=((init&&init.method)||((input&&input.method)||'GET')).toUpperCase();
+        const isSb=reqUrl.indexOf(U)>=0;
+        const isAudit=reqUrl.indexOf('/rest/v1/rpc/log_audit_event')>=0;
+        const mut=isSb&&['POST','PATCH','PUT','DELETE'].includes(method)&&!isAudit;
+        let resp;
+        try{resp=await nativeFetch(input,init);}catch(err){throw err;}
+        if(mut){
+          try{
+            const u=new URL(reqUrl,U);
+            const parts=u.pathname.split('/').filter(Boolean);
+            let op='db_operation', type=parts[1]||'supabase', label='';
+            if(parts[1]==='rpc'){label=parts[2]||'rpc';}else{label=parts[1]||'table';}
+            const status=resp.status;
+            log(op,type,null,safe(method+' '+label),{method,url:u.pathname,status,ok:resp.ok});
+          }catch(_){}
+        }
+        return resp;
+      };
+    }
+    return true;
+  }
+  if(!start()){
+    let tries=0; const timer=setInterval(()=>{if(start()||++tries>=75)clearInterval(timer)},200);
+  }
+})();
+</script>
+<script id="qawafel-permission-menu-v174">
+(function(){
+ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
+ let perms=null, busy=false;
+ function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
+ function apply(){
+   if(!perms || busy)return; busy=true;
+   try{
+     document.querySelectorAll('a[href]').forEach(a=>{
+       const k=pageKey(a.getAttribute('href')); if(!k)return;
+       let ok=perms.has(k);
+       if(k==='nusuk') ok=ok||perms.has('booking_staff')||perms.has('visa');
+       if(k==='supervisors') ok=ok||perms.has('supervisor')||perms.has('driver');
+       if(k==='super_admin') ok=false;
+       a.style.display=ok?'':'none';
+       a.setAttribute('aria-hidden',ok?'false':'true');
+     });
+   }finally{busy=false}
+ }
+ async function run(){
+   try{
+     if(!window.supabase)return;
+     const db=window.supabase.createClient(U,K);
+     const r=await db.auth.getUser(),u=r.data&&r.data.user;if(!u)return;
+     const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+     const s=q.data;if(!s||s.active===false)return;
+     if(['super_admin','manager'].includes(s.role)) return; // المدير والمدير العام يرون كل الأقسام
+     perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
+     apply();
+     const obs=new MutationObserver(()=>apply());
+     obs.observe(document.body,{childList:true,subtree:true});
+     setTimeout(()=>obs.disconnect(),15000);
+     [100,300,700,1500,3000].forEach(t=>setTimeout(apply,t));
+   }catch(e){console.warn('permission menu',e)}
+ }
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
+})();
+</script><script id="qawafel-permission-guard-v175">
+(function(){
+  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+  const map={
+    'programs.html':'trips','pilgrims.html':'booking_staff','agents.html':'agents','supervisors.html':'supervisors',
+    'visa.html':'visa','nusuk.html':'nusuk','archive.html':'archive','financial.html':'finance','employees.html':'manager','audit.html':'super_admin'
+  };
+  const sensitive=Object.keys(map);
+  let applied=false;
+  function key(h){
+    try{return new URL(h,location.href).pathname.split('/').pop().toLowerCase()}catch(e){return String(h||'').split('?')[0].split('#')[0].split('/').pop().toLowerCase()}
+  }
+  function hideAll(){
+    document.querySelectorAll('a[href]').forEach(a=>{
+      const k=key(a.getAttribute('href')); if(sensitive.includes(k)) a.style.display='none';
+    });
+  }
+  function sectionCleanup(){
+    document.querySelectorAll('#qawafelAdminDrawer .qad-section').forEach(sec=>{
+      let n=sec.nextElementSibling,has=false;
+      while(n && !n.classList.contains('qad-section')){if(n.matches&&n.matches('.qad-link')&&n.style.display!=='none')has=true;n=n.nextElementSibling}
+      if(sec.textContent.includes('المالية')||sec.textContent.includes('العمليات')) sec.style.display=has?'':'none';
+    });
+  }
+  async function apply(){
+    try{
+      if(!window.supabase){return false;}
+      const db=window.supabase.createClient(U,K);
+      const r=await db.auth.getUser(); const u=r.data&&r.data.user;
+      if(!u){hideAll();return false;}
+      const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+      const s=q.data;
+      if(!s || s.active===false){hideAll();return false;}
+      if(s.role==='super_admin'||s.role==='manager'){
+        document.querySelectorAll('a[href]').forEach(a=>{const k=key(a.getAttribute('href'));if(sensitive.includes(k))a.style.display='';});
+        sectionCleanup(); applied=true; return true;
+      }
+      const perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
+      document.querySelectorAll('a[href]').forEach(a=>{
+        const k=key(a.getAttribute('href')); const need=map[k]; if(!need)return;
+        let ok=perms.has(need);
+        if(k==='nusuk.html') ok=ok||perms.has('booking_staff')||perms.has('visa');
+        if(k==='supervisors.html') ok=ok||perms.has('supervisor')||perms.has('driver');
+        a.style.display=ok?'':'none';
+        a.setAttribute('aria-hidden',ok?'false':'true');
+      });
+      sectionCleanup(); applied=true; return true;
+    }catch(e){console.warn('permission guard',e);hideAll();return false;}
+  }
+  hideAll();
+  let tries=0;
+  const timer=setInterval(async()=>{tries++;const ok=await apply();if(ok||tries>=20){clearInterval(timer);}},500);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{hideAll();apply();});
+  else {hideAll();apply();}
+  const obs=new MutationObserver(()=>{if(applied)apply();});
+  obs.observe(document.documentElement,{childList:true,subtree:true});
+  setTimeout(()=>obs.disconnect(),20000);
+})();
+</script></body></html>async function load(){const row=$('rows');try{const result=await withTimeout(db.from('pilgrims').select('id,full_name,profile_code,passport_number,passport_first_name,nationality,visa_status,visa_number,visa_issued_at,visa_document_path,bookings(program_id,programs(title))').order('created_at',{ascending:false}).limit(5000),10000);if(result.error)throw result.error;all=result.data||[];render();}catch(e){all=[];$('total').textContent='0';$('pending').textContent='0';$('issued').textContent='0';$('rejected').textContent='0';if(row)row.innerHTML='<tr><td colspan="9" class="muted">لا توجد بيانات للعرض حاليًا.</td></tr>';}}
 function statusMatches(x){const v=x.visa_status||'pending';if(activeFilter==='pending')return v==='pending'||v==='processing';if(activeFilter==='issued')return v==='issued';if(activeFilter==='rejected')return v==='rejected';return true}function setVisaFilter(f){activeFilter=f||'all';document.querySelectorAll('.stat[data-filter]').forEach(el=>el.classList.toggle('active',el.dataset.filter===activeFilter));const labels={all:'عرض جميع المعتمرين',pending:'عرض الجوازات بانتظار إصدار التأشيرة',issued:'عرض الجوازات التي صدرت تأشيرتها',rejected:'عرض الجوازات المرفوضة / غير الصادرة'};$('filterLabel').textContent=labels[activeFilter]||labels.all;render()}function render(){const q=($('search').value||'').trim().toLowerCase();const list=all.filter(x=>statusMatches(x)&&(!q||[x.full_name,x.profile_code,x.passport_number,x.visa_number].some(v=>String(v||'').toLowerCase().includes(q))));$('total').textContent=all.length;$('pending').textContent=all.filter(x=>{const v=x.visa_status||'pending';return v==='pending'||v==='processing'}).length;$('issued').textContent=all.filter(x=>x.visa_status==='issued').length;$('rejected').textContent=all.filter(x=>x.visa_status==='rejected').length;if(!list.length){$('rows').innerHTML='<tr><td colspan="9" class="muted">لا توجد نتائج ضمن هذا التصنيف.</td></tr>';return}$('rows').innerHTML=list.map(x=>{const p=x.bookings?.[0]?.programs?.title||'—';return `<tr><td><b>${esc(x.full_name)}</b></td><td>${esc(x.profile_code||'—')}</td><td>${esc(x.passport_number||'—')}</td><td>${esc(p)}</td><td>${badge(x.visa_status)}</td><td>${esc(x.visa_number||'—')}</td><td>${esc(x.visa_issued_at||'—')}</td><td>${x.visa_document_path?'<span class="badge b-issued">PDF محفوظ</span>':'<span class="muted">غير محفوظ</span>'}</td><td><div class="actions"><button class="btn gold" onclick="openInquiry('${x.id}')">استعلام الوزارة</button><button class="btn primary" onclick="openUpdate('${x.id}')">تحديث الحالة</button><button class="btn green" onclick="uploadVisaPdf('${x.id}')">📄 حفظ PDF</button>${x.visa_document_path?'<button class="btn" onclick="viewVisaPdf(\''+x.id+'\')">عرض PDF</button>':''}</div></td></tr>`}).join('')}
 function openInquiry(id){current=all.find(x=>x.id===id);if(!current)return;$('inquiryTitle').textContent='استعلام التأشيرة: '+current.full_name;$('inqPassport').textContent=current.passport_number||'غير محفوظ';$('inqFirstName').textContent=current.passport_first_name||'غير محفوظ';$('inqNationality').textContent='العراق';const w=$('inqWarning'),ed=$('inqFirstNameEditor'),inp=$('inqFirstNameInput');const missing=[];if(!current.passport_number)missing.push('رقم الجواز');if(!current.passport_first_name)missing.push('الاسم الأول بالإنكليزي من الجواز');if(missing.length){w.style.display='block';w.textContent='⚠️ البيانات الناقصة: '+missing.join('، ')+'.';}else w.style.display='none';if(!current.passport_first_name){ed.style.display='block';inp.value='';$('saveInquiryFirstName').onclick=async()=>{const value=((inp.value||'').trim().replace(/[<_]+/g,' ').replace(/[^A-Za-z\s'-]/g,' ').split(/\s+/)[0]||'').toUpperCase();if(!value)return alert('أدخل الاسم الأول كما هو في الجواز.');const r=await db.from('pilgrims').update({passport_first_name:value}).eq('id',current.id);if(r.error)return alert('تعذر حفظ الاسم الأول: '+r.error.message);current.passport_first_name=value;$('inqFirstName').textContent=value;ed.style.display='none';const missing2=[];if(!current.passport_number)missing2.push('رقم الجواز');if(missing2.length){w.style.display='block';w.textContent='⚠️ البيانات الناقصة: '+missing2.join('، ')+'.';}else w.style.display='none';alert('تم حفظ الاسم الأول بنجاح ✅');};}else ed.style.display='none';$('openMofa').onclick=()=>window.open('https://visa.mofa.gov.sa/visaservices/searchvisa','_blank','noopener');$('inquiryModal').classList.remove('hide')}
 function copyInquiry(id){const v=$(id)?.textContent?.trim()||'';if(!v||v==='—'||v==='غير محفوظ')return alert('لا توجد قيمة محفوظة للنسخ.');navigator.clipboard?.writeText(v).then(()=>alert('تم النسخ ✅')).catch(()=>{const ta=document.createElement('textarea');ta.value=v;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();alert('تم النسخ ✅')})}
