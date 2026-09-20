@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V287-ANALYTICS-AR-EVENTS">
+<meta name="qawafel-build" content="V288-ANALYTICS-AR-EVENTS">
 <title>إحصائيات الموقع | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -117,6 +117,19 @@ async function load(){
 }
 $('refresh').onclick=load;$('range').onchange=load;
 $('logout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
-(async()=>{try{const s=await db.auth.getSession();if(!s.data?.session){location.href='./internal.html';return;}load();}catch(e){location.href='./internal.html';}})();
+(async()=>{
+  try{
+    const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('انتهت مهلة الاتصال بخدمة الدخول')),10000));
+    const result=await Promise.race([db.auth.getSession(),timeout]);
+    if(!result?.data?.session){
+      showStatus('🔐 انتهت جلسة الدخول. ارجع إلى لوحة الإدارة وسجّل الدخول من جديد.','err');
+      return;
+    }
+    load();
+  }catch(e){
+    console.error(e);
+    showStatus('❌ تعذر التحقق من جلسة الدخول.<br>'+String(e?.message||e)+'<br><button onclick="location.reload()">↻ إعادة المحاولة</button>','err');
+  }
+})();
 </script>
 </body></html>
