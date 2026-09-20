@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V292-ANALYTICS-AR-EVENTS">
+<meta name="qawafel-build" content="V293-ANALYTICS-DEVICES-SOURCES">
 <title>إحصائيات الموقع | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -43,7 +43,7 @@
       </div>
       <div>
         <div class="card"><div class="sect"><div><h2>🔗 مصادر الزيارات</h2><small>من أين وصل الزوار</small></div></div><div id="sources"></div></div>
-        <div class="card"><div class="sect"><div><h2>🌍 الدول والمدن</h2><small>الموقع الجغرافي التقريبي</small></div></div><div id="geo"></div></div>
+        <div class="card"><div class="sect"><div><h2>🌍 الدول</h2><small>الموقع الجغرافي التقريبي</small></div></div><div id="geo"></div></div><div class="card"><div class="sect"><div><h2>📱 نوع الجهاز</h2><small>كيف يتصفح الزوار الموقع</small></div></div><div id="devices"></div></div>
         <div class="card"><div class="sect"><div><h2>🟢 الموجودون الآن</h2><small>بيانات آخر دقائق</small></div></div><div id="realtime"></div></div>
       </div>
     </div>
@@ -68,6 +68,7 @@ function bars(rows,labelIndex=0,valueIndex=1){
 function cleanPath(v){return String(v||'/').replace(/^https?:\/\/[^/]+/,'')||'/';}
 const EVENT_LABELS={page_view:'مشاهدة صفحة',first_visit:'أول زيارة',session_start:'بداية جلسة',user_engagement:'تفاعل المستخدم',whatsapp_click:'ضغط على واتساب',programs_section_click:'فتح قسم البرامج',visa_section_click:'فتح قسم التأشيرة',pilgrim_login_click:'دخول المعتمر',agent_login_click:'دخول الوكيل',admin_login_click:'دخول الإدارة',program_search:'البحث عن برنامج',visa_tracking_attempt:'محاولة تتبع التأشيرة',program_view:'مشاهدة برنامج',scroll:'التمرير في الصفحة',click:'نقرة',file_download:'تنزيل ملف',video_start:'بدء فيديو',video_progress:'تقدم الفيديو',video_complete:'اكتمال الفيديو',view_search_results:'عرض نتائج البحث',form_start:'بدء تعبئة النموذج',form_submit:'إرسال النموذج',generate_lead:'إنشاء طلب',sign_up:'إنشاء حساب',login:'تسجيل الدخول',search:'بحث'};
 function eventLabel(v){return EVENT_LABELS[String(v||'')]||String(v||'حدث آخر');}
+function deviceLabel(v){return ({mobile:'هاتف محمول',desktop:'كمبيوتر',tablet:'جهاز لوحي'}[String(v||'').toLowerCase()]||String(v||'غير محدد'));}
 async function load(){
   $('dashboard').classList.add('hide');
   showStatus('⏳ جاري تحميل الإحصائيات...');
@@ -87,7 +88,7 @@ async function load(){
     $('pages').innerHTML=rowsHtml((data.pages||[]).map(r=>[cleanPath(r.pagePath),r.pageTitle||'',fmt(r.screenPageViews),fmt(r.totalUsers)]),['الصفحة','العنوان','المشاهدات','المستخدمون']);
     $('events').innerHTML=rowsHtml((data.events||[]).map(r=>[eventLabel(r.eventName),fmt(r.eventCount)]),['الحدث','العدد']);
     $('sources').innerHTML=bars((data.sources||[]).map(r=>[(r.source||'(مباشر)')+' / '+(r.medium||'(none)'),r.sessions]));
-    $('geo').innerHTML=bars((data.geo||[]).map(r=>[(r.city&&r.city!=='(not set)'?r.city:'غير محدد')+' — '+(r.country||''),r.activeUsers]));
+    $('geo').innerHTML=bars((data.geo||[]).map(r=>[r.country||'غير محدد',r.activeUsers]));$('devices').innerHTML=bars((data.devices||[]).map(r=>[deviceLabel(r.device),r.activeUsers]));
     $('realtime').innerHTML=bars((data.realtime||[]).map(r=>[eventLabel(r.eventName),r.activeUsers]));
     $('dashboard').classList.remove('hide');
     showStatus('✅ تم تحديث الإحصائيات بنجاح <div class="updated">آخر تحديث: '+new Date().toLocaleString('ar-IQ')+'</div>','ok');
