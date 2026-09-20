@@ -141,30 +141,47 @@ function wirePassport(who){let ids=[who+'Pass',who+'PassCam'];ids.forEach(id=>$(
 wirePassport('s');wirePassport('d');$('dPass').addEventListener('change',async()=>{let f=$('dPass').files?.[0];if(f){$('dExtractPhoto').disabled=false;window.currentDriverPhotoFile=await extractDriverPhoto(f,'dPhotoPreview','dPhotoMsg');$('dCropPhoto').disabled=!window.currentDriverPhotoFile}});$('dExtractPhoto').onclick=async()=>{let f=$('dPass').files?.[0];if(!f)return;window.currentDriverPhotoFile=await extractDriverPhoto(f,'dPhotoPreview','dPhotoMsg');$('dCropPhoto').disabled=!window.currentDriverPhotoFile};$('dCropPhoto').onclick=async()=>{if(!window.currentDriverPhotoFile)return;let out=await cropPersonalDriverPhoto(window.currentDriverPhotoFile);if(out){window.currentDriverPhotoFile=out;$('dPhotoPreview').src=URL.createObjectURL(out);$('dPhotoPreview').style.display='block';$('dPhotoMsg').textContent='تم اعتماد الصورة الشخصية المعدلة.'}};
 $('rotL').onclick=()=>cropState.cropper?.rotate(-90);$('rotR').onclick=()=>cropState.cropper?.rotate(90);$('cropReset').onclick=()=>cropState.cropper?.reset();$('cropZoomIn').onclick=()=>cropState.cropper?.zoom(.1);$('cropZoomOut').onclick=()=>cropState.cropper?.zoom(-.1);$('cropClose').onclick=closeCrop;$('cropSave').onclick=saveCrop;
 async function guard(){
-  let r=await db.auth.getUser();
-  if(!r.data?.user){location.href='internal.html';return false}
-  currentUser=r.data.user;
+  const timeout=(ms)=>new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة التحقق من تسجيل الدخول')),ms));
+  try{
+    // getSession أسرع وأكثر ثباتًا هنا من getUser ولا ينتظر طلبًا خارجيًا.
+    const r=await Promise.race([db.auth.getSession(),timeout(6000)]);
+    const user=r.data?.session?.user;
+    if(!user){location.href='internal.html';return false}
+    currentUser=user;
 
-  // نتحقق من المشرف العام أولاً لتجنب أي تعارض مع سياسات قراءة staff_profiles.
-  let a=await db.from('admin_users').select('role').eq('user_id',currentUser.id).maybeSingle();
-  if(!a.error&&a.data?.role==='super_admin')return 'manager';
+    // المشرف العام أولاً.
+    const a=await Promise.race([
+      db.from('admin_users').select('role').eq('user_id',currentUser.id).maybeSingle(),
+      timeout(5000)
+    ]);
+    if(!a.error&&a.data?.role==='super_admin')return 'manager';
 
-  let s=await db.from('staff_profiles').select('full_name,role,active,permissions').eq('user_id',currentUser.id).maybeSingle();
-  if(!s.error&&s.data?.active!==false&&['super_admin','manager'].includes(s.data?.role))return 'manager';
-  if(!s.error&&s.data?.active!==false&&Array.isArray(s.data?.permissions)&&s.data.permissions.includes('supervisors'))return 'manager';
+    const s=await Promise.race([
+      db.from('staff_profiles').select('full_name,role,active,permissions').eq('user_id',currentUser.id).maybeSingle(),
+      timeout(5000)
+    ]);
+    if(!s.error&&s.data?.active!==false&&['super_admin','manager'].includes(s.data?.role))return 'manager';
+    if(!s.error&&s.data?.active!==false&&Array.isArray(s.data?.permissions)&&s.data.permissions.includes('supervisors'))return 'manager';
 
-  if(!s.error&&s.data?.active!==false&&s.data?.role==='driver'){
-    document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');
-    let dr=await db.from('drivers').select('*').eq('user_id',currentUser.id).maybeSingle();
-    if(!dr.error&&dr.data){currentDriver=dr.data;return 'driver'}
+    if(!s.error&&s.data?.active!==false&&s.data?.role==='driver'){
+      document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');
+      const dr=await db.from('drivers').select('*').eq('user_id',currentUser.id).maybeSingle();
+      if(!dr.error&&dr.data){currentDriver=dr.data;return 'driver'}
+    }
+    if(!s.error&&s.data?.active!==false&&s.data?.role==='supervisor'){
+      document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');
+      const sp=await db.from('supervisors').select('*').eq('user_id',currentUser.id).maybeSingle();
+      if(!sp.error&&sp.data){currentSupervisor=sp.data;return 'supervisor'}
+    }
+    location.href='internal.html';return false;
+  }catch(e){
+    console.error('guard error',e);
+    $('supRows').innerHTML='<tr><td colspan="6">تعذر التحقق من جلسة الدخول. أعد تحميل الصفحة.</td></tr>';
+    msg(e.message||'تعذر التحقق من تسجيل الدخول.',true);
+    return false;
   }
-  if(!s.error&&s.data?.active!==false&&s.data?.role==='supervisor'){
-    document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');
-    let sp=await db.from('supervisors').select('*').eq('user_id',currentUser.id).maybeSingle();
-    if(!sp.error&&sp.data){currentSupervisor=sp.data;return 'supervisor'}
-  }
-  location.href='internal.html';return false;
 }
+
 async function loadData(){
   let errors=[];
   // لا نترك الجدول عالقًا على "جاري التحميل" إذا تأخر طلب الشبكة.
