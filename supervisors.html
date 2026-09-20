@@ -149,10 +149,23 @@ async function loadData(){
     supervisors=Array.isArray(r.data?.supervisors)?r.data.supervisors:[];
     drivers=Array.isArray(r.data?.drivers)?r.data.drivers:[];
   }catch(e){
-    console.error('team directory load error',e);
-    supervisors=[];
-    drivers=[];
-    errors.push('المشرفون والسائقون: '+(e.message||'تعذر تحميل بيانات الفريق'));
+    console.error('team directory RPC error',e);
+    // fallback مباشر حتى لا تتعطل القائمة إذا تأخر تحديث RPC في Supabase
+    try{
+      const [sr,dr]=await Promise.all([
+        db.from('supervisors').select('*').order('full_name'),
+        db.from('drivers').select('*').order('full_name_ar',{ascending:true})
+      ]);
+      if(sr.error) throw sr.error;
+      if(dr.error) throw dr.error;
+      supervisors=sr.data||[];
+      drivers=dr.data||[];
+    }catch(e2){
+      console.error('team directory direct load error',e2);
+      supervisors=[];
+      drivers=[];
+      errors.push('المشرفون والسائقون: '+(e2.message||e.message||'تعذر تحميل بيانات الفريق'));
+    }
   }
   try{
     let r=await db.from('programs').select('id,title,departure_date,supervisor_id,driver_id,driver_fee,assistant_driver_id').order('departure_date');
