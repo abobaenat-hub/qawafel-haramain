@@ -420,7 +420,7 @@ async function loadPrograms(){
    $('programRows').innerHTML=rows.map(p=>`<tr><td><b>${esc(p.title)}</b></td><td>${p.departure_date||'—'}</td><td>${esc(p.travel_type==='جو'?'طيران':p.travel_type||'—')}</td><td><b>متعددة</b><br><small>الأسعار والفنادق داخل الباقات</small></td><td>${p.seats_available??0}/${p.seats_total??0}</td><td><span class="badge ${p.status}">${statusName(p.status)}</span></td><td><div class="actions"><button class="btn ghost" onclick='fill(${JSON.stringify(p)})'>تعديل</button><button class="btn danger" onclick="removeProgram('${p.id}')">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">لا توجد رحلات مطابقة.</td></tr>';
    const completedSection=$('completedTripsSection');
    if(completedSection){
-     const showCompleted=(f==='all'||f==='full')&&completedRows.length>0;
+     const showCompleted=(f==='full')&&completedRows.length>0;
      completedSection.classList.toggle('hidden',!showCompleted);
      $('completedProgramRows').innerHTML=completedRows.map(p=>`<tr><td><b>${esc(p.title)}</b></td><td>${p.departure_date||'—'}</td><td>${esc(p.travel_type==='جو'?'طيران':p.travel_type||'—')}</td><td><b>متعددة</b><br><small>الأسعار والفنادق داخل الباقات</small></td><td>${p.seats_available??0}/${p.seats_total??0}</td><td><span class="badge full">${statusName(p.status)}</span></td><td><div class="actions"><button class="btn ghost" onclick='fill(${JSON.stringify(p)})'>تعديل</button><button class="btn danger" onclick="removeProgram('${p.id}')">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">لا توجد رحلات مكتملة.</td></tr>';
    }
