@@ -202,7 +202,7 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
   <div class="trip-modal-card">
     <div class="trip-modal-head">
       <div class="trip-modal-head-top">
-        <div><div id="tripModalTitle" class="trip-modal-title">معتمرو الرحلة</div><div id="tripModalSub" class="trip-modal-sub"></div></div>
+        <div><div id="tripModalTitle" class="trip-modal-title">إدارة الرحلة</div><div id="tripModalSub" class="trip-modal-sub"></div></div>
         <button class="close-trip" onclick="closeTripModal()">✕ إغلاق</button>
       </div>
     </div>
@@ -213,7 +213,7 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
         <input id="tripPilgrimSearch" placeholder="🔎 ابحث باسم المعتمر أو رقم الجواز أو الهاتف أو رقم المعتمر">
         <span id="tripPilgrimCount" class="trip-pilgrim-count">0 معتمر</span>
         <div class="trip-tools">
-          <a id="tripManageLink" class="btn primary" href="#">👥 إدارة المعتمرين</a>
+          <a id="tripManageLink" class="btn primary" href="#">👥 إدارة المعتمرين</a><button id="tripEditBtn" class="btn ghost" type="button">✏️ تعديل الرحلة</button><a id="tripFinanceLink" class="btn ghost" href="./financial.html?v=114">💰 مالية الرحلة</a>
           <button id="printBadgesTrip" class="btn gold" type="button">🪪 طباعة الباجات</button>
           <button id="passportStickersTrip" class="btn ghost" type="button">🏷️ ستيكر الجواز</button>
           <button id="zamzamStickersTrip" class="btn ghost" type="button">💧 ستيكر زمزم</button>
@@ -263,6 +263,8 @@ function renderVisaPanel(){
 async function saveVisa(id){const st=document.querySelector(`[data-visa-status="${id}"]`)?.value||'قيد المعالجة';const vn=document.querySelector(`[data-visa-number="${id}"]`)?.value.trim()||null;const vd=document.querySelector(`[data-visa-date="${id}"]`)?.value||null;const notes=document.querySelector(`[data-visa-notes="${id}"]`)?.value.trim()||null;const {data,error}=await db.rpc('update_pilgrim_visa',{p_pilgrim_id:id,p_visa_status:st,p_visa_number:vn,p_visa_issued_at:vd||null,p_visa_notes:notes});if(error){alert(error.message);return}const x=allProgramPilgrims.find(y=>y.id===id);if(x){x.visa_status=st;x.visa_number=vn;x.visa_issued_at=vd;x.visa_notes=notes}renderVisaPanel();renderTripPilgrims();}
 async function visaSetAll(status){if(!allProgramPilgrims.length)return; if(!confirm(`تغيير حالة ${allProgramPilgrims.length} معتمر إلى «${status}»؟`))return;for(const x of allProgramPilgrims){const r=await db.rpc('update_pilgrim_visa',{p_pilgrim_id:x.id,p_visa_status:status,p_visa_number:x.visa_number||null,p_visa_issued_at:x.visa_issued_at||null,p_visa_notes:x.visa_notes||null});if(r.error){alert(r.error.message);break}x.visa_status=status}renderVisaPanel();renderTripPilgrims();}
 function closeTripModal(){const m=$('tripModal');m.classList.add('hidden');m.setAttribute('aria-hidden','true');activeTrip=null}
+function openFullTripManagement(id){openTripPilgrims(id)}
+function editActiveTrip(){if(!activeTrip)return;const p=activeTrip;closeTripModal();fill(p)}
 function paymentLabel(b){
  const total=Number(b?.total_amount||0), paid=Number(b?.paid_amount||0), rem=Math.max(total-paid,0);
  if(!total || rem<=0) return '<span class="badge payment-paid">الدفع مكتمل</span>';
@@ -301,8 +303,8 @@ async function openTripPilgrims(id){
  activeTrip=p;
  $('tripModalTitle').textContent='معتمرو الرحلة — '+(p.title||'');
  $('tripModalSub').innerHTML='🗓 '+(p.departure_date||'غير محدد')+' &nbsp; · &nbsp; ✈️/🚌 '+esc(p.travel_type||'—');
- $('tripManageLink').href='./pilgrims.html?program='+encodeURIComponent(id);
- $('tripPilgrimSearch').value='';
+ $('tripManageLink').href='./pilgrims.html?program='+encodeURIComponent(id);$('tripFinanceLink').href='./financial.html?v=114&program='+encodeURIComponent(id);
+ $('tripPilgrimSearch').value='';$('tripEditBtn').onclick=editActiveTrip;
  $('tripModal').classList.remove('hidden');$('tripModal').setAttribute('aria-hidden','false');$('visaPanel').classList.add('hidden');
  $('tripPilgrimGrid').innerHTML='<div class="empty-pilgrims" style="grid-column:1/-1">جاري تحميل المعتمرين…</div>';
  const [{data:bs,error:be},{data:ps,error:pe}]=await Promise.all([db.from('bookings').select('id,program_id,status,total_amount,paid_amount,payment_type,package_id,agent_id').eq('program_id',id),db.from('pilgrims').select('id,booking_id,full_name,phone,passport_number,profile_code,visa_status,photo_path,gender,birth_date').order('full_name')]);
@@ -372,7 +374,7 @@ async function loadPrograms(){
      completedSection.classList.toggle('hidden',!showCompleted);
      $('completedProgramRows').innerHTML=completedRows.map(p=>`<tr><td><b>${esc(p.title)}</b></td><td>${p.departure_date||'—'}</td><td>${esc(p.travel_type==='جو'?'طيران':p.travel_type||'—')}</td><td><b>متعددة</b><br><small>الأسعار والفنادق داخل الباقات</small></td><td>${p.seats_available??0}/${p.seats_total??0}</td><td><span class="badge full">${statusName(p.status)}</span></td><td><div class="actions"><button class="btn ghost" onclick='fill(${JSON.stringify(p)})'>تعديل</button><button class="btn danger" onclick="removeProgram('${p.id}')">حذف</button></div></td></tr>`).join('')||'<tr><td colspan="7" class="empty">لا توجد رحلات مكتملة.</td></tr>';
    }
-   $('tripCards').innerHTML=rows.slice(0,6).map(p=>{const booked=B.filter(x=>x.program_id===p.id&&x.status!=='cancelled').length;const cap=Number(p.seats_total||0);const used=cap?Math.min(100,Math.round(booked/cap*100)):0;return `<div class="tripcard"><div class="triphead"><div><div class="triptitle">${esc(p.title)}</div><div class="tripmeta">🗓 ${p.departure_date||'غير محدد'} · ${p.travel_type==='جو'?'✈️ طيران':p.travel_type==='بر'?'🚌 بر':'🔄 '+esc(p.travel_type||'—')}<br>🏨 الأسعار والسكن حسب الباقة</div></div><span class="badge ${p.status}">${statusName(p.status)}</span></div><div class="progress"><i style="width:${used}%"></i></div><div class="tripfoot"><span>المحجوز <b>${booked}</b> من ${cap}</span><b>${used}% إشغال</b></div><div class="mini-actions"><button class="btn gold" onclick="openTripPilgrims('${p.id}')">👥 المعتمرون</button>${window.__canPilgrimManage?`<a class="btn ghost" href="./pilgrims.html?program=${encodeURIComponent(p.id)}">إدارة كاملة</a>`:''}<button class="btn primary" onclick='fill(${JSON.stringify(p)})'>✏️ تعديل</button></div></div>`}).join('')||'<div class="empty">لا توجد رحلات.</div>';
+   $('tripCards').innerHTML=rows.slice(0,6).map(p=>{const booked=B.filter(x=>x.program_id===p.id&&x.status!=='cancelled').length;const cap=Number(p.seats_total||0);const used=cap?Math.min(100,Math.round(booked/cap*100)):0;return `<div class="tripcard"><div class="triphead"><div><div class="triptitle">${esc(p.title)}</div><div class="tripmeta">🗓 ${p.departure_date||'غير محدد'} · ${p.travel_type==='جو'?'✈️ طيران':p.travel_type==='بر'?'🚌 بر':'🔄 '+esc(p.travel_type||'—')}<br>🏨 الأسعار والسكن حسب الباقة</div></div><span class="badge ${p.status}">${statusName(p.status)}</span></div><div class="progress"><i style="width:${used}%"></i></div><div class="tripfoot"><span>المحجوز <b>${booked}</b> من ${cap}</span><b>${used}% إشغال</b></div><div class="mini-actions"><button class="btn gold" onclick="openTripPilgrims('${p.id}')">👥 المعتمرون</button>${window.__canPilgrimManage?`<button class="btn ghost" type="button" onclick="openFullTripManagement('${p.id}')">⚙️ إدارة كاملة</button>`:''}<button class="btn primary" onclick='fill(${JSON.stringify(p)})'>✏️ تعديل</button></div></div>`}).join('')||'<div class="empty">لا توجد رحلات.</div>';
    $('sAll').textContent=data.length;$('sPublished').textContent=data.filter(x=>x.status==='published').length;$('sSeats').textContent=data.reduce((a,x)=>a+Number(x.seats_total||0),0);$('sAvailable').textContent=data.reduce((a,x)=>a+Number(x.seats_available||0),0);
  }
  render();
