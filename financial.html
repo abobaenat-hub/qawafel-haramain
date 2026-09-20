@@ -1026,7 +1026,11 @@ function renderSharedPrograms(){
  document.querySelectorAll('.sharedProgramCheck,.sharedBasis').forEach(el=>el.oninput=updateSharedPreview);
 }
 function getSharedAllocations(){
- const amount=Number($('expenseAmount')?.value||0), method=$('sharedMethod')?.value||'passengers';
+ const entered=Number($('expenseAmount')?.value||0);
+ const funding=$('expenseFunding')?.value||'direct';
+ const rate=funding==='supplier_wallet'?Number($('expenseWalletIqdRate')?.value||0):1;
+ const amount=funding==='supplier_wallet'?Number((entered*rate).toFixed(2)):entered;
+ const method=$('sharedMethod')?.value||'passengers';
  const ids=[...document.querySelectorAll('.sharedProgramCheck:checked')].map(x=>x.value); if(!ids.length)return [];
  const vals=ids.map(id=>({program_id:id,basis:Number(document.querySelector('.sharedBasis[data-id="'+id+'"]')?.value||0)}));
  if(method==='passengers') vals.forEach(v=>{const bs=B.filter(b=>b.program_id===v.program_id);v.basis=bs.reduce((n,b)=>n+Math.max(Number(b.passengers_count||1),1),0)});
@@ -1036,12 +1040,26 @@ function getSharedAllocations(){
  return vals.map(v=>({...v,allocated_amount:amount*v.basis/total}));
 }
 function updateSharedPreview(){
- const box=$('sharedPreview');if(!box)return;const amount=Number($('expenseAmount')?.value||0), method=$('sharedMethod')?.value||'passengers', arr=getSharedAllocations(), total=arr.reduce((s,x)=>s+Number(x.allocated_amount||0),0), diff=amount-total;
- box.innerHTML=[['التكلفة الكلية',money(amount),''],['الموزع على الرحلات',money(total),Math.abs(diff)<0.01?'':'warn'],['الفرق',money(Math.abs(diff)),Math.abs(diff)<0.01?'good':'warn']].map(x=>'<div class="purchaseMetric '+x[2]+'"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('');
+ const box=$('sharedPreview');if(!box)return;
+ const entered=Number($('expenseAmount')?.value||0);
+ const funding=$('expenseFunding')?.value||'direct';
+ const currency=$('expenseWalletCurrency')?.value||'SAR';
+ const rate=funding==='supplier_wallet'?Number($('expenseWalletIqdRate')?.value||0):1;
+ const amount=funding==='supplier_wallet'?Number((entered*rate).toFixed(2)):entered;
+ const method=$('sharedMethod')?.value||'passengers';
+ const arr=getSharedAllocations();
+ const total=arr.reduce((s,x)=>s+Number(x.allocated_amount||0),0), diff=amount-total;
+ const totalLabel=funding==='supplier_wallet'?walletMoney(entered,currency)+' → '+money(amount)+' د.ع':money(amount);
+ const distributedLabel=funding==='supplier_wallet'?money(total)+' د.ع':money(total);
+ box.innerHTML=[['التكلفة الكلية',totalLabel,'' ],['الموزع على الرحلات',distributedLabel,Math.abs(diff)<0.01?'':'warn'],['الفرق',money(Math.abs(diff))+' د.ع',Math.abs(diff)<0.01?'good':'warn']].map(x=>'<div class="purchaseMetric '+x[2]+'"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('');
 }
 function validateShared(){
  if(!$('expenseIsShared').checked)return {ok:true,allocations:[]};
- const arr=getSharedAllocations(), amount=Number($('expenseAmount').value||0); if(!arr.length)return {ok:false,msg:'اختر رحلة واحدة على الأقل للتكلفة المشتركة.'};
+ const entered=Number($('expenseAmount').value||0);
+ const funding=$('expenseFunding')?.value||'direct';
+ const rate=funding==='supplier_wallet'?Number($('expenseWalletIqdRate')?.value||0):1;
+ const amount=funding==='supplier_wallet'?Number((entered*rate).toFixed(2)):entered;
+ const arr=getSharedAllocations(); if(!arr.length)return {ok:false,msg:'اختر رحلة واحدة على الأقل للتكلفة المشتركة.'};
  const total=arr.reduce((s,x)=>s+Number(x.allocated_amount||0),0); if(Math.abs(total-amount)>0.01)return {ok:false,msg:'توزيع التكلفة غير مكتمل. يجب أن يساوي مجموع التوزيع '+money(amount)+' تمامًا.'};
  return {ok:true,allocations:arr};
 }
@@ -1197,35 +1215,51 @@ function renderExpenseWalletControls(){
  const sid=$('expenseWalletSupplier')?.value; if(!sid){balanceBox.textContent='اختر المورد لعرض الرصيد المتاح.';return;}
  const bal=supplierWalletBalance(sid,c); balanceBox.innerHTML='<b>الرصيد المتاح:</b> '+walletMoney(bal,c)+(bal<0?' — ⚠️ الرصيد سالب':'');
 }
-$('expenseFunding')?.addEventListener('change',()=>{renderExpenseWalletControls();});
+$('expenseFunding')?.addEventListener('change',()=>{renderExpenseWalletControls();if($('expenseIsShared')?.checked)renderSharedPrograms();});
 $('expenseWalletSupplier')?.addEventListener('change',()=>{renderExpenseWalletControls();});
-$('expenseWalletCurrency')?.addEventListener('change',()=>{const r=$('expenseWalletIqdRate');if(r)r.value='';renderExpenseWalletControls();});
+$('expenseWalletCurrency')?.addEventListener('change',()=>{const r=$('expenseWalletIqdRate');if(r)r.value='';renderExpenseWalletControls();if($('expenseIsShared')?.checked)updateSharedPreview();});
 $('expenseAmount')?.addEventListener('input',()=>{
- const funding=$('expenseFunding')?.value; if(funding!=='supplier_wallet')return;
+ const funding=$('expenseFunding')?.value;
+ if($('expenseIsShared')?.checked)updateSharedPreview();
+ if(funding!=='supplier_wallet')return;
  const sid=$('expenseWalletSupplier')?.value,c=$('expenseWalletCurrency')?.value||'SAR',amt=Number($('expenseAmount')?.value||0),rate=c==='IQD'?1:Number($('expenseWalletIqdRate')?.value||0);
  const box=$('expenseWalletBalance'); if(!box||!sid)return; const bal=supplierWalletBalance(sid,c); const iqd=amt*rate; box.innerHTML='<b>الرصيد المتاح:</b> '+walletMoney(bal,c)+' — <b>سيُخصم:</b> '+walletMoney(amt,c)+' — <b>تكلفة التقرير:</b> '+money(iqd);
 });
-$('expenseWalletIqdRate')?.addEventListener('input',()=>{$('expenseAmount')?.dispatchEvent(new Event('input'));});
+$('expenseWalletIqdRate')?.addEventListener('input',()=>{$('expenseAmount')?.dispatchEvent(new Event('input'));if($('expenseIsShared')?.checked)updateSharedPreview();});
 
 async function deleteExpense(id){
  const item=E.find(x=>x.id===id);
  if(!item)return;
- const ok=confirm('هل أنت متأكد من حذف هذا المصروف؟\n\n'+(item.description||'مصروف')+' — '+money(item.amount)+'\n\nسيتم حذفه من السجل، ولن يدخل ضمن إجمالي المصروفات والربح.');
+ const ok=confirm('هل أنت متأكد من حذف هذا المصروف؟\n\n'+(item.description||'مصروف')+' — '+money(item.amount)+'\n\nإذا كان من رصيد المورد، سيُعاد المبلغ إلى رصيد المورد تلقائيًا.');
  if(!ok)return;
  try{
-   const {data:walletTxs,error:wtErr}=await db.from('supplier_wallet_transactions').select('id').eq('expense_id',id);
+   const {data:walletTxs,error:wtErr}=await db.from('supplier_wallet_transactions').select('*').eq('expense_id',id).eq('transaction_type','withdrawal');
    if(wtErr)throw wtErr;
-   if((walletTxs||[]).length){
-     const {error:wdel}=await db.from('supplier_wallet_transactions').delete().eq('expense_id',id);
-     if(wdel)throw wdel;
+   const reversalIds=[];
+   for(const tx of (walletTxs||[])){
+     const reversalDescription='إرجاع صرف مصروف محذوف — الأصل '+tx.id;
+     const {data:existing,error:exErr}=await db.from('supplier_wallet_transactions').select('id').eq('transaction_type','deposit').eq('description',reversalDescription).limit(1);
+     if(exErr)throw exErr;
+     if(existing?.length)continue;
+     const {data:rev,error:revErr}=await db.from('supplier_wallet_transactions').insert({
+       supplier_id:tx.supplier_id,transaction_type:'deposit',currency:tx.currency,amount:tx.amount,amount_iqd:tx.amount_iqd,
+       transaction_date:tx.transaction_date||new Date().toISOString().slice(0,10),source_currency:tx.source_currency||tx.currency,
+       source_amount:tx.source_amount??tx.amount,fx_rate:tx.fx_rate||null,exchange_rate_to_iqd:tx.exchange_rate_to_iqd,
+       description:reversalDescription,notes:'إرجاع تلقائي بعد حذف المصروف',created_by:null,expense_id:tx.expense_id,program_id:tx.program_id||null
+     }).select('id').single();
+     if(revErr)throw revErr;
+     if(rev?.id)reversalIds.push(rev.id);
    }
    const {error}=await db.from('expenses').delete().eq('id',id);
-   if(error)throw error;
+   if(error){
+     if(reversalIds.length)await db.from('supplier_wallet_transactions').delete().in('id',reversalIds);
+     throw error;
+   }
    if(item.attachment_path){
      const {error:storageErr}=await db.storage.from('pilgrim-photos').remove([item.attachment_path]);
      if(storageErr)console.warn('تعذر حذف المستند المرفق من التخزين:',storageErr.message);
    }
-   msg('expenseMsg',(walletTxs||[]).length?'تم حذف المصروف وحركة السحب من رصيد المورد.':'تم حذف المصروف بنجاح.');
+   msg('expenseMsg',(walletTxs||[]).length?'تم حذف المصروف وإرجاع المبلغ إلى رصيد المورد تلقائيًا.':'تم حذف المصروف بنجاح.');
    await load();
  }catch(e){msg('expenseMsg',e.message||'تعذر حذف المصروف.',true)}
 }
@@ -1246,7 +1280,6 @@ $('addExpense').onclick=async()=>{
    if(!walletSupplierId)return msg('expenseMsg','اختر المورد عند استخدام رصيد المورد.',true);
    if(!walletRate||walletRate<=0)return msg('expenseMsg','أدخل سعر العملة مقابل الدينار العراقي.',true);
    if(walletBalance+0.0001<enteredAmount)return msg('expenseMsg','الرصيد المتاح عند المورد لا يكفي لهذا المصروف.',true);
-   if(is_shared)return msg('expenseMsg','لا يمكن حاليًا ربط سحب من رصيد المورد بتكلفة مشتركة؛ اختر رحلة واحدة.',true);
  }
  if(file && file.size>8*1024*1024)return msg('expenseMsg','حجم المستند يجب ألا يتجاوز 8 ميغابايت.',true);
  const allowed=/^image\/(jpeg|png|webp|heic|heif|gif)$|^application\/pdf$/i;
@@ -1273,10 +1306,14 @@ $('addExpense').onclick=async()=>{
    if(is_shared){
      const allocations=validation.allocations.map(x=>({expense_id:expenseId,program_id:x.program_id,basis_value:x.basis,allocated_amount:x.allocated_amount}));
      const {error:aErr}=await db.from('expense_allocations').insert(allocations);
-     if(aErr){await db.from('expenses').delete().eq('id',expenseId);throw aErr;}
+     if(aErr){
+       if(funding==='supplier_wallet')await db.from('supplier_wallet_transactions').delete().eq('expense_id',expenseId);
+       await db.from('expenses').delete().eq('id',expenseId);
+       throw aErr;
+     }
    }
    $('expenseAmount').value='';$('expenseDescription').value='';$('expenseNotes').value='';$('expenseInvoice').value='';$('expenseAttachment').value='';$('expenseIsShared').checked=false;$('sharedControls').classList.remove('active');$('expenseProgram').disabled=false;$('expenseProgram').value='';if($('expenseFunding'))$('expenseFunding').value='direct';if($('expenseWalletSupplier'))$('expenseWalletSupplier').value='';if($('expenseWalletIqdRate'))$('expenseWalletIqdRate').value='';renderExpenseWalletControls();
-   msg('expenseMsg',file?'تم حفظ المصروف وتوزيعه وإرفاق المستند بنجاح.':is_shared?'تم حفظ التكلفة المشتركة وتوزيعها على الرحلات بنجاح.':'تم حفظ المصروف بنجاح.');
+   msg('expenseMsg',file?'تم حفظ المصروف وتوزيعه وإرفاق المستند بنجاح.':is_shared?(funding==='supplier_wallet'?'تم حفظ التكلفة المشتركة وسحب المبلغ من رصيد المورد مرة واحدة وتوزيعه على الرحلات.':'تم حفظ التكلفة المشتركة وتوزيعها على الرحلات بنجاح.'):'تم حفظ المصروف بنجاح.');
    await load();
  }catch(e){if(uploadedPath && !expenseId)await db.storage.from('pilgrim-photos').remove([uploadedPath]);msg('expenseMsg',e.message||'تعذر حفظ المصروف.',true)}
  finally{$('addExpense').disabled=false}
