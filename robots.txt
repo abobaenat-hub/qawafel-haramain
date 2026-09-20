@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://qawafialharamainiq.com/sitemap.xml
