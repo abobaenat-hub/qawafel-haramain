@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V288-ANALYTICS-AR-EVENTS">
+<meta name="qawafel-build" content="V289-ANALYTICS-AR-EVENTS">
 <title>إحصائيات الموقع | قوافل الحرمين</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
 <style>
 :root{--navy:#082f50;--blue:#155985;--gold:#c99a32;--bg:#f4f6f8;--card:#fff;--line:#e3e9ee;--text:#18384f;--muted:#718390;--green:#18734e;--red:#a43b3b;--shadow:0 5px 22px rgba(11,53,86,.07)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Tahoma,Arial,sans-serif;background:var(--bg);color:var(--text)}body{direction:rtl}.hide{display:none!important}
@@ -50,6 +50,18 @@
   </section>
 </main>
 <script>
+setTimeout(function(){
+  var s=document.getElementById('status');
+  if(s && s.textContent.indexOf('جاري')!==-1){
+    s.className='status err';
+    s.innerHTML='❌ صفحة الإحصائيات لم تبدأ بشكل صحيح.<br><button onclick="location.reload()">↻ إعادة تحميل الصفحة</button>';
+  }
+},12000);
+</script>
+<script>
+<script>
+window.addEventListener('load',function(){
+
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=supabase.createClient(U,K);
 const $=id=>document.getElementById(id);
@@ -131,5 +143,6 @@ $('logout').onclick=async()=>{await db.auth.signOut();location.href='./internal.
     showStatus('❌ تعذر التحقق من جلسة الدخول.<br>'+String(e?.message||e)+'<br><button onclick="location.reload()">↻ إعادة المحاولة</button>','err');
   }
 })();
-</script>
+});
+</script>>
 </body></html>
