@@ -562,10 +562,19 @@ async function load(){
  const er=[a,b,c,i,ar].find(x=>x.error);
  if(er)return msg('listMsg',er.error.message,true);
  P=a.data||[];B=b.data||[];PR=c.data||[];I=i.data||[];A=ar.data||[];
+ const requestedProgramId=new URLSearchParams(window.location.search).get('program');
+ if(requestedProgramId){
+   const allowedBookings=new Set(B.filter(x=>String(x.program_id)===String(requestedProgramId)).map(x=>x.id));
+   P=P.filter(x=>allowedBookings.has(x.booking_id));
+   B=B.filter(x=>String(x.program_id)===String(requestedProgramId));
+ }
  $('pc').textContent=P.length;$('bc').textContent=B.length;
  $('paid').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
  $('rem').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
- $('program').innerHTML='<option value="">اختر البرنامج</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
+ const requestedProgramId=new URLSearchParams(window.location.search).get('program');
+ const selectablePrograms=requestedProgramId?PR.filter(x=>String(x.id)===String(requestedProgramId)):PR.filter(x=>x.status==='published');
+ $('program').innerHTML='<option value="">اختر البرنامج</option>'+selectablePrograms.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
+ if(requestedProgramId && selectablePrograms.length){$('program').value=requestedProgramId; await loadPackagesForProgram(requestedProgramId); updateSaleBox(); if($('paymentType').value==='installment')buildSchedule(); else updateCashPaymentBox();}
  render();
  const requestedId=new URLSearchParams(window.location.search).get('open');
  if(requestedId){
