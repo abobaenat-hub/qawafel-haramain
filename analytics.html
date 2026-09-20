@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V294-ANALYTICS-CHART">
+<meta name="qawafel-build" content="V295-ANALYTICS-SEARCH">
 <title>إحصائيات الموقع | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -39,7 +39,7 @@
       <div>
         <div class="card"><div class="sect"><div><h2>📈 الزيارات حسب الأيام</h2><small>المستخدمون النشطون ومشاهدات الصفحات</small></div></div><div id="daily"></div></div>
         <div class="card"><div class="sect"><div><h2>📄 أكثر الصفحات زيارة</h2><small>حسب مشاهدات الصفحات</small></div></div><div id="pages" class="table"></div></div>
-        <div class="card"><div class="sect"><div><h2>⚡ التفاعلات والأحداث</h2><small>مثل واتساب والبحث وتتبع التأشيرة</small></div></div><div id="events" class="table"></div></div>
+        <div class="card"><div class="sect"><div><h2>🔎 البحث داخل الموقع</h2><small>عدد مرات استخدام البحث في الموقع</small></div></div><div id="searchStats"></div></div><div class="card"><div class="sect"><div><h2>⚡ التفاعلات والأحداث</h2><small>مثل واتساب والبحث وتتبع التأشيرة</small></div></div><div id="events" class="table"></div></div>
       </div>
       <div>
         <div class="card"><div class="sect"><div><h2>🔗 مصادر الزيارات</h2><small>من أين وصل الزوار</small></div></div><div id="sources"></div></div>
@@ -90,6 +90,7 @@ async function load(){
       $('daily').innerHTML='<div class="chart">'+d.map(r=>{const u=Number(r.activeUsers||0),v=Number(r.screenPageViews||0);const uh=Math.max(2,Math.round(u/maxUsers*100)),vh=Math.max(2,Math.round(v/maxViews*100));return '<div class="chartcol"><div class="chartbars" title="المستخدمون: '+fmt(u)+' | المشاهدات: '+fmt(v)+'"><div class="chartbar" style="height:'+uh+'%"></div><div class="chartbar pages" style="height:'+vh+'%"></div></div><div class="chartlabel">'+String(r.date||'').slice(4)+'</div></div>';}).join('')+'</div><div class="chartlegend"><span><i class="dot"></i>المستخدمون النشطون</span><span><i class="dot gold"></i>مشاهدات الصفحات</span></div>';
     }else $('daily').innerHTML='<div class="empty">لا توجد بيانات بعد.</div>';
     $('pages').innerHTML=rowsHtml((data.pages||[]).map(r=>[cleanPath(r.pagePath),r.pageTitle||'',fmt(r.screenPageViews),fmt(r.totalUsers)]),['الصفحة','العنوان','المشاهدات','المستخدمون']);
+    const searchCount=(data.events||[]).find(r=>r.eventName==='program_search')?.eventCount||0; $('searchStats').innerHTML='<div style="font-size:28px;font-weight:900;color:var(--navy);padding:8px 0">'+fmt(searchCount)+'</div><div style="font-size:9px;color:var(--muted)">عملية بحث عن البرامج</div><div style="margin-top:10px;font-size:9px;color:var(--muted);line-height:1.7">الكلمات التي يكتبها الزوار ستظهر هنا بعد تسجيل <b>search_term</b> كُبعد مخصص في Google Analytics.</div>';
     $('events').innerHTML=rowsHtml((data.events||[]).map(r=>[eventLabel(r.eventName),fmt(r.eventCount)]),['الحدث','العدد']);
     $('sources').innerHTML=bars((data.sources||[]).map(r=>[(r.source||'(مباشر)')+' / '+(r.medium||'(none)'),r.sessions]));
     $('geo').innerHTML=bars((data.geo||[]).map(r=>[r.country||'غير محدد',r.activeUsers]));$('devices').innerHTML=bars((data.devices||[]).map(r=>[deviceLabel(r.device),r.activeUsers]));
