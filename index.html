@@ -35,7 +35,7 @@
  const price=pk.length?Math.min(...pk.map(x=>Number(x.price||0))):Number(p.price||0);
  const currency=p.currency||'IQD';
  const packageHtml=pk.length?pk.map(x=>{
-   const pf=Number(x.seats_available??0)<=0;
+   const pf=p.status==='full';
    return '<div class="package-item">'+
      '<div class="package-top"><span class="package-name">📦 '+esc(x.name||'باقة')+'</span><span class="package-price">'+fmt(x.price)+' '+cur(currency)+'</span></div>'+
      '<div class="package-meta"><span>🏨 المدينة<b>'+esc(x.city_hotel||p.city_hotel||'—')+'</b></span><span>🕋 مكة<b>'+esc(x.makkah_hotel||p.makkah_hotel||'—')+'</b></span></div>'+
