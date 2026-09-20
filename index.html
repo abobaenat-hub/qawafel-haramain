@@ -25,6 +25,9 @@
   function gtag(){dataLayer.push(arguments);}
   gtag("js", new Date());
   gtag("config", "G-79G8NPVW5X");
+  window.qawafelGA = function(name, params){
+    try{ if(typeof gtag === "function") gtag("event", name, params || {}); }catch(e){}
+  };
 </script><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script><style>
 :root{--n:#07385d;--b:#145f8d;--g:#d19a18;--bg:#f4f8fb;--m:#6e818e;--l:#dce7ed;--sh:0 14px 38px rgba(7,56,93,.12)}*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--n);font-family:Tahoma,Arial,sans-serif}a{text-decoration:none;color:inherit}.w{width:min(1240px,calc(100% - 36px));margin:auto}.top{height:42px;background:#06375b;color:#fff}.top .w{height:100%;display:flex;align-items:center;justify-content:space-between;font-size:12px}.phones{display:flex;gap:24px}.note{color:#e8bf4d;font-weight:900}.head{height:88px;background:#fff;border-bottom:1px solid #e6edf1;position:sticky;top:0;z-index:50}.head .w{height:100%;display:flex;align-items:center;gap:22px}.logo{width:158px;height:78px;object-fit:contain}.nav{display:flex;flex:1;justify-content:center;gap:2px}.nav a{padding:16px 13px;font-size:14px;font-weight:900;border-bottom:3px solid transparent}.nav a:hover,.nav a.active{color:var(--g);border-bottom-color:var(--g)}.actions{display:flex;gap:7px;align-items:center}.actions .btn{white-space:nowrap}.userhead{background:#fff;border:1px solid #b9cbd7;color:var(--n)}.agenthead{background:#0a4c78;color:#fff}.admin{background:var(--g);color:#fff}.btn{border:0;border-radius:12px;padding:13px 20px;font:inherit;font-size:13px;font-weight:900;cursor:pointer;display:inline-flex;justify-content:center;align-items:center}.admin,.gold{background:var(--g);color:#fff}.outline{background:#fff;border:1px solid #b9cbd7;color:var(--n)}.menu{display:none;background:#eef5f8;color:var(--n)}
 .hero{height:430px;position:relative;overflow:visible;background:#fff}.hero:before{content:"";position:absolute;inset:0;background:linear-gradient(90deg,rgba(255,255,255,.02) 0%,rgba(255,255,255,.18) 35%,rgba(255,255,255,.88) 72%,#fff 100%),url('hero.jpg');background-size:cover;background-position:center left}.hero .w{height:100%;position:relative;display:flex;align-items:center}.copy{width:58%;margin-right:0;margin-left:auto;text-align:right;padding-right:10px}.tag{display:inline-block;background:#edf6fa;color:var(--b);padding:8px 15px;border-radius:999px;font-size:13px;font-weight:900}.hero h1{font-size:52px;line-height:1.18;margin:13px 0 8px;font-weight:900}.hero h1 span{color:var(--g)}.hero p{font-size:16px;color:#526c7b;line-height:1.9;margin:0;max-width:650px;margin-left:auto}.hero .actions{margin-top:20px}.hero .actions .btn{min-width:180px}.portal{position:absolute;z-index:5;left:0;right:0;bottom:-105px}.portalbox{background:rgba(255,255,255,.97);border-radius:22px;box-shadow:var(--sh);padding:18px;display:grid;grid-template-columns:1fr 1fr;gap:18px;direction:ltr}.portalcard{border-radius:18px;padding:20px 24px;display:flex;align-items:center;justify-content:space-between;gap:15px;min-height:96px;direction:rtl}.portalcard.user{background:#0a4c78;color:#fff}.portalcard.agent{background:linear-gradient(135deg,#d19a18,#b97d00);color:#fff}.portalcard .pcopy{text-align:right}.portalcard h3{margin:0 0 5px;font-size:22px}.portalcard p{margin:0;font-size:11px;opacity:.9}.picon{font-size:36px}.parrow{width:38px;height:38px;border-radius:50%;background:#fff;color:var(--n);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900}
@@ -71,7 +74,7 @@
    '</div>';
  }).join(''):'<div class="package-item">لا توجد باقات مضافة لهذا البرنامج.</div>';
  return '<article class="card"><div class="pic"><span class="badge">'+(isFull?'مكتمل':'متاح للحجز')+'</span></div><div class="body"><h3>'+esc(p.title||'برنامج عمرة')+'</h3><div class="meta"><div><small>الذهاب</small><b>'+dt(p.departure_date)+'</b></div><div><small>العودة</small><b>'+dt(p.return_date)+'</b></div><div><small>الرحلة</small><b>'+esc(p.travel_type||'—')+'</b></div></div><div class="packages-title">📦 باقات البرنامج</div><div class="package-list">'+packageHtml+'</div><div class="foot">'+(isFull?'<button class="btn book" type="button" disabled style="opacity:.55;cursor:not-allowed;width:100%">مكتملة</button>':'<a class="btn book" href="'+wa(p)+'" target="_blank" style="width:100%">📱 للحجز عبر واتساب</a>')+'</div></div></article>';
-}function render(a){let q=document.getElementById('q').value.trim().toLowerCase(),t=document.getElementById('type').value.toLowerCase(),c=document.getElementById('city').value.toLowerCase(),d=document.getElementById('date').value.trim().toLowerCase();let f=a.filter(p=>{let x=[p.title,p.city_hotel,p.makkah_hotel,p.travel_type,p.description,p.services].filter(Boolean).join(' ').toLowerCase();return(!q||x.includes(q))&&(!t||String(p.travel_type||'').toLowerCase().includes(t))&&(!c||x.includes(c))&&(!d||dt(p.departure_date).toLowerCase().includes(d)||String(p.departure_date||'').includes(d))});document.getElementById('list').innerHTML=f.length?f.map(card).join(''):'<div class="empty">لا توجد برامج مطابقة للبحث حالياً.</div>'}function filterPrograms(){render(rows);document.getElementById('programs').scrollIntoView({behavior:'smooth'})}function resetFilters(){['q','date'].forEach(x=>document.getElementById(x).value='');['city','type'].forEach(x=>document.getElementById(x).value='');render(rows)}function showP(id){let p=rows.find(x=>String(x.id)===String(id));if(!p)return;const pk=(p.packages||[]).filter(x=>x.active!==false);document.getElementById('mt').textContent=p.title||'تفاصيل البرنامج';document.getElementById('md').textContent=p.description||'برنامج عمرة منظم من قوافل الحرمين.';document.getElementById('det').innerHTML=[['الذهاب',dt(p.departure_date)],['العودة',dt(p.return_date)],['فندق المدينة',(pk[0]?.city_hotel)||p.city_hotel||'—'],['فندق مكة',(pk[0]?.makkah_hotel)||p.makkah_hotel||'—'],['نوع الرحلة',p.travel_type||'—'],['العملة',cur(p.currency||'IQD')],['الباقات',pk.length?pk.map(x=>(x.name||'باقة')+' — '+fmt(x.price)+' '+cur(p.currency||'IQD')).join(' | '):fmt(p.price)+' '+cur(p.currency||'IQD')],['المقاعد',fmt(p.seats_available)],['الخدمات',p.services||'—']].map(x=>'<div><small>'+esc(x[0])+'</small><b>'+esc(x[1])+'</b></div>').join('');document.getElementById('mw').href=wa(p);document.getElementById('modal').classList.add('show')}function closeM(){document.getElementById('modal').classList.remove('show')}function track(){let c=document.getElementById('code').value.trim(),r=document.getElementById('vr');r.classList.add('show');r.innerHTML=c?'<b>سيتم تفعيل التتبع الآمن لهذا الرمز داخل بوابة المعتمر.</b>':'<b>أدخل رمز الملف أولاً.</b>'}async function load(){try{const a=await db.from('programs').select('*').eq('status','published').order('departure_date',{ascending:true});if(a.error)throw a.error;const ids=(a.data||[]).map(p=>p.id);let packages=[];if(ids.length){const b=await db.from('program_packages').select('id,program_id,name,city_hotel,makkah_hotel,price,installment_price,active,seats_available').in('program_id',ids).order('created_at',{ascending:true});if(!b.error)packages=b.data||[]}rows=(a.data||[]).map(p=>({...p,packages:packages.filter(x=>x.program_id===p.id)}));render(rows)}catch(e){console.error(e);document.getElementById('list').innerHTML='<div class="empty"><b>تعذر تحميل البرامج الآن</b><br><button class="btn admin" onclick="load()" style="margin-top:10px">إعادة المحاولة</button></div>'}}load();</script><script id="qawafel-audit-v169">
+}function render(a){let q=document.getElementById('q').value.trim().toLowerCase(),t=document.getElementById('type').value.toLowerCase(),c=document.getElementById('city').value.toLowerCase(),d=document.getElementById('date').value.trim().toLowerCase();let f=a.filter(p=>{let x=[p.title,p.city_hotel,p.makkah_hotel,p.travel_type,p.description,p.services].filter(Boolean).join(' ').toLowerCase();return(!q||x.includes(q))&&(!t||String(p.travel_type||'').toLowerCase().includes(t))&&(!c||x.includes(c))&&(!d||dt(p.departure_date).toLowerCase().includes(d)||String(p.departure_date||'').includes(d))});document.getElementById('list').innerHTML=f.length?f.map(card).join(''):'<div class="empty">لا توجد برامج مطابقة للبحث حالياً.</div>'}function filterPrograms(){if(window.qawafelTrackSearch)window.qawafelTrackSearch();render(rows);document.getElementById('programs').scrollIntoView({behavior:'smooth'})}function resetFilters(){['q','date'].forEach(x=>document.getElementById(x).value='');['city','type'].forEach(x=>document.getElementById(x).value='');render(rows)}function showP(id){let p=rows.find(x=>String(x.id)===String(id));if(!p)return;const pk=(p.packages||[]).filter(x=>x.active!==false);document.getElementById('mt').textContent=p.title||'تفاصيل البرنامج';document.getElementById('md').textContent=p.description||'برنامج عمرة منظم من قوافل الحرمين.';document.getElementById('det').innerHTML=[['الذهاب',dt(p.departure_date)],['العودة',dt(p.return_date)],['فندق المدينة',(pk[0]?.city_hotel)||p.city_hotel||'—'],['فندق مكة',(pk[0]?.makkah_hotel)||p.makkah_hotel||'—'],['نوع الرحلة',p.travel_type||'—'],['العملة',cur(p.currency||'IQD')],['الباقات',pk.length?pk.map(x=>(x.name||'باقة')+' — '+fmt(x.price)+' '+cur(p.currency||'IQD')).join(' | '):fmt(p.price)+' '+cur(p.currency||'IQD')],['المقاعد',fmt(p.seats_available)],['الخدمات',p.services||'—']].map(x=>'<div><small>'+esc(x[0])+'</small><b>'+esc(x[1])+'</b></div>').join('');document.getElementById('mw').href=wa(p);document.getElementById('modal').classList.add('show')}function closeM(){document.getElementById('modal').classList.remove('show')}function track(){if(window.qawafelTrackVisa)window.qawafelTrackVisa();let c=document.getElementById('code').value.trim(),r=document.getElementById('vr');r.classList.add('show');r.innerHTML=c?'<b>سيتم تفعيل التتبع الآمن لهذا الرمز داخل بوابة المعتمر.</b>':'<b>أدخل رمز الملف أولاً.</b>'}async function load(){try{const a=await db.from('programs').select('*').eq('status','published').order('departure_date',{ascending:true});if(a.error)throw a.error;const ids=(a.data||[]).map(p=>p.id);let packages=[];if(ids.length){const b=await db.from('program_packages').select('id,program_id,name,city_hotel,makkah_hotel,price,installment_price,active,seats_available').in('program_id',ids).order('created_at',{ascending:true});if(!b.error)packages=b.data||[]}rows=(a.data||[]).map(p=>({...p,packages:packages.filter(x=>x.program_id===p.id)}));render(rows)}catch(e){console.error(e);document.getElementById('list').innerHTML='<div class="empty"><b>تعذر تحميل البرامج الآن</b><br><button class="btn admin" onclick="load()" style="margin-top:10px">إعادة المحاولة</button></div>'}}load();</script><script id="qawafel-audit-v169">
 (function(){
   const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
   const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
@@ -251,4 +254,45 @@
   obs.observe(document.documentElement,{childList:true,subtree:true});
   setTimeout(()=>obs.disconnect(),20000);
 })();
-</script></body></html>
+<script id="qawafel-ga-events-v1">
+(function(){
+  function send(name, params){ try{ if(window.qawafelGA) window.qawafelGA(name, params); }catch(e){} }
+  document.addEventListener('click', function(e){
+    const a=e.target.closest('a,button');
+    if(!a) return;
+    const href=a.getAttribute('href')||'';
+    const text=(a.innerText||a.textContent||'').replace(/\s+/g,' ').trim().slice(0,100);
+    if(href.indexOf('wa.me/')>=0){
+      send('whatsapp_click',{link_text:text,location:'program_card'});
+    }else if(href==='#programs'){
+      send('programs_section_click',{link_text:text});
+    }else if(href==='#visa'){
+      send('visa_section_click',{link_text:text});
+    }else if(href==='/pilgrim.html'){
+      send('pilgrim_login_click',{link_text:text});
+    }else if(href==='/agent'){
+      send('agent_login_click',{link_text:text});
+    }else if(href==='/admin'){
+      send('admin_login_click',{link_text:text});
+    }
+  }, true);
+
+  window.qawafelTrackSearch = function(){
+    const city=document.getElementById('city')?.value||'';
+    const type=document.getElementById('type')?.value||'';
+    const date=document.getElementById('date')?.value||'';
+    const q=document.getElementById('q')?.value||'';
+    send('program_search',{city:city,travel_type:type,date:date,search_term:q});
+  };
+
+  window.qawafelTrackVisa = function(){
+    const code=document.getElementById('code')?.value?.trim()||'';
+    send('visa_tracking_attempt',{has_code:!!code});
+  };
+
+  window.qawafelTrackProgram = function(title){
+    send('program_view',{program_name:String(title||'').slice(0,100)});
+  };
+})();
+</script>
+</body></html>
