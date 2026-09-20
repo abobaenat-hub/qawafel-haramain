@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V285-ANALYTICS-DASHBOARD">
+<meta name="qawafel-build" content="V286-ANALYTICS-AR-EVENTS">
 <title>إحصائيات الموقع | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -65,7 +65,23 @@ function bars(rows,labelIndex=0,valueIndex=1){
   const max=Math.max(1,...rows.map(r=>Number(r[valueIndex]||0)));
   return rows.map(r=>'<div class="barrow"><div><div class="barlabel" title="'+String(r[labelIndex]||'').replace(/"/g,'&quot;')+'">'+(r[labelIndex]||'(غير معروف)')+'</div><div class="barbg"><div class="barfill" style="width:'+Math.round(Number(r[valueIndex]||0)/max*100)+'%"></div></div></div><div class="num">'+fmt(r[valueIndex])+'</div></div>').join('');
 }
-function cleanPath(v){return String(v||'/').replace(/^https?:\/\/[^/]+/,'')||'/';}
+function cleanPath(v){return String(v||'/').replace(/^https?:\\/\\/[^/]+/,'')||'/';}
+const EVENT_LABELS={
+  page_view:'مشاهدة صفحة',
+  first_visit:'أول زيارة',
+  session_start:'بداية جلسة',
+  user_engagement:'تفاعل المستخدم',
+  whatsapp_click:'ضغط على واتساب',
+  programs_section_click:'فتح قسم البرامج',
+  visa_section_click:'فتح قسم التأشيرة',
+  pilgrim_login_click:'دخول المعتمر',
+  agent_login_click:'دخول الوكيل',
+  admin_login_click:'دخول الإدارة',
+  program_search:'البحث عن برنامج',
+  visa_tracking_attempt:'محاولة تتبع التأشيرة',
+  program_view:'مشاهدة برنامج'
+};
+function eventLabel(v){return EVENT_LABELS[String(v||'')]||String(v||'حدث آخر');}
 async function load(){
   $('dashboard').classList.add('hide');
   showStatus('⏳ جاري تحميل الإحصائيات...');
@@ -83,10 +99,10 @@ async function load(){
     const d=data.daily||[];
     $('daily').innerHTML=d.length?d.map(r=>'<div class="barrow"><div><div class="barlabel">'+r.date+'</div><div class="barbg"><div class="barfill" style="width:'+Math.round(Number(r.activeUsers||0)/Math.max(1,...d.map(x=>Number(x.activeUsers||0)))*100)+'%"></div></div></div><div class="num">'+fmt(r.activeUsers)+'</div></div>').join(''):'<div class="empty">لا توجد بيانات بعد.</div>';
     $('pages').innerHTML=rowsHtml((data.pages||[]).map(r=>[cleanPath(r.pagePath),r.pageTitle||'',fmt(r.screenPageViews),fmt(r.totalUsers)]),['الصفحة','العنوان','المشاهدات','المستخدمون']);
-    $('events').innerHTML=rowsHtml((data.events||[]).map(r=>[r.eventName,fmt(r.eventCount)]),['الحدث','العدد']);
+    $('events').innerHTML=rowsHtml((data.events||[]).map(r=>[eventLabel(r.eventName),fmt(r.eventCount)]),['الحدث','العدد']);
     $('sources').innerHTML=bars((data.sources||[]).map(r=>[(r.source||'(مباشر)')+' / '+(r.medium||'(none)'),r.sessions]));
     $('geo').innerHTML=bars((data.geo||[]).map(r=>[(r.city&&r.city!=='(not set)'?r.city:'غير محدد')+' — '+(r.country||''),r.activeUsers]));
-    $('realtime').innerHTML=bars((data.realtime||[]).map(r=>[r.eventName||'زيارة/حدث',r.activeUsers]));
+    $('realtime').innerHTML=bars((data.realtime||[]).map(r=>[eventLabel(r.eventName),r.activeUsers]));
     $('dashboard').classList.remove('hide');
     showStatus('✅ تم تحديث الإحصائيات بنجاح <div class="updated">آخر تحديث: '+new Date().toLocaleString('ar-IQ')+'</div>','ok');
   }catch(e){console.error(e);showStatus('❌ تعذر تحميل الإحصائيات.<br>'+String(e?.message||e)+'<br><small>إذا كان الربط جديدًا، تأكد من إعداد Google Analytics Data API وصلاحية حساب الخدمة على موقع Analytics.</small>','err');}
