@@ -249,6 +249,7 @@ button,.btn{border:0;border-radius:10px;padding:11px 16px;font-weight:bold;curso
   <div class="visualCard"><h3>💰 قراءة سريعة للنتيجة</h3><div id="reportDonut" class="donutWrap"></div></div>
 </div>
 <div class="table reportTable"><table><thead><tr><th>الرحلة</th><th>المعتمرون</th><th>المبيعات</th><th>المقبوض</th><th>الجملة</th><th>الربح الإجمالي</th><th>مصروفات الرحلة</th><th>صافي الربح</th><th>هامش الربح</th></tr></thead><tbody id="advancedReportRows"></tbody></table></div>
+<div class="panel unifiedReportPanel" style="margin-top:16px"><div class="sectionTop" style="margin-bottom:10px"><div><h3 style="margin:0">📊 التقرير المالي الموحد</h3><small>الرحلات الداخلية + الخدمات خارج الرحلات ضمن نفس الفترة</small></div></div><div class="reportKpis unifiedReportKpis" id="unifiedReportKpis"></div><div class="reportNote">هذا الملخص يجمع مبيعات وتكاليف وأرباح الرحلات الداخلية والخدمات خارج الرحلات، ويعرض الإجمالي الكلي بالدينار العراقي.</div><div class="table reportTable"><table><thead><tr><th>النوع</th><th>التاريخ</th><th>البيان</th><th>المبيعات</th><th>التكلفة</th><th>المصروفات</th><th>صافي الربح</th></tr></thead><tbody id="unifiedReportRows"></tbody></table></div></div>
 <div class="panel externalReportPanel" style="margin-top:16px">
   <h3 style="margin:0 0 10px">🌐 الخدمات خارج الرحلات — ضمن التقرير</h3>
   <div class="reportKpis externalReportKpis" id="externalReportKpis"></div>
@@ -1068,6 +1069,21 @@ function renderExternalServicesReport(from,to){
  if($('externalReportRows')) $('externalReportRows').innerHTML=rows||'<tr><td colspan="7" class="reportEmpty">لا توجد خدمات خارج الرحلات ضمن الفترة المحددة.</td></tr>';
  return {salesIqd,costIqd,profitIqd,count:list.length};
 }
+function renderUnifiedFinancialReport(from,to,pid){
+ const bookings=B.filter(b=>{const d=dateOnly(b.created_at);return (!from||d>=from)&&(!to||d<=to)&&(!pid||b.program_id===pid)});
+ const programs=pid?PR.filter(p=>p.id===pid):PR; let internalSales=0,internalCost=0,internalExp=0,internalNet=0; const rows=[];
+ programs.forEach(pr=>{const bs=bookings.filter(b=>b.program_id===pr.id);if(!bs.length)return;const n=bs.reduce((z,b)=>z+Math.max(Number(b.passengers_count||1),1),0);const sales=bs.reduce((z,b)=>z+Number(b.total_amount||0),0);const cost=n*Number(pr.purchase_cost||0);const ex=linkedExpenseForProgram(pr.id,from,to);const net=sales-cost-ex;internalSales+=sales;internalCost+=cost;internalExp+=ex;internalNet+=net;rows.push({type:'رحلة داخلية',date:pr.departure_date||dateOnly(bs[0]?.created_at)||'—',name:pr.title||'—',sales,cost,expense:ex,net});});
+ const generalExp=E.filter(e=>!e.program_id&&!e.is_shared&&(!from||dateOnly(e.expense_date)>=from)&&(!to||dateOnly(e.expense_date)<=to)).reduce((z,e)=>z+Number(e.amount||0),0);
+ const extList=(EXT_SERVICES||[]).filter(x=>{const d=dateOnly(x.service_date||x.created_at);return (!from||d>=from)&&(!to||d<=to)});
+ const externalSales=extList.reduce((z,x)=>z+Number(x.revenue_iqd||0),0), externalCost=extList.reduce((z,x)=>z+Number(x.supplier_cost_iqd||0),0), externalNet=extList.reduce((z,x)=>z+Number(x.profit_iqd||0),0);
+ extList.forEach(x=>rows.push({type:'خدمة خارجية',date:x.service_date||dateOnly(x.created_at)||'—',name:(x.customer_name||'—')+' — '+(x.service_type||'خدمة'),sales:Number(x.revenue_iqd||0),cost:Number(x.supplier_cost_iqd||0),expense:0,net:Number(x.profit_iqd||0)}));
+ const totalSales=internalSales+externalSales,totalCost=internalCost+externalCost,totalExpenses=internalExp+generalExp,totalNet=internalNet+externalNet-generalExp;
+ const k=[['مبيعات الرحلات',internalSales,''],['مبيعات الخدمات الخارجية',externalSales,''],['إجمالي المبيعات',totalSales,''],['إجمالي التكاليف',totalCost,''],['إجمالي المصروفات',totalExpenses,''],['صافي الربح الكلي',totalNet,totalNet>=0?'profit':'loss']];
+ const box=$('unifiedReportKpis');if(box)box.innerHTML=k.map(x=>'<div class="reportKpi '+x[2]+'"><small>'+x[0]+'</small><b>'+money(x[1])+'</b></div>').join('');
+ rows.sort((a,b)=>String(b.date).localeCompare(String(a.date)));const body=$('unifiedReportRows');if(body)body.innerHTML=rows.map(x=>'<tr><td><b>'+esc(x.type)+'</b></td><td>'+esc(x.date)+'</td><td>'+esc(x.name)+'</td><td>'+money(x.sales)+'</td><td>'+money(x.cost)+'</td><td>'+money(x.expense)+'</td><td><b class="'+(x.net>=0?'marginGood':'marginBad')+'">'+money(x.net)+'</b></td></tr>').join('')||'<tr><td colspan="7" class="reportEmpty">لا توجد رحلات أو خدمات ضمن الفترة المحددة.</td></tr>';
+ return {internalSales,externalSales,totalSales,totalCost,totalExpenses,totalNet};
+}
+
 function renderAdvancedReport(){
  const from=$('reportFrom').value,to=$('reportTo').value,pid=$('reportProgram').value;
  const bookings=B.filter(b=>{const d=dateOnly(b.created_at);return (!from||d>=from)&&(!to||d<=to)&&(!pid||b.program_id===pid)});
@@ -1432,7 +1448,7 @@ $('addExpense').onclick=async()=>{
   obs.observe(document.documentElement,{childList:true,subtree:true});
   setTimeout(()=>obs.disconnect(),20000);
 })();
-</script></body></html><style id="finance-v138-modern">
+</script><style id="finance-v275-unified-report">.unifiedReportPanel{background:#fff}.unifiedReportKpis{grid-template-columns:repeat(6,1fr)!important}.unifiedReportKpis .reportKpi{min-height:72px}@media(max-width:1050px){.unifiedReportKpis{grid-template-columns:repeat(3,1fr)!important}}@media(max-width:700px){.unifiedReportKpis{grid-template-columns:repeat(2,1fr)!important}}@media print{.unifiedReportPanel{break-inside:auto}.unifiedReportPanel table{font-size:8px}}</style></body></html><style id="finance-v138-modern">
 :root{--n:#0a3152;--d:#061f36;--gold:#c9a45c;--bg:#f5f7fa;--card:#ffffff;--muted:#718096;--line:#e7edf2}
 body{background:radial-gradient(circle at 10% 0%,#eef5fa 0,transparent 28%),linear-gradient(180deg,#f7f9fb 0%,#f1f4f7 100%);font-family:Tahoma,Arial,sans-serif}
 .top{background:linear-gradient(135deg,#061f36,#0d4168 58%,#092d4a);padding:18px 24px;box-shadow:0 8px 30px #061f361c;position:sticky;top:0;z-index:50}
