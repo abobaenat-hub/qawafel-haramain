@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V291-ANALYTICS-AR-EVENTS">
+<meta name="qawafel-build" content="V292-ANALYTICS-AR-EVENTS">
 <title>إحصائيات الموقع | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -50,15 +50,6 @@
   </section>
 </main>
 <script>
-setTimeout(function(){
-  var s=document.getElementById('status');
-  if(s && s.textContent.indexOf('جاري')!==-1){
-    s.className='status err';
-    s.innerHTML='❌ صفحة الإحصائيات لم تبدأ بشكل صحيح.<br><button onclick="location.reload()">↻ إعادة تحميل الصفحة</button>';
-  }
-},12000);
-</script>
-<script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=supabase.createClient(U,K);
 const $=id=>document.getElementById(id);
@@ -74,30 +65,8 @@ function bars(rows,labelIndex=0,valueIndex=1){
   const max=Math.max(1,...rows.map(r=>Number(r[valueIndex]||0)));
   return rows.map(r=>'<div class="barrow"><div><div class="barlabel" title="'+String(r[labelIndex]||'').replace(/"/g,'&quot;')+'">'+(r[labelIndex]||'(غير معروف)')+'</div><div class="barbg"><div class="barfill" style="width:'+Math.round(Number(r[valueIndex]||0)/max*100)+'%"></div></div></div><div class="num">'+fmt(r[valueIndex])+'</div></div>').join('');
 }
-function cleanPath(v){return String(v||'/').replace(/^https?:\\/\\/[^/]+/,'')||'/';}
-const EVENT_LABELS={
-  scroll:'التمرير في الصفحة',
-  click:'نقرة',
-  file_download:'تنزيل ملف',
-  video_start:'بدء فيديو',
-  video_progress:'تقدم الفيديو',
-  video_complete:'اكتمال الفيديو',
-  view_search_results:'عرض نتائج البحث',
-  form_start:'بدء تعبئة النموذج',
-  form_submit:'إرسال النموذج',
-  generate_lead:'إنشاء طلب',
-  sign_up:'إنشاء حساب',
-  login:'تسجيل الدخول',
-  search:'بحث',
-  page_view:'مشاهدة صفحة',
-  first_visit:'أول زيارة',
-  session_start:'بداية جلسة',
-  user_engagement:'تفاعل المستخدم',
-  language_change:'تغيير اللغة',
-  outbound_click:'نقرة إلى موقع خارجي',
-  exception:'خطأ في الصفحة',
-  timing_complete:'اكتمال التحميل'
-};
+function cleanPath(v){return String(v||'/').replace(/^https?:\/\/[^/]+/,'')||'/';}
+const EVENT_LABELS={page_view:'مشاهدة صفحة',first_visit:'أول زيارة',session_start:'بداية جلسة',user_engagement:'تفاعل المستخدم',whatsapp_click:'ضغط على واتساب',programs_section_click:'فتح قسم البرامج',visa_section_click:'فتح قسم التأشيرة',pilgrim_login_click:'دخول المعتمر',agent_login_click:'دخول الوكيل',admin_login_click:'دخول الإدارة',program_search:'البحث عن برنامج',visa_tracking_attempt:'محاولة تتبع التأشيرة',program_view:'مشاهدة برنامج',scroll:'التمرير في الصفحة',click:'نقرة',file_download:'تنزيل ملف',video_start:'بدء فيديو',video_progress:'تقدم الفيديو',video_complete:'اكتمال الفيديو',view_search_results:'عرض نتائج البحث',form_start:'بدء تعبئة النموذج',form_submit:'إرسال النموذج',generate_lead:'إنشاء طلب',sign_up:'إنشاء حساب',login:'تسجيل الدخول',search:'بحث'};
 function eventLabel(v){return EVENT_LABELS[String(v||'')]||String(v||'حدث آخر');}
 async function load(){
   $('dashboard').classList.add('hide');
@@ -126,19 +95,6 @@ async function load(){
 }
 $('refresh').onclick=load;$('range').onchange=load;
 $('logout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
-(async()=>{
-  try{
-    const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('انتهت مهلة الاتصال بخدمة الدخول')),10000));
-    const result=await Promise.race([db.auth.getSession(),timeout]);
-    if(!result?.data?.session){
-      showStatus('🔐 انتهت جلسة الدخول. ارجع إلى لوحة الإدارة وسجّل الدخول من جديد.','err');
-      return;
-    }
-    load();
-  }catch(e){
-    console.error(e);
-    showStatus('❌ تعذر التحقق من جلسة الدخول.<br>'+String(e?.message||e)+'<br><button onclick="location.reload()">↻ إعادة المحاولة</button>','err');
-  }
-})();
+(async()=>{try{const s=await db.auth.getSession();if(!s.data?.session){location.href='./internal.html';return;}load();}catch(e){location.href='./internal.html';}})();
 </script>
 </body></html>
