@@ -294,12 +294,24 @@ async function saveVisa(id){const st=document.querySelector(`[data-visa-status="
 async function visaSetAll(status){if(!allProgramPilgrims.length)return; if(!confirm(`تغيير حالة ${allProgramPilgrims.length} معتمر إلى «${status}»؟`))return;for(const x of allProgramPilgrims){const r=await db.rpc('update_pilgrim_visa',{p_pilgrim_id:x.id,p_visa_status:status,p_visa_number:x.visa_number||null,p_visa_issued_at:x.visa_issued_at||null,p_visa_notes:x.visa_notes||null});if(r.error){alert(r.error.message);break}x.visa_status=status}renderVisaPanel();renderTripPilgrims();}
 function closeTripModal(){const m=$('tripModal');m.classList.add('hidden');m.setAttribute('aria-hidden','true');activeTrip=null}
 async function openFullTripManagement(id){
- await openTripPilgrims(id);
- if(!activeTrip)return;
- $('tripModalTitle').textContent='إدارة الرحلة — '+(activeTrip.title||'');
+ const p=window.__programs?.find(x=>x.id===id); if(!p)return;
+ activeTrip=p;
+ $('tripModalTitle').textContent='إدارة الرحلة — '+(p.title||'');
+ $('tripModalSub').innerHTML='🗓 '+(p.departure_date||'غير محدد')+' &nbsp; · &nbsp; '+(p.travel_type==='جو'?'✈️ طيران':'🚌 '+esc(p.travel_type||'بر'));
+ $('tripManageLink').href='./pilgrims.html?program='+encodeURIComponent(id);
+ $('tripFinanceLink').href='./financial.html?v=114&program='+encodeURIComponent(id);
+ $('tripEditBtn').onclick=editActiveTrip;
+ $('tripPilgrimSearch').value='';
  $('tripFullPanel').classList.remove('hidden');
- $('tripPilgrimArea')?.classList.add('hidden');
+ $('tripPilgrimArea').classList.add('hidden');
  $('visaPanel').classList.add('hidden');
+ const cap=Number(p.seats_total||0);
+ $('tripSummary').innerHTML='<div class="box"><span>المقاعد</span><b>'+cap+'</b></div><div class="box"><span>نوع الرحلة</span><b style="font-size:15px">'+esc(p.travel_type||'—')+'</b></div><div class="box"><span>تاريخ الذهاب</span><b style="font-size:15px">'+esc(p.departure_date||'غير محدد')+'</b></div><div class="box"><span>تاريخ العودة</span><b style="font-size:15px">'+esc(p.return_date||'غير محدد')+'</b></div>';
+ $('tripOps').innerHTML='<div class="box"><span>مشرف الرحلة</span><b style="font-size:15px">'+esc(p.supervisor_name||'غير محدد')+'</b><small>'+esc(p.supervisor_phone||'')+'</small></div>'+
+   ((p.travel_type==='بر'||p.travel_type==='مختلط')?'<div class="box"><span>الباص</span><b style="font-size:15px">'+esc(p.bus_number||'غير محدد')+'</b><small>'+esc(p.bus_company||'')+'</small></div><div class="box"><span>السائق الرئيسي</span><b style="font-size:15px">'+esc(p.driver_name||'غير محدد')+'</b><small>'+esc(p.driver_phone||'')+'</small></div><div class="box"><span>السائق المساعد</span><b style="font-size:15px">'+esc(p.assistant_driver_name||'غير محدد')+'</b><small>'+esc(p.assistant_driver_phone||'')+'</small></div>':'')+
+   '<div class="box"><span>الحالة</span><b style="font-size:15px">'+esc(statusName(p.status))+'</b></div>';
+ $('tripModal').classList.remove('hidden');
+ $('tripModal').setAttribute('aria-hidden','false');
 }
 function editActiveTrip(){if(!activeTrip)return;const p=activeTrip;closeTripModal();fill(p)}
 function paymentLabel(b){
