@@ -167,57 +167,58 @@ async function guard(){
 }
 async function loadData(){
   let errors=[];
+  // لا نترك الجدول عالقًا على "جاري التحميل" إذا تأخر طلب الشبكة.
+  const timeout=(ms)=>new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة الاتصال بقاعدة البيانات')),ms));
   try{
-    const r=await db.rpc('get_team_directory');
+    const r=await Promise.race([
+      db.rpc('get_team_directory'),
+      timeout(5000)
+    ]);
     if(r.error) throw r.error;
     const teamData=typeof r.data==='string'?JSON.parse(r.data):r.data;
     supervisors=Array.isArray(teamData?.supervisors)?teamData.supervisors:[];
     drivers=Array.isArray(teamData?.drivers)?teamData.drivers:[];
-    // عرض القائمة فور وصول البيانات، قبل تحميل أي بيانات إضافية
-    renderSup();
-    renderDrv();
   }catch(e){
     console.error('team directory RPC error',e);
-    // fallback مباشر حتى لا تتعطل القائمة إذا تأخر تحديث RPC في Supabase
+    errors.push(e.message||'تعذر تحميل بيانات الفريق');
     try{
-      const [sr,dr]=await Promise.all([
-        db.from('supervisors').select('*').order('full_name'),
-        db.from('drivers').select('*').order('full_name_ar',{ascending:true})
+      const result=await Promise.race([
+        Promise.all([
+          db.from('supervisors').select('*').order('full_name'),
+          db.from('drivers').select('*').order('full_name_ar',{ascending:true})
+        ]),
+        timeout(5000)
       ]);
+      const [sr,dr]=result;
       if(sr.error) throw sr.error;
       if(dr.error) throw dr.error;
       supervisors=sr.data||[];
       drivers=dr.data||[];
+      errors=[];
     }catch(e2){
       console.error('team directory direct load error',e2);
       supervisors=[];
       drivers=[];
-      errors.push('المشرفون والسائقون: '+(e2.message||e.message||'تعذر تحميل بيانات الفريق'));
+      errors.push(e2.message||'تعذر تحميل بيانات الفريق مباشرة');
     }
   }
+
+  // عرض ما تم تحميله فورًا.
+  renderSup();
+  renderDrv();
+
   try{
     let r=await db.from('programs').select('id,title,departure_date,supervisor_id,driver_id,driver_fee,assistant_driver_id').order('departure_date');
     programs=r.error?[]:(r.data||[]);
-    if(r.error) console.warn('تعذر تحميل ربط الرحلات:',r.error);
-  }catch(e){ programs=[]; console.warn('تعذر تحميل ربط الرحلات:',e); }
-  try{
-    drivers=await Promise.all(drivers.map(async x=>{
-      x._photo_url='';
-      if(x.photo_path){
-        try{const r=await db.storage.from('pilgrim-photos').createSignedUrl(x.photo_path,3600);x._photo_url=r.data?.signedUrl||'';}catch(e){console.warn('driver photo',x.id,e);}
-      }
-      return x;
-    }));
-  }catch(e){ console.warn('driver photo processing',e); }
-  try{
-    renderSup();
-    renderDrv();
-    console.log('TEAM DIRECTORY COUNTS', {supervisors:supervisors.length, drivers:drivers.length, programs:programs.length});
-  }catch(e){
-    console.error('team directory render error',e);
-    msg('خطأ في عرض القائمة: '+(e.message||e),true);
+  }catch(e){ programs=[]; }
+
+  // إعادة العرض بعد تحميل الرحلات حتى يظهر عدد الرحلات المرتبطة.
+  renderSup();
+  renderDrv();
+
+  if(errors.length){
+    msg('تعذر تحميل قائمة المشرفين: '+errors.join(' | '),true);
   }
-  if(errors.length) msg('تعذر تحميل البيانات: '+errors.join(' | '),true);
 }
 
 function switchSection(id,btn){
