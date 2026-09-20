@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V108-CLOCK-DATE-ONLY-VERIFIED">
+<meta name="qawafel-build" content="V283-DASHBOARD-ALERTS-COMPLETED-TRIP-FILTER">
   <title>المركز الداخلي | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <style>
@@ -433,10 +433,16 @@ async function load(){
 }
 function render(){
  const today=new Date().toISOString().slice(0,10);
- const overdue=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today).length;
- const docs=P.filter(x=>!x.passport_number||!x.passport_expiry).length;
+ const bookingById=new Map(B.map(x=>[x.id,x]));
+ const programById=new Map(PR.map(x=>[x.id,x]));
+ const isCompletedBooking=b=>{const pr=b?programById.get(b.program_id):null;return pr?.status==='full';};
+ const isActiveBooking=b=>!!b && b.status!=='cancelled' && !isCompletedBooking(b);
+ const activeBookingIds=new Set(B.filter(isActiveBooking).map(x=>x.id));
+ const overdue=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today&&activeBookingIds.has(x.booking_id)).length;
+ const docs=P.filter(x=>(!x.passport_number||!x.passport_expiry)&&activeBookingIds.has(x.booking_id)).length;
  const calcAgeLocal=d=>{if(!d)return null;const b=new Date(d+'T00:00:00');if(Number.isNaN(b.getTime()))return null;const t=new Date();let a=t.getFullYear()-b.getFullYear();const m=t.getMonth()-b.getMonth();if(m<0||(m===0&&t.getDate()<b.getDate()))a--;return a;};
- const pendingVisas=P.filter(x=>!x.visa_status||x.visa_status!=='issued');
+ const pendingVisas=P.filter(x=>{const b=bookingById.get(x.booking_id);return activeBookingIds.has(x.booking_id)&&(!x.visa_status||x.visa_status!=='issued');});
+ const unpaidPilgrims=P.filter(x=>{const b=bookingById.get(x.booking_id);return !!b&&b.status!=='cancelled'&&x.booking_id&&b.cash_payment_status==='unpaid';});
  const missingBy={phone:[],residence:[],governorate:[],guardian:[]};
  P.forEach(x=>{
    if(!String(x.phone||'').trim()) missingBy.phone.push(x);
@@ -446,7 +452,7 @@ function render(){
    if(a!==null&&a<18&&!x.guardian_accompanied&&!x.guardian_authorization_path) missingBy.guardian.push(x);
  });
  const missingTotal=Object.values(missingBy).reduce((n,a)=>n+a.length,0);
- const totalAlerts=overdue+docs+pendingVisas.length+missingTotal;
+ const totalAlerts=overdue+docs+pendingVisas.length+missingTotal+unpaidPilgrims.length;
  const issueMeta={phone:['📱','نقص رقم الهاتف','phone'],residence:['🏠','نقص محل السكن','residence'],governorate:['🏛️','نقص المحافظة','governorate'],guardian:['👨‍👦','نقص وكالة القاصر','guardian']};
  const incompleteLink=(x,issue,label)=>'<a class="alert alert-link compactAlert" href="./pilgrims.html?open='+encodeURIComponent(x.id)+'&issue='+encodeURIComponent(issue)+'#profile" style="display:block;text-decoration:none;color:inherit;cursor:pointer"><b>'+issueMeta[issue][0]+' '+esc(label)+'</b><br><span>'+esc(x.full_name||'معتمر')+'</span><small style="display:block;margin-top:4px;color:#0c3b63;font-weight:900">إكمال الحقل ←</small></a>';
  const group=(id,title,icon,count,body,open)=>'<div class="alertGroup '+(open?'open':'')+'" id="alertGroup-'+id+'"><button type="button" class="alertGroupHead" onclick="toggleAlertGroup(\''+id+'\')"><span class="aghTitle"><span>'+icon+'</span>'+title+'</span><span style="display:flex;align-items:center;gap:8px"><span class="aghCount">'+count+'</span><span class="aghArrow">▼</span></span></button><div class="alertGroupBody">'+body+'</div></div>';
@@ -457,17 +463,21 @@ function render(){
    Object.keys(missingBy).forEach(k=>{if(!missingBy[k].length)return;detail+='<div id="alertGroup-missing-'+k+'" style="display:none;margin-top:7px">'+missingBy[k].map(x=>incompleteLink(x,k,issueMeta[k][1])).join('')+'</div>';});
    groups+=group('missing','بيانات المعتمرين الناقصة','⚠️',missingTotal,'<div class="missingGrid">'+cards+'</div>'+detail,true);
  }
+ if(unpaidPilgrims.length){
+   const body=unpaidPilgrims.map(x=>{const b=bookingById.get(x.booking_id),pr=programById.get(b?.program_id);return '<a class="alert alert-link compactAlert" href="./pilgrims.html?open='+encodeURIComponent(x.id)+'#profile" style="display:block;text-decoration:none;color:inherit;cursor:pointer"><b>🔴 لم يدفع شيئًا</b><br><span>'+esc(x.full_name||'معتمر')+'</span> — '+esc(pr?.title||'الرحلة')+'<small style="display:block;margin-top:4px;color:#0c3b63;font-weight:900">فتح ملف المعتمر ←</small></a>';}).join('');
+   groups+=group('unpaid','معتمرون لم يدفعوا','💰',unpaidPilgrims.length,body,true);
+ }
  if(pendingVisas.length){
    const body=pendingVisas.map(x=>'<a class="alert alert-link compactAlert" href="./visa.html?open='+encodeURIComponent(x.id)+'" style="display:block;text-decoration:none;color:inherit;cursor:pointer"><b>🔴 متابعة التأشيرة</b><br><span>'+esc(x.full_name||'معتمر')+'</span> — '+esc(x.visa_status==='rejected'?'التأشيرة مرفوضة / غير صادرة.':'التأشيرة لم تُصدر بعد.')+'<small style="display:block;margin-top:4px;color:#0c3b63;font-weight:900">معالجة التأشيرة ←</small></a>').join('');
    groups+=group('visa','متابعة التأشيرات','🛂',pendingVisas.length,body,false);
  }
- if(docs) groups+=group('docs','ملفات الجواز تحتاج استكمالاً','🪪',docs,'<div class="alert">يوجد <b>'+docs+'</b> ملف جواز يحتاج استكمالاً.</div>',false);
- if(overdue) groups+=group('overdue','أقساط متأخرة تحتاج متابعة','💰',overdue,'<div class="alert">يوجد <b>'+overdue+'</b> قسط متأخر يحتاج متابعة.</div>',false);
+ if(docs) groups+=group('docs','ملفات الجواز تحتاج استكمالاً','🪪',docs,'<div class="alert">يوجد <b>'+docs+'</b> ملف جواز يحتاج استكمالاً في الرحلات غير المكتملة.</div>',false);
+ if(overdue) groups+=group('overdue','أقساط متأخرة تحتاج متابعة','💰',overdue,'<div class="alert">يوجد <b>'+overdue+'</b> قسط متأخر يحتاج متابعة في الرحلات غير المكتملة.</div>',false);
  const summary='<div class="alertSummary">'+
    '<button type="button" class="alertStat '+(totalAlerts?'danger':'good')+'" onclick="focusAlertSection()"><span class="asIcon">🔔</span><small>إجمالي المتابعة</small><b>'+totalAlerts+'</b></button>'+
+   '<button type="button" class="alertStat '+(unpaidPilgrims.length?'danger':'good')+'" onclick="toggleAlertGroup(\'unpaid\')"><span class="asIcon">💰</span><small>لم يدفعوا</small><b>'+unpaidPilgrims.length+'</b></button>'+
    '<button type="button" class="alertStat '+(pendingVisas.length?'danger':'good')+'" onclick="toggleAlertGroup(\'visa\')"><span class="asIcon">🛂</span><small>التأشيرات</small><b>'+pendingVisas.length+'</b></button>'+
-   '<button type="button" class="alertStat '+(missingTotal?'warn':'good')+'" onclick="toggleAlertGroup(\'missing\')"><span class="asIcon">⚠️</span><small>بيانات ناقصة</small><b>'+missingTotal+'</b></button>'+
-   '<button type="button" class="alertStat '+((docs+overdue)?'warn':'good')+'" onclick="focusAlertSection()"><span class="asIcon">📋</span><small>أخرى</small><b>'+((docs+overdue))+'</b></button>'+ '</div>';
+   '<button type="button" class="alertStat '+(missingTotal?'warn':'good')+'" onclick="toggleAlertGroup(\'missing\')"><span class="asIcon">⚠️</span><small>بيانات ناقصة</small><b>'+missingTotal+'</b></button>'+ '</div>';
  $('alerts').innerHTML=totalAlerts?summary+'<div class="alertGroups" id="alertGroups">'+groups+'</div>':'<div class="alert ok">✅ لا توجد تنبيهات حرجة حاليًا.</div>';
  $('programList').innerHTML=PR.map(x=>'<div class="program"><b>'+esc(x.title)+'</b><small>'+esc(x.departure_date||'—')+' · المقاعد المتاحة: '+Number(x.seats_available||0)+' · '+esc(x.status)+'</small></div>').join('')||'<div class="empty">لا توجد رحلات مسجلة.</div>';
  $('bookingRows').innerHTML=B.slice(0,12).map(b=>{const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+(b.payment_type==='installment'?'أقساط':'نقد')+'</td></tr>'}).join('')||'<tr><td colspan="6" class="empty">لا توجد حجوزات.</td></tr>';
