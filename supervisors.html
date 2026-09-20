@@ -140,7 +140,31 @@ async function saveCrop(){let cr=cropState.cropper;if(!cr)return;let canvas=cr.g
 function wirePassport(who){let ids=[who+'Pass',who+'PassCam'];ids.forEach(id=>$(id).addEventListener('change',e=>{let f=e.target.files?.[0];if(!f)return;let dt=new DataTransfer();dt.items.add(f);$(who+'Pass').files=dt.files;$(who+'Preview').src=URL.createObjectURL(f);$(who+'Preview').style.display='block';$(who+'Ocr').disabled=false;$(who+'Edit').disabled=false;if(who==='d'&&$('dExtractPhoto'))$('dExtractPhoto').disabled=false;$(who+'OcrMsg').textContent='تم رفع الجواز. يمكنك ضبط الصورة أو قراءة الجواز.'}));$(who+'Ocr').onclick=()=>ocrFile($(who+'Pass').files[0],who);$(who+'Edit').onclick=()=>openCrop(who)}
 wirePassport('s');wirePassport('d');$('dPass').addEventListener('change',async()=>{let f=$('dPass').files?.[0];if(f){$('dExtractPhoto').disabled=false;window.currentDriverPhotoFile=await extractDriverPhoto(f,'dPhotoPreview','dPhotoMsg');$('dCropPhoto').disabled=!window.currentDriverPhotoFile}});$('dExtractPhoto').onclick=async()=>{let f=$('dPass').files?.[0];if(!f)return;window.currentDriverPhotoFile=await extractDriverPhoto(f,'dPhotoPreview','dPhotoMsg');$('dCropPhoto').disabled=!window.currentDriverPhotoFile};$('dCropPhoto').onclick=async()=>{if(!window.currentDriverPhotoFile)return;let out=await cropPersonalDriverPhoto(window.currentDriverPhotoFile);if(out){window.currentDriverPhotoFile=out;$('dPhotoPreview').src=URL.createObjectURL(out);$('dPhotoPreview').style.display='block';$('dPhotoMsg').textContent='تم اعتماد الصورة الشخصية المعدلة.'}};
 $('rotL').onclick=()=>cropState.cropper?.rotate(-90);$('rotR').onclick=()=>cropState.cropper?.rotate(90);$('cropReset').onclick=()=>cropState.cropper?.reset();$('cropZoomIn').onclick=()=>cropState.cropper?.zoom(.1);$('cropZoomOut').onclick=()=>cropState.cropper?.zoom(-.1);$('cropClose').onclick=closeCrop;$('cropSave').onclick=saveCrop;
-async function guard(){let r=await db.auth.getUser();if(!r.data?.user){location.href='internal.html';return false}currentUser=r.data.user;let s=await db.from('staff_profiles').select('full_name,role,active,permissions').eq('user_id',currentUser.id).maybeSingle();if(!s.error&&s.data?.active!==false&&['super_admin','manager'].includes(s.data?.role)){return 'manager'}if(!s.error&&s.data?.active!==false&&Array.isArray(s.data?.permissions)&&s.data.permissions.includes('supervisors')){return 'manager'}if(!s.error&&s.data?.active!==false&&s.data?.role==='driver'){document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');let dr=await db.from('drivers').select('*').eq('user_id',currentUser.id).maybeSingle();if(!dr.error&&dr.data){currentDriver=dr.data;return 'driver'}}if(!s.error&&s.data?.active!==false&&s.data?.role==='supervisor'){document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');let sp=await db.from('supervisors').select('*').eq('user_id',currentUser.id).maybeSingle();if(!sp.error&&sp.data){currentSupervisor=sp.data;return 'supervisor'}}let a=await db.from('admin_users').select('role').eq('user_id',currentUser.id).maybeSingle();if(!a.error&&['super_admin'].includes(a.data?.role))return 'manager';location.href='internal.html';return false}
+async function guard(){
+  let r=await db.auth.getUser();
+  if(!r.data?.user){location.href='internal.html';return false}
+  currentUser=r.data.user;
+
+  // نتحقق من المشرف العام أولاً لتجنب أي تعارض مع سياسات قراءة staff_profiles.
+  let a=await db.from('admin_users').select('role').eq('user_id',currentUser.id).maybeSingle();
+  if(!a.error&&a.data?.role==='super_admin')return 'manager';
+
+  let s=await db.from('staff_profiles').select('full_name,role,active,permissions').eq('user_id',currentUser.id).maybeSingle();
+  if(!s.error&&s.data?.active!==false&&['super_admin','manager'].includes(s.data?.role))return 'manager';
+  if(!s.error&&s.data?.active!==false&&Array.isArray(s.data?.permissions)&&s.data.permissions.includes('supervisors'))return 'manager';
+
+  if(!s.error&&s.data?.active!==false&&s.data?.role==='driver'){
+    document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');
+    let dr=await db.from('drivers').select('*').eq('user_id',currentUser.id).maybeSingle();
+    if(!dr.error&&dr.data){currentDriver=dr.data;return 'driver'}
+  }
+  if(!s.error&&s.data?.active!==false&&s.data?.role==='supervisor'){
+    document.getElementById('qawafelAdminDrawer')?.classList.add('staff-limited');
+    let sp=await db.from('supervisors').select('*').eq('user_id',currentUser.id).maybeSingle();
+    if(!sp.error&&sp.data){currentSupervisor=sp.data;return 'supervisor'}
+  }
+  location.href='internal.html';return false;
+}
 async function loadData(){
   let errors=[];
   try{
