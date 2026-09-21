@@ -413,14 +413,15 @@ async function load(){
  const canFinance=!!me && (me.role==='super_admin'||me.role==='manager'||(Array.isArray(me.permissions)&&me.permissions.includes('finance')));
  const fs=document.getElementById('financeSummary');
  if(fs) fs.style.display=canFinance?'':'none';
- const [b,p,pr,i,e]=await Promise.all([
+ const [b,p,pr,i,e,v]=await Promise.all([
    db.from('bookings').select('*').order('created_at',{ascending:false}),
    db.from('pilgrims').select('*'),
    db.from('programs').select('*').order('departure_date'),
    db.from('installment_plans').select('*').order('due_date'),
-   canFinance ? db.from('expenses').select('*').order('expense_date',{ascending:false}) : Promise.resolve({data:[],error:null})
+   canFinance ? db.from('expenses').select('*').order('expense_date',{ascending:false}) : Promise.resolve({data:[],error:null}),
+   db.from('visa_email_events').select('id,subject,attachment_name,received_at,viewed_at,matched_pilgrim_id,status').is('viewed_at',null).order('received_at',{ascending:false}).limit(20)
  ]);
- const er=[b,p,pr,i,e].find(x=>x.error);
+ const er=[b,p,pr,i,e,v].find(x=>x.error);
  if(er){$('alerts').innerHTML='<div class="alert">'+esc(er.error.message)+'</div>';return}
  B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];window.qawafelUnreadVisaEvents=v.data||[];
  $('programs').textContent=PR.filter(x=>x.status==='published').length;
