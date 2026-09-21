@@ -1690,7 +1690,7 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
         const realPilgrim=await resolvePilgrim(p);
         const {data,error}=await qwDb.functions.invoke('whatsapp-send',{body:{pilgrim_id:realPilgrim.id,message}});
         if(error)throw error;
-        if(!data?.success)throw new Error(data?.error||'تعذر إرسال الرسالة.');
+        if(!data?.ok)throw new Error(data?.error||'تعذر إرسال الرسالة.');
         status.textContent='✅ تم إرسال الرسالة بنجاح.';
         status.style.background='#eaf7ef'; status.style.color='#176644';
         send.textContent='تم الإرسال ✓';
@@ -1704,7 +1704,7 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
     };
   }
   function escSafe(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
-  const qwDb=window.supabase.createClient('https://ymjkzvdjpuuxkcgkmbtc.supabase.co','sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ');
+  const qwDb=db;
   function boot(){addButtons();const rows=document.getElementById('rows');if(rows){new MutationObserver(()=>addButtons()).observe(rows,{childList:true,subtree:true});}}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
