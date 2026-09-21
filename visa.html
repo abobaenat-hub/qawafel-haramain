@@ -28,7 +28,7 @@ async function loadVisaEmailLog(){
   const body=$('visaEmailRows');if(!body)return;
   body.innerHTML='<tr><td colspan="10" class="muted">جاري تحميل سجل البريد...</td></tr>';
   try{
-    const r=await withTimeout(db.from('visa_email_events').select('id,sender,subject,received_at,attachment_name,matched_pilgrim_id,match_method,match_confidence,status,error_message,created_at').order('created_at',{ascending:false}).limit(100),8000);
+    const r=await withTimeout(db.from('visa_email_events').select('id,sender,subject,received_at,attachment_name,attachment_path,matched_pilgrim_id,match_method,match_confidence,status,error_message,created_at').order('created_at',{ascending:false}).limit(100),8000);
     if(r.error)throw r.error;
     emailEvents=r.data||[];
     renderVisaEmailLog();
@@ -58,8 +58,9 @@ function renderVisaEmailLog(){
     const p=e.matched_pilgrim_id?all.find(x=>x.id===e.matched_pilgrim_id):null;
     const dt=e.received_at||e.created_at;
     const conf=e.match_confidence!=null?Math.round(Number(e.match_confidence)*100)+'%':'—';
-    const pdf=p?.visa_document_path
-      ?'<button class="btn green" style="padding:6px 9px" data-view-pdf="'+esc(p.id)+'">عرض PDF</button>'
+    const pdfPath=e.attachment_path||p?.visa_document_path||'';
+    const pdf=pdfPath
+      ?'<button class="btn green" style="padding:6px 9px" data-view-email-pdf="'+esc(pdfPath)+'">📄 عرض PDF</button>'
       :esc(e.attachment_name||'—');
     return '<tr><td dir="ltr">'+esc(dt?new Date(dt).toLocaleString('ar-IQ'):'—')+'</td><td dir="ltr">'+esc(e.sender||'—')+'</td><td>'+esc(e.subject||'—')+'</td><td>'+pdf+'</td><td><b>'+esc(p?.full_name||'غير مطابقة')+'</b></td><td dir="ltr">'+esc(p?.passport_number||'—')+'</td><td dir="ltr">'+esc(p?.visa_number||'—')+'</td><td>'+method(e.match_method)+'</td><td>'+conf+'</td><td>'+esc(result(e.status))+'</td></tr>';
   }).join('');
@@ -75,6 +76,7 @@ function openUpdate(id){current=all.find(x=>x.id===id);if(!current)return;$('mod
 function close(){current=null;$('modal').classList.add('hide')}
 async function update(status){if(!current)return;const patch={visa_status:status,visa_number:status==='issued'?($('visaNumber').value.trim()||null):null,visa_issued_at:status==='issued'?($('visaDate').value||new Date().toISOString().slice(0,10)):null};const {error}=await db.from('pilgrims').update(patch).eq('id',current.id);if(error){alert('تعذر حفظ الحالة: '+error.message);return;}close();await load()}
 async function uploadVisaPdf(id){current=all.find(x=>x.id===id);if(!current)return;const input=$('visaPdfInput');input.value='';input.onchange=async()=>{const file=input.files?.[0];if(!file)return;if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)){alert('يرجى اختيار ملف PDF فقط.');return;}const safePassport=String(current.passport_number||'NO-PASSPORT').replace(/[^A-Za-z0-9_-]/g,'');const path='visa-'+safePassport+'-'+Date.now()+'.pdf';try{const up=await db.storage.from('pilgrim-photos').upload(path,file,{upsert:false,contentType:'application/pdf'});if(up.error)throw up.error;const ur=await db.from('pilgrims').update({visa_document_path:path,visa_status:'issued',visa_issued_at:current.visa_issued_at||new Date().toISOString().slice(0,10)}).eq('id',current.id);if(ur.error)throw ur.error;alert('تم حفظ التأشيرة PDF وربطها بالمعتمر بنجاح ✅');await load();}catch(e){alert('تعذر حفظ ملف التأشيرة: '+(e?.message||e));}};input.click()}
+async function viewEmailPdf(path){if(!path)return alert('لا يوجد ملف PDF محفوظ.');try{const r=await db.storage.from('pilgrim-photos').createSignedUrl(path,3600);if(r.error||!r.data?.signedUrl)throw r.error||new Error('تعذر إنشاء رابط الملف');window.open(r.data.signedUrl,'_blank','noopener')}catch(e){alert('تعذر فتح التأشيرة: '+(e?.message||e))}}
 async function viewVisaPdf(id){const x=all.find(v=>v.id===id);if(!x?.visa_document_path)return alert('لا يوجد ملف تأشيرة محفوظ.');try{const r=await db.storage.from('pilgrim-photos').createSignedUrl(x.visa_document_path,3600);if(r.error||!r.data?.signedUrl)throw r.error||new Error('تعذر إنشاء رابط الملف');window.open(r.data.signedUrl,'_blank','noopener')}catch(e){alert('تعذر فتح التأشيرة: '+(e?.message||e))}}
 $('search').addEventListener('input',render);
 document.querySelectorAll('.stat[data-filter]').forEach(el=>el.addEventListener('click',()=>setVisaFilter(el.dataset.filter)));
@@ -86,7 +88,7 @@ $('zohoCopyWebhook').onclick=()=>{const v=$('zohoCopyWebhook').dataset.url||ZOHO
 $('closeModal').onclick=close;
 $('closeInquiry').onclick=()=>{$('inquiryModal').classList.add('hide');current=null};
 $('saveIssued').onclick=()=>update('issued');$('savePending').onclick=()=>update('pending');$('saveProcessing').onclick=()=>update('processing');$('saveRejected').onclick=()=>update('rejected');
-document.addEventListener('click',e=>{const t=e.target.closest('[data-view-pdf],[data-inquiry],[data-update],[data-upload-pdf]');if(!t)return;if(t.dataset.viewPdf)viewVisaPdf(t.dataset.viewPdf);else if(t.dataset.inquiry)openInquiry(t.dataset.inquiry);else if(t.dataset.update)openUpdate(t.dataset.update);else if(t.dataset.uploadPdf)uploadVisaPdf(t.dataset.uploadPdf)});
+document.addEventListener('click',e=>{const t=e.target.closest('[data-view-email-pdf],[data-view-pdf],[data-inquiry],[data-update],[data-upload-pdf]');if(!t)return;if(t.dataset.viewEmailPdf)viewEmailPdf(t.dataset.viewEmailPdf);else if(t.dataset.viewPdf)viewVisaPdf(t.dataset.viewPdf);else if(t.dataset.inquiry)openInquiry(t.dataset.inquiry);else if(t.dataset.update)openUpdate(t.dataset.update);else if(t.dataset.uploadPdf)uploadVisaPdf(t.dataset.uploadPdf)});
 Promise.allSettled([load(),loadVisaEmailLog(),zohoStatus()]).then(()=>{const id=new URLSearchParams(location.search).get('open');if(id)openUpdate(id)});
 </script>
 <script id="qawafel-audit-v169">
