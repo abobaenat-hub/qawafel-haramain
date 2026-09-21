@@ -1631,5 +1631,74 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
   obs.observe(document.documentElement,{childList:true,subtree:true});
   setTimeout(()=>obs.disconnect(),20000);
 })();
-</script></body>
+</script>
+<style id="qawafel-whatsapp-ui-v1">
+.qw-row-btn{background:#25D366!important;color:#fff!important;border:0!important}
+.qw-wa-modal{position:fixed;inset:0;background:#0008;z-index:400000;display:flex;align-items:center;justify-content:center;padding:18px}
+.qw-wa-card{background:#fff;width:min(560px,96vw);border-radius:18px;padding:20px;box-shadow:0 20px 70px #0006;direction:rtl}
+.qw-wa-card h3{margin:0 0 8px;color:#072b49}.qw-wa-card small{color:#687984}
+.qw-wa-card textarea{min-height:130px;margin-top:10px;resize:vertical}
+.qw-wa-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.qw-wa-status{margin-top:10px;padding:10px;border-radius:10px;display:none}
+</style>
+<script id="qawafel-whatsapp-ui-v1">
+(function(){
+  function cleanPhone(v){return String(v||'').replace(/[\\s()\\[\\]{}._-]/g,'').replace(/^00/,'').replace(/^\\+/,'');}
+  function findPilgrimFromRow(tr){
+    const name=(tr.children[0]?.innerText||'').split('\\n')[0].trim();
+    const phone=cleanPhone(tr.children[1]?.innerText||'');
+    return (window.P||[]).find(p=>cleanPhone(p.phone)===phone) || (window.P||[]).find(p=>String(p.full_name||'').trim()===name);
+  }
+  function addButtons(){
+    const rows=document.querySelectorAll('#rows tr');
+    rows.forEach(tr=>{
+      if(tr.dataset.qwWa==='1')return;
+      const p=findPilgrimFromRow(tr);
+      const cell=tr.lastElementChild;
+      if(!p||!cell||!p.phone)return;
+      const btn=document.createElement('button');
+      btn.type='button'; btn.className='btn qw-row-btn noPrint'; btn.textContent='💬 واتساب';
+      btn.style.marginInlineStart='6px';
+      btn.addEventListener('click',()=>openWhatsAppModal(p));
+      cell.querySelector('div')?.appendChild(btn);
+      tr.dataset.qwWa='1';
+    });
+  }
+  function openWhatsAppModal(p){
+    const modal=document.createElement('div');
+    modal.className='qw-wa-modal';
+    const defaultMsg='السلام عليكم '+(p.full_name||'')+'،\n\nمعك شركة قوافل الحرمين للحج والعمرة.\nتم تسجيل بياناتكم في منصة قوافل الحرمين.\n\nنسأل الله أن ييسر لكم عمرتكم ويتقبل منكم.';
+    modal.innerHTML='<div class="qw-wa-card"><h3>💬 إرسال رسالة عبر واتساب</h3><small>المعتمر: '+escSafe(p.full_name||'—')+'<br>الهاتف: '+escSafe(p.phone||'—')+'</small><textarea id="qwWaText">'+escSafe(defaultMsg)+'</textarea><div class="qw-wa-actions"><button type="button" class="btn qw-row-btn" id="qwWaSend">إرسال الرسالة</button><button type="button" class="btn w" id="qwWaClose">إلغاء</button></div><div id="qwWaStatus" class="qw-wa-status"></div></div>';
+    document.body.appendChild(modal);
+    const close=()=>modal.remove();
+    modal.querySelector('#qwWaClose').onclick=close;
+    modal.addEventListener('click',e=>{if(e.target===modal)close();});
+    modal.querySelector('#qwWaSend').onclick=async()=>{
+      const send=modal.querySelector('#qwWaSend'), status=modal.querySelector('#qwWaStatus');
+      const message=modal.querySelector('#qwWaText').value.trim();
+      if(!message)return alert('اكتب نص الرسالة أولًا.');
+      send.disabled=true; send.textContent='جارٍ الإرسال...';
+      status.style.display='block'; status.textContent='جاري الاتصال بواتساب...'; status.style.background='#f5f7f9';
+      try{
+        const {data,error}=await window.db.functions.invoke('whatsapp-send',{body:{pilgrim_id:p.id,message}});
+        if(error)throw error;
+        if(!data?.success)throw new Error(data?.error||'تعذر إرسال الرسالة.');
+        status.textContent='✅ تم إرسال الرسالة بنجاح.';
+        status.style.background='#eaf7ef'; status.style.color='#176644';
+        send.textContent='تم الإرسال ✓';
+        setTimeout(close,1200);
+      }catch(e){
+        console.error('WhatsApp send',e);
+        status.textContent='❌ تعذر الإرسال: '+(e?.message||'خطأ غير معروف');
+        status.style.background='#fff0f0'; status.style.color='#a33';
+        send.disabled=false; send.textContent='إعادة الإرسال';
+      }
+    };
+  }
+  function escSafe(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+  function boot(){addButtons();const rows=document.getElementById('rows');if(rows){new MutationObserver(()=>addButtons()).observe(rows,{childList:true,subtree:true});}}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
+})();
+</script>
+</body>
 </html>
