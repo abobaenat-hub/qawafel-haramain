@@ -62,7 +62,8 @@ function renderVisaEmailLog(){
     const pdf=pdfPath
       ?'<button class="btn green" style="padding:6px 9px" data-view-email-pdf="'+esc(pdfPath)+'">📄 عرض PDF</button>'
       :esc(e.attachment_name||'—');
-    return '<tr><td dir="ltr">'+esc(dt?new Date(dt).toLocaleString('ar-IQ'):'—')+'</td><td dir="ltr">'+esc(e.sender||'—')+'</td><td>'+esc(e.subject||'—')+'</td><td>'+pdf+'</td><td><b>'+esc(p?.full_name||'غير مطابقة')+'</b></td><td dir="ltr">'+esc(p?.passport_number||'—')+'</td><td dir="ltr">'+esc(p?.visa_number||'—')+'</td><td>'+method(e.match_method)+'</td><td>'+conf+'</td><td>'+esc(result(e.status))+'</td></tr>';
+    const unmatchedName=!p&&e.attachment_name?String(e.attachment_name).replace(/\\.pdf$/i,''):'غير مطابقة';
+    return '<tr><td dir="ltr">'+esc(dt?new Date(dt).toLocaleString('ar-IQ'):'—')+'</td><td dir="ltr">'+esc(e.sender||'—')+'</td><td>'+esc(e.subject||'—')+'</td><td>'+pdf+'</td><td><b>'+esc(p?.full_name||unmatchedName)+'</b></td><td dir="ltr">'+esc(p?.passport_number||'—')+'</td><td dir="ltr">'+esc(p?.visa_number||'—')+'</td><td>'+method(e.match_method)+'</td><td>'+conf+'</td><td>'+esc(result(e.status))+'</td></tr>';
   }).join('');
 }
 function badge(v){const x=v||'pending';const c=x==='issued'?'b-issued':x==='rejected'?'b-rejected':x==='processing'?'b-processing':'b-pending';const t=x==='issued'?'تم إصدار التأشيرة':x==='rejected'?'مرفوضة / غير صادرة':x==='processing'?'قيد الإجراء':'بانتظار الفحص';return '<span class="badge '+c+'">'+t+'</span>'}
