@@ -1,0 +1,59 @@
+<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>طباعة تأشيرات الرحلة | قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.min.mjs" type="module"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#17384f;font-family:Tahoma,Arial,sans-serif}.top{background:#082f50;color:#fff;padding:16px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px}.top h1{margin:0;font-size:20px}.top small{color:#e4c878}.wrap{max-width:1100px;margin:20px auto;padding:0 14px}.bar{background:#fff;border:1px solid #dfe7ec;border-radius:14px;padding:14px;display:flex;justify-content:space-between;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:15px}.btn{border:0;border-radius:10px;padding:10px 14px;font-weight:900;cursor:pointer}.print{background:#c99a32;color:#082f50}.back{background:#082f50;color:#fff;text-decoration:none}.status{color:#718390;font-size:12px}.visa{background:#fff;border:1px solid #dfe7ec;border-radius:12px;margin-bottom:14px;padding:10px}.visa h3{margin:0 0 8px;color:#082f50;font-size:14px}.visa small{color:#718390}.pdfpage{display:block;width:100%;border:1px solid #e0e6ea;margin-top:10px;background:#fff}.loading{text-align:center;padding:40px;color:#718390}.err{color:#a43b3b;background:#fff0f0;border:1px solid #efcaca;padding:12px;border-radius:10px}
+@media print{body{background:#fff}.top,.bar{display:none!important}.wrap{margin:0;padding:0}.visa{border:0;margin:0;padding:0;break-after:page}.visa:last-child{break-after:auto}.visa h3,.visa small{display:none}.pdfpage{border:0;margin:0;max-width:100%;break-inside:avoid}}
+</style></head><body>
+<header class="top"><div><h1>🛂 طباعة تأشيرات الرحلة</h1><small id="tripTitle">جاري التحميل...</small></div><a class="btn back" href="./programs.html">رجوع</a></header>
+<main class="wrap"><div class="bar"><div class="status" id="status">جاري تحميل التأشيرات...</div><button class="btn print" id="printBtn" disabled>🖨️ طباعة كل التأشيرات</button></div><div id="list"><div class="loading">جاري تجهيز ملفات التأشيرات...</div></div></main>
+<script type="module">
+const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const q=new URLSearchParams(location.search),programId=q.get('program');
+const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/4.4.168/pdf.worker.min.mjs';
+async function auth(){
+ const {data}=await db.auth.getSession(); if(!data.session){location.href='./internal.html';return false}
+ const u=data.session.user; const s=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
+ const allowed=!s.error&&s.data?.active&&(s.data.role==='super_admin'||s.data.role==='manager'||(s.data.permissions||[]).some(x=>['trips','visa'].includes(x)));
+ if(!allowed){const a=await db.from('admin_users').select('role').eq('user_id',u.id).maybeSingle();if(a.data?.role!=='super_admin'){location.href='./internal.html';return false}}
+ return true;
+}
+async function main(){
+ if(!programId||!(await auth()))return;
+ const [pr,book,pil]=await Promise.all([
+  db.from('programs').select('id,title,departure_date').eq('id',programId).single(),
+  db.from('bookings').select('id,program_id').eq('program_id',programId),
+  db.from('pilgrims').select('id,booking_id,full_name,passport_number,visa_document_path,visa_number,visa_status').not('visa_document_path','is',null)
+ ]);
+ if(pr.error||book.error||pil.error)throw new Error((pr.error||book.error||pil.error).message);
+ $('tripTitle').textContent=pr.data.title+' — '+(pr.data.departure_date||'');
+ const ids=new Set((book.data||[]).map(x=>x.id));
+ const list=(pil.data||[]).filter(x=>ids.has(x.booking_id)&&x.visa_document_path);
+ if(!list.length){$('status').textContent='لا توجد تأشيرات محفوظة لهذه الرحلة حتى الآن.';$('list').innerHTML='<div class="err">لم يتم العثور على ملفات PDF مرتبطة بمعتمري هذه الرحلة.</div>';return}
+ $('status').textContent='تم العثور على '+list.length+' تأشيرة محفوظة. جارٍ تجهيزها للطباعة...';
+ const box=$('list');box.innerHTML='';
+ let rendered=0;
+ for(const p of list){
+  const wrap=document.createElement('section');wrap.className='visa';
+  wrap.innerHTML='<h3>'+esc(p.full_name||'—')+'</h3><small>الجواز: '+esc(p.passport_number||'—')+(p.visa_number?' — رقم التأشيرة: '+esc(p.visa_number):'')+'</small>';
+  box.appendChild(wrap);
+  try{
+   const r=await db.storage.from('pilgrim-photos').createSignedUrl(p.visa_document_path,3600); if(r.error||!r.data?.signedUrl)throw r.error||new Error('تعذر إنشاء رابط PDF');
+   const pdf=await pdfjsLib.getDocument(r.data.signedUrl).promise;
+   for(let n=1;n<=pdf.numPages;n++){
+    const pg=await pdf.getPage(n),vp=pg.getViewport({scale:1.55});
+    const c=document.createElement('canvas');c.className='pdfpage';c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);
+    await pg.render({canvasContext:c.getContext('2d'),viewport:vp}).promise;wrap.appendChild(c);
+   }
+   rendered++;
+  }catch(e){const er=document.createElement('div');er.className='err';er.textContent='تعذر تجهيز PDF: '+(e.message||e);wrap.appendChild(er)}
+ }
+ $('status').textContent='تم تجهيز '+rendered+' من '+list.length+' تأشيرة للطباعة.';
+ $('printBtn').disabled=rendered===0;
+}
+$('printBtn').onclick=()=>window.print();
+main().catch(e=>{ $('status').textContent='حدث خطأ';$('list').innerHTML='<div class="err">'+esc(e.message||e)+'</div>';});
+</script></body></html>
