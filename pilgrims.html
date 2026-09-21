@@ -1688,7 +1688,7 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
       status.style.display='block'; status.textContent='جاري الاتصال بواتساب...'; status.style.background='#f5f7f9';
       try{
         const realPilgrim=await resolvePilgrim(p);
-        const {data,error}=await qwDb.functions.invoke('whatsapp-send',{body:{pilgrim_id:realPilgrim.id,message}});
+        const {data,error}=await qwDb.functions.invoke('whatsapp-send',{body:{pilgrim_id:realPilgrim.id,template_name:'hello_world',template_language:'en_US'}});
         if(error)throw error;
         if(!data?.ok)throw new Error(data?.error||'تعذر إرسال الرسالة.');
         status.textContent='✅ تم إرسال الرسالة بنجاح.';
