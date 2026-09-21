@@ -223,6 +223,9 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
         <button type="button" class="trip-full-action" onclick="document.getElementById('tripVisaTrip').click()">
           <b>🛂 إدارة التأشيرات</b><span>متابعة حالات التأشيرات وإجراءاتها.</span>
         </button>
+        <button type="button" class="trip-full-action primary-action" onclick="document.getElementById('printTripVisas').click()">
+          <b>🖨️ طباعة تأشيرات الرحلة</b><span>جمع كل تأشيرات معتمري الرحلة المحفوظة وطباعتها دفعة واحدة.</span>
+        </button>
         <button type="button" class="trip-full-action" onclick="document.getElementById('printBadgesTrip').click()">
           <b>🪪 طباعة الباجات</b><span>طباعة باجات معتمري الرحلة.</span>
         </button>
@@ -248,7 +251,7 @@ label{display:block;font-weight:800;font-size:13px;margin:14px 0 6px}input,selec
           <button id="passportStickersTrip" class="btn ghost" type="button">🏷️ ستيكر الجواز</button>
           <button id="zamzamStickersTrip" class="btn ghost" type="button">💧 ستيكر زمزم</button>
           <button id="tripReportTrip" class="btn ghost" type="button">📄 كشف الرحلة</button>
-          <button id="tripVisaTrip" class="btn ghost" type="button">🛂 إدارة التأشيرات</button>
+          <button id="tripVisaTrip" class="btn ghost" type="button">🛂 إدارة التأشيرات</button><button id="printTripVisas" class="btn gold" type="button">🖨️ طباعة تأشيرات الرحلة</button>
         </div>
       </div>
       <div id="tripPilgrimGrid" class="pilgrim-grid"></div>
@@ -625,6 +628,7 @@ function openTripReport(){
 }
 $('tripReportTrip')?.addEventListener('click',openTripReport);
 $('tripVisaTrip')?.addEventListener('click',()=>{$('visaPanel').classList.toggle('hidden'); if(!$('visaPanel').classList.contains('hidden')) renderVisaPanel();});
+$('printTripVisas')?.addEventListener('click',()=>{if(!activeTrip?.id)return alert('افتح الرحلة أولاً.');window.open('./print-trip-visas.html?program='+encodeURIComponent(activeTrip.id),'_blank','noopener');});
 $('travel_type')?.addEventListener('change',setTransportFields);
 setTransportFields();
 $('tripModal')?.addEventListener('click',e=>{if(e.target.id==='tripModal')closeTripModal()});
