@@ -1697,7 +1697,17 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
         setTimeout(close,1200);
       }catch(e){
         console.error('WhatsApp send',e);
-        status.textContent='❌ تعذر الإرسال: '+(e?.message||'خطأ غير معروف');
+        let detail=e?.message||'خطأ غير معروف';
+        try{
+          const resp=e?.context;
+          if(resp && typeof resp.json==='function'){
+            const body=await resp.json();
+            if(body?.details?.error?.message) detail=body.details.error.message;
+            else if(body?.error) detail=body.error;
+            else if(body?.details) detail=typeof body.details==='string'?body.details:JSON.stringify(body.details);
+          }
+        }catch(_){}
+        status.textContent='❌ تعذر الإرسال: '+detail;
         status.style.background='#fff0f0'; status.style.color='#a33';
         send.disabled=false; send.textContent='إعادة الإرسال';
       }
