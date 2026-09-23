@@ -65,9 +65,11 @@
 <div class="field"><label>طريقة الدفع</label><select id="outMethod"><option value="cash">نقدي</option><option value="transfer">تحويل</option><option value="bank">مصرف</option><option value="other">أخرى</option></select></div>
 </div><div class="grid3" style="margin-top:10px">
 <div class="field"><label>الرحلة (اختياري)</label><select id="outProgram"><option value="">بدون رحلة</option></select></div>
-<div class="field"><label>لمن صُرف؟</label><input id="outParty" placeholder="اسم المورد/المشرف/الموظف..."></div>
+<div class="field" id="outSupplierWrap" style="display:none"><label>المورد</label><select id="outSupplier" onchange="showSupplierBalance()"><option value="">اختر المورد</option></select></div>
+<div class="field" id="outPartyWrap"><label>لمن صُرف؟</label><input id="outParty" placeholder="اسم المورد/المشرف/الموظف..."></div>
 <div class="field"><label>التاريخ</label><input id="outDate" type="date"></div>
-</div><div class="field" style="margin-top:10px"><label>ملاحظات</label><textarea id="outNotes"></textarea></div>
+</div><div id="supplierBalanceBox" class="msg hidden" style="margin-top:10px"></div>
+<div class="field" style="margin-top:10px"><label>ملاحظات</label><textarea id="outNotes"></textarea></div>
 <button class="btn primary" onclick="addManual('out')">تسجيل الصرف</button><div id="outMsg"></div></div>
 </section>
 
@@ -85,7 +87,7 @@
 <div id="login" class="panel" style="max-width:420px;margin:80px auto"><h2>تسجيل الدخول</h2><input id="email" type="email" placeholder="البريد الإلكتروني" style="width:100%;padding:11px;margin:6px 0"><input id="password" type="password" placeholder="كلمة المرور" style="width:100%;padding:11px;margin:6px 0"><button class="btn primary" style="width:100%;margin-top:8px" onclick="login()">دخول</button><div id="loginMsg"></div></div>
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
-const db=window.supabase.createClient(U,K);let TX=[],BOOK=[],PAY=[],PROGS=[];
+const db=window.supabase.createClient(U,K);let TX=[],BOOK=[],PAY=[],PROGS=[],SUPPLIERS=[],SWALLET=[];
 const $=id=>document.getElementById(id),fmt=n=>new Intl.NumberFormat('ar-IQ',{maximumFractionDigits:2}).format(Number(n||0));
 const catLabel={trip_income:'إيراد رحلة',visa_income:'إيراد تأشيرة',hotel_income:'إيراد فندق',other_income:'إيراد آخر',pilgrim_payment:'قبض معتمر',supplier_payment:'مورد',contractor_payment:'متعهد',supervisor_payment:'مشرف',employee_payment:'موظف',trip_expense:'مصروف رحلة',admin_expense:'مصروف إداري',other_expense:'مصروف آخر',driver_payment:'سائق'};
 function dateToday(){return new Date().toISOString().slice(0,10)}
@@ -94,25 +96,63 @@ async function login(){const r=await db.auth.signInWithPassword({email:$('email'
 async function signOut(){await db.auth.signOut();location.reload()}
 async function init(){const s=await db.auth.getSession();if(!s.data.session){$('login').classList.remove('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');await loadAll()}
 async function loadAll(){
- const [tx,b,p,pgr]=await Promise.all([
+ const [tx,b,p,pgr,sup,sw]=await Promise.all([
   db.from('finance_transactions').select('*').order('transaction_date',{ascending:false}).limit(1000),
   db.from('bookings').select('id,booking_number,full_name,total_amount,program_id,status').order('created_at',{ascending:false}),
   db.from('payments').select('id,booking_id,amount,currency,payment_method,payment_date,reference,notes').order('payment_date',{ascending:false}),
-  db.from('programs').select('id,title,departure_date,status').order('departure_date',{ascending:false})
+  db.from('programs').select('id,title,departure_date,status').order('departure_date',{ascending:false}),
+  db.from('suppliers').select('id,name,active').eq('active',true).order('name'),
+  db.from('supplier_wallet_transactions').select('supplier_id,transaction_type,amount,currency,amount_iqd').order('created_at',{ascending:false})
  ]);
  TX=tx.data||[];BOOK=b.data||[];PAY=p.data||[];PROGS=pgr.data||[];
  fillPrograms();renderAll();
 }
+function fillSuppliers(){
+ const el=$('outSupplier'); if(!el)return;
+ el.innerHTML='<option value="">اختر المورد</option>'+SUPPLIERS.map(s=>{
+   const b=supplierBalances(s.id);
+   const parts=[]; if(b.SAR)parts.push(fmt(b.SAR)+' ريال'); if(b.USD)parts.push(fmt(b.USD)+' دولار'); if(b.IQD)parts.push(fmt(b.IQD)+' د.ع');
+   return '<option value="'+s.id+'">'+esc(s.name)+' — رصيدنا: '+(parts.join(' | ')||'0')+'</option>';
+ }).join('');
+}
+function supplierBalances(id){
+ const b={};
+ SWALLET.filter(x=>x.supplier_id===id).forEach(x=>{
+   const cur=x.currency||'IQD', n=Number(x.amount||0)*(x.transaction_type==='deposit'?1:-1);
+   b[cur]=(b[cur]||0)+n;
+ });
+ return b;
+}
+function showSupplierBalance(){
+ const id=$('outSupplier').value, box=$('supplierBalanceBox');
+ if(!id){box.classList.add('hidden');return}
+ const s=SUPPLIERS.find(x=>x.id===id),b=supplierBalances(id);
+ const parts=Object.entries(b).map(([cur,n])=>'<b>'+fmt(n)+' '+(cur==='SAR'?'ريال':cur==='USD'?'دولار':'د.ع')+'</b>');
+ box.classList.remove('hidden');
+ box.innerHTML='<b>'+esc(s?.name||'المورد')+'</b><br>الرصيد الموجود لنا عند المورد: '+(parts.join(' &nbsp; | &nbsp; ')||'<b>0</b>')+
+   '<br><span class="muted">الرصيد الموجب = أموال لنا عند المورد، والسالب = مبلغ مستحق علينا.</span>';
+}
+function toggleSupplierField(){
+ const is=$('outCat').value==='supplier_payment';
+ $('outSupplierWrap').style.display=is?'block':'none';
+ $('outPartyWrap').style.display=is?'none':'block';
+ if(is){fillSuppliers();showSupplierBalance()}else $('supplierBalanceBox').classList.add('hidden');
+}
+$('outCat').addEventListener('change',toggleSupplierField);
+
 function fillPrograms(){['inProgram','outProgram','pilgrimProgramFilter'].forEach(id=>{const el=$(id),cur=el.value;const first=id==='pilgrimProgramFilter'?'<option value="">كل الرحلات</option>':'<option value="">بدون رحلة</option>';el.innerHTML=first+PROGS.map(p=>'<option value="'+p.id+'">'+esc(p.title)+' — '+(p.departure_date||'')+'</option>').join('');el.value=cur})}
 function renderAll(){const ins=TX.filter(x=>x.direction==='in'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount),0),outs=TX.filter(x=>x.direction==='out'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount),0);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id&&p.currency==='IQD').reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').textContent=fmt(ins);$('outTotal').textContent=fmt(outs);$('netTotal').textContent=fmt(ins-outs);$('dueTotal').textContent=fmt(due);$('txCount').textContent=TX.length;$('dashboardText').innerHTML='<b>الرصيد النقدي المسجل: '+fmt(ins-outs)+' دينار/وحدة العمل</b><br><span class="muted">هذا الرقم مبني على الحركات المالية الفعلية المسجلة، وليس على حالة الحجز.</span>';renderRecent();renderBookings();renderLedger()}
 function renderRecent(){$('recentRows').innerHTML=TX.slice(0,15).map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="'+x.direction+'">'+(x.direction==='in'?'وارد':'صرف')+'</td><td>'+esc(catLabel[x.category]||x.category)+'</td><td>'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="5">لا توجد حركات</td></tr>'}
 function bookingPaid(id){return PAY.filter(p=>p.booking_id===id&&p.currency==='IQD').reduce((s,p)=>s+Number(p.amount||0),0)}
 function renderBookings(){const q=($('pilgrimSearch').value||'').trim().toLowerCase(),pf=$('pilgrimProgramFilter').value,df=$('dueFilter').value;let arr=BOOK.filter(b=>(!q||(b.full_name||'').toLowerCase().includes(q)||(b.booking_number||'').toLowerCase().includes(q))&&(!pf||b.program_id===pf));arr=arr.filter(b=>{const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(b.id));return !df||(df==='due'&&rem>0)||(df==='paid'&&rem===0)});$('bookingRows').innerHTML=arr.map(b=>{const paid=bookingPaid(b.id),rem=Math.max(0,Number(b.total_amount||0)-paid);return '<tr><td><b>'+esc(b.full_name||'—')+'</b><br><span class="pill">'+esc(b.booking_number||'')+'</span></td><td>'+esc(programName(b.program_id))+'</td><td>'+fmt(b.total_amount)+'</td><td class="in">'+fmt(paid)+'</td><td class="'+(rem?'out':'in')+'">'+fmt(rem)+'</td><td><button class="btn primary" onclick="payBooking(\''+b.id+'\')">قبض دفعة</button></td></tr>'}).join('')||'<tr><td colspan="6">لا توجد نتائج</td></tr>'}
 async function payBooking(id){const b=BOOK.find(x=>x.id===id);if(!b)return;const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(id));const amount=prompt('المتبقي: '+fmt(rem)+'\nأدخل المبلغ المقبوض فعليًا:');if(amount===null)return;const n=Number(amount);if(!n||n<=0||n>rem){alert('المبلغ غير صحيح.');return}const r=await db.from('payments').insert({booking_id:id,amount:n,currency:'IQD',payment_method:'cash',payment_date:new Date().toISOString()});if(r.error){alert(r.error.message);return}await loadAll();alert('تم تسجيل القبض وإضافته لصندوق الوارد.')}
-async function addManual(direction){const pre=direction==='in'?'in':'out',amount=Number($(pre+'Amount').value);if(!amount||amount<=0){alert('أدخل مبلغًا صحيحًا');return}const data={direction,category:$(pre+'Cat').value,description:catLabel[$(pre+'Cat').value],amount,currency:$(pre+'Currency').value,payment_method:$(pre+'Method').value,transaction_date:new Date($(pre+'Date').value+'T12:00:00').toISOString(),program_id:$(pre+'Program').value||null,party_name:$(pre+'Party').value.trim()||null,notes:$(pre+'Notes').value.trim()||null,source_type:'manual',source_id:crypto.randomUUID()};const r=await db.from('finance_transactions').insert(data);if(r.error){alert(r.error.message);return}$(pre+'Msg').innerHTML='<div class="msg">تم تسجيل الحركة بنجاح.</div>';['Amount','Party','Notes'].forEach(x=>$(pre+x).value='');await loadAll()}
+async function addManual(direction){const pre=direction==='in'?'in':'out',amount=Number($(pre+'Amount').value);if(!amount||amount<=0){alert('أدخل مبلغًا صحيحًا');return}const supplierId=direction==='out'&&$(pre+'Cat').value==='supplier_payment'?$('outSupplier').value:null;
+if(direction==='out'&&$(pre+'Cat').value==='supplier_payment'&&!supplierId){alert('اختر المورد أولًا');return}
+const supplierName=supplierId?(SUPPLIERS.find(s=>s.id===supplierId)?.name||''):'';
+const data={direction,category:$(pre+'Cat').value,description:catLabel[$(pre+'Cat').value],amount,currency:$(pre+'Currency').value,payment_method:$(pre+'Method').value,transaction_date:new Date($(pre+'Date').value+'T12:00:00').toISOString(),program_id:$(pre+'Program').value||null,supplier_id:supplierId,party_name:supplierName||$(pre+'Party').value.trim()||null,notes:$(pre+'Notes').value.trim()||null,source_type:'manual',source_id:crypto.randomUUID()};const r=await db.from('finance_transactions').insert(data);if(r.error){alert(r.error.message);return}$(pre+'Msg').innerHTML='<div class="msg">تم تسجيل الحركة بنجاح.</div>';['Amount','Party','Notes'].forEach(x=>$(pre+x).value='');await loadAll()}
 function renderLedger(){const q=($('ledgerSearch').value||'').toLowerCase();const arr=TX.filter(x=>(x.description||'').toLowerCase().includes(q)||(x.party_name||'').toLowerCase().includes(q)||(catLabel[x.category]||x.category).toLowerCase().includes(q));$('ledgerRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="'+x.direction+'">'+(x.direction==='in'?'🟢 وارد':'🔴 صرف')+'</td><td>'+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="'+x.direction+'">'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="7">لا توجد حركات</td></tr>'}
 function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
 function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'&&s)init()});init();
+db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'&&s)init()});toggleSupplierField();init();
 </script>
 </body></html>
