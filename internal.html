@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V285-DASHBOARD-AUTH-RENDER-FIX">
+<meta name="qawafel-build" content="V284-DASHBOARD-UNPAID-PAYMENT-UI">
   <title>المركز الداخلي | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <style>
@@ -138,7 +138,7 @@
   async function init(){
     if(!window.supabase) return;
     const bar=boot();
-    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'qawafel-admin-auth'}});
+    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
     window.qawafelDb=db;
     const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
@@ -234,10 +234,11 @@
       <div class="kpi"><div class="kicon">👥</div><div><span>المتعهدون الفعالون</span><b id="agentsCount">0</b></div></div>
     </section>
 
-    <section id="financeSummary" class="finance" style="display:grid">
+    <section id="financeSummary" class="finance" style="display:none">
       <div><span>إجمالي المبيعات</span><b id="sales">0 د.ع</b></div>
-      <div><span>المصروفات</span><b id="expenses">0 د.ع</b></div>
+      <div><span>المقبوض</span><b id="received">0 د.ع</b></div>
       <div><span>المتبقي</span><b id="remaining">0 د.ع</b></div>
+      <div><span>المصروفات</span><b id="expenses">0 د.ع</b></div>
     </section>
 
     <div class="grid2">
@@ -282,24 +283,19 @@
 <script>
 const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
 const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
-  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'qawafel-admin-auth'}
-});
-window.db=db;
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 let B=[],P=[],PR=[],I=[],E=[];
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function showLoginMsg(t,e=false){$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
 async function isAdmin(){
- const sr=await db.auth.getSession();
- const session=sr.data?.session;
- const user=session?.user;
- if(!user)return null;
- const s=await db.from('staff_profiles').select('role,active').eq('user_id',user.id).maybeSingle();
- if(!s.error&&s.data?.active)return user;
- const q=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
- return q.error||!q.data?null:user;
+ const r=await db.auth.getUser();
+ if(!r.data.user)return null;
+ const s=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();
+ if(!s.error&&s.data?.active)return r.data.user;
+ const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();
+ return q.error||!q.data?null:r.data.user;
 }
 async function routeStaffPortal(){const r=await db.auth.getUser();if(!r.data.user)return false;const q=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();if(!q.error&&q.data?.active){if(q.data.role==='supervisor'||q.data.role==='driver'){location.href='./supervisors.html?v=196';return true;}}return false}
 async function signIn(){
@@ -380,13 +376,7 @@ function setToday(){
   tick();
   setInterval(tick,1000);
 }
-async function getCurrentStaff(){
-  const sr=await db.auth.getSession();
-  const user=sr.data?.session?.user;
-  if(!user)return null;
-  const q=await db.from('staff_profiles').select('full_name,role,active,permissions').eq('user_id',user.id).maybeSingle();
-  return q.data||null;
-}
+async function getCurrentStaff(){const r=await db.auth.getUser();if(!r.data.user)return null;const q=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',r.data.user.id).maybeSingle();return q.data||null}
 async function loadAudit(){
  const me=await getCurrentStaff(); if(!me||me.role!=='super_admin'||!me.active){$('auditCard').classList.add('hide');return;}
  $('auditCard').classList.remove('hide');
@@ -419,107 +409,90 @@ async function loadAgents(){
 }
 
 async function load(){
-  // أوقف حالة «جاري التحميل» فورًا؛ البيانات ستُملأ عندما تصل من Supabase.
-  render();
-  let me=null;
-  try{ me=await getCurrentStaff(); }catch(err){ console.warn('staff load',err); }
-  const canFinance=!!me && (me.role==='super_admin'||me.role==='manager'||(Array.isArray(me.permissions)&&me.permissions.includes('finance')));
-  const fs=document.getElementById('financeSummary');
-  if(fs) fs.style.display=canFinance?'':'none';
-
-  // كل استعلام له مهلة مستقلة، ولا يمكن أن يمنع لوحة الإدارة من الرسم.
-  const timed=async(p,label)=>Promise.race([
-    p,
-    new Promise(resolve=>setTimeout(()=>resolve({data:[],error:{message:'انتهت مهلة تحميل '+label}}),6000))
-  ]);
+ const me=await getCurrentStaff();
+ const canFinance=!!me && (me.role==='super_admin'||me.role==='manager'||(Array.isArray(me.permissions)&&me.permissions.includes('finance')));
+ const fs=document.getElementById('financeSummary');
+ if(fs) fs.style.display=canFinance?'':'none';
  const [b,p,pr,i,e,v]=await Promise.all([
-   timed(db.from('bookings').select('*').order('created_at',{ascending:false}),'الحجوزات'),
-   timed(db.from('pilgrims').select('*'),'المعتمرون'),
-   timed(db.from('programs').select('*').order('departure_date'),'الرحلات'),
-   timed(db.from('installment_plans').select('*').order('due_date'),'الأقساط'),
-   canFinance ? timed(db.from('expenses').select('*').order('expense_date',{ascending:false}),'المصروفات') : Promise.resolve({data:[],error:null}),
-   timed(db.from('visa_email_events').select('id,subject,attachment_name,received_at,viewed_at,matched_pilgrim_id,status').is('viewed_at',null).order('received_at',{ascending:false}).limit(20),'التأشيرات')
+   db.from('bookings').select('*').order('created_at',{ascending:false}),
+   db.from('pilgrims').select('*'),
+   db.from('programs').select('*').order('departure_date'),
+   db.from('installment_plans').select('*').order('due_date'),
+   canFinance ? db.from('expenses').select('*').order('expense_date',{ascending:false}) : Promise.resolve({data:[],error:null}),
+   db.from('visa_email_events').select('id,subject,attachment_name,received_at,viewed_at,matched_pilgrim_id,status').is('viewed_at',null).order('received_at',{ascending:false}).limit(20)
  ]);
-
- const results={b,p,pr,i,e,v};
- const bad=Object.entries(results).filter(([,x])=>x?.error);
- if(bad.length) console.warn('Dashboard queries:',bad.map(([k,x])=>k+': '+x.error.message));
-
- B=b?.data||[];P=p?.data||[];PR=pr?.data||[];I=i?.data||[];E=e?.data||[];window.qawafelUnreadVisaEvents=v?.data||[];
+ const er=[b,p,pr,i,e,v].find(x=>x.error);
+ if(er){$('alerts').innerHTML='<div class="alert">'+esc(er.error.message)+'</div>';return}
+ B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];window.qawafelUnreadVisaEvents=v.data||[];
  $('programs').textContent=PR.filter(x=>x.status==='published').length;
  $('pilgrims').textContent=P.length;
  $('bookings').textContent=B.length;
- $('seats').textContent=PR.reduce((sum,x)=>sum+Number(x.seats_available||0),0);
+ $('seats').textContent=PR.reduce((s,x)=>s+Number(x.seats_available||0),0);
  if(canFinance){
-   $('sales').textContent=money(B.reduce((sum,x)=>sum+Number(x.total_amount||0),0));
-   $('received').textContent=money(B.reduce((sum,x)=>sum+Number(x.paid_amount||0),0));
-   $('remaining').textContent=money(B.reduce((sum,x)=>sum+Number(x.remaining_amount||0),0));
-   $('expenses').textContent=money(E.reduce((sum,x)=>sum+Number(x.amount||0),0));
+   $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
+   $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
+   $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
+   $('expenses').textContent=money(E.reduce((s,x)=>s+Number(x.amount||0),0));
  }
  render();
 }
 function render(){
-  // عرض الرحلات الحالية — مستقل عن التنبيهات.
-  try{
-    const currentPrograms=Array.isArray(PR)?PR.filter(x=>x.status==='published'):[];
-    $('programList').innerHTML=currentPrograms.map(x=>
-      '<div class="program"><b>'+esc(x.title||'رحلة')+'</b><small>'+
-      esc(x.departure_date||'—')+' · المقاعد المتاحة: '+Number(x.seats_available||0)+
-      '</small></div>'
-    ).join('')||'<div class="empty">لا توجد رحلات حالية.</div>';
-  }catch(e){
-    console.error('programs render',e);
-    $('programList').innerHTML='<div class="alert">تعذر تحميل الرحلات الحالية.</div>';
-  }
-
-  // التنبيهات — حساب بسيط وآمن حتى لا يمنع أي خطأ ظهور بقية اللوحة.
-  try{
-    const today=new Date().toISOString().slice(0,10);
-    const bookingById=new Map((Array.isArray(B)?B:[]).map(x=>[x.id,x]));
-    const programById=new Map((Array.isArray(PR)?PR:[]).map(x=>[x.id,x]));
-    const isActiveBooking=b=>!!b&&b.status!=='cancelled'&&programById.get(b.program_id)?.status!=='full';
-    const activeIds=new Set((Array.isArray(B)?B:[]).filter(isActiveBooking).map(x=>x.id));
-    const overdue=(Array.isArray(I)?I:[]).filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today&&activeIds.has(x.booking_id)).length;
-    const docs=(Array.isArray(P)?P:[]).filter(x=>(!x.passport_number||!x.passport_expiry)&&activeIds.has(x.booking_id)).length;
-    const pendingVisas=(Array.isArray(P)?P:[]).filter(x=>activeIds.has(x.booking_id)&&x.visa_status!=='issued').length;
-    const unpaid=(Array.isArray(P)?P:[]).filter(x=>{const b=bookingById.get(x.booking_id);return !!b&&b.status!=='cancelled'&&b.cash_payment_status==='unpaid'}).length;
-    const missing=(Array.isArray(P)?P:[]).reduce((n,x)=>n+
-      (!String(x.phone||'').trim()?1:0)+
-      (!String(x.current_residence||'').trim()?1:0)+
-      (!String(x.governorate||'').trim()?1:0),0);
-    const unread=Array.isArray(window.qawafelUnreadVisaEvents)?window.qawafelUnreadVisaEvents.length:0;
-    const total=overdue+docs+pendingVisas+unpaid+missing+unread;
-    const item=(icon,label,count,href)=>count?'<a class="alert alert-link compactAlert" href="'+href+'" style="display:block;text-decoration:none;color:inherit"><b>'+icon+' '+esc(label)+'</b><span>'+count+'</span></a>':'';
-    const body=[
-      item('💰','معتمرون لم يدفعوا',unpaid,'./pilgrims.html'),
-      item('🛂','تأشيرات تحتاج متابعة',pendingVisas,'./visa.html'),
-      item('🆕','تأشيرات جديدة لم تُفتح',unread,'./visa.html'),
-      item('⚠️','بيانات ناقصة',missing,'./pilgrims.html'),
-      item('🪪','ملفات جواز تحتاج استكمالاً',docs,'./pilgrims.html'),
-      item('💳','أقساط متأخرة',overdue,'./financial.html')
-    ].join('');
-    $('alerts').innerHTML='<div class="alertSummary">'+
-      '<div class="alertStat '+(total?'danger':'good')+'"><span class="asIcon">🔔</span><small>إجمالي المتابعة</small><b>'+total+'</b></div>'+
-      '<div class="alertStat '+(unpaid?'danger':'good')+'"><span class="asIcon">💰</span><small>لم يدفعوا</small><b>'+unpaid+'</b></div>'+
-      '<div class="alertStat '+(pendingVisas?'danger':'good')+'"><span class="asIcon">🛂</span><small>التأشيرات</small><b>'+pendingVisas+'</b></div>'+
-      '<div class="alertStat '+(missing?'warn':'good')+'"><span class="asIcon">⚠️</span><small>بيانات ناقصة</small><b>'+missing+'</b></div></div>'+
-      (body||'<div class="alert ok">✅ لا توجد تنبيهات حرجة حاليًا.</div>');
-  }catch(e){
-    console.error('alerts render',e);
-    $('alerts').innerHTML='<div class="alert ok">تم تحميل لوحة الإدارة. لا توجد بيانات متابعة إضافية للعرض حاليًا.</div>';
-  }
-
-  // آخر الحجوزات.
-  try{
-    $('bookingRows').innerHTML=(Array.isArray(B)?B:[]).slice(0,12).map(b=>{
-      const p=(Array.isArray(P)?P:[]).find(x=>x.booking_id===b.id);
-      const pr=(Array.isArray(PR)?PR:[]).find(x=>x.id===b.program_id);
-      return '<tr><td><b>'+esc(p?.full_name||b.full_name||'—')+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+(b.payment_type==='installment'?'أقساط':'نقد')+'</td></tr>';
-    }).join('')||'<tr><td colspan="6" class="empty">لا توجد حجوزات.</td></tr>';
-  }catch(e){
-    console.error('bookings render',e);
-    $('bookingRows').innerHTML='<tr><td colspan="6" class="empty">تعذر تحميل الحجوزات حاليًا.</td></tr>';
-  }
+ const today=new Date().toISOString().slice(0,10);
+ const bookingById=new Map(B.map(x=>[x.id,x]));
+ const programById=new Map(PR.map(x=>[x.id,x]));
+ const isCompletedBooking=b=>{const pr=b?programById.get(b.program_id):null;return pr?.status==='full';};
+ const isActiveBooking=b=>!!b && b.status!=='cancelled' && !isCompletedBooking(b);
+ const activeBookingIds=new Set(B.filter(isActiveBooking).map(x=>x.id));
+ const overdue=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today&&activeBookingIds.has(x.booking_id)).length;
+ const docs=P.filter(x=>(!x.passport_number||!x.passport_expiry)&&activeBookingIds.has(x.booking_id)).length;
+ const calcAgeLocal=d=>{if(!d)return null;const b=new Date(d+'T00:00:00');if(Number.isNaN(b.getTime()))return null;const t=new Date();let a=t.getFullYear()-b.getFullYear();const m=t.getMonth()-b.getMonth();if(m<0||(m===0&&t.getDate()<b.getDate()))a--;return a;};
+ const pendingVisas=P.filter(x=>{const b=bookingById.get(x.booking_id);return activeBookingIds.has(x.booking_id)&&(!x.visa_status||x.visa_status!=='issued');});
+ const unpaidPilgrims=P.filter(x=>{const b=bookingById.get(x.booking_id);return !!b&&b.status!=='cancelled'&&x.booking_id&&b.cash_payment_status==='unpaid';});
+ const missingBy={phone:[],residence:[],governorate:[],guardian:[]};
+ P.forEach(x=>{
+   if(!String(x.phone||'').trim()) missingBy.phone.push(x);
+   if(!String(x.current_residence||'').trim()) missingBy.residence.push(x);
+   if(!String(x.governorate||'').trim()) missingBy.governorate.push(x);
+   const a=calcAgeLocal(x.birth_date);
+   if(a!==null&&a<18&&!x.guardian_accompanied&&!x.guardian_authorization_path) missingBy.guardian.push(x);
+ });
+ const missingTotal=Object.values(missingBy).reduce((n,a)=>n+a.length,0);
+ const unreadVisaEvents=Array.isArray(window.qawafelUnreadVisaEvents)?window.qawafelUnreadVisaEvents:[];
+ const unreadVisaCount=unreadVisaEvents.length;
+ const totalAlerts=overdue+docs+pendingVisas.length+missingTotal+unpaidPilgrims.length+unreadVisaCount;
+ const issueMeta={phone:['📱','نقص رقم الهاتف','phone'],residence:['🏠','نقص محل السكن','residence'],governorate:['🏛️','نقص المحافظة','governorate'],guardian:['👨‍👦','نقص وكالة القاصر','guardian']};
+ const incompleteLink=(x,issue,label)=>'<a class="alert alert-link compactAlert" href="./pilgrims.html?open='+encodeURIComponent(x.id)+'&issue='+encodeURIComponent(issue)+'#profile" style="display:block;text-decoration:none;color:inherit;cursor:pointer"><b>'+issueMeta[issue][0]+' '+esc(label)+'</b><br><span>'+esc(x.full_name||'معتمر')+'</span><small style="display:block;margin-top:4px;color:#0c3b63;font-weight:900">إكمال الحقل ←</small></a>';
+ const group=(id,title,icon,count,body,open)=>'<div class="alertGroup '+(open?'open':'')+'" id="alertGroup-'+id+'"><button type="button" class="alertGroupHead" onclick="toggleAlertGroup(\''+id+'\')"><span class="aghTitle"><span>'+icon+'</span>'+title+'</span><span style="display:flex;align-items:center;gap:8px"><span class="aghCount">'+count+'</span><span class="aghArrow">▼</span></span></button><div class="alertGroupBody">'+body+'</div></div>';
+ let groups='';
+ if(unreadVisaCount){
+   const body='<div class="alert newVisaDashboardAlert"><b>🆕 وصلت '+unreadVisaCount+' تأشيرة جديدة ولم يتم فتحها بعد.</b><br><span>اضغط لفتح سجل التأشيرات ومراجعة ملفات PDF.</span><div style="margin-top:8px"><a class="unpaidOpenBtn" href="./visa.html?v=136">📄 فتح التأشيرات الجديدة</a></div></div>';
+   groups+=group('newVisas','تأشيرات جديدة لم تُفتح','🆕',unreadVisaCount,body,true);
+ }
+ if(missingTotal){
+   const cards=Object.keys(missingBy).map(k=>{const m=issueMeta[k];return '<button type="button" class="missingStat" onclick="toggleAlertGroup(\'missing-'+k+'\')"><span>'+m[0]+' '+m[1]+'</span><b>'+missingBy[k].length+'</b></button>';}).join('');
+   let detail='';
+   Object.keys(missingBy).forEach(k=>{if(!missingBy[k].length)return;detail+='<div id="alertGroup-missing-'+k+'" style="display:none;margin-top:7px">'+missingBy[k].map(x=>incompleteLink(x,k,issueMeta[k][1])).join('')+'</div>';});
+   groups+=group('missing','بيانات المعتمرين الناقصة','⚠️',missingTotal,'<div class="missingGrid">'+cards+'</div>'+detail,true);
+ }
+ if(unpaidPilgrims.length){
+   const body=unpaidPilgrims.map(x=>{const b=bookingById.get(x.booking_id),pr=programById.get(b?.program_id),amt=money(b?.remaining_amount||b?.total_amount||0);return '<div class="compactAlert unpaidAlertCard"><div class="unpaidAlertInfo"><b>🔴 لم يدفع شيئًا</b><span>'+esc(x.full_name||'معتمر')+'</span><small>'+esc(pr?.title||'الرحلة')+' — المتبقي: '+esc(amt)+'</small></div><div class="unpaidAlertActions"><a class="unpaidPayBtn" href="./pilgrims.html?open='+encodeURIComponent(x.id)+'#profile">💳 تسجيل السداد</a><a class="unpaidOpenBtn" href="./pilgrims.html?open='+encodeURIComponent(x.id)+'#profile">فتح الملف</a></div></div>';}).join('');
+   groups+=group('unpaid','معتمرون لم يدفعوا','💰',unpaidPilgrims.length,body,true);
+ }
+ if(pendingVisas.length){
+   const body=pendingVisas.map(x=>'<a class="alert alert-link compactAlert" href="./visa.html?open='+encodeURIComponent(x.id)+'" style="display:block;text-decoration:none;color:inherit;cursor:pointer"><b>🔴 متابعة التأشيرة</b><br><span>'+esc(x.full_name||'معتمر')+'</span> — '+esc(x.visa_status==='rejected'?'التأشيرة مرفوضة / غير صادرة.':'التأشيرة لم تُصدر بعد.')+'<small style="display:block;margin-top:4px;color:#0c3b63;font-weight:900">معالجة التأشيرة ←</small></a>').join('');
+   groups+=group('visa','متابعة التأشيرات','🛂',pendingVisas.length,body,false);
+ }
+ if(docs) groups+=group('docs','ملفات الجواز تحتاج استكمالاً','🪪',docs,'<div class="alert">يوجد <b>'+docs+'</b> ملف جواز يحتاج استكمالاً في الرحلات غير المكتملة.</div>',false);
+ if(overdue) groups+=group('overdue','أقساط متأخرة تحتاج متابعة','💰',overdue,'<div class="alert">يوجد <b>'+overdue+'</b> قسط متأخر يحتاج متابعة في الرحلات غير المكتملة.</div>',false);
+ const summary='<div class="alertSummary">'+
+   '<button type="button" class="alertStat '+(totalAlerts?'danger':'good')+'" onclick="focusAlertSection()"><span class="asIcon">🔔</span><small>إجمالي المتابعة</small><b>'+totalAlerts+'</b></button>'+
+   '<button type="button" class="alertStat '+(unpaidPilgrims.length?'danger':'good')+'" onclick="toggleAlertGroup(\'unpaid\')"><span class="asIcon">💰</span><small>لم يدفعوا</small><b>'+unpaidPilgrims.length+'</b></button>'+
+   '<button type="button" class="alertStat '+(pendingVisas.length?'danger':'good')+'" onclick="toggleAlertGroup(\'visa\')"><span class="asIcon">🛂</span><small>التأشيرات</small><b>'+pendingVisas.length+'</b></button>'+
+   '<button type="button" class="alertStat '+(missingTotal?'warn':'good')+'" onclick="toggleAlertGroup(\'missing\')"><span class="asIcon">⚠️</span><small>بيانات ناقصة</small><b>'+missingTotal+'</b></button>'+ '</div>';
+ $('alerts').innerHTML=totalAlerts?summary+'<div class="alertGroups" id="alertGroups">'+groups+'</div>':'<div class="alert ok">✅ لا توجد تنبيهات حرجة حاليًا.</div>';
+ const currentPrograms=PR.filter(x=>x.status==='published');
+ $('programList').innerHTML=currentPrograms.map(x=>'<div class="program"><b>'+esc(x.title)+'</b><small>'+esc(x.departure_date||'—')+' · المقاعد المتاحة: '+Number(x.seats_available||0)+' · '+esc(x.status)+'</small></div>').join('')||'<div class="empty">لا توجد رحلات حالية.</div>';
+ $('bookingRows').innerHTML=B.slice(0,12).map(b=>{const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+(b.payment_type==='installment'?'أقساط':'نقد')+'</td></tr>'}).join('')||'<tr><td colspan="6" class="empty">لا توجد حجوزات.</td></tr>';
 }
 function toggleAlertGroup(id){
  const el=$('alertGroup-'+id); if(!el)return;
