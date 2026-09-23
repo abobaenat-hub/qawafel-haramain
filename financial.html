@@ -166,10 +166,24 @@ async function addManual(direction){
   if(!cur){alert('اختر رصيد المورد الذي تريد استخدامه');return}
   const entries=supplierBalances(supplierId),available=Number((entries.find(([c])=>c===cur)||['',0])[1]||0);
   if(amount>available+0.000001){alert('المبلغ أكبر من الرصيد المتاح عند المورد. الرصيد المتاح: '+fmt(available)+' '+cur);return}
+  let rate=cur==='IQD'?1:0;
+  if(cur!=='IQD'){
+    const same=WALLET_TX.filter(x=>x.supplier_id===supplierId&&x.currency===cur&&Number(x.amount)>0);
+    let remainingAmount=0,remainingIqd=0;
+    same.forEach(x=>{
+      const a=Number(x.amount||0),iq=Number(x.amount_iqd||0);
+      if(x.transaction_type==='deposit'){remainingAmount+=a;remainingIqd+=iq}
+      else{remainingAmount-=a;remainingIqd-=iq}
+    });
+    if(remainingAmount>0&&remainingIqd>0)rate=Number((remainingIqd/remainingAmount).toFixed(6));
+  }
+  if(!rate){alert('لا يوجد سعر صرف مسجل لهذا الرصيد عند المورد.');return}
+  const amountIqd=Number((amount*rate).toFixed(2));
   const {data:{user}}=await db.auth.getUser();
   const r=await db.from('supplier_wallet_transactions').insert({
     supplier_id:supplierId,transaction_type:'withdrawal',currency:cur,amount,
-    amount_iqd:cur==='IQD'?amount:null,transaction_date:$(pre+'Date').value||dateToday(),
+    exchange_rate_to_iqd:rate,amount_iqd:amountIqd,
+    transaction_date:$(pre+'Date').value||dateToday(),
     program_id:$(pre+'Program').value||null,
     description:$(pre+'Notes').value.trim()||'استخدام من رصيد المورد',
     created_by:user?.id||null
