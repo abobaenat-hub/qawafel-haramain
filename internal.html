@@ -433,7 +433,18 @@ async function load(){
    $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
    $('expenses').textContent=money(E.reduce((s,x)=>s+Number(x.amount||0),0));
  }
- render();
+ try{
+   render();
+ }catch(e){
+   console.error('dashboard render error',e);
+   try{
+     const currentPrograms=Array.isArray(PR)?PR.filter(x=>x.status==='published'):[];
+     $('programList').innerHTML=currentPrograms.map(x=>'<div class="program"><b>'+esc(x.title||'رحلة')+'</b><small>'+esc(x.departure_date||'—')+' · المقاعد المتاحة: '+Number(x.seats_available||0)+'</small></div>').join('')||'<div class="empty">لا توجد رحلات حالية.</div>';
+   }catch(_){}
+   try{
+     $('alerts').innerHTML='<div class="alert ok">تم تحميل لوحة الإدارة، ولا توجد بيانات متابعة إضافية للعرض حاليًا.</div>';
+   }catch(_){}
+ }
 }
 function render(){
  const today=new Date().toISOString().slice(0,10);
