@@ -22,10 +22,39 @@
 @media(max-width:850px){.grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.slots{grid-template-columns:1fr 1fr}.topin{align-items:flex-start;flex-wrap:wrap}}
 @media(max-width:550px){.grid,.grid2,.stats,.slots{grid-template-columns:1fr}.wrap{padding:13px}}
 </style>
-</head>
+<style id="qawafel-agreements-menu-v287">
+#qawafelTopMenu{position:relative}
+#qawafelTopMenuBtn{font-size:20px;line-height:1;padding:7px 10px}
+#qawafelDrawerOverlay{display:none;position:fixed;inset:0;background:#0006;z-index:9998}
+#qawafelDrawerOverlay.show{display:block}
+#qawafelDrawer{position:fixed;right:-330px;top:0;width:310px;height:100vh;background:#fff;z-index:9999;box-shadow:-12px 0 35px #0003;transition:right .22s;direction:rtl;overflow:auto}
+#qawafelDrawer.open{right:0}
+#qawafelDrawer .qd-head{padding:18px 16px;background:#082f50;color:#fff;border-bottom:2px solid #c99a32}
+#qawafelDrawer .qd-head b{display:block;font-size:14px}.qd-head small{display:block;color:#e4c878;font-size:9px;margin-top:5px}
+#qawafelDrawer .qd-tools{display:flex;gap:7px;margin-top:10px}
+#qawafelDrawer .qd-search{flex:1;border:0;border-radius:9px;height:34px;padding:0 10px;font:800 10px Tahoma;background:#fff}
+#qawafelDrawer .qd-section{padding:6px 9px;margin-top:4px}
+#qawafelDrawer .qd-section>button{width:100%;border:0;background:#f5f8fa;color:#18384f;border-radius:11px;padding:11px 12px;display:flex;justify-content:space-between;font:900 11px Tahoma;cursor:pointer}
+#qawafelDrawer .qd-links{display:none;padding-top:2px}.qd-section.open+.qd-links{display:block}
+#qawafelDrawer .qd-link{display:flex;align-items:center;gap:10px;margin:3px 9px;padding:10px;border-radius:10px;color:#18384f;text-decoration:none;font:900 10px Tahoma}
+#qawafelDrawer .qd-link:hover,#qawafelDrawer .qd-link.active{background:#edf4f8;color:#082f50}
+#qawafelDrawer .qd-ico{width:29px;height:29px;border-radius:8px;background:#f1f5f7;display:grid;place-items:center}
+#qawafelDrawer .qd-arrow{color:#718390}.qd-searching .qd-section,.qd-searching .qd-links{display:none!important}
+#qawafelDrawer .qd-searching .qd-section.match,.qd-searching .qd-links.match{display:block!important}
+@media(max-width:600px){#qawafelDrawer{width:min(310px,88vw)}}
+</style></head>
 <body>
 <header class="top"><div class="topin"><div class="brand"><img src="./logo.png" class="logo"><div><b>قوافل الحرمين</b><small>إدارة الاتفاقيات</small></div></div><div class="toolbar"><a href="./internal.html">⌂ لوحة الإدارة</a><a href="./nusuk.html">🛂 نسك</a><button id="logout">تسجيل الخروج</button></div></div></header>
-<main class="wrap">
+<div id="qawafelDrawerOverlay"></div>
+<aside id="qawafelDrawer">
+<div class="qd-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small><div class="qd-tools"><input id="qdSearch" class="qd-search" placeholder="ابحث بأول حرف من القسم" autocomplete="off"></div></div>
+<div class="qd-section open" data-group="home"><button>الرئيسية <span>⌄</span></button></div><div class="qd-links" data-links="home"><a class="qd-link" href="./internal.html"><span class="qd-ico">⌂</span>لوحة الإدارة</a><a class="qd-link" href="./analytics.html?v=296"><span class="qd-ico">📊</span>إحصائيات الموقع</a></div>
+<div class="qd-section" data-group="trips"><button>الرحلات والمعتمرين <span>⌄</span></button></div><div class="qd-links" data-links="trips"><a class="qd-link" href="./programs.html"><span class="qd-ico">◫</span>إدارة الرحلات</a><a class="qd-link" href="./pilgrims.html"><span class="qd-ico">♙</span>إدارة المعتمرين</a><a class="qd-link" href="./passports.html"><span class="qd-ico">🛂</span>جوازات المعتمرين</a></div>
+<div class="qd-section" data-group="agents"><button>المتعهدون والمتابعة <span>⌄</span></button></div><div class="qd-links" data-links="agents"><a class="qd-link" href="./agents.html"><span class="qd-ico">👥</span>إدارة المتعهدين</a><a class="qd-link" href="./surveys.html"><span class="qd-ico">📝</span>استبانات المعتمرين</a><a class="qd-link" href="./supervisors.html?v=196"><span class="qd-ico">🚌</span>المشرفون والسائقون</a></div>
+<div class="qd-section open" data-group="travel"><button>التأشيرات والسفر <span>⌄</span></button></div><div class="qd-links" data-links="travel"><a class="qd-link" href="./visa.html?v=136"><span class="qd-ico">🛂</span>إدارة التأشيرات</a><a class="qd-link" href="./nusuk.html"><span class="qd-ico">🟢</span>رفع الجوازات إلى نسك</a><a class="qd-link active" href="./agreements.html"><span class="qd-ico">📑</span>إدارة الاتفاقيات</a></div>
+<div class="qd-section" data-group="admin"><button>الأرشيف والإدارة <span>⌄</span></button></div><div class="qd-links" data-links="admin"><a class="qd-link" href="./archive.html"><span class="qd-ico">🗃️</span>أرشيف المعتمرين</a><a class="qd-link" href="./financial.html?v=114"><span class="qd-ico">د.ع</span>الإدارة المالية</a><a class="qd-link" href="./employees.html"><span class="qd-ico">♟</span>الموظفون والصلاحيات</a></div>
+<div class="qd-section" data-group="audit"><button>السجل والرقابة <span>⌄</span></button></div><div class="qd-links" data-links="audit"><a class="qd-link" href="./audit.html"><span class="qd-ico">▤</span>سجل نشاط الموظفين</a></div>
+</aside><main class="wrap">
 <div class="head"><div><h1>📑 إدارة الاتفاقيات</h1><p>اختر الرحلة أولاً. الاتفاقية نفسها يمكن مشاركتها بين أكثر من رحلة، بينما ربط المعتمرين والخانات والترحيل يكون خاصًا بالرحلة المختارة.</p></div><button class="btn gray" id="refresh">↻ تحديث</button></div>
 
 <section class="card">
@@ -264,4 +293,23 @@ async function start(){
 }
 start();
 </script>
-</body></html>
+<script id="qawafel-agreements-menu-v287">
+(function(){
+ const d=document.getElementById('qawafelDrawer'),o=document.getElementById('qawafelDrawerOverlay'),b=document.getElementById('qawafelTopMenuBtn'),s=document.getElementById('qdSearch');
+ if(!d||!o||!b)return;
+ b.onclick=()=>{d.classList.toggle('open');o.classList.toggle('show');};
+ o.onclick=()=>{d.classList.remove('open');o.classList.remove('show');};
+ d.querySelectorAll('.qd-section>button').forEach(x=>x.onclick=()=>x.parentElement.classList.toggle('open'));
+ s?.addEventListener('input',()=>{
+   const q=(s.value||'').trim().toLowerCase().replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/^ال/,'');
+   d.classList.toggle('qd-searching',!!q);
+   d.querySelectorAll('.qd-section').forEach(sec=>{
+     const match=!q || (sec.textContent||'').trim().toLowerCase().replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/^ال/,'').startsWith(q);
+     const box=d.querySelector('[data-links="'+sec.dataset.group+'"]');
+     sec.classList.toggle('match',match); if(box)box.classList.toggle('match',match);
+     if(match&&q)sec.classList.add('open');
+   });
+ });
+ d.querySelectorAll('.qd-link').forEach(a=>a.onclick=()=>{d.classList.remove('open');o.classList.remove('show');});
+})();
+</script></body></html>
