@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="qawafel-build" content="V284-DASHBOARD-UNPAID-PAYMENT-UI">
+<meta name="qawafel-build" content="V285-DASHBOARD-AUTH-RENDER-FIX">
   <title>المركز الداخلي | قوافل الحرمين</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <style>
@@ -282,7 +282,10 @@
 <script>
 const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
 const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY,{
+  auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true,storageKey:'qawafel-admin-auth'}
+});
+window.db=db;
 const $=id=>document.getElementById(id);
 let B=[],P=[],PR=[],I=[],E=[];
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
@@ -377,7 +380,13 @@ function setToday(){
   tick();
   setInterval(tick,1000);
 }
-async function getCurrentStaff(){const r=await db.auth.getUser();if(!r.data.user)return null;const q=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',r.data.user.id).maybeSingle();return q.data||null}
+async function getCurrentStaff(){
+  const sr=await db.auth.getSession();
+  const user=sr.data?.session?.user;
+  if(!user)return null;
+  const q=await db.from('staff_profiles').select('full_name,role,active,permissions').eq('user_id',user.id).maybeSingle();
+  return q.data||null;
+}
 async function loadAudit(){
  const me=await getCurrentStaff(); if(!me||me.role!=='super_admin'||!me.active){$('auditCard').classList.add('hide');return;}
  $('auditCard').classList.remove('hide');
@@ -410,16 +419,19 @@ async function loadAgents(){
 }
 
 async function load(){
- const me=await getCurrentStaff();
- const canFinance=!!me && (me.role==='super_admin'||me.role==='manager'||(Array.isArray(me.permissions)&&me.permissions.includes('finance')));
- const fs=document.getElementById('financeSummary');
- if(fs) fs.style.display=canFinance?'':'none';
+  // أوقف حالة «جاري التحميل» فورًا؛ البيانات ستُملأ عندما تصل من Supabase.
+  render();
+  let me=null;
+  try{ me=await getCurrentStaff(); }catch(err){ console.warn('staff load',err); }
+  const canFinance=!!me && (me.role==='super_admin'||me.role==='manager'||(Array.isArray(me.permissions)&&me.permissions.includes('finance')));
+  const fs=document.getElementById('financeSummary');
+  if(fs) fs.style.display=canFinance?'':'none';
 
- // لا نسمح لاستعلام واحد متعثر أن يبقي أقسام اللوحة على «جاري التحميل».
- const timed=async(p,label)=>Promise.race([
-   p,
-   new Promise(resolve=>setTimeout(()=>resolve({data:[],error:{message:'انتهت مهلة تحميل '+label}}),8000))
- ]);
+  // كل استعلام له مهلة مستقلة، ولا يمكن أن يمنع لوحة الإدارة من الرسم.
+  const timed=async(p,label)=>Promise.race([
+    p,
+    new Promise(resolve=>setTimeout(()=>resolve({data:[],error:{message:'انتهت مهلة تحميل '+label}}),6000))
+  ]);
  const [b,p,pr,i,e,v]=await Promise.all([
    timed(db.from('bookings').select('*').order('created_at',{ascending:false}),'الحجوزات'),
    timed(db.from('pilgrims').select('*'),'المعتمرون'),
