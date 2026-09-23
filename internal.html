@@ -112,7 +112,17 @@
 #qawafelAdminDrawer{z-index:100001}
 #qawafelAdminDrawerOverlay{z-index:100000}
 </style>
-</head>
+<style id="qawafel-drawer-collapsible-v285">
+#qawafelAdminDrawer .qad-section.qad-collapsible{padding:5px 9px;margin-top:4px}
+#qawafelAdminDrawer .qad-section-btn{width:100%;border:0;background:#f5f8fa;color:#18384f;border-radius:11px;padding:11px 12px;display:flex;align-items:center;justify-content:space-between;font:900 11px Tahoma,Arial,sans-serif;cursor:pointer;text-align:right}
+#qawafelAdminDrawer .qad-section-btn:hover{background:#edf4f8;color:#082f50}
+#qawafelAdminDrawer .qad-arrow{font-size:15px;color:#718390;transition:transform .18s}
+#qawafelAdminDrawer .qad-collapsible.open .qad-arrow{transform:rotate(180deg)}
+#qawafelAdminDrawer .qad-section-links{display:none;padding-top:2px}
+#qawafelAdminDrawer .qad-collapsible.open + .qad-section-links{display:block}
+#qawafelAdminDrawer .qad-section-links .qad-link{margin-right:16px;margin-left:9px;padding:9px 9px;font-size:10px}
+#qawafelAdminDrawer .qad-section-links .qad-ico{width:29px;height:29px;font-size:11px}
+</style></head>
 <!-- V91 Global Admin Header: persistent public-site button and current user/role -->
 <body class="auth-checking">
 <script id="qawafel-global-admin-js">
@@ -135,7 +145,7 @@
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
-    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><a class="qad-link" data-page="analytics.html?v=296" href="./analytics.html?v=296"><span class="qad-ico">📊</span><span>إحصائيات الموقع</span></a><div class="qad-section">الرحلات والمعتمرين</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="passports.html" href="./passports.html"><span class="qad-ico">🛂</span><span>جوازات المعتمرين</span></a><div class="qad-section">المتعهدون والمتابعة</div><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="surveys.html" href="./surveys.html"><span class="qad-ico">📝</span><span>استبانات المعتمرين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=196"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><div class="qad-section">التأشيرات والسفر</div><a class="qad-link" data-page="visa.html" href="./visa.html?v=136"><span class="qad-ico">🛂</span><span>إدارة التأشيرات</span></a><a class="qad-link" data-page="nusuk.html" href="./nusuk.html"><span class="qad-ico">🟢</span><span>رفع الجوازات إلى نسك</span></a><a class="qad-link" data-page="agreements.html" href="./agreements.html"><span class="qad-ico">📑</span><span>إدارة الاتفاقيات</span></a><div class="qad-section">الأرشيف والإدارة</div><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><a class="qad-link" data-page="financial.html" href="./financial.html?v=114"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><div class="qad-section">السجل والرقابة</div><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section qad-collapsible open" data-group="home"><button type="button" class="qad-section-btn"><span>الرئيسية</span><span class="qad-arrow">⌄</span></button></div><div class="qad-section-links" data-group-links="home"><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><a class="qad-link" data-page="analytics.html?v=296" href="./analytics.html?v=296"><span class="qad-ico">📊</span><span>إحصائيات الموقع</span></a></div><div class="qad-section qad-collapsible" data-group="trips"><button type="button" class="qad-section-btn"><span>الرحلات والمعتمرين</span><span class="qad-arrow">⌄</span></button></div><div class="qad-section-links" data-group-links="trips"><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="passports.html" href="./passports.html"><span class="qad-ico">🛂</span><span>جوازات المعتمرين</span></a></div><div class="qad-section qad-collapsible" data-group="agents"><button type="button" class="qad-section-btn"><span>المتعهدون والمتابعة</span><span class="qad-arrow">⌄</span></button></div><div class="qad-section-links" data-group-links="agents"><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="surveys.html" href="./surveys.html"><span class="qad-ico">📝</span><span>استبانات المعتمرين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=196"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a></div><div class="qad-section qad-collapsible" data-group="travel"><button type="button" class="qad-section-btn"><span>التأشيرات والسفر</span><span class="qad-arrow">⌄</span></button></div><div class="qad-section-links" data-group-links="travel"><a class="qad-link" data-page="visa.html" href="./visa.html?v=136"><span class="qad-ico">🛂</span><span>إدارة التأشيرات</span></a><a class="qad-link" data-page="nusuk.html" href="./nusuk.html"><span class="qad-ico">🟢</span><span>رفع الجوازات إلى نسك</span></a><a class="qad-link" data-page="agreements.html" href="./agreements.html"><span class="qad-ico">📑</span><span>إدارة الاتفاقيات</span></a></div><div class="qad-section qad-collapsible" data-group="admin"><button type="button" class="qad-section-btn"><span>الأرشيف والإدارة</span><span class="qad-arrow">⌄</span></button></div><div class="qad-section-links" data-group-links="admin"><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><a class="qad-link" data-page="financial.html" href="./financial.html?v=114"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a></div><div class="qad-section qad-collapsible" data-group="audit"><button type="button" class="qad-section-btn"><span>السجل والرقابة</span><span class="qad-arrow">⌄</span></button></div><div class="qad-section-links" data-group-links="audit"><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a></div><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
@@ -147,7 +157,7 @@
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
     const qad=document.getElementById('qawafelAdminDrawer'),qao=document.getElementById('qawafelAdminDrawerOverlay');
-    document.querySelectorAll('#qawafelAdminDrawer .qad-link').forEach(a=>{if(a.dataset.page===location.pathname.split('/').pop())a.classList.add('active');a.addEventListener('click',()=>{qad.classList.remove('open');qao.classList.remove('show');});});
+    document.querySelectorAll('#qawafelAdminDrawer .qad-link').forEach(a=>{if(a.dataset.page===location.pathname.split('/').pop())a.classList.add('active');a.addEventListener('click',()=>{qad.classList.remove('open');qao.classList.remove('show');});}); document.querySelectorAll('#qawafelAdminDrawer .qad-section-btn').forEach(btn=>btn.addEventListener('click',()=>btn.closest('.qad-collapsible').classList.toggle('open')));
     qao.addEventListener('click',()=>{qad.classList.remove('open');qao.classList.remove('show');});
     document.getElementById('qgaMenu').onclick=()=>{const d=document.getElementById('qawafelAdminDrawer'),o=document.getElementById('qawafelAdminDrawerOverlay'); if(d&&o){d.classList.toggle('open');o.classList.toggle('show');}};
     async function load(session){
@@ -713,10 +723,11 @@ setToday();
     });
   }
   function sectionCleanup(){
-    document.querySelectorAll('#qawafelAdminDrawer .qad-section').forEach(sec=>{
-      let n=sec.nextElementSibling,has=false;
-      while(n && !n.classList.contains('qad-section')){if(n.matches&&n.matches('.qad-link')&&n.style.display!=='none')has=true;n=n.nextElementSibling}
+    document.querySelectorAll('#qawafelAdminDrawer .qad-collapsible').forEach(sec=>{
+      const group=sec.dataset.group,box=document.querySelector('#qawafelAdminDrawer .qad-section-links[data-group-links="'+group+'"]');
+      const has=!!(box&&Array.from(box.querySelectorAll('.qad-link')).some(a=>a.style.display!=='none'));
       sec.style.display=has?'':'none';
+      if(box) box.style.display=has?'':'none';
     });
   }
   async function apply(){
