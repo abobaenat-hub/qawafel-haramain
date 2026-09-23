@@ -42,7 +42,7 @@
 #qawafelDrawer .qd-arrow{color:#718390}.qd-searching .qd-section,.qd-searching .qd-links{display:none!important}
 #qawafelDrawer .qd-searching .qd-section.match,.qd-searching .qd-links.match{display:block!important}
 @media(max-width:600px){#qawafelDrawer{width:min(310px,88vw)}}
-</style></head>
+</style><style id="qawafel-agreement-delete-v288">.agreement-delete-btn{background:#fff0f0!important;color:#a43b3b!important;border:1px solid #efcaca!important}.agreement-delete-btn:hover{background:#ffe4e4!important}</style></head>
 <body>
 <header class="top"><div class="topin"><div class="brand"><img src="./logo.png" class="logo"><div><b>قوافل الحرمين</b><small>إدارة الاتفاقيات</small></div></div><div class="toolbar"><a href="./internal.html">⌂ لوحة الإدارة</a><a href="./nusuk.html">🛂 نسك</a><button id="logout">تسجيل الخروج</button></div></div></header>
 <div id="qawafelDrawerOverlay"></div>
@@ -166,7 +166,7 @@ function render(){
  $('rows').innerHTML=arr.map(a=>{
    const used=globalAssigned(a.id).length, tripUsed=selectedProgram?assigned(a.id,selectedProgram).length:0,rem=remaining(a);
    const status=a.active===false?'<span class="badge b-red">متوقفة</span>':a.agreement_kind==='hotel'&&rem===0?'<span class="badge b-orange">مكتملة</span>':'<span class="badge b-green">متاحة</span>';
-   return `<tr class="agreement-row"><td>${kindLabel(a.agreement_kind)}</td><td><b>${esc(a.agreement_number)}</b></td><td>${cityLabel(a.city)}</td><td>${esc(a.hotel_name||'—')}</td><td>${esc(a.check_in||'—')}</td><td>${esc(a.check_out||'—')}</td><td>${a.capacity??'—'}</td><td>${a.agreement_kind==='hotel'?used:'—'}</td><td>${rem??'—'}</td><td>${status}</td><td><div class="toolbar">${a.agreement_kind==='hotel'?`<button class="btn primary" onclick="event.stopPropagation();openAgreement('${a.id}')">فتح الخانات</button>`:''}<button class="btn red" onclick="event.stopPropagation();toggleAgreement('${a.id}',${a.active!==false})">${a.active===false?'تفعيل':'إيقاف'}</button></div></td></tr>`;
+   return `<tr class="agreement-row"><td>${kindLabel(a.agreement_kind)}</td><td><b>${esc(a.agreement_number)}</b></td><td>${cityLabel(a.city)}</td><td>${esc(a.hotel_name||'—')}</td><td>${esc(a.check_in||'—')}</td><td>${esc(a.check_out||'—')}</td><td>${a.capacity??'—'}</td><td>${a.agreement_kind==='hotel'?used:'—'}</td><td>${rem??'—'}</td><td>${status}</td><td><div class="toolbar">${a.agreement_kind==='hotel'?`<button class="btn primary" onclick="event.stopPropagation();openAgreement('${a.id}')">فتح الخانات</button>`:''}<button class="btn red" onclick="event.stopPropagation();toggleAgreement('${a.id}',${a.active!==false})">${a.active===false?'تفعيل':'إيقاف'}</button><button class="btn red agreement-delete-btn" onclick="event.stopPropagation();deleteAgreement('${a.id}')">حذف</button></div></td></tr>`;
  }).join('')||'<tr><td colspan="11" style="text-align:center;color:var(--muted)">لا توجد اتفاقيات.</td></tr>';
 }
 function agreementOptionLabel(a){return `${a.agreement_number} — ${cityLabel(a.city)} — ${a.hotel_name||'فندق'} — متبقي ${remaining(a)}`;}
@@ -263,6 +263,18 @@ async function assignCandidate(pid){
  const r=await db.from('travel_agreement_assignments').insert({agreement_id:a.id,pilgrim_id:pid,program_id:selectedProgram,slot_number:selectedSlot,travel_type:(PROGRAMS.find(p=>p.id===selectedProgram)?.travel_type||null),status:'reserved'});
  if(r.error){toast(r.error.message,false);return;}
  closeCandidate();toast('تم حجز المعتمر في الخانة. لم يتم ترحيله إلى الفيزا بعد.');await load();document.getElementById('agreementDetail')?.remove();openAgreement(a.id);
+}
+async function deleteAgreement(id){
+ const a=A.find(z=>z.id===id); if(!a)return;
+ const used=globalAssigned(id).length;
+ if(used>0){toast('لا يمكن حذف الاتفاقية لأنها مرتبطة بـ '+used+' معتمر. أخلِ الخانات أولًا.',false);return;}
+ if(!confirm('هل أنت متأكد من حذف الاتفاقية '+(a.agreement_number||'')+'؟\\nسيتم حذفها نهائيًا ولا يمكن التراجع.'))return;
+ const r=await db.from('travel_agreements').delete().eq('id',id);
+ if(r.error){toast(r.error.message,false);return;}
+ selectedAgreement=null;selectedSlot=null;
+ document.getElementById('agreementDetail')?.remove();
+ toast('تم حذف الاتفاقية بنجاح.');
+ await load();
 }
 async function removeAssignment(id){
  const x=AS.find(z=>z.id===id);if(!x)return;if(x.status==='transferred'){toast('لا يمكن إخلاء معتمر تم ترحيله إلى الفيزا.',false);return;}
