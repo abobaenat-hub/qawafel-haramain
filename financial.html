@@ -104,8 +104,8 @@ async function loadAll(){
   db.from('suppliers').select('id,name,active').eq('active',true).order('name'),
   db.from('supplier_wallet_transactions').select('supplier_id,transaction_type,amount,currency,amount_iqd').order('created_at',{ascending:false})
  ]);
- TX=tx.data||[];BOOK=b.data||[];PAY=p.data||[];PROGS=pgr.data||[];
- fillPrograms();renderAll();
+ TX=tx.data||[];BOOK=b.data||[];PAY=p.data||[];PROGS=pgr.data||[];SUPPLIERS=sup.data||[];SWALLET=sw.data||[];
+ fillPrograms();fillSuppliers();renderAll();
 }
 function fillSuppliers(){
  const el=$('outSupplier'); if(!el)return;
