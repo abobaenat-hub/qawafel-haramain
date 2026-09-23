@@ -289,12 +289,14 @@ function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function showLoginMsg(t,e=false){$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
 async function isAdmin(){
- const r=await db.auth.getUser();
- if(!r.data.user)return null;
- const s=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();
- if(!s.error&&s.data?.active)return r.data.user;
- const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();
- return q.error||!q.data?null:r.data.user;
+ const sr=await db.auth.getSession();
+ const session=sr.data?.session;
+ const user=session?.user;
+ if(!user)return null;
+ const s=await db.from('staff_profiles').select('role,active').eq('user_id',user.id).maybeSingle();
+ if(!s.error&&s.data?.active)return user;
+ const q=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
+ return q.error||!q.data?null:user;
 }
 async function routeStaffPortal(){const r=await db.auth.getUser();if(!r.data.user)return false;const q=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();if(!q.error&&q.data?.active){if(q.data.role==='supervisor'||q.data.role==='driver'){location.href='./supervisors.html?v=196';return true;}}return false}
 async function signIn(){
