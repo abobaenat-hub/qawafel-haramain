@@ -424,10 +424,15 @@ async function load(){
  const er=[b,p,pr,i,e,v].find(x=>x.error);
  if(er){$('alerts').innerHTML='<div class="alert">'+esc(er.error.message)+'</div>';return}
  B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];window.qawafelUnreadVisaEvents=v.data||[];
- $('programs').textContent=PR.filter(x=>x.status==='published').length;
- $('pilgrims').textContent=P.length;
- $('bookings').textContent=B.length;
- $('seats').textContent=PR.reduce((s,x)=>s+Number(x.seats_available||0),0);
+ // إحصائيات لوحة الإدارة تعرض الرحلات المنشورة فقط، ولا تُدخل الرحلات المكتملة/المؤرشفة في الأرقام الحالية.
+ const publishedProgramIds=new Set(PR.filter(x=>x.status==='published').map(x=>x.id));
+ const activeBookings=B.filter(x=>x.status!=='cancelled' && publishedProgramIds.has(x.program_id));
+ const activeBookingIds=new Set(activeBookings.map(x=>x.id));
+ const activePilgrims=P.filter(x=>activeBookingIds.has(x.booking_id));
+ $('programs').textContent=publishedProgramIds.size;
+ $('pilgrims').textContent=activePilgrims.length;
+ $('bookings').textContent=activeBookings.length;
+ $('seats').textContent=PR.filter(x=>x.status==='published').reduce((s,x)=>s+Number(x.seats_available||0),0);
  if(canFinance){
    $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
    $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
