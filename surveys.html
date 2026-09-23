@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>استبانات المعتمرين | قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#0b3556;--gold:#c99a32;--bg:#f4f6f8;--card:#fff;--line:#e3e9ee;--text:#18384f;--muted:#718390;--green:#18734e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif}.wrap{max-width:1200px;margin:auto;padding:25px 16px}.head{display:flex;justify-content:space-between;gap:15px;align-items:flex-end;margin-bottom:18px}.eyebrow{color:var(--gold);font-weight:900;font-size:11px}.head h1{margin:5px 0;color:var(--navy);font-size:25px}.head p{margin:0;color:var(--muted);font-size:11px}.btn{border:0;border-radius:9px;padding:10px 13px;font-weight:900;cursor:pointer}.primary{background:var(--navy);color:#fff}.green{background:var(--green);color:#fff}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.kpi,.card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:0 4px 18px #0b35560b;margin-bottom:13px}.kpi span{display:block;color:var(--muted);font-size:10px}.kpi b{display:block;color:var(--navy);font-size:25px;margin-top:5px}.card h2{margin:0;color:var(--navy);font-size:15px}.card p{color:var(--muted);font-size:10px}.tools{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.tools select{min-width:240px}.tools input,.tools select{padding:10px;border:1px solid #ccd8df;border-radius:9px;background:#fff;font-family:inherit;font-size:11px}.linkbox{display:flex;gap:7px;margin-top:10px}.linkbox input{flex:1;direction:ltr}.table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:900px}th,td{padding:10px 8px;border-bottom:1px solid var(--line);font-size:10px;text-align:right}th{background:#f4f7f9;color:var(--navy)}.pill{display:inline-block;padding:4px 7px;border-radius:99px;background:#edf4f8;color:var(--navy);font-weight:900;font-size:9px}.stars{letter-spacing:1px;color:#b17b00}.muted{color:var(--muted)}.empty{text-align:center;padding:25px;color:var(--muted);font-size:11px}.msg{padding:10px;border-radius:9px;background:#edf8f3;color:#176341;font-size:11px;display:none;margin-top:9px}
+@media(max-width:800px){.grid{grid-template-columns:repeat(2,1fr)}.head{align-items:flex-start;flex-direction:column}}@media(max-width:480px){.grid{grid-template-columns:1fr 1fr}.wrap{padding:16px 10px}.linkbox{flex-direction:column}.linkbox input{min-height:40px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="head"><div><div class="eyebrow">قوافل الحرمين</div><h1>استبانات المعتمرين</h1><p>متابعة آراء المعتمرين وتحليل مستوى الخدمة بعد كل رحلة.</p></div><button class="btn primary" onclick="location.href='./internal.html'">← لوحة الإدارة</button></div>
+<div id="login" class="card"><h2>جاري التحقق من الصلاحية...</h2></div>
+<div id="app" class="hide">
+<div class="grid">
+<div class="kpi"><span>إجمالي الاستبانات</span><b id="total">0</b></div>
+<div class="kpi"><span>رحلات البر</span><b id="groundCount">0</b></div>
+<div class="kpi"><span>رحلات الطيران</span><b id="airCount">0</b></div>
+<div class="kpi"><span>متوسط التقييم العام</span><b id="avg">0.0/5</b></div>
+</div>
+<div class="card"><h2>إرسال رابط الاستبانة</h2><p>يمكنك إنشاء رابط عام، أو ربطه برحلة محددة. أرسل الرابط للمعتمرين عبر واتساب.</p>
+<div class="tools"><select id="program"><option value="">استبانة عامة — بدون تحديد رحلة</option></select><button class="btn green" id="copy">نسخ الرابط</button></div>
+<div class="linkbox"><input id="surveyLink" readonly></div><div id="msg" class="msg"></div></div>
+<div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px"><div><h2>آخر الاستبانات</h2><p>آخر 100 إجابة مسجلة.</p></div><button class="btn" style="background:#edf4f8;color:var(--navy)" id="refresh">تحديث</button></div>
+<div class="table"><table><thead><tr><th>التاريخ</th><th>الرحلة</th><th>النوع</th><th>التقييم العام</th><th>الفريق</th><th>السكن مكة</th><th>السكن المدينة</th><th>الباص/الطيران</th><th>المتعهد</th><th>مشكلة</th><th>ملاحظات</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+</div></div>
+<script>
+const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K);
+const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+let programs=[];
+function stars(v){return v?'<span class="stars">'+'★'.repeat(Number(v))+'☆'.repeat(5-Number(v))+'</span>':'—'}
+function link(){const u=new URL('./survey.html',location.href);const p=$('program').value;if(p)u.searchParams.set('program_id',p);$('surveyLink').value=u.href}
+async function boot(){
+ const s=await db.auth.getSession();const user=s.data?.session?.user;
+ if(!user){$('login').innerHTML='<h2>يجب تسجيل الدخول إلى الإدارة.</h2>';return}
+ const q=await db.from('staff_profiles').select('role,active').eq('user_id',user.id).maybeSingle();const st=q.data;
+ if(!st||st.active===false||!['super_admin','manager'].includes(st.role)){$('login').innerHTML='<h2>ليس لديك صلاحية لعرض الاستبانات.</h2>';return}
+ $('login').classList.add('hide');$('app').classList.remove('hide');
+ const p=await db.from('programs').select('id,title,departure_date,travel_type').order('departure_date',{ascending:false});
+ programs=p.data||[];$('program').innerHTML='<option value="">استبانة عامة — بدون تحديد رحلة</option>'+programs.map(x=>'<option value="'+x.id+'">'+esc(x.title||'رحلة')+' — '+esc(x.departure_date||'')+' — '+(x.travel_type==='air'?'طيران':'بر')+'</option>').join('');
+ link();await load();
+}
+async function load(){
+ const r=await db.from('pilgrim_surveys').select('*').order('created_at',{ascending:false}).limit(100);if(r.error){$('rows').innerHTML='<tr><td colspan="11">تعذر تحميل الاستبانات.</td></tr>';return}
+ const a=r.data||[];$('total').textContent=a.length;
+ $('groundCount').textContent=a.filter(x=>x.travel_type==='ground').length;
+ $('airCount').textContent=a.filter(x=>x.travel_type==='air').length;
+ $('avg').textContent=(a.length?(a.reduce((s,x)=>s+Number(x.overall_rating||0),0)/a.length):0).toFixed(1)+'/5';
+ const pm=new Map(programs.map(x=>[x.id,x]));
+ $('rows').innerHTML=a.map(x=>{
+ const p=pm.get(x.program_id);let special=x.travel_type==='ground'?stars(x.bus_comfort_rating)+' / '+stars(x.driver_rating):stars(x.air_travel_rating)+' / '+stars(x.air_airport_rating);
+ const note=[x.favorite,x.improvement].filter(Boolean).join(' — ');
+ return '<tr><td>'+new Date(x.created_at).toLocaleString('ar-IQ')+'</td><td>'+esc(p?.title||'استبانة عامة')+'</td><td><span class="pill">'+(x.travel_type==='ground'?'🚌 بر':'✈️ طيران')+'</span></td><td>'+stars(x.overall_rating)+'</td><td>'+stars(x.staff_rating)+'</td><td>'+stars(x.makkah_hotel_rating)+'</td><td>'+stars(x.madinah_hotel_rating)+'</td><td>'+special+'</td><td>'+(x.travel_type==='ground'?stars(x.contractor_rating):'—')+'</td><td>'+(x.problem_reported?'نعم':'لا')+'</td><td>'+esc(note||'—')+'</td></tr>'
+ }).join('')||'<tr><td colspan="11" class="empty">لا توجد استبانات حتى الآن.</td></tr>';
+}
+$('program').onchange=link;$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('surveyLink').value);$('msg').textContent='تم نسخ الرابط.';$('msg').style.display='block';setTimeout(()=>$('msg').style.display='none',2500)}catch(e){$('surveyLink').select();document.execCommand('copy')}};$('refresh').onclick=load;
+boot();
+</script>
+</body></html>
