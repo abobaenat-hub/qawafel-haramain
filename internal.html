@@ -497,7 +497,7 @@ function render(){
  $('alerts').innerHTML=totalAlerts?summary+'<div class="alertGroups" id="alertGroups">'+groups+'</div>':'<div class="alert ok">✅ لا توجد تنبيهات حرجة حاليًا.</div>';
  const currentPrograms=PR.filter(x=>x.status==='published');
  $('programList').innerHTML=currentPrograms.map(x=>'<div class="program"><b>'+esc(x.title)+'</b><small>'+esc(x.departure_date||'—')+' · المقاعد المتاحة: '+Number(x.seats_available||0)+' · '+esc(x.status)+'</small></div>').join('')||'<div class="empty">لا توجد رحلات حالية.</div>';
- $('bookingRows').innerHTML=B.slice(0,12).map(b=>{const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+(b.payment_type==='installment'?'أقساط':'نقد')+'</td></tr>'}).join('')||'<tr><td colspan="6" class="empty">لا توجد حجوزات.</td></tr>';
+ $('bookingRows').innerHTML=B.slice(0,5).map(b=>{const p=P.find(x=>x.booking_id===b.id),pr=PR.find(x=>x.id===b.program_id);return '<tr><td><b>'+esc(p?.full_name||b.full_name)+'</b></td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b.total_amount)+'</td><td>'+money(b.paid_amount)+'</td><td>'+money(b.remaining_amount)+'</td><td>'+(b.payment_type==='installment'?'أقساط':'نقد')+'</td></tr>'}).join('')||'<tr><td colspan="6" class="empty">لا توجد حجوزات.</td></tr>';
 }
 function toggleAlertGroup(id){
  const el=$('alertGroup-'+id); if(!el)return;
