@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>استبانة رضا المعتمرين | قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#0b3556;--gold:#c99a32;--bg:#f4f6f8;--line:#e0e7ec;--muted:#718390;--green:#18734e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#18384f;font-family:Tahoma,Arial,sans-serif}
+.wrap{max-width:720px;margin:auto;padding:22px 14px 45px}.head{background:var(--navy);color:#fff;border-radius:18px;padding:24px 20px;text-align:center;margin-bottom:14px;border-bottom:4px solid var(--gold)}
+.logo{width:66px;height:66px;background:#fff;border:2px solid var(--gold);border-radius:14px;object-fit:contain}.head h1{font-size:21px;margin:12px 0 5px}.head p{margin:0;color:#dce7ee;font-size:12px;line-height:1.8}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:17px;margin-bottom:12px;box-shadow:0 4px 18px #0b35560d}.title{font-weight:900;color:var(--navy);font-size:14px;margin-bottom:12px}.hint{font-size:10px;color:var(--muted);line-height:1.7;margin:-6px 0 12px}
+label.q{display:block;font-size:12px;font-weight:900;margin:14px 0 7px}select,input,textarea{width:100%;border:1px solid #ccd8df;border-radius:10px;padding:11px;background:#fff;color:#18384f;font-family:inherit;font-size:12px}textarea{min-height:85px;resize:vertical}
+.rating{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}.rating label{position:relative;margin:0}.rating input{position:absolute;opacity:0}.rating span{display:flex;align-items:center;justify-content:center;border:1px solid #d7e0e5;border-radius:9px;padding:10px 3px;font-size:11px;font-weight:900;cursor:pointer}.rating input:checked+span{background:var(--navy);color:#fff;border-color:var(--navy)}
+.choice{display:grid;grid-template-columns:1fr 1fr;gap:8px}.choice label{margin:0}.choice input{position:absolute;opacity:0}.choice span{display:block;text-align:center;padding:11px;border:1px solid #d7e0e5;border-radius:10px;font-size:11px;font-weight:900;cursor:pointer}.choice input:checked+span{background:#edf4f8;border-color:var(--navy);color:var(--navy)}
+.req{color:#b33;margin-right:3px}.hide{display:none!important}.submit{width:100%;border:0;border-radius:11px;background:var(--navy);color:#fff;padding:13px;font-weight:900;cursor:pointer}.submit:disabled{opacity:.6}.success{text-align:center;padding:35px 18px}.success .check{font-size:42px}.success h2{color:var(--navy);margin:10px 0}.success p{font-size:12px;line-height:1.9;color:var(--muted)}
+.error{background:#fff0f0;color:#9b3030;border-radius:9px;padding:10px;font-size:11px;margin-bottom:10px;display:none}
+@media(max-width:430px){.wrap{padding:12px 9px 35px}.rating span{font-size:10px;padding:9px 2px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="head"><img class="logo" src="./logo.png" alt="قوافل الحرمين"><h1>استبانة رضا المعتمرين</h1><p>نسعد برأيكم، وملاحظاتكم تساعدنا على تطوير خدمات قوافل الحرمين وتحسين رحلاتنا القادمة.</p></header>
+<form id="surveyForm">
+<div class="card"><div class="title">أولًا: نوع الرحلة</div><div class="choice">
+<label><input type="radio" name="travel_type" value="ground"><span>🚌 بر</span></label>
+<label><input type="radio" name="travel_type" value="air"><span>✈️ طيران</span></label>
+</div></div>
+
+<div id="common" class="card hide"><div class="title">ثانيًا: تقييم الرحلة والخدمات</div><div class="hint">اختر تقييمًا من 1 إلى 5، حيث 5 = ممتاز.</div>
+<label class="q">التسجيل والحجز</label><div class="rating" data-field="registration_rating"></div>
+<label class="q">تعامل فريق قوافل الحرمين</label><div class="rating" data-field="staff_rating"></div>
+<label class="q">وضوح المعلومات قبل وأثناء الرحلة</label><div class="rating" data-field="clarity_rating"></div>
+<label class="q">السكن في المدينة المنورة</label><div class="rating" data-field="madinah_hotel_rating"></div>
+<label class="q">السكن في مكة المكرمة</label><div class="rating" data-field="makkah_hotel_rating"></div>
+<label class="q">التنظيم والمتابعة بشكل عام</label><div class="rating" data-field="organization_rating"></div>
+</div>
+
+<div id="ground" class="card hide"><div class="title">ثالثًا: تقييم الرحلة البرية</div><div class="hint">هذه الأسئلة تظهر فقط لمن اختار السفر برًا.</div>
+<label class="q">راحة الباص</label><div class="rating" data-field="bus_comfort_rating"></div>
+<label class="q">نظافة الباص</label><div class="rating" data-field="bus_cleanliness_rating"></div>
+<label class="q">تعامل السائق والقيادة</label><div class="rating" data-field="driver_rating"></div>
+<label class="q">الاستراحات والتوقفات أثناء الطريق</label><div class="rating" data-field="stops_rating"></div>
+<label class="q">تعامل المتعهد</label><div class="rating" data-field="contractor_rating"></div>
+<label class="q">متابعة المتعهد واستجابته</label><div class="rating" data-field="contractor_followup_rating"></div>
+</div>
+
+<div id="air" class="card hide"><div class="title">ثالثًا: تقييم رحلة الطيران</div><div class="hint">هذه الأسئلة تظهر فقط لمن اختار السفر بالطائرة.</div>
+<label class="q">تنظيم إجراءات السفر والطيران</label><div class="rating" data-field="air_travel_rating"></div>
+<label class="q">التنسيق والمتابعة في المطار</label><div class="rating" data-field="air_airport_rating"></div>
+<label class="q">مواعيد الرحلات وملاءمتها</label><div class="rating" data-field="air_schedule_rating"></div>
+</div>
+
+<div id="final" class="card hide"><div class="title">رابعًا: رأيكم وملاحظاتكم</div>
+<label class="q">هل واجهتم مشكلة أثناء الرحلة؟</label><div class="choice"><label><input type="radio" name="problem_reported" value="true"><span>نعم</span></label><label><input type="radio" name="problem_reported" value="false"><span>لا</span></label></div>
+<div id="resolvedWrap" class="hide"><label class="q">هل تمت معالجة المشكلة؟</label><div class="choice"><label><input type="radio" name="problem_resolved" value="true"><span>نعم</span></label><label><input type="radio" name="problem_resolved" value="false"><span>لا</span></label></div></div>
+<label class="q">التقييم العام للرحلة <span class="req">*</span></label><div class="rating" data-field="overall_rating"></div>
+<label class="q">ما أكثر شيء أعجبكم في الرحلة؟</label><textarea name="favorite" placeholder="اكتب رأيك..."></textarea>
+<label class="q">ما أهم شيء تقترحون تحسينه؟</label><textarea name="improvement" placeholder="اقتراحاتكم محل اهتمامنا..."></textarea>
+<label class="q">هل تنصحون بالتعامل مع قوافل الحرمين؟</label><div class="choice"><label><input type="radio" name="recommend" value="true"><span>نعم</span></label><label><input type="radio" name="recommend" value="false"><span>لا</span></label></div>
+</div>
+
+<div id="optional" class="card hide"><div class="title">بيانات اختيارية</div><div class="hint">يمكنكم تركها فارغة. نستخدمها فقط إذا احتجنا للتواصل حول ملاحظة.</div>
+<label class="q">الاسم</label><input name="name" autocomplete="name">
+<label class="q">رقم الهاتف</label><input name="phone" inputmode="tel" autocomplete="tel">
+</div>
+<div id="error" class="error"></div><button id="submitBtn" class="submit hide" type="submit">إرسال الاستبانة</button>
+</form>
+<div id="success" class="card success hide"><div class="check">✅</div><h2>شكرًا لكم</h2><p>تم استلام رأيكم بنجاح.<br>نسأل الله أن يتقبل عمرتكم، ونأمل أن نراكم معنا في رحلات قادمة.</p></div>
+</div>
+<script>
+const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K);
+const params=new URLSearchParams(location.search),programId=params.get('program_id'),bookingId=params.get('booking_id');
+const $=id=>document.getElementById(id);
+const fields=['registration_rating','staff_rating','clarity_rating','madinah_hotel_rating','makkah_hotel_rating','organization_rating','bus_comfort_rating','bus_cleanliness_rating','driver_rating','stops_rating','contractor_rating','contractor_followup_rating','air_travel_rating','air_airport_rating','air_schedule_rating','overall_rating'];
+function ratingHtml(name){return [1,2,3,4,5].map(n=>'<label><input type="radio" name="'+name+'" value="'+n+'"><span>'+n+'</span></label>').join('')}
+document.querySelectorAll('.rating').forEach(el=>el.innerHTML=ratingHtml(el.dataset.field));
+function val(name){const x=document.querySelector('[name="'+name+'"]:checked');return x?x.value:''}
+function showType(type){
+ $('common').classList.remove('hide');$('final').classList.remove('hide');$('optional').classList.remove('hide');$('submitBtn').classList.remove('hide');
+ $('ground').classList.toggle('hide',type!=='ground');$('air').classList.toggle('hide',type!=='air');
+}
+document.querySelectorAll('[name="travel_type"]').forEach(x=>x.addEventListener('change',()=>showType(val('travel_type'))));
+document.querySelectorAll('[name="problem_reported"]').forEach(x=>x.addEventListener('change',()=> $('resolvedWrap').classList.toggle('hide',val('problem_reported')!=='true')));
+$('surveyForm').addEventListener('submit',async e=>{
+ e.preventDefault(); const err=$('error');err.style.display='none';
+ const type=val('travel_type'), overall=val('overall_rating');
+ if(!type||!overall){err.textContent='يرجى اختيار نوع الرحلة والتقييم العام.';err.style.display='block';return}
+ const payload={program_id:programId||null,booking_id:bookingId||null,travel_type:type,overall_rating:Number(overall)};
+ for(const f of fields.filter(x=>x!=='overall_rating')){const v=val(f);if(v)payload[f]=Number(v)}
+ for(const f of ['favorite','improvement','name','phone'])payload[f]=(document.querySelector('[name="'+f+'"]')?.value||'').trim()||null;
+ payload.problem_reported=val('problem_reported')==='true';
+ payload.problem_resolved=payload.problem_reported?(val('problem_resolved')==='true'?true:val('problem_resolved')==='false'?false:null):null;
+ payload.problem_details=null;
+ payload.recommend=val('recommend')==='true'?true:val('recommend')==='false'?false:null;
+ const btn=$('submitBtn');btn.disabled=true;btn.textContent='جاري إرسال الاستبانة...';
+ const r=await db.from('pilgrim_surveys').insert(payload);
+ if(r.error){err.textContent='تعذر إرسال الاستبانة، يرجى المحاولة مرة أخرى.';err.style.display='block';btn.disabled=false;btn.textContent='إرسال الاستبانة';return}
+ $('surveyForm').classList.add('hide');$('success').classList.remove('hide');window.scrollTo({top:0,behavior:'smooth'});
+});
+</script>
+</body></html>
