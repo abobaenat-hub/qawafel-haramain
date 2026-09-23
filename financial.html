@@ -189,7 +189,8 @@ async function addManual(direction){
     created_by:user?.id||null
   });
   if(r.error){alert(r.error.message);return}
-  $(pre+'Msg').innerHTML='<div class="msg">تم استخدام '+fmt(amount)+' '+cur+' من رصيد المورد، دون تسجيل خروج نقدي جديد.</div>';
+  $(pre+'Msg').innerHTML='<div class="msg">✅ تم تسجيل الدفعة واستخدام '+fmt(amount)+' '+cur+' من رصيد المورد، دون تسجيل خروج نقدي جديد.</div>';
+  alert('✅ تم تسجيل الدفعة بنجاح\\n\\nتم استخدام '+fmt(amount)+' '+cur+' من رصيد المورد.');
   ['Amount','Party','Notes'].forEach(x=>$(pre+x).value='');toggleOutSupplier();await loadAll();return;
  }
  const data={direction,category:$(pre+'Cat').value,description:catLabel[$(pre+'Cat').value],amount,currency:$(pre+'Currency').value,payment_method:$(pre+'Method').value,transaction_date:new Date($(pre+'Date').value+'T12:00:00').toISOString(),program_id:$(pre+'Program').value||null,party_name:$(pre+'Party').value.trim()||null,notes:$(pre+'Notes').value.trim()||null,source_type:'manual',source_id:crypto.randomUUID()};
