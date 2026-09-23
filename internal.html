@@ -414,39 +414,37 @@ async function load(){
  const canFinance=!!me && (me.role==='super_admin'||me.role==='manager'||(Array.isArray(me.permissions)&&me.permissions.includes('finance')));
  const fs=document.getElementById('financeSummary');
  if(fs) fs.style.display=canFinance?'':'none';
- const [b,p,pr,i,e,v]=await Promise.all([
-   db.from('bookings').select('*').order('created_at',{ascending:false}),
-   db.from('pilgrims').select('*'),
-   db.from('programs').select('*').order('departure_date'),
-   db.from('installment_plans').select('*').order('due_date'),
-   canFinance ? db.from('expenses').select('*').order('expense_date',{ascending:false}) : Promise.resolve({data:[],error:null}),
-   db.from('visa_email_events').select('id,subject,attachment_name,received_at,viewed_at,matched_pilgrim_id,status').is('viewed_at',null).order('received_at',{ascending:false}).limit(20)
+
+ // لا نسمح لاستعلام واحد متعثر أن يبقي أقسام اللوحة على «جاري التحميل».
+ const timed=async(p,label)=>Promise.race([
+   p,
+   new Promise(resolve=>setTimeout(()=>resolve({data:[],error:{message:'انتهت مهلة تحميل '+label}}),8000))
  ]);
- const er=[b,p,pr,i,e,v].find(x=>x.error);
- if(er){$('alerts').innerHTML='<div class="alert">'+esc(er.error.message)+'</div>';return}
- B=b.data||[];P=p.data||[];PR=pr.data||[];I=i.data||[];E=e.data||[];window.qawafelUnreadVisaEvents=v.data||[];
+ const [b,p,pr,i,e,v]=await Promise.all([
+   timed(db.from('bookings').select('*').order('created_at',{ascending:false}),'الحجوزات'),
+   timed(db.from('pilgrims').select('*'),'المعتمرون'),
+   timed(db.from('programs').select('*').order('departure_date'),'الرحلات'),
+   timed(db.from('installment_plans').select('*').order('due_date'),'الأقساط'),
+   canFinance ? timed(db.from('expenses').select('*').order('expense_date',{ascending:false}),'المصروفات') : Promise.resolve({data:[],error:null}),
+   timed(db.from('visa_email_events').select('id,subject,attachment_name,received_at,viewed_at,matched_pilgrim_id,status').is('viewed_at',null).order('received_at',{ascending:false}).limit(20),'التأشيرات')
+ ]);
+
+ const results={b,p,pr,i,e,v};
+ const bad=Object.entries(results).filter(([,x])=>x?.error);
+ if(bad.length) console.warn('Dashboard queries:',bad.map(([k,x])=>k+': '+x.error.message));
+
+ B=b?.data||[];P=p?.data||[];PR=pr?.data||[];I=i?.data||[];E=e?.data||[];window.qawafelUnreadVisaEvents=v?.data||[];
  $('programs').textContent=PR.filter(x=>x.status==='published').length;
  $('pilgrims').textContent=P.length;
  $('bookings').textContent=B.length;
- $('seats').textContent=PR.reduce((s,x)=>s+Number(x.seats_available||0),0);
+ $('seats').textContent=PR.reduce((sum,x)=>sum+Number(x.seats_available||0),0);
  if(canFinance){
-   $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
-   $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
-   $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
-   $('expenses').textContent=money(E.reduce((s,x)=>s+Number(x.amount||0),0));
+   $('sales').textContent=money(B.reduce((sum,x)=>sum+Number(x.total_amount||0),0));
+   $('received').textContent=money(B.reduce((sum,x)=>sum+Number(x.paid_amount||0),0));
+   $('remaining').textContent=money(B.reduce((sum,x)=>sum+Number(x.remaining_amount||0),0));
+   $('expenses').textContent=money(E.reduce((sum,x)=>sum+Number(x.amount||0),0));
  }
- try{
-   render();
- }catch(e){
-   console.error('dashboard render error',e);
-   try{
-     const currentPrograms=Array.isArray(PR)?PR.filter(x=>x.status==='published'):[];
-     $('programList').innerHTML=currentPrograms.map(x=>'<div class="program"><b>'+esc(x.title||'رحلة')+'</b><small>'+esc(x.departure_date||'—')+' · المقاعد المتاحة: '+Number(x.seats_available||0)+'</small></div>').join('')||'<div class="empty">لا توجد رحلات حالية.</div>';
-   }catch(_){}
-   try{
-     $('alerts').innerHTML='<div class="alert ok">تم تحميل لوحة الإدارة، ولا توجد بيانات متابعة إضافية للعرض حاليًا.</div>';
-   }catch(_){}
- }
+ render();
 }
 function render(){
   // عرض الرحلات الحالية — مستقل عن التنبيهات.
