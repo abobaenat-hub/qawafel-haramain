@@ -180,7 +180,165 @@ function printSupplierStatement(){
 }
 function fillPrograms(){['inProgram','outProgram','pilgrimProgramFilter'].forEach(id=>{const el=$(id),cur=el.value;const first=id==='pilgrimProgramFilter'?'<option value="">كل الرحلات</option>':'<option value="">بدون رحلة</option>';el.innerHTML=first+PROGS.map(p=>'<option value="'+p.id+'">'+esc(p.title)+' — '+(p.departure_date||'')+'</option>').join('');el.value=cur})}
 function officialTx(){const pending=new Set(COMPLETED_PENDING.map(p=>p.id));return TX.filter(x=>!x.program_id||!pending.has(x.program_id))}function renderSettlement(){const box=$('settlementRows');if(!box)return;box.innerHTML=COMPLETED_PENDING.map(p=>{const bs=BOOK.filter(b=>b.program_id===p.id),sales=bs.reduce((s,b)=>s+Number(b.total_amount||0),0),paid=0,due=sales;return '<div class="msg" style="margin-bottom:10px"><b>'+esc(p.title)+'</b><br>عدد الحجوزات: '+bs.length+' — قيمة الرحلة: '+fmt(sales)+' — المقبوض فعليًا: '+fmt(paid)+' — المتبقي للتحصيل: '+fmt(due)+'<br><span class="muted">هذه الرحلة معلقة ماليًا، ولا تدخل في السجل الرسمي حتى تتم التصفية.</span></div>'}).join('')||'<div class="msg">لا توجد رحلات مكتملة معلقة حاليًا.</div>'}function moneyByCurrency(rows){const g={};rows.forEach(x=>{const cur=x.currency||'IQD';g[cur]=(g[cur]||0)+Number(x.amount||0)});const labels={IQD:'د.ع',SAR:'ر.س',USD:'$'};return Object.entries(g).map(([cur,v])=>fmt(v)+' '+(labels[cur]||cur)).join(' — ')||'0'}
-function netByCurrency(rowsIn,rowsOut){const labels={IQD:'د.ع',SAR:'ر.س',USD:'$'};return ['IQD','SAR','USD'].map(cur=>{const i=rowsIn.filter(x=>(x.currency||'IQD')===cur).reduce((s,x)=>s+Number(x.amount||0),0),o=rowsOut.filter(x=>(x.currency||'IQD')===cur).reduce((s,x)=>s+Number(x.amount||0),0),n=i-o;return fmt(n)+' '+labels[cur]}).join('<br>')}
+function netByCurrency(rowsIn,rowsOut){const labels={IQD:'د.ع',SAR:'ر.س',USD:'
+function expenseRows(O=officialTx()){
+ const manual=O.filter(x=>x.direction==='out').map(x=>({...x,_source:'النظام المالي'}));
+ const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').map(x=>{
+  const s=SUPPLIERS.find(a=>a.id===x.supplier_id);
+  return {id:'wallet_'+x.id,direction:'out',category:'supplier_payment',description:x.description||'استخدام من رصيد المورد',party_name:s?.name||'—',amount:x.amount,currency:x.currency,transaction_date:x.transaction_date,program_id:x.program_id,_source:'خزينة المورد'};
+ });
+ return [...manual,...wallet].sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
+}
+function renderExpenses(O=officialTx()){
+ const arr=expenseRows(O),totals={};
+ arr.forEach(x=>{const cur=x.currency||'IQD';totals[cur]=(totals[cur]||0)+Number(x.amount||0)});
+ $('expenseSummary').innerHTML='<b>إجمالي الصرفيات المسجلة:</b> '+(Object.entries(totals).map(([cur,v])=>fmt(v)+' '+cur).join(' — ')||'لا توجد صرفيات');
+ $('expenseRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(programName(x.program_id))+'</td><td><span class="pill">'+esc(x._source)+'</span></td></tr>').join('')||'<tr><td colspan="7">لا توجد صرفيات مسجلة</td></tr>';
+}
+function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O),allMovementsCount=O.length+WALLET_TX.length;const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=moneyByCurrency(allExpenseRows);$('netTotal').innerHTML=netCashByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=allMovementsCount;$('dashboardText').innerHTML='<b>صافي حركة النقد</b><br><span class="muted">يُحسب من المقبوضات والمدفوعات الفعلية، وتُحتسب إيداعات خزائن الموردين كخروج نقدي، بينما سحوبات الخزينة تظهر كمصروف موزع ولا تُخصم من النقد مرة ثانية.</span>';renderRecent(O);renderBookings();renderLedger(O);renderExpenses(O)}
+function renderRecent(O=officialTx()){
+ const finance=O.map(x=>({...x,_sourceOrder:new Date(x.transaction_date).getTime()}));
+ const wallet=WALLET_TX.map(x=>({direction:x.transaction_type==='deposit'?'in':'out',category:x.transaction_type==='deposit'?'supplier_payment':'supplier_payment',description:x.description||'حركة خزينة المورد',amount:x.amount,currency:x.currency,transaction_date:x.transaction_date,program_id:x.program_id,_sourceOrder:new Date(x.transaction_date).getTime()}));
+ const arr=[...finance,...wallet].sort((a,b)=>b._sourceOrder-a._sourceOrder).slice(0,15);
+ $('recentRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="'+x.direction+'">'+(x.direction==='in'?'وارد':'صرف')+'</td><td>'+esc(x.description||catLabel[x.category]||x.category)+'</td><td>'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="5">لا توجد حركات</td></tr>';
+}
+function bookingPaid(id){return PAY.filter(p=>p.booking_id===id).reduce((s,p)=>s+Number(p.amount||0),0)}
+function renderBookings(){const q=($('pilgrimSearch').value||'').trim().toLowerCase(),pf=$('pilgrimProgramFilter').value,df=$('dueFilter').value;let arr=BOOK.filter(b=>(!q||(b.full_name||'').toLowerCase().includes(q)||(b.booking_number||'').toLowerCase().includes(q))&&(!pf||b.program_id===pf));arr=arr.filter(b=>{const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(b.id));return !df||(df==='due'&&rem>0)||(df==='paid'&&rem===0)});$('bookingRows').innerHTML=arr.map(b=>{const paid=bookingPaid(b.id),rem=Math.max(0,Number(b.total_amount||0)-paid);return '<tr><td><b>'+esc(b.full_name||'—')+'</b><br><span class="pill">'+esc(b.booking_number||'')+'</span></td><td>'+esc(programName(b.program_id))+'</td><td>'+fmt(b.total_amount)+'</td><td class="in">'+fmt(paid)+'</td><td class="'+(rem?'out':'in')+'">'+fmt(rem)+'</td><td><button class="btn primary" onclick="payBooking(\''+b.id+'\')">قبض دفعة</button></td></tr>'}).join('')||'<tr><td colspan="6">لا توجد نتائج</td></tr>'}
+async function payBooking(id){const b=BOOK.find(x=>x.id===id);if(!b)return;const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(id));const amount=prompt('المتبقي: '+fmt(rem)+'\nأدخل المبلغ المقبوض فعليًا:');if(amount===null)return;const n=Number(amount);if(!n||n<=0||n>rem){alert('المبلغ غير صحيح.');return}const r=await db.from('payments').insert({booking_id:id,amount:n,currency:'IQD',payment_method:'cash',payment_date:new Date().toISOString()});if(r.error){alert(r.error.message);return}await loadAll();alert('تم تسجيل القبض وإضافته لصندوق الوارد.')}
+async function addManual(direction){
+ const pre=direction==='in'?'in':'out',amount=Number($(pre+'Amount').value);
+ if(!amount||amount<=0){alert('أدخل مبلغًا صحيحًا');return}
+ const supplierId=direction==='out'&&$('outCat').value==='supplier_payment'?($('outSupplier').value||null):null;
+ if(direction==='out'&&$('outCat').value==='supplier_payment'){
+  if(!supplierId){alert('اختر المورد أولاً');return}
+  const cur=$('outWalletCurrency').value;
+  if(!cur){alert('اختر رصيد المورد الذي تريد استخدامه');return}
+  const entries=supplierBalances(supplierId),available=Number((entries.find(([c])=>c===cur)||['',0])[1]||0);
+  if(amount>available+0.000001){alert('المبلغ أكبر من الرصيد المتاح عند المورد. الرصيد المتاح: '+fmt(available)+' '+cur);return}
+  let rate=cur==='IQD'?1:0;
+  if(cur!=='IQD'){
+    const same=WALLET_TX.filter(x=>x.supplier_id===supplierId&&x.currency===cur&&Number(x.amount)>0);
+    let remainingAmount=0,remainingIqd=0;
+    same.forEach(x=>{
+      const a=Number(x.amount||0),iq=Number(x.amount_iqd||0);
+      if(x.transaction_type==='deposit'){remainingAmount+=a;remainingIqd+=iq}
+      else{remainingAmount-=a;remainingIqd-=iq}
+    });
+    if(remainingAmount>0&&remainingIqd>0)rate=Number((remainingIqd/remainingAmount).toFixed(6));
+  }
+  if(!rate){alert('لا يوجد سعر صرف مسجل لهذا الرصيد عند المورد.');return}
+  const amountIqd=Number((amount*rate).toFixed(2));
+  const {data:{user}}=await db.auth.getUser();
+  const r=await db.from('supplier_wallet_transactions').insert({
+    supplier_id:supplierId,transaction_type:'withdrawal',currency:cur,amount,
+    exchange_rate_to_iqd:rate,amount_iqd:amountIqd,
+    transaction_date:$(pre+'Date').value||dateToday(),
+    program_id:$(pre+'Program').value||null,
+    description:$(pre+'Notes').value.trim()||'استخدام من رصيد المورد',
+    created_by:user?.id||null
+  });
+  if(r.error){alert(r.error.message);return}
+  $(pre+'Msg').innerHTML='<div class="msg">✅ تم تسجيل الدفعة واستخدام '+fmt(amount)+' '+cur+' من رصيد المورد، دون تسجيل خروج نقدي جديد.</div>';
+  alert('✅ تم تسجيل الدفعة بنجاح\\n\\nتم استخدام '+fmt(amount)+' '+cur+' من رصيد المورد.');
+  ['Amount','Party','Notes'].forEach(x=>$(pre+x).value='');toggleOutSupplier();await loadAll();return;
+ }
+ const data={direction,category:$(pre+'Cat').value,description:catLabel[$(pre+'Cat').value],amount,currency:$(pre+'Currency').value,payment_method:$(pre+'Method').value,transaction_date:new Date($(pre+'Date').value+'T12:00:00').toISOString(),program_id:$(pre+'Program').value||null,party_name:$(pre+'Party').value.trim()||null,notes:$(pre+'Notes').value.trim()||null,source_type:'manual',source_id:crypto.randomUUID()};
+ const r=await db.from('finance_transactions').insert(data);
+ if(r.error){alert(r.error.message);return}
+ $(pre+'Msg').innerHTML='<div class="msg">تم تسجيل الحركة بنجاح.</div>';
+ ['Amount','Party','Notes'].forEach(x=>$(pre+x).value='');await loadAll();
+}
+function renderLedger(O=officialTx()){const q=($('ledgerSearch').value||'').toLowerCase();const arr=O.filter(x=>(x.description||'').toLowerCase().includes(q)||(x.party_name||'').toLowerCase().includes(q)||(catLabel[x.category]||x.category).toLowerCase().includes(q));$('ledgerRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="'+x.direction+'">'+(x.direction==='in'?'🟢 وارد':'🔴 صرف')+'</td><td>'+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="'+x.direction+'">'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="7">لا توجد حركات</td></tr>'}
+function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
+function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'&&s)init()});init();
+</script>
+</body></html>
+};return ['IQD','SAR','USD'].map(cur=>{const i=rowsIn.filter(x=>(x.currency||'IQD')===cur).reduce((s,x)=>s+Number(x.amount||0),0),o=rowsOut.filter(x=>(x.currency||'IQD')===cur).reduce((s,x)=>s+Number(x.amount||0),0),n=i-o;return fmt(n)+' '+labels[cur]}).join('<br>')}
+function netCashByCurrency(rowsIn,rowsOut){
+ const labels={IQD:'د.ع',SAR:'ر.س',USD:'
+function expenseRows(O=officialTx()){
+ const manual=O.filter(x=>x.direction==='out').map(x=>({...x,_source:'النظام المالي'}));
+ const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').map(x=>{
+  const s=SUPPLIERS.find(a=>a.id===x.supplier_id);
+  return {id:'wallet_'+x.id,direction:'out',category:'supplier_payment',description:x.description||'استخدام من رصيد المورد',party_name:s?.name||'—',amount:x.amount,currency:x.currency,transaction_date:x.transaction_date,program_id:x.program_id,_source:'خزينة المورد'};
+ });
+ return [...manual,...wallet].sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
+}
+function renderExpenses(O=officialTx()){
+ const arr=expenseRows(O),totals={};
+ arr.forEach(x=>{const cur=x.currency||'IQD';totals[cur]=(totals[cur]||0)+Number(x.amount||0)});
+ $('expenseSummary').innerHTML='<b>إجمالي الصرفيات المسجلة:</b> '+(Object.entries(totals).map(([cur,v])=>fmt(v)+' '+cur).join(' — ')||'لا توجد صرفيات');
+ $('expenseRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(programName(x.program_id))+'</td><td><span class="pill">'+esc(x._source)+'</span></td></tr>').join('')||'<tr><td colspan="7">لا توجد صرفيات مسجلة</td></tr>';
+}
+function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=moneyByCurrency(allExpenseRows);$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=O.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الوارد والصرف وصافي الحركة لا يتم جمعها بين الدينار والريال والدولار.</span>';renderRecent(O);renderBookings();renderLedger(O);renderExpenses(O)}
+function renderRecent(O=officialTx()){
+ const finance=O.map(x=>({...x,_sourceOrder:new Date(x.transaction_date).getTime()}));
+ const wallet=WALLET_TX.map(x=>({direction:x.transaction_type==='deposit'?'in':'out',category:x.transaction_type==='deposit'?'supplier_payment':'supplier_payment',description:x.description||'حركة خزينة المورد',amount:x.amount,currency:x.currency,transaction_date:x.transaction_date,program_id:x.program_id,_sourceOrder:new Date(x.transaction_date).getTime()}));
+ const arr=[...finance,...wallet].sort((a,b)=>b._sourceOrder-a._sourceOrder).slice(0,15);
+ $('recentRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="'+x.direction+'">'+(x.direction==='in'?'وارد':'صرف')+'</td><td>'+esc(x.description||catLabel[x.category]||x.category)+'</td><td>'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="5">لا توجد حركات</td></tr>';
+}
+function bookingPaid(id){return PAY.filter(p=>p.booking_id===id).reduce((s,p)=>s+Number(p.amount||0),0)}
+function renderBookings(){const q=($('pilgrimSearch').value||'').trim().toLowerCase(),pf=$('pilgrimProgramFilter').value,df=$('dueFilter').value;let arr=BOOK.filter(b=>(!q||(b.full_name||'').toLowerCase().includes(q)||(b.booking_number||'').toLowerCase().includes(q))&&(!pf||b.program_id===pf));arr=arr.filter(b=>{const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(b.id));return !df||(df==='due'&&rem>0)||(df==='paid'&&rem===0)});$('bookingRows').innerHTML=arr.map(b=>{const paid=bookingPaid(b.id),rem=Math.max(0,Number(b.total_amount||0)-paid);return '<tr><td><b>'+esc(b.full_name||'—')+'</b><br><span class="pill">'+esc(b.booking_number||'')+'</span></td><td>'+esc(programName(b.program_id))+'</td><td>'+fmt(b.total_amount)+'</td><td class="in">'+fmt(paid)+'</td><td class="'+(rem?'out':'in')+'">'+fmt(rem)+'</td><td><button class="btn primary" onclick="payBooking(\''+b.id+'\')">قبض دفعة</button></td></tr>'}).join('')||'<tr><td colspan="6">لا توجد نتائج</td></tr>'}
+async function payBooking(id){const b=BOOK.find(x=>x.id===id);if(!b)return;const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(id));const amount=prompt('المتبقي: '+fmt(rem)+'\nأدخل المبلغ المقبوض فعليًا:');if(amount===null)return;const n=Number(amount);if(!n||n<=0||n>rem){alert('المبلغ غير صحيح.');return}const r=await db.from('payments').insert({booking_id:id,amount:n,currency:'IQD',payment_method:'cash',payment_date:new Date().toISOString()});if(r.error){alert(r.error.message);return}await loadAll();alert('تم تسجيل القبض وإضافته لصندوق الوارد.')}
+async function addManual(direction){
+ const pre=direction==='in'?'in':'out',amount=Number($(pre+'Amount').value);
+ if(!amount||amount<=0){alert('أدخل مبلغًا صحيحًا');return}
+ const supplierId=direction==='out'&&$('outCat').value==='supplier_payment'?($('outSupplier').value||null):null;
+ if(direction==='out'&&$('outCat').value==='supplier_payment'){
+  if(!supplierId){alert('اختر المورد أولاً');return}
+  const cur=$('outWalletCurrency').value;
+  if(!cur){alert('اختر رصيد المورد الذي تريد استخدامه');return}
+  const entries=supplierBalances(supplierId),available=Number((entries.find(([c])=>c===cur)||['',0])[1]||0);
+  if(amount>available+0.000001){alert('المبلغ أكبر من الرصيد المتاح عند المورد. الرصيد المتاح: '+fmt(available)+' '+cur);return}
+  let rate=cur==='IQD'?1:0;
+  if(cur!=='IQD'){
+    const same=WALLET_TX.filter(x=>x.supplier_id===supplierId&&x.currency===cur&&Number(x.amount)>0);
+    let remainingAmount=0,remainingIqd=0;
+    same.forEach(x=>{
+      const a=Number(x.amount||0),iq=Number(x.amount_iqd||0);
+      if(x.transaction_type==='deposit'){remainingAmount+=a;remainingIqd+=iq}
+      else{remainingAmount-=a;remainingIqd-=iq}
+    });
+    if(remainingAmount>0&&remainingIqd>0)rate=Number((remainingIqd/remainingAmount).toFixed(6));
+  }
+  if(!rate){alert('لا يوجد سعر صرف مسجل لهذا الرصيد عند المورد.');return}
+  const amountIqd=Number((amount*rate).toFixed(2));
+  const {data:{user}}=await db.auth.getUser();
+  const r=await db.from('supplier_wallet_transactions').insert({
+    supplier_id:supplierId,transaction_type:'withdrawal',currency:cur,amount,
+    exchange_rate_to_iqd:rate,amount_iqd:amountIqd,
+    transaction_date:$(pre+'Date').value||dateToday(),
+    program_id:$(pre+'Program').value||null,
+    description:$(pre+'Notes').value.trim()||'استخدام من رصيد المورد',
+    created_by:user?.id||null
+  });
+  if(r.error){alert(r.error.message);return}
+  $(pre+'Msg').innerHTML='<div class="msg">✅ تم تسجيل الدفعة واستخدام '+fmt(amount)+' '+cur+' من رصيد المورد، دون تسجيل خروج نقدي جديد.</div>';
+  alert('✅ تم تسجيل الدفعة بنجاح\\n\\nتم استخدام '+fmt(amount)+' '+cur+' من رصيد المورد.');
+  ['Amount','Party','Notes'].forEach(x=>$(pre+x).value='');toggleOutSupplier();await loadAll();return;
+ }
+ const data={direction,category:$(pre+'Cat').value,description:catLabel[$(pre+'Cat').value],amount,currency:$(pre+'Currency').value,payment_method:$(pre+'Method').value,transaction_date:new Date($(pre+'Date').value+'T12:00:00').toISOString(),program_id:$(pre+'Program').value||null,party_name:$(pre+'Party').value.trim()||null,notes:$(pre+'Notes').value.trim()||null,source_type:'manual',source_id:crypto.randomUUID()};
+ const r=await db.from('finance_transactions').insert(data);
+ if(r.error){alert(r.error.message);return}
+ $(pre+'Msg').innerHTML='<div class="msg">تم تسجيل الحركة بنجاح.</div>';
+ ['Amount','Party','Notes'].forEach(x=>$(pre+x).value='');await loadAll();
+}
+function renderLedger(O=officialTx()){const q=($('ledgerSearch').value||'').toLowerCase();const arr=O.filter(x=>(x.description||'').toLowerCase().includes(q)||(x.party_name||'').toLowerCase().includes(q)||(catLabel[x.category]||x.category).toLowerCase().includes(q));$('ledgerRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="'+x.direction+'">'+(x.direction==='in'?'🟢 وارد':'🔴 صرف')+'</td><td>'+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="'+x.direction+'">'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="7">لا توجد حركات</td></tr>'}
+function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
+function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'&&s)init()});init();
+</script>
+</body></html>
+},inMap={},outMap={};
+ rowsIn.forEach(x=>{const c=x.currency||'IQD';inMap[c]=(inMap[c]||0)+Number(x.amount||0)});
+ rowsOut.forEach(x=>{const c=x.currency||'IQD';outMap[c]=(outMap[c]||0)+Number(x.amount||0)});
+ WALLET_TX.filter(x=>x.transaction_type==='deposit').forEach(x=>{
+   const c=x.source_currency||x.currency||'IQD',a=Number(x.source_amount||x.amount||0);
+   outMap[c]=(outMap[c]||0)+a;
+ });
+ return ['IQD','SAR','USD'].map(cur=>fmt((inMap[cur]||0)-(outMap[cur]||0))+' '+labels[cur]).join('<br>');
+}
 function expenseRows(O=officialTx()){
  const manual=O.filter(x=>x.direction==='out').map(x=>({...x,_source:'النظام المالي'}));
  const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').map(x=>{
