@@ -72,6 +72,7 @@ async function saveWalletTx(){const supplier_id=$('walletSupplier').value,type=$
 <div class="field"><label>التاريخ</label><input id="inDate" type="date"></div>
 </div><div class="field" style="margin-top:10px"><label>ملاحظات</label><textarea id="inNotes"></textarea></div>
 <button class="btn primary" onclick="addManual('in')">تسجيل الوارد</button><div id="inMsg"></div></div>
+<div class="panel"><div class="sectionTitle"><h2>📋 الوارد المسجل</h2><span class="muted">كل الحركات التي دخلت للصندوق</span></div><div class="table"><table><thead><tr><th>التاريخ</th><th>نوع الإيراد</th><th>البيان</th><th>الطرف</th><th>المبلغ</th><th>الرحلة</th></tr></thead><tbody id="inRows"></tbody></table></div></div>
 </section>
 
 <section id="out" class="hidden">
@@ -258,7 +259,11 @@ async function deleteWalletExpense(id){
 }
 
 function actualExpenseIqd(O=officialTx()){const manual=TX.filter(x=>x.direction==='out'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount||0),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+Number(x.amount_iqd||0),0);return manual+wallet}
-function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=fmt(actualExpenseIqd(O))+' د.ع';$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=TX.length+WALLET_TX.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الصرف الفعلي معروض بالدينار العراقي: المصروفات المسجلة بالدينار + الصرف من خزائن الموردين محسوبًا وفق تفاصيل التحويل.</span>';renderRecent(O);renderBookings();renderLedger(O);renderExpenses(O)}
+function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=fmt(actualExpenseIqd(O))+' د.ع';$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=TX.length+WALLET_TX.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الصرف الفعلي معروض بالدينار العراقي: المصروفات المسجلة بالدينار + الصرف من خزائن الموردين محسوبًا وفق تفاصيل التحويل.</span>';renderRecent(O);renderIncome();renderBookings();renderLedger(O);renderExpenses(O)}
+function renderIncome(){
+ const rows=TX.filter(x=>x.direction==='in').sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
+ $('inRows').innerHTML=rows.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td>'+esc(catLabel[x.category]||x.category||'وارد')+'</td><td>'+esc(x.description||'—')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="in"><b>'+fmt(x.amount)+' '+esc(x.currency||'IQD')+'</b></td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="6">لا توجد حركات وارد مسجلة</td></tr>';
+}
 function renderRecent(O=officialTx()){
  const finance=TX.map(x=>({...x,_movement:x.direction==='in'?'وارد':'صرف',_sourceOrder:new Date(x.transaction_date).getTime()}));
  const wallet=WALLET_TX.map(x=>({...x,_movement:x.transaction_type==='deposit'?'إيداع خزينة المورد':'صرف من خزينة المورد',_sourceOrder:new Date(x.transaction_date).getTime()}));
