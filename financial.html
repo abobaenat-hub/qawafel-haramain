@@ -207,23 +207,32 @@ function expenseRows(O=officialTx()){
 async function editManualExpense(id){
  const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual');
  if(!x)return;
- const amount=prompt('المبلغ الحالي: '+fmt(x.amount)+' '+x.currency+'\nأدخل المبلغ الجديد:',x.amount);
+ const amount=prompt('المبلغ الحالي: '+fmt(x.amount)+' '+x.currency+'\\nأدخل المبلغ الجديد:',x.amount);
  if(amount===null)return;
  const n=Number(String(amount).replace(/,/g,''));
  if(!n||n<=0){alert('المبلغ غير صحيح.');return}
- const description=prompt('البيان الحالي:\n'+(x.description||'')+'\n\nأدخل البيان الجديد:',x.description||'');
+ const description=prompt('البيان الحالي:\\n'+(x.description||'')+'\\n\\nأدخل البيان الجديد:',x.description||'');
  if(description===null)return;
- const date=prompt('التاريخ الحالي: '+fmtDate(x.transaction_date)+'\nأدخل التاريخ الجديد بصيغة YYYY-MM-DD:',String(x.transaction_date).slice(0,10));
+ const date=prompt('التاريخ الحالي: '+fmtDate(x.transaction_date)+'\\nأدخل التاريخ الجديد بصيغة YYYY-MM-DD:',String(x.transaction_date).slice(0,10));
  if(date===null)return;
- if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){alert('صيغة التاريخ غير صحيحة.');return}
+ if(!/^\\\\d{4}-\\\\d{2}-\\\\d{2}$/.test(date)){alert('صيغة التاريخ غير صحيحة.');return}
+ const trips=PROGS.filter(p=>p&&p.id);
+ const menu=['0 — بدون رحلة',...trips.map((p,i)=>(i+1)+' — '+p.title)];
+ const current=x.program_id?programName(x.program_id):'بدون رحلة';
+ const choice=prompt('الرحلة الحالية: '+current+'\\n\\nاختر رقم الرحلة الجديدة:\\n'+menu.join('\\n'),x.program_id?(trips.findIndex(p=>p.id===x.program_id)+1):0);
+ if(choice===null)return;
+ const idx=Number(String(choice).trim());
+ if(!Number.isInteger(idx)||idx<0||idx>trips.length){alert('اختيار الرحلة غير صحيح.');return}
+ const programId=idx===0?null:trips[idx-1].id;
  const r=await db.from('finance_transactions').update({
   amount:n,
   description:description.trim()||x.description,
-  transaction_date:new Date(date+'T12:00:00').toISOString()
+  transaction_date:new Date(date+'T12:00:00').toISOString(),
+  program_id:programId
  }).eq('id',id).eq('source_type','manual').eq('direction','out');
  if(r.error){alert(r.error.message);return}
  await loadAll();
- alert('✅ تم تعديل الحركة.');
+ alert('✅ تم تعديل الحركة والرحلة.');
 }
 async function editWalletExpense(id){
  const x=WALLET_TX.find(a=>a.id===id&&a.transaction_type==='withdrawal');if(!x)return;
