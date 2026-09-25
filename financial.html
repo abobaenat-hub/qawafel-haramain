@@ -88,7 +88,7 @@ async function saveWalletTx(){const supplier_id=$('walletSupplier').value,type=$
 <div class="field"><label>التاريخ</label><input id="outDate" type="date"></div>
 </div><div id="outSupplierInfo" class="msg hidden" style="margin-top:10px"></div>
 <div id="outWalletCurrencyWrap" class="field hidden" style="margin-top:10px"><label>الرصيد الذي سيُستخدم</label><select id="outWalletCurrency" onchange="syncOutWalletCurrency()"></select></div><div class="field" style="margin-top:10px"><label>ملاحظات</label><textarea id="outNotes"></textarea></div>
-<button class="btn primary" onclick="addManual('out')">تسجيل الصرف</button><div id="outMsg"></div></div><div class="panel"><div class="sectionTitle"><h2>📒 الصرفيات المسجلة</h2><span class="muted">تشمل الصرف النقدي والصرف من خزائن الموردين</span></div><div class="table"><table><thead><tr><th>التاريخ</th><th>نوع الصرف</th><th>البيان</th><th>الطرف</th><th>المبلغ</th><th>الرحلة</th><th>المصدر</th></tr></thead><tbody id="expenseRows"></tbody></table></div></div>
+<button class="btn primary" onclick="addManual('out')">تسجيل الصرف</button><div id="outMsg"></div></div><div class="panel"><div class="sectionTitle"><h2>📒 الصرفيات المسجلة</h2><span class="muted">تشمل الصرف النقدي والصرف من خزائن الموردين</span></div><div class="table"><table><thead><tr><th>التاريخ</th><th>نوع الصرف</th><th>البيان</th><th>الطرف</th><th>المبلغ</th><th>الرحلة</th><th>المصدر</th><th>إجراء</th></tr></thead><tbody id="expenseRows"></tbody></table></div></div>
 </section>
 
 <section id="pilgrims" class="hidden">
@@ -204,9 +204,30 @@ function expenseRows(O=officialTx()){
  });
  return [...manual,...wallet].sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
 }
+async function editManualExpense(id){
+ const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual');
+ if(!x)return;
+ const amount=prompt('المبلغ الحالي: '+fmt(x.amount)+' '+x.currency+'\nأدخل المبلغ الجديد:',x.amount);
+ if(amount===null)return;
+ const n=Number(String(amount).replace(/,/g,''));
+ if(!n||n<=0){alert('المبلغ غير صحيح.');return}
+ const description=prompt('البيان الحالي:\n'+(x.description||'')+'\n\nأدخل البيان الجديد:',x.description||'');
+ if(description===null)return;
+ const date=prompt('التاريخ الحالي: '+fmtDate(x.transaction_date)+'\nأدخل التاريخ الجديد بصيغة YYYY-MM-DD:',String(x.transaction_date).slice(0,10));
+ if(date===null)return;
+ if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){alert('صيغة التاريخ غير صحيحة.');return}
+ const r=await db.from('finance_transactions').update({
+  amount:n,
+  description:description.trim()||x.description,
+  transaction_date:new Date(date+'T12:00:00').toISOString()
+ }).eq('id',id).eq('source_type','manual').eq('direction','out');
+ if(r.error){alert(r.error.message);return}
+ await loadAll();
+ alert('✅ تم تعديل الحركة.');
+}
 function renderExpenses(O=officialTx()){
  const arr=expenseRows(O);
- $('expenseRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(programName(x.program_id))+'</td><td><span class="pill">'+esc(x._source)+'</span></td></tr>').join('')||'<tr><td colspan="7">لا توجد صرفيات مسجلة</td></tr>';
+ $('expenseRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(programName(x.program_id))+'</td><td><span class="pill">'+esc(x._source)+'</span></td><td>'+(x._source==='النظام المالي'&&x.source_type==='manual'?'<button class="btn" onclick="editManualExpense(\''+x.id+'\')">✏️ تعديل</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="8">لا توجد صرفيات مسجلة</td></tr>';
 }
 function actualExpenseIqd(O=officialTx()){const manual=TX.filter(x=>x.direction==='out'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount||0),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+Number(x.amount_iqd||0),0);return manual+wallet}
 function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=fmt(actualExpenseIqd(O))+' د.ع';$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=TX.length+WALLET_TX.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الصرف الفعلي معروض بالدينار العراقي: المصروفات المسجلة بالدينار + الصرف من خزائن الموردين محسوبًا وفق تفاصيل التحويل.</span>';renderRecent(O);renderBookings();renderLedger(O);renderExpenses(O)}
