@@ -266,29 +266,48 @@ async function addManual(direction){
 }
 function renderLedger(O=officialTx()){const q=($('ledgerSearch').value||'').toLowerCase();const finance=O.map(x=>({...x,_label:catLabel[x.category]||x.category,_party:x.party_name||'—'}));const wallet=WALLET_TX.map(x=>({transaction_date:x.transaction_date,direction:x.transaction_type==='deposit'?'in':'out',_label:x.transaction_type==='deposit'?'إيداع خزينة مورد':'صرف من خزينة مورد',description:x.description||'حركة خزينة المورد',_party:(SUPPLIERS.find(s=>s.id===x.supplier_id)?.name)||'—',amount:x.amount,currency:x.currency,program_id:x.program_id}));const arr=[...finance,...wallet].filter(x=>((x.description||'')+' '+(x._party||'')+' '+(x._label||'')).toLowerCase().includes(q)).sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));$('ledgerRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="'+x.direction+'">'+(x.direction==='in'?'🟢 وارد':'🔴 صرف')+'</td><td>'+esc(x._label)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x._party||'—')+'</td><td class="'+x.direction+'">'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="7">لا توجد حركات</td></tr>'}
 function reportDate(v){return v?String(v).slice(0,10):''}
-function reportTotals(rows){const g={};rows.forEach(x=>{const cur=x.currency||'IQD';g[cur]=(g[cur]||0)+Number(x.amount||0)});return g}
+function walletWithdrawalIqd(x){
+ const amount=Number(x.amount||0);
+ if((x.currency||'')==='IQD')return amount;
+ if(x.source_currency==='USD'&&Number(x.source_amount)>0&&Number(x.fx_rate)>0&&Number(x.exchange_rate_to_iqd)>0)return (amount/Number(x.fx_rate))*Number(x.exchange_rate_to_iqd);
+ if(x.source_currency==='IQD'&&Number(x.source_amount)>0&&Number(x.amount)>0)return amount*(Number(x.source_amount)/Number(x.amount));
+ if(x.currency==='USD'&&Number(x.exchange_rate_to_iqd)>0)return amount*Number(x.exchange_rate_to_iqd);
+ return Number(x.amount_iqd||0);
+}
+function financeAmountIqd(x){
+ const cur=x.currency||'IQD',amount=Number(x.amount||0);
+ if(cur==='IQD')return amount;
+ return Number(x.amount_iqd||0);
+}
 function renderFinancialReport(){
  const from=$('reportFrom').value||dateToday().slice(0,8)+'01',to=$('reportTo').value||dateToday();
  if(from>to)return alert('تاريخ البداية يجب أن يكون قبل تاريخ النهاية.');
  const O=officialTx().filter(x=>{const d=reportDate(x.transaction_date);return d>=from&&d<=to});
- const ins=O.filter(x=>x.direction==='in');
- const cashOut=O.filter(x=>x.direction==='out');
- const walletOut=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').filter(x=>{const d=reportDate(x.transaction_date);return d>=from&&d<=to});
- const rev=reportTotals(ins),out=reportTotals(cashOut),wout=reportTotals(walletOut),curr=[...new Set([...Object.keys(rev),...Object.keys(out),...Object.keys(wout)])];
- const labels={IQD:'د.ع',SAR:'ر.س',USD:'$'};
- const profit=curr.map(cur=>({cur,revenue:rev[cur]||0,expense:(out[cur]||0)+(wout[cur]||0),profit:(rev[cur]||0)-(out[cur]||0)-(wout[cur]||0)}));
- const programs=new Set();O.forEach(x=>{if(x.program_id)programs.add(x.program_id)});walletOut.forEach(x=>{if(x.program_id)programs.add(x.program_id)});
+ const income=O.filter(x=>x.direction==='in').reduce((s,x)=>s+financeAmountIqd(x),0);
+ const generalCash=O.filter(x=>x.direction==='out').reduce((s,x)=>s+financeAmountIqd(x),0);
+ const generalSupplier=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').filter(x=>{const d=reportDate(x.transaction_date);return d>=from&&d<=to}).reduce((s,x)=>s+walletWithdrawalIqd(x),0);
+ const generalExpense=generalCash+generalSupplier;
+ const result=income-generalExpense;
+ const resultLabel=result>=0?'ربح الفترة':'خسارة الفترة';
+ const resultText=result>=0?'ربح':'خسارة';
  const bookings=BOOK.filter(b=>{const p=PROGS.find(p=>p.id===b.program_id);const d=reportDate(p?.departure_date);return d&&d>=from&&d<=to});
- const html='<div class="grid3">'+profit.map(x=>'<div class="msg"><b>'+labels[x.cur]+'</b><br>الإيرادات: '+fmt(x.revenue)+'<br>التكاليف: '+fmt(x.expense)+'<br><b>صافي النتيجة: '+fmt(x.profit)+'</b></div>').join('')+'</div>'+
- '<div class="panel" style="margin-top:12px"><b>ملخص الفترة</b><div class="table"><table><thead><tr><th>البند</th><th>النتيجة</th></tr></thead><tbody>'+
- '<tr><td>الفترة</td><td>'+esc(from)+' إلى '+esc(to)+'</td></tr>'+
+ const programs=new Set();O.forEach(x=>{if(x.program_id)programs.add(x.program_id)});
+ const html='<div class="grid3">'+
+ '<div class="msg"><b>إجمالي الإيرادات</b><br><strong>'+fmt(income)+' د.ع</strong></div>'+
+ '<div class="msg"><b>الصرف العام</b><br><strong>'+fmt(generalExpense)+' د.ع</strong><br><span class="muted">يشمل الصرف النقدي + الصرف من خزائن الموردين</span></div>'+
+ '<div class="msg"><b>'+resultLabel+'</b><br><strong>'+fmt(Math.abs(result))+' د.ع</strong></div>'+
+ '</div>'+
+ '<div class="panel" style="margin-top:12px"><h3 style="margin-top:0">📊 نتيجة الفترة</h3><div class="msg"><b>من '+esc(from)+' إلى '+esc(to)+'</b><br><span style="font-size:20px;font-weight:bold">'+resultText+': '+fmt(Math.abs(result))+' د.ع</span></div>'+
+ '<div class="table"><table><thead><tr><th>البند</th><th>المبلغ</th></tr></thead><tbody>'+
+ '<tr><td>الإيرادات</td><td>'+fmt(income)+' د.ع</td></tr>'+
+ '<tr><td>الصرف العام</td><td>'+fmt(generalExpense)+' د.ع</td></tr>'+
+ '<tr><td>الصرف النقدي</td><td>'+fmt(generalCash)+' د.ع</td></tr>'+
+ '<tr><td>الصرف من خزائن الموردين</td><td>'+fmt(generalSupplier)+' د.ع</td></tr>'+
+ '<tr><td><b>النتيجة النهائية</b></td><td><b>'+resultText+' '+fmt(Math.abs(result))+' د.ع</b></td></tr>'+
  '<tr><td>عدد الرحلات المرتبطة بالحركات</td><td>'+programs.size+'</td></tr>'+
- '<tr><td>عدد المعتمرين/الحجوزات في الرحلات خلال الفترة</td><td>'+bookings.length+'</td></tr>'+
- '<tr><td>إجمالي الإيرادات</td><td>'+ (Object.entries(rev).map(([k,v])=>fmt(v)+' '+labels[k]).join(' — ')||'0') +'</td></tr>'+
- '<tr><td>الصرف النقدي</td><td>'+ (Object.entries(out).map(([k,v])=>fmt(v)+' '+labels[k]).join(' — ')||'0') +'</td></tr>'+
- '<tr><td>الصرف من خزائن الموردين</td><td>'+ (Object.entries(wout).map(([k,v])=>fmt(v)+' '+labels[k]).join(' — ')||'0') +'</td></tr>'+
+ '<tr><td>عدد الحجوزات في رحلات الفترة</td><td>'+bookings.length+'</td></tr>'+
  '</tbody></table></div></div>'+
- '<div class="msg"><b>ملاحظة:</b> صافي النتيجة هنا = الإيرادات المسجلة ناقص المصروفات المسجلة خلال الفترة، ولكل عملة على حدة. لا يتم تحويل العملات أو جمع الدينار والريال والدولار في رقم واحد.</div>';
+ '<div class="msg"><b>طريقة الحساب:</b> جميع النتائج معروضة بالدينار العراقي فقط. إيداعات خزائن الموردين لا تُحسب إيرادًا. سحوبات خزائن الموردين تدخل ضمن الصرف العام بعد تحويلها للدينار وفق تفاصيل التحويل المسجلة.</div>';
  $('reportBody').innerHTML=html;
 }
 function printFinancialReport(){
@@ -296,7 +315,7 @@ function printFinancialReport(){
  const body=$('reportBody').innerHTML;
  const w=window.open('','_blank');
  if(!w)return alert('يرجى السماح بالنوافذ المنبثقة للطباعة');
- const printHtml='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>التقرير المالي - قوافل الحرمين</title><style>body{font-family:Tahoma,Arial;padding:25px;color:#18384f}.head{text-align:center;border-bottom:2px solid #18384f;padding-bottom:15px;margin-bottom:15px}table{width:100%;border-collapse:collapse}th,td{padding:9px;border:1px solid #dfe7ec;text-align:right;font-size:11px}th{background:#f1f6f9}.msg{padding:10px;border:1px solid #dfe7ec;border-radius:8px;margin:10px 0;font-size:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.panel{border:1px solid #dfe7ec;border-radius:10px;padding:12px;margin-top:10px}@media print{body{padding:10px}}</style></head><body><div class="head"><h2>شركة قوافل الحرمين للحج والعمرة</h2><h3>التقرير المالي للفترة المحددة</h3></div>'+body+'<p style="margin-top:30px;text-align:center;font-size:10px">تقرير مستخرج من النظام المالي</p></body></html>';
+ const printHtml='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>التقرير المالي - قوافل الحرمين</title><style>body{font-family:Tahoma,Arial;padding:25px;color:#18384f}.head{text-align:center;border-bottom:2px solid #18384f;padding-bottom:15px;margin-bottom:15px}table{width:100%;border-collapse:collapse}th,td{padding:9px;border:1px solid #dfe7ec;text-align:right;font-size:11px}th{background:#f1f6f9}.msg{padding:12px;border:1px solid #dfe7ec;border-radius:8px;margin:10px 0;font-size:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.panel{border:1px solid #dfe7ec;border-radius:10px;padding:12px;margin-top:10px}@media print{body{padding:10px}}</style></head><body><div class="head"><h2>شركة قوافل الحرمين للحج والعمرة</h2><h3>التقرير المالي</h3></div>'+body+'<p style="margin-top:30px;text-align:center;font-size:10px">تقرير مستخرج من النظام المالي</p></body></html>';
  w.document.open();w.document.write(printHtml);w.document.close();w.focus();setTimeout(()=>w.print(),300);
 }
 function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
