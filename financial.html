@@ -41,7 +41,7 @@ async function saveWalletTx(){const supplier_id=$('walletSupplier').value,type=$
 
 <div class="tabs"><div class="tab" onclick="showTab('suppliers',this)">🏢 الموردون</div><div class="tab" onclick="showTab('wallet',this)">🏦 خزائن الموردين</div></div><section id="dashboard">
 <div class="panel"><div class="sectionTitle"><h2>الصورة المالية الآن</h2><button class="btn primary" onclick="loadAll()">تحديث</button></div><div id="dashboardText" class="msg">جاري التحميل...</div></div>
-<div class="panel"><div class="sectionTitle"><h2>آخر الحركات</h2></div><div class="table"><table><thead><tr><th>التاريخ</th><th>الحركة</th><th>البيان</th><th>المبلغ</th><th>الرحلة</th></tr></thead><tbody id="recentRows"></tbody></table></div></div>
+<div class="panel"><div class="sectionTitle"><h2>آخر الحركات</h2></div><div class="table"><table><thead><tr><th>التاريخ</th><th>الحركة</th><th>البيان</th><th>المبلغ</th><th>الرحلة</th></tr></thead><tbody id="recentRows"></tbody></table></div></div><div class="panel"><div class="sectionTitle"><h2>🔴 ملخص الصرفيات</h2><span class="muted">يشمل الصرف النقدي والصرف من خزائن الموردين</span></div><div id="expenseSummary" class="msg">جاري التحميل...</div><div class="table"><table><thead><tr><th>التاريخ</th><th>نوع الصرف</th><th>البيان</th><th>المبلغ</th><th>المصدر</th></tr></thead><tbody id="expenseSummaryRows"></tbody></table></div></div>
 </section>
 
 <section id="in" class="hidden">
@@ -190,7 +190,10 @@ function expenseRows(O=officialTx()){
  return [...manual,...wallet].sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
 }
 function renderExpenses(O=officialTx()){
- const arr=expenseRows(O);
+ const arr=expenseRows(O),totals={};
+ arr.forEach(x=>{const cur=x.currency||'IQD';totals[cur]=(totals[cur]||0)+Number(x.amount||0)});
+ $('expenseSummary').innerHTML='<b>إجمالي الصرفيات المسجلة:</b> '+(Object.entries(totals).map(([cur,v])=>fmt(v)+' '+cur).join(' — ')||'لا توجد صرفيات');
+ $('expenseSummaryRows').innerHTML=arr.slice(0,10).map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td><span class="pill">'+esc(x._source)+'</span></td></tr>').join('')||'<tr><td colspan="5">لا توجد صرفيات</td></tr>';
  $('expenseRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(programName(x.program_id))+'</td><td><span class="pill">'+esc(x._source)+'</span></td></tr>').join('')||'<tr><td colspan="7">لا توجد صرفيات مسجلة</td></tr>';
 }
 function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=moneyByCurrency(allExpenseRows);$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=O.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الوارد والصرف وصافي الحركة لا يتم جمعها بين الدينار والريال والدولار.</span>';renderRecent(O);renderBookings();renderLedger(O);renderExpenses(O)}
