@@ -100,7 +100,24 @@ const $=id=>document.getElementById(id),fmt=n=>new Intl.NumberFormat('ar-IQ',{ma
 const catLabel={trip_income:'إيراد رحلة',visa_income:'إيراد تأشيرة',hotel_income:'إيراد فندق',other_income:'إيراد آخر',pilgrim_payment:'قبض معتمر',supplier_payment:'مورد',contractor_payment:'متعهد',supervisor_payment:'مشرف',employee_payment:'موظف',trip_expense:'مصروف رحلة',admin_expense:'مصروف إداري',other_expense:'مصروف آخر',driver_payment:'سائق'};
 function dateToday(){return new Date().toISOString().slice(0,10)}
 $('inDate').value=dateToday();$('outDate').value=dateToday();
-async function login(){const r=await db.auth.signInWithPassword({email:$('email').value,password:$('password').value});if(r.error)$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+r.error.message+'</div>';else init();}
+function showLoginMsg(t,e=false){$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
+async function isAdmin(){const r=await db.auth.getUser();if(!r.data.user)return null;const s=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();if(!s.error&&s.data?.active)return r.data.user;const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();return q.error||!q.data?null:r.data.user}
+async function login(){
+ const email=$('email').value.trim(),password=$('password').value;
+ if(!email||!password)return showLoginMsg('أدخل البريد الإلكتروني وكلمة المرور.',true);
+ showLoginMsg('جاري التحقق...');
+ try{
+  const r=await db.auth.signInWithPassword({email,password});
+  if(r.error)throw r.error;
+  if(!r.data?.user)throw Error('تعذر إنشاء جلسة الدخول.');
+  if(!await isAdmin()){await db.auth.signOut();throw Error('هذا الحساب غير مخول للدخول إلى الإدارة المالية.')}
+  $('login').classList.add('hidden');$('app').classList.remove('hidden');await loadAll();
+ }catch(e){
+  const raw=String(e?.message||e||'');
+  showLoginMsg(raw.includes('Failed to fetch')||raw.includes('fetch')?'تعذر الاتصال بخدمة تسجيل الدخول. تحقق من اتصال الإنترنت ثم حاول مرة أخرى.':(raw||'تعذر تسجيل الدخول.'),true)
+ }
+}
+$('password').onkeydown=e=>{if(e.key==='Enter')login()};
 async function signOut(){await db.auth.signOut();location.reload()}
 async function init(){const s=await db.auth.getSession();if(!s.data.session){$('login').classList.remove('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');await loadAll()}
 async function loadAll(){
