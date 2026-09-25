@@ -352,7 +352,7 @@ function renderFinancialReport(){
  '<div class="msg"><b>الصرف العام</b><br><strong>'+fmt(generalExpense)+' د.ع</strong><br><span class="muted">يشمل الصرف النقدي + الصرف من خزائن الموردين</span></div>'+
  '<div class="msg"><b style="color:'+(result<0?'#a33':'inherit')+'">'+resultLabel+'</b><br><strong style="color:'+(result<0?'#a33':'inherit')+'">'+fmt(Math.abs(result))+' د.ع</strong></div>'+
  '</div>'+
- '<div class="panel" style="margin-top:12px"><h3 style="margin-top:0">📊 نتيجة الفترة</h3><div class="msg"><b>من '+esc(from)+' إلى '+esc(to)+'</b><br><span style="font-size:20px;font-weight:bold;color:'+(result<0?'#a33':'inherit')+'">'+resultText+': '+fmt(Math.abs(result))+' د.ع</span></div>'+
+ '<div class="panel" style="margin-top:12px"><h3 style="margin-top:0">📊 نتيجة الفترة</h3><div class="msg"><b>من '+esc(from)+' إلى '+esc(to)+'</b><br><span style="font-size:20px;font-weight:bold;color:'+(result<0?'#a33':'inherit')+'">'+resultText+': '+fmt(Math.abs(result))+' د.ع '+(result<0?'🥺 (هجم بيتك أبو مريم)':'')+'</span></div>'+
  '<div class="table"><table><thead><tr><th>البند</th><th>المبلغ</th></tr></thead><tbody>'+
  '<tr><td>الإيرادات</td><td>'+fmt(income)+' د.ع</td></tr>'+
  '<tr><td>الصرف العام</td><td>'+fmt(generalExpense)+' د.ع</td></tr>'+
