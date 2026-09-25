@@ -39,7 +39,7 @@
 #qawafelBackupBtn:hover{background:#145f40}
 #qawafelBackupBtn:disabled{opacity:.65;cursor:wait}
 @media(max-width:560px){#qawafelBackupBtn{display:inline-flex!important;padding:7px 7px}}
-</style>
+.dhikr-strip{position:fixed;top:84px;left:18px;width:50vw;max-width:760px;min-width:420px;height:38px;z-index:55;background:rgba(255,255,255,.96);border:1px solid var(--line);border-radius:19px;box-shadow:0 4px 16px rgba(11,53,86,.10);overflow:hidden;direction:ltr;display:flex;align-items:center}.dhikr-track{display:inline-block;white-space:nowrap;padding-left:100%;animation:dhikrMove 34s linear infinite;color:var(--navy);font-weight:800;font-size:13px}.dhikr-strip:hover .dhikr-track{animation-play-state:paused}@keyframes dhikrMove{from{transform:translateX(0)}to{transform:translateX(-100%)}}@media(max-width:700px){.dhikr-strip{left:10px;width:calc(100vw - 20px);min-width:0;top:80px;height:34px}.dhikr-track{font-size:11px}}</style>
 
 <style id="qawafel-global-admin-css">
 #qawafelGlobalAdminBar{display:none;position:sticky;top:0;z-index:99999;height:68px;background:#082f50;color:#fff;border-bottom:2px solid #c99a32;box-shadow:0 3px 12px rgba(0,0,0,.14);font-family:Tahoma,Arial,sans-serif;direction:rtl}
@@ -111,7 +111,8 @@
 </style>
 </head>
 <!-- V91 Global Admin Header: persistent public-site button and current user/role -->
-<body class="auth-checking">
+<body class="auth-checking"><div class="dhikr-strip" aria-label="أذكار وتذكير"><div class="dhikr-track">🕌 سبحان الله وبحمده، سبحان الله العظيم &nbsp; • &nbsp; 🤲 اللهم صل وسلم وبارك على نبينا محمد ﷺ &nbsp; • &nbsp; 📿 لا إله إلا الله وحده لا شريك له &nbsp; • &nbsp; 🌿 أستغفر الله وأتوب إليه &nbsp; • &nbsp; 💚 سبحان الله، والحمد لله، والله أكبر</div></div>
+
 <script id="qawafel-global-admin-js">
 (function(){
   const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
