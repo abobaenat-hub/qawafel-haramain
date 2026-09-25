@@ -350,15 +350,15 @@ function renderFinancialReport(){
  const html='<div class="grid3">'+
  '<div class="msg"><b>إجمالي الإيرادات</b><br><strong>'+fmt(income)+' د.ع</strong></div>'+
  '<div class="msg"><b>الصرف العام</b><br><strong>'+fmt(generalExpense)+' د.ع</strong><br><span class="muted">يشمل الصرف النقدي + الصرف من خزائن الموردين</span></div>'+
- '<div class="msg"><b>'+resultLabel+'</b><br><strong>'+fmt(Math.abs(result))+' د.ع</strong></div>'+
+ '<div class="msg"><b style="color:'+(result<0?'#a33':'inherit')+'">'+resultLabel+'</b><br><strong style="color:'+(result<0?'#a33':'inherit')+'">'+fmt(Math.abs(result))+' د.ع</strong></div>'+
  '</div>'+
- '<div class="panel" style="margin-top:12px"><h3 style="margin-top:0">📊 نتيجة الفترة</h3><div class="msg"><b>من '+esc(from)+' إلى '+esc(to)+'</b><br><span style="font-size:20px;font-weight:bold">'+resultText+': '+fmt(Math.abs(result))+' د.ع</span></div>'+
+ '<div class="panel" style="margin-top:12px"><h3 style="margin-top:0">📊 نتيجة الفترة</h3><div class="msg"><b>من '+esc(from)+' إلى '+esc(to)+'</b><br><span style="font-size:20px;font-weight:bold;color:'+(result<0?'#a33':'inherit')+'">'+resultText+': '+fmt(Math.abs(result))+' د.ع</span></div>'+
  '<div class="table"><table><thead><tr><th>البند</th><th>المبلغ</th></tr></thead><tbody>'+
  '<tr><td>الإيرادات</td><td>'+fmt(income)+' د.ع</td></tr>'+
  '<tr><td>الصرف العام</td><td>'+fmt(generalExpense)+' د.ع</td></tr>'+
  '<tr><td>الصرف النقدي</td><td>'+fmt(generalCash)+' د.ع</td></tr>'+
  '<tr><td>الصرف من خزائن الموردين</td><td>'+fmt(generalSupplier)+' د.ع</td></tr>'+
- '<tr><td><b>النتيجة النهائية</b></td><td><b>'+resultText+' '+fmt(Math.abs(result))+' د.ع</b></td></tr>'+
+ '<tr><td><b>النتيجة النهائية</b></td><td><b style="color:'+(result<0?'#a33':'inherit')+'">'+resultText+' '+fmt(Math.abs(result))+' د.ع</b></td></tr>'+
  '<tr><td>عدد الرحلات المرتبطة بالحركات</td><td>'+programs.size+'</td></tr>'+
  '<tr><td>عدد الحجوزات في رحلات الفترة</td><td>'+bookings.length+'</td></tr>'+
  '</tbody></table></div></div>'+
