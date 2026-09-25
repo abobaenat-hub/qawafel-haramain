@@ -224,7 +224,14 @@ async function saveEditedExpense(id){
  const r=await db.from('finance_transactions').update({amount,description:description||x.description,transaction_date:new Date(date+'T12:00:00').toISOString(),program_id:programId}).eq('id',id).eq('source_type','manual').eq('direction','out');
  if(r.error){alert(r.error.message);return}
  closeExpenseEditor();await loadAll();alert('✅ تم تعديل الصرفية والرحلة.');
+}async function deleteManualExpense(id){
+ const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual');if(!x)return;
+ if(!confirm('⚠️ هل أنت متأكد من حذف هذه الصرفية؟\\n\\nالمبلغ: '+fmt(x.amount)+' '+x.currency+'\\nالبيان: '+(x.description||'')+'\\n\\nسيتم حذف الحركة نهائيًا من السجل المالي.'))return;
+ const r=await db.from('finance_transactions').delete().eq('id',id).eq('source_type','manual').eq('direction','out');
+ if(r.error){alert(r.error.message);return}
+ await loadAll();alert('✅ تم حذف الصرفية.');
 }
+
 async function editWalletExpense(id){
  const x=WALLET_TX.find(a=>a.id===id&&a.transaction_type==='withdrawal');if(!x)return;
  const amount=prompt('المبلغ الحالي: '+fmt(x.amount)+' '+x.currency+'\nأدخل المبلغ الجديد:',x.amount);if(amount===null)return;
@@ -238,7 +245,7 @@ async function editWalletExpense(id){
 }
 function renderExpenses(O=officialTx()){
  const arr=expenseRows(O);
- $('expenseRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(programName(x.program_id))+'</td><td><span class="pill">'+esc(x._source)+'</span></td><td>'+(x._source==='النظام المالي'&&x.source_type==='manual'?'<button class="btn" onclick="editManualExpense(\''+x.id+'\')">✏️ تعديل</button>':x._source==='خزينة المورد'?'<button class="btn" onclick="editWalletExpense(\''+x.id.replace('wallet_','')+'\')">✏️ تعديل</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="8">لا توجد صرفيات مسجلة</td></tr>';
+ $('expenseRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(programName(x.program_id))+'</td><td><span class="pill">'+esc(x._source)+'</span></td><td>'+(x._source==='النظام المالي'&&x.source_type==='manual'?'<button class="btn" onclick="editManualExpense(\''+x.id+'\')">✏️ تعديل</button> <button class="btn" onclick="deleteManualExpense(\''+x.id+'\')" style="color:#a00">🗑️ حذف</button>':x._source==='خزينة المورد'?'<button class="btn" onclick="editWalletExpense(\''+x.id.replace('wallet_','')+'\')">✏️ تعديل</button>':'—')+'</td></tr>').join('')||'<tr><td colspan="8">لا توجد صرفيات مسجلة</td></tr>';
 }
 function actualExpenseIqd(O=officialTx()){const manual=TX.filter(x=>x.direction==='out'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount||0),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+Number(x.amount_iqd||0),0);return manual+wallet}
 function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=fmt(actualExpenseIqd(O))+' د.ع';$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=TX.length+WALLET_TX.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الصرف الفعلي معروض بالدينار العراقي: المصروفات المسجلة بالدينار + الصرف من خزائن الموردين محسوبًا وفق تفاصيل التحويل.</span>';renderRecent(O);renderBookings();renderLedger(O);renderExpenses(O)}
