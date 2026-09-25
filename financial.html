@@ -227,9 +227,10 @@ async function saveEditedExpense(id){
 }async function deleteManualExpense(id){
  const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual');if(!x)return;
  if(!confirm('⚠️ هل أنت متأكد من حذف هذه الصرفية؟\\n\\nالمبلغ: '+fmt(x.amount)+' '+x.currency+'\\nالبيان: '+(x.description||'')+'\\n\\nسيتم حذف الحركة نهائيًا من السجل المالي.'))return;
- const r=await db.from('finance_transactions').delete().eq('id',id).eq('source_type','manual').eq('direction','out');
- if(r.error){alert(r.error.message);return}
- await loadAll();alert('✅ تم حذف الصرفية.');
+ const r=await db.from('finance_transactions').delete().eq('id',id).eq('source_type','manual').eq('direction','out').select('id');
+ if(r.error){alert('تعذر حذف الحركة: '+r.error.message);return}
+ if(!r.data||!r.data.length){alert('لم يتم حذف الحركة. تحقق من الصلاحيات ثم أعد المحاولة.');return}
+ await loadAll();alert('✅ تم حذف الصرفية من السجل المالي وآخر الحركات.');
 }
 
 async function editWalletExpense(id){
@@ -249,10 +250,11 @@ function renderExpenses(O=officialTx()){
 }
 async function deleteWalletExpense(id){
  const x=WALLET_TX.find(a=>a.id===id&&a.transaction_type==='withdrawal');if(!x)return;
- if(!confirm('⚠️ هل أنت متأكد من حذف صرف خزينة المورد؟\\n\\nالمبلغ: '+fmt(x.amount)+' '+x.currency+'\\nالبيان: '+(x.description||'')+'\\n\\nسيتم حذف الحركة نهائيًا من خزينة المورد.'))return;
- const r=await db.from('supplier_wallet_transactions').delete().eq('id',id).eq('transaction_type','withdrawal');
- if(r.error){alert(r.error.message);return}
- await loadAll();alert('✅ تم حذف صرف خزينة المورد.');
+ if(!confirm('⚠️ هل أنت متأكد من حذف صرف خزينة المورد؟\\n\\nالمبلغ: '+fmt(x.amount)+' '+x.currency+'\\nالبيان: '+(x.description||'')+'\\n\\nسيعود المبلغ كاملًا إلى رصيد المورد بعد الحذف.'))return;
+ const r=await db.from('supplier_wallet_transactions').delete().eq('id',id).eq('transaction_type','withdrawal').select('id');
+ if(r.error){alert('تعذر حذف حركة خزينة المورد: '+r.error.message);return}
+ if(!r.data||!r.data.length){alert('لم يتم حذف الحركة، ولذلك لم يتغير رصيد المورد.');return}
+ await loadAll();alert('✅ تم حذف الحركة وعاد المبلغ إلى رصيد المورد.');
 }
 
 function actualExpenseIqd(O=officialTx()){const manual=TX.filter(x=>x.direction==='out'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount||0),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+Number(x.amount_iqd||0),0);return manual+wallet}
