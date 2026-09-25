@@ -271,12 +271,7 @@ function renderFinancialReport(){
  const cashOut=O.filter(x=>x.direction==='out');
  const walletOut=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').filter(x=>{const d=reportDate(x.transaction_date);return d>=from&&d<=to});
  const rev=reportTotals(ins),out=reportTotals(cashOut),wout=reportTotals(walletOut),curr=[...new Set([...Object.keys(rev),...Object.keys(out),...Object.keys(wout)])];
- const labels={IQD:'د.ع',SAR:'ر.س',USD:'
-function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'&&s)init()});init();
-</script>
-</body></html>
-};
+ const labels={IQD:'د.ع',SAR:'ر.س',USD:'$'};
  const profit=curr.map(cur=>({cur,revenue:rev[cur]||0,expense:(out[cur]||0)+(wout[cur]||0),profit:(rev[cur]||0)-(out[cur]||0)-(wout[cur]||0)}));
  const programs=new Set();O.forEach(x=>{if(x.program_id)programs.add(x.program_id)});walletOut.forEach(x=>{if(x.program_id)programs.add(x.program_id)});
  const bookings=BOOK.filter(b=>{const p=PROGS.find(p=>p.id===b.program_id);const d=reportDate(p?.departure_date);return d&&d>=from&&d<=to});
@@ -293,9 +288,12 @@ db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'&&s)init()});init();
  $('reportBody').innerHTML=html;
 }
 function printFinancialReport(){
+ renderFinancialReport();
  const body=$('reportBody').innerHTML;
- if(!body||body.includes('undefined')){renderFinancialReport();}
- setTimeout(()=>{const w=window.open('','_blank');if(!w)return alert('يرجى السماح بالنوافذ المنبثقة للطباعة');w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>التقرير المالي - قوافل الحرمين</title><style>body{font-family:Tahoma,Arial;padding:25px;color:#18384f}.head{text-align:center;border-bottom:2px solid #18384f;padding-bottom:15px;margin-bottom:15px}table{width:100%;border-collapse:collapse}th,td{padding:9px;border:1px solid #dfe7ec;text-align:right;font-size:11px}th{background:#f1f6f9}.msg{padding:10px;border:1px solid #dfe7ec;border-radius:8px;margin:10px 0;font-size:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.panel{border:1px solid #dfe7ec;border-radius:10px;padding:12px;margin-top:10px}@media print{body{padding:10px}}</style></head><body><div class="head"><h2>شركة قوافل الحرمين للحج والعمرة</h2><h3>التقرير المالي للفترة المحددة</h3></div>'+body+'<p style="margin-top:30px;text-align:center;font-size:10px">تقرير مستخرج من النظام المالي</p></body></html>');w.document.close();w.focus();setTimeout(()=>w.print(),300)},50);
+ const w=window.open('','_blank');
+ if(!w)return alert('يرجى السماح بالنوافذ المنبثقة للطباعة');
+ const printHtml='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>التقرير المالي - قوافل الحرمين</title><style>body{font-family:Tahoma,Arial;padding:25px;color:#18384f}.head{text-align:center;border-bottom:2px solid #18384f;padding-bottom:15px;margin-bottom:15px}table{width:100%;border-collapse:collapse}th,td{padding:9px;border:1px solid #dfe7ec;text-align:right;font-size:11px}th{background:#f1f6f9}.msg{padding:10px;border:1px solid #dfe7ec;border-radius:8px;margin:10px 0;font-size:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.panel{border:1px solid #dfe7ec;border-radius:10px;padding:12px;margin-top:10px}@media print{body{padding:10px}}</style></head><body><div class="head"><h2>شركة قوافل الحرمين للحج والعمرة</h2><h3>التقرير المالي للفترة المحددة</h3></div>'+body+'<p style="margin-top:30px;text-align:center;font-size:10px">تقرير مستخرج من النظام المالي</p></body></html>';
+ w.document.open();w.document.write(printHtml);w.document.close();w.focus();setTimeout(()=>w.print(),300);
 }
 function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
 function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
