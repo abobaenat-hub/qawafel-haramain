@@ -197,7 +197,7 @@ function fillPrograms(){['inProgram','outProgram','pilgrimProgramFilter'].forEac
 function officialTx(){const pending=new Set(COMPLETED_PENDING.map(p=>p.id));return TX.filter(x=>!x.program_id||!pending.has(x.program_id))}function renderSettlement(){const box=$('settlementRows');if(!box)return;box.innerHTML=COMPLETED_PENDING.map(p=>{const bs=BOOK.filter(b=>b.program_id===p.id),sales=bs.reduce((s,b)=>s+Number(b.total_amount||0),0),paid=0,due=sales;return '<div class="msg" style="margin-bottom:10px"><b>'+esc(p.title)+'</b><br>عدد الحجوزات: '+bs.length+' — قيمة الرحلة: '+fmt(sales)+' — المقبوض فعليًا: '+fmt(paid)+' — المتبقي للتحصيل: '+fmt(due)+'<br><span class="muted">هذه الرحلة معلقة ماليًا، ولا تدخل في السجل الرسمي حتى تتم التصفية.</span></div>'}).join('')||'<div class="msg">لا توجد رحلات مكتملة معلقة حاليًا.</div>'}function moneyByCurrency(rows){const g={};rows.forEach(x=>{const cur=x.currency||'IQD';g[cur]=(g[cur]||0)+Number(x.amount||0)});const labels={IQD:'د.ع',SAR:'ر.س',USD:'$'};return Object.entries(g).map(([cur,v])=>fmt(v)+' '+(labels[cur]||cur)).join(' — ')||'0'}
 function netByCurrency(rowsIn,rowsOut){const labels={IQD:'د.ع',SAR:'ر.س',USD:'$'};return ['IQD','SAR','USD'].map(cur=>{const i=rowsIn.filter(x=>(x.currency||'IQD')===cur).reduce((s,x)=>s+Number(x.amount||0),0),o=rowsOut.filter(x=>(x.currency||'IQD')===cur).reduce((s,x)=>s+Number(x.amount||0),0),n=i-o;return fmt(n)+' '+labels[cur]}).join('<br>')}
 function expenseRows(O=officialTx()){
- const manual=O.filter(x=>x.direction==='out').map(x=>({...x,_source:'النظام المالي'}));
+ const manual=TX.filter(x=>x.direction==='out').map(x=>({...x,_source:'النظام المالي'}));
  const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').map(x=>{
   const s=SUPPLIERS.find(a=>a.id===x.supplier_id);
   return {id:'wallet_'+x.id,direction:'out',category:'supplier_payment',description:x.description||'استخدام من رصيد المورد',party_name:s?.name||'—',amount:x.amount,currency:x.currency,transaction_date:x.transaction_date,program_id:x.program_id,_source:'خزينة المورد'};
@@ -210,7 +210,7 @@ function renderExpenses(O=officialTx()){
  $('expenseSummary').innerHTML='<b>إجمالي الصرفيات المسجلة:</b> '+(Object.entries(totals).map(([cur,v])=>fmt(v)+' '+cur).join(' — ')||'لا توجد صرفيات');
  $('expenseRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(programName(x.program_id))+'</td><td><span class="pill">'+esc(x._source)+'</span></td></tr>').join('')||'<tr><td colspan="7">لا توجد صرفيات مسجلة</td></tr>';
 }
-function actualExpenseIqd(O=officialTx()){const manual=O.filter(x=>x.direction==='out'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount||0),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+Number(x.amount_iqd||0),0);return manual+wallet}
+function actualExpenseIqd(O=officialTx()){const manual=TX.filter(x=>x.direction==='out'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount||0),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+Number(x.amount_iqd||0),0);return manual+wallet}
 function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=fmt(actualExpenseIqd(O))+' د.ع';$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=TX.length+WALLET_TX.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الصرف الفعلي معروض بالدينار العراقي: المصروفات المسجلة بالدينار + الصرف من خزائن الموردين محسوبًا وفق تفاصيل التحويل.</span>';renderRecent(O);renderBookings();renderLedger(O);renderExpenses(O)}
 function renderRecent(O=officialTx()){
  const finance=O.map(x=>({...x,_movement:x.direction==='in'?'وارد':'صرف',_sourceOrder:new Date(x.transaction_date).getTime()}));
@@ -284,7 +284,7 @@ function renderFinancialReport(){
  if(from>to)return alert('تاريخ البداية يجب أن يكون قبل تاريخ النهاية.');
  const O=officialTx().filter(x=>{const d=reportDate(x.transaction_date);return d>=from&&d<=to});
  const income=O.filter(x=>x.direction==='in').reduce((s,x)=>s+financeAmountIqd(x),0);
- const generalCash=O.filter(x=>x.direction==='out').reduce((s,x)=>s+financeAmountIqd(x),0);
+ const generalCash=TX.filter(x=>{const d=reportDate(x.transaction_date);return x.direction==='out'&&d>=from&&d<=to}).reduce((s,x)=>s+financeAmountIqd(x),0);
  const generalSupplier=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').filter(x=>{const d=reportDate(x.transaction_date);return d>=from&&d<=to}).reduce((s,x)=>s+walletWithdrawalIqd(x),0);
  const generalExpense=generalCash+generalSupplier;
  const result=income-generalExpense;
