@@ -205,9 +205,7 @@ function expenseRows(O=officialTx()){
  return [...manual,...wallet].sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
 }
 function renderExpenses(O=officialTx()){
- const arr=expenseRows(O),totals={};
- arr.forEach(x=>{const cur=x.currency||'IQD';totals[cur]=(totals[cur]||0)+Number(x.amount||0)});
- $('expenseSummary').innerHTML='<b>إجمالي الصرفيات المسجلة:</b> '+(Object.entries(totals).map(([cur,v])=>fmt(v)+' '+cur).join(' — ')||'لا توجد صرفيات');
+ const arr=expenseRows(O);
  $('expenseRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(programName(x.program_id))+'</td><td><span class="pill">'+esc(x._source)+'</span></td></tr>').join('')||'<tr><td colspan="7">لا توجد صرفيات مسجلة</td></tr>';
 }
 function actualExpenseIqd(O=officialTx()){const manual=TX.filter(x=>x.direction==='out'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount||0),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+Number(x.amount_iqd||0),0);return manual+wallet}
