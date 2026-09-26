@@ -43,17 +43,29 @@
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K);
 const params=new URLSearchParams(location.search), productId=params.get('product'), linkedName=params.get('name'), linkedCategory=params.get('category'), linkedUrl=params.get('url'), linkedPrice=params.get('price'), linkedImage=params.get('image');
-if(productId && linkedName){
- $('productCard').style.display='block';
- if(linkedImage){$('productImage').src=linkedImage;$('productImage').style.display='block';}
- if(linkedPrice){$('productPrice').textContent='السعر: '+Number(linkedPrice).toLocaleString('ar-IQ')+' د.ع';}
- $('productTitle').textContent=linkedName;
- $('productCategory').textContent=linkedCategory||'';
- $('product').value=linkedName;
- $('product').readOnly=true;
- if(linkedUrl)$('url').value=linkedUrl;
- $('kind').value='منتج من القناة';
+const $=id=>document.getElementById(id);
+async function loadLinkedProduct(){
+  if(!productId)return;
+  let name=linkedName, category=linkedCategory, url=linkedUrl, price=linkedPrice, image=linkedImage;
+  if(!name || !url || !price || !image){
+    const r=await db.from('bazaar_products').select('id,name,category,source_url,selling_price_iqd,image_url').eq('id',productId).single();
+    if(!r.error && r.data){
+      name=name||r.data.name; category=category||r.data.category; url=url||r.data.source_url;
+      price=price||r.data.selling_price_iqd; image=image||r.data.image_url;
+    }
+  }
+  if(!name)return;
+  $('productCard').style.display='block';
+  if(image){$('productImage').src=image;$('productImage').style.display='block';}
+  if(price){$('productPrice').textContent='السعر: '+Number(price).toLocaleString('ar-IQ')+' د.ع';}
+  $('productTitle').textContent=name;
+  $('productCategory').textContent=category||'';
+  $('product').value=name;
+  $('product').readOnly=true;
+  if(url)$('url').value=url;
+  $('kind').value='منتج من القناة';
 }
+loadLinkedProduct().catch(console.error);
 $('form').addEventListener('submit',async e=>{
  e.preventDefault(); const b=$('submit'); b.disabled=true;b.textContent='⏳ جارٍ إرسال الطلب...';
  try{
