@@ -111,6 +111,11 @@ async function saveWalletTx(){const supplier_id=$('walletSupplier').value,type=$
 </div><div id="outSupplierInfo" class="msg hidden" style="margin-top:10px"></div>
 <div id="outWalletCurrencyWrap" class="field hidden" style="margin-top:10px"><label>الرصيد الذي سيُستخدم</label><select id="outWalletCurrency" onchange="syncOutWalletCurrency()"></select></div><div class="field" style="margin-top:10px"><label>ملاحظات</label><textarea id="outNotes"></textarea></div>
 <button class="btn primary" onclick="addManual('out')">تسجيل الصرف</button><div id="outMsg"></div></div><div class="panel"><div class="sectionTitle"><div><h2>📒 الصرفيات المسجلة</h2><span class="muted">كل المصروفات المسجلة من الإدارة المالية، مع ربطها بالرحلة.</span></div><div style="min-width:270px"><label class="muted" style="display:block;margin-bottom:4px">🔎 توضيح: اختر رحلة لعرض صرفياتها فقط</label><select id="expenseProgramFilter" onchange="renderExpenseTable()" style="width:100%"><option value="">كل الرحلات</option></select></div></div><div class="table"><table><thead><tr><th>التاريخ</th><th>نوع الصرف</th><th>البيان</th><th>الطرف</th><th>المبلغ</th><th>الرحلة</th><th>المصدر</th></tr></thead><tbody id="expenseRows"></tbody></table></div></div>
+<div class="panel" id="sharedExpensesPanel" style="margin-top:14px;border:2px solid #d7c27a;background:linear-gradient(180deg,#fffdf7,#fff)">
+ <div class="sectionTitle"><div><h2>🔗 المصروفات المشتركة</h2><span class="muted">المصروف يُسجل مرة واحدة، ثم يوزع على الرحلات حسب الحصص.</span></div><button class="btn" type="button" onclick="renderSharedExpenses()">↻ تحديث</button></div>
+ <div id="sharedExpensesSummary" class="msg" style="margin-bottom:10px"></div>
+ <div class="table"><table style="min-width:900px"><thead><tr><th>التاريخ</th><th>البيان</th><th>المبلغ الكلي</th><th>العملة</th><th>الرحلات وحصصها</th><th>الطرف</th></tr></thead><tbody id="sharedExpenseRows"></tbody></table></div>
+</div>
 </section>
 
 <section id="pilgrims" class="hidden">
@@ -482,9 +487,20 @@ function renderExpenseTable(){
   return '<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(x._allocated?programNamesForTx(x):(x._programNames||programName(x.program_id)))+(x._allocated?' <span class="pill">مشترك</span>':'')+'</td><td><span class="pill">'+esc(x._source)+'</span></td><td>'+edit+'</td></tr>';
  }).join('')||'<tr><td colspan="8" style="text-align:center;padding:18px">لا توجد صرفيات مرتبطة بالاختيار.</td></tr>';
 }
+function renderSharedExpenses(){
+ const rows=TX.filter(x=>x.direction==='out'&&txProgramAllocations(x).length>1).sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
+ const total=rows.reduce((n,x)=>n+Number(x.amount||0),0);
+ $('sharedExpensesSummary').innerHTML=rows.length
+  ? '🔗 يوجد <b>'+rows.length+'</b> مصروف مشترك مسجل. <span class="muted">الإجمالي الحقيقي لهذه الحركات: <b>'+fmt(total)+'</b> (كل حركة محسوبة مرة واحدة فقط).</span>'
+  : 'لا توجد مصروفات مشتركة مسجلة حاليًا.';
+ $('sharedExpenseRows').innerHTML=rows.map(x=>{
+  const parts=txProgramAllocations(x).map(a=>'<div style="margin:3px 0"><b>'+esc(programName(a.program_id))+'</b> — '+fmt(a.allocated_amount)+' '+esc(x.currency||'IQD')+'</div>').join('');
+  return '<tr><td>'+fmtDate(x.transaction_date)+'</td><td>'+esc(x.description||catLabel[x.category]||'مصروف')+'</td><td><b>'+fmt(x.amount)+'</b></td><td>'+esc(x.currency||'IQD')+'</td><td>'+parts+'</td><td>'+esc(x.party_name||'—')+'</td></tr>';
+ }).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px">لا توجد مصروفات مشتركة مسجلة حاليًا.</td></tr>';
+}
 function renderExpenses(O=officialTx()){fillExpenseProgramFilter();renderExpenseTable();}
 function actualExpenseIqd(O=officialTx()){const manual=TX.filter(x=>x.direction==='out'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount||0),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+Number(x.amount_iqd||0),0);return manual+wallet}
-function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=fmt(actualExpenseIqd(O))+' د.ع';$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=TX.length+WALLET_TX.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الصرف الفعلي معروض بالدينار العراقي: المصروفات المسجلة بالدينار + الصرف من خزائن الموردين محسوبًا وفق تفاصيل التحويل.</span>';renderRecent(O);renderIncome();renderBookings();renderLedger(O);renderExpenses(O);renderTripFocus()}
+function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=fmt(actualExpenseIqd(O))+' د.ع';$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=TX.length+WALLET_TX.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الصرف الفعلي معروض بالدينار العراقي: المصروفات المسجلة بالدينار + الصرف من خزائن الموردين محسوبًا وفق تفاصيل التحويل.</span>';renderRecent(O);renderIncome();renderBookings();renderLedger(O);renderExpenses(O);renderSharedExpenses();renderTripFocus()}
 function renderIncome(){
  const rows=TX.filter(x=>x.direction==='in').sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
  $('inRows').innerHTML=rows.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td>'+esc(catLabel[x.category]||x.category||'وارد')+'</td><td>'+esc(x.description||'—')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="in"><b>'+fmt(x.amount)+' '+esc(x.currency||'IQD')+'</b></td><td>'+esc(x._programNames||programNamesForTx(x)||programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="6">لا توجد حركات وارد مسجلة</td></tr>';
