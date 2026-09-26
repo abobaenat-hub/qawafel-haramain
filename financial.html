@@ -144,7 +144,7 @@ async function login(){const r=await db.auth.signInWithPassword({email:$('email'
 async function signOut(){await db.auth.signOut();location.reload()}
 async function init(){const s=await db.auth.getSession();if(!s.data.session){$('login').classList.remove('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');await loadAll()}
 async function loadAll(){
- const [tx,b,p,pgr]=await Promise.all([
+ const [tx,b,p,pgr,ftp]=await Promise.all([
   db.from('finance_transactions').select('*').order('transaction_date',{ascending:false}).limit(1000),
   db.from('bookings').select('id,booking_number,full_name,total_amount,program_id,status').order('created_at',{ascending:false}),
   db.from('payments').select('id,booking_id,amount,currency,payment_method,payment_date,reference,notes').order('payment_date',{ascending:false}),
