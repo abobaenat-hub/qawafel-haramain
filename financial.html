@@ -37,9 +37,12 @@ async function saveWalletTx(){const supplier_id=$('walletSupplier').value,type=$
 </section>
 <section id="tripFocusPanel" class="hidden" style="margin:14px 0">
 <div class="panel" style="border:2px solid var(--gold);background:linear-gradient(180deg,#fffdf7,#fff)">
-<div class="sectionTitle"><div><h2 id="tripFocusTitle">💰 مالية الرحلة</h2><span id="tripFocusSub" class="muted">مصروفات الرحلة المرتبطة بها.</span></div><div style="display:flex;gap:7px"><a class="btn" href="./programs.html" style="text-decoration:none">← الرحلات</a><button class="btn primary" type="button" onclick="renderTripFocus()">↻ تحديث</button></div></div>
+<div class="sectionTitle"><div><h2 id="tripFocusTitle">💰 ملخص مالية الرحلة</h2><span id="tripFocusSub" class="muted">هذا المربع يعرض ملخص الرحلة المختارة فقط: ما دخل فعليًا، وما صُرف فعليًا، وصافي الحركة.</span></div><div style="display:flex;gap:7px"><a class="btn" href="./programs.html" style="text-decoration:none">← الرحلات</a><button class="btn primary" type="button" onclick="renderTripFocus()">↻ تحديث</button></div></div>
+<div class="msg" style="margin:10px 0;background:#fffaf0;border:1px solid #ead9a7">
+<b>📌 توضيح:</b> عند اختيار رحلة من شاشة الرحلات، يظهر هنا ملخصها المالي تلقائيًا. <b>الوارد</b> يشمل المقبوضات الفعلية المرتبطة بالرحلة، و<b>الصرف</b> يشمل المصروفات المرتبطة بها من الإدارة المالية وخزائن الموردين. <b>الصافي = إجمالي الوارد − إجمالي الصرف.</b> هذا المربع للعرض والمتابعة فقط ولا ينشئ حركة مالية جديدة.
+</div>
 <div id="tripFocusSummary" class="kpis" style="margin:10px 0 14px"></div>
-<div class="table"><table style="min-width:760px"><thead><tr><th>التاريخ</th><th>نوع المصروف</th><th>البيان</th><th>الطرف / المورد</th><th>المبلغ</th><th>المصدر</th><th>بالدينار</th></tr></thead><tbody id="tripFocusRows"></tbody></table></div>
+<div class="table"><table style="min-width:760px"><thead><tr><th>التاريخ</th><th>نوع الحركة</th><th>البيان</th><th>الطرف / المورد</th><th>المبلغ</th><th>المصدر</th><th>بالدينار</th></tr></thead><tbody id="tripFocusRows"></tbody></table></div>
 </div></section>
 
 <div class="tabs">
@@ -97,7 +100,7 @@ async function saveWalletTx(){const supplier_id=$('walletSupplier').value,type=$
 <div class="field"><label>التاريخ</label><input id="outDate" type="date"></div>
 </div><div id="outSupplierInfo" class="msg hidden" style="margin-top:10px"></div>
 <div id="outWalletCurrencyWrap" class="field hidden" style="margin-top:10px"><label>الرصيد الذي سيُستخدم</label><select id="outWalletCurrency" onchange="syncOutWalletCurrency()"></select></div><div class="field" style="margin-top:10px"><label>ملاحظات</label><textarea id="outNotes"></textarea></div>
-<button class="btn primary" onclick="addManual('out')">تسجيل الصرف</button><div id="outMsg"></div></div><div class="panel"><div class="sectionTitle"><div><h2>📒 الصرفيات المسجلة</h2><span class="muted">كل المصروفات المسجلة من الإدارة المالية، مع ربطها بالرحلة.</span></div><div style="min-width:240px"><select id="expenseProgramFilter" onchange="renderExpenseTable()"><option value="">كل الرحلات</option></select></div></div><div class="table"><table><thead><tr><th>التاريخ</th><th>نوع الصرف</th><th>البيان</th><th>الطرف</th><th>المبلغ</th><th>الرحلة</th><th>المصدر</th></tr></thead><tbody id="expenseRows"></tbody></table></div></div>
+<button class="btn primary" onclick="addManual('out')">تسجيل الصرف</button><div id="outMsg"></div></div><div class="panel"><div class="sectionTitle"><div><h2>📒 الصرفيات المسجلة</h2><span class="muted">كل المصروفات المسجلة من الإدارة المالية، مع ربطها بالرحلة.</span></div><div style="min-width:270px"><label class="muted" style="display:block;margin-bottom:4px">🔎 توضيح: اختر رحلة لعرض صرفياتها فقط</label><select id="expenseProgramFilter" onchange="renderExpenseTable()" style="width:100%"><option value="">كل الرحلات</option></select></div></div><div class="table"><table><thead><tr><th>التاريخ</th><th>نوع الصرف</th><th>البيان</th><th>الطرف</th><th>المبلغ</th><th>الرحلة</th><th>المصدر</th></tr></thead><tbody id="expenseRows"></tbody></table></div></div>
 </section>
 
 <section id="pilgrims" class="hidden">
@@ -272,14 +275,43 @@ function renderTripFocus(){
  if(!FOCUS_PROGRAM_ID){panel.classList.add('hidden');return}
  const p=PROGS.find(x=>x.id===FOCUS_PROGRAM_ID);if(!p){panel.classList.add('hidden');return}
  panel.classList.remove('hidden');
- $('tripFocusTitle').textContent='💰 مالية الرحلة — '+(p.title||'');
- $('tripFocusSub').textContent='🗓 '+(p.departure_date||'غير محدد')+' · '+(p.travel_type==='جو'?'✈️ طيران':p.travel_type==='بر'?'🚌 بر':p.travel_type||'—');
- const rows=expenseRowsForProgram(FOCUS_PROGRAM_ID);
- const iqd=rows.reduce((n,x)=>n+Number(x.currency==='IQD'?x.amount:x.amount_iqd||0),0);
- const by={};rows.forEach(x=>{const c=x.currency||'IQD';by[c]=(by[c]||0)+Number(x.amount||0)});
- const curText=Object.entries(by).map(([c,v])=>fmt(v)+' '+c).join(' — ')||'0';
- $('tripFocusSummary').innerHTML='<div class="kpi"><small>عدد المصروفات</small><b>'+rows.length+'</b></div><div class="kpi"><small>حسب العملة</small><b style="font-size:13px">'+curText+'</b></div><div class="kpi"><small>المحتسب بالدينار</small><b>'+fmt(iqd)+' د.ع</b></div>';
- $('tripFocusRows').innerHTML=rows.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td>'+esc(catLabel[x.category]||x.category||'مصروف')+'</td><td>'+esc(x.description||'—')+'</td><td>'+esc(x.party_name||'—')+'</td><td>'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td><span class="pill">'+esc(x._source)+'</span></td><td>'+fmt(x.currency==='IQD'?x.amount:x.amount_iqd||0)+' د.ع</td></tr>').join('')||'<tr><td colspan="7" style="text-align:center;padding:20px">لا توجد مصروفات مرتبطة بهذه الرحلة حاليًا.</td></tr>';
+ $('tripFocusTitle').textContent='💰 ملخص مالية الرحلة — '+(p.title||'');
+ $('tripFocusSub').textContent='🗓 '+(p.departure_date||'غير محدد')+' · '+(p.travel_type==='جو'?'✈️ طيران':p.travel_type==='بر'?'🚌 بر':p.travel_type||'—')+' · الرحلة المختارة فقط';
+
+ const expenses=expenseRowsForProgram(FOCUS_PROGRAM_ID);
+ const directIncome=TX.filter(x=>x.direction==='in'&&x.program_id===FOCUS_PROGRAM_ID);
+ const tripBookings=BOOK.filter(b=>b.program_id===FOCUS_PROGRAM_ID);
+ const bookingIds=new Set(tripBookings.map(b=>b.id));
+ const pilgrimPayments=PAY.filter(x=>bookingIds.has(x.booking_id));
+
+ const expenseIqd=expenses.reduce((n,x)=>n+Number(x.currency==='IQD'?x.amount:x.amount_iqd||0),0);
+ const directIncomeByCurrency={};
+ directIncome.forEach(x=>{const cur=x.currency||'IQD';directIncomeByCurrency[cur]=(directIncomeByCurrency[cur]||0)+Number(x.amount||0)});
+ const pilgrimIncomeIqd=pilgrimPayments.reduce((n,x)=>n+Number(x.currency==='IQD'?x.amount:0),0);
+ const directIncomeIqd=directIncome.reduce((n,x)=>n+Number(x.currency==='IQD'?x.amount:x.amount_iqd||0),0);
+ const totalIncomeIqd=directIncomeIqd+pilgrimIncomeIqd;
+ const netIqd=totalIncomeIqd-expenseIqd;
+ const incomeText=Object.entries(directIncomeByCurrency).map(([c,v])=>fmt(v)+' '+c).join(' — ')||'0';
+
+ $('tripFocusSummary').innerHTML=
+   '<div class="kpi"><small>🟢 الوارد الفعلي</small><b>'+fmt(totalIncomeIqd)+' د.ع</b><span class="muted">يشمل قبض المعتمرين + الوارد المالي المباشر</span></div>'+
+   '<div class="kpi"><small>🔴 صرف الرحلة</small><b>'+fmt(expenseIqd)+' د.ع</b><span class="muted">'+expenses.length+' حركة صرف</span></div>'+
+   '<div class="kpi"><small>📊 صافي الرحلة</small><b style="color:'+(netIqd>=0?'#176644':'#a33')+'">'+fmt(netIqd)+' د.ع</b><span class="muted">الوارد − الصرف</span></div>'+
+   '<div class="kpi"><small>👤 قبض المعتمرين</small><b>'+fmt(pilgrimIncomeIqd)+' د.ع</b><span class="muted">'+pilgrimPayments.length+' دفعة فعلية</span></div>'+
+   '<div class="kpi"><small>💵 وارد مالي مباشر</small><b style="font-size:13px">'+esc(incomeText)+'</b><span class="muted">'+directIncome.length+' حركة</span></div>';
+
+ const incomeRows=[
+   ...directIncome.map(x=>({...x,_movement:'وارد مباشر',_source:'الإدارة المالية',_iqd:Number(x.currency==='IQD'?x.amount:x.amount_iqd||0),_party:x.party_name||'—'})),
+   ...pilgrimPayments.map(x=>({...x,_movement:'قبض معتمر',_source:'سداد المعتمرين',_iqd:Number(x.currency==='IQD'?x.amount:0),_party:(BOOK.find(b=>b.id===x.booking_id)?.full_name)||'—',description:x.notes||'دفعة معتمر'}))
+ ];
+ const expenseRows=expenses.map(x=>({...x,_movement:'صرف',_iqd:Number(x.currency==='IQD'?x.amount:x.amount_iqd||0),_source:x._source,_party:x.party_name||'—'}));
+ const rows=[...incomeRows,...expenseRows].sort((a,b)=>new Date(b.transaction_date||b.payment_date)-new Date(a.transaction_date||a.payment_date));
+
+ $('tripFocusRows').innerHTML=rows.map(x=>{
+   const d=x.transaction_date||x.payment_date;
+   const isIn=x._movement!=='صرف';
+   return '<tr><td>'+fmtDate(d)+'</td><td class="'+(isIn?'in':'out')+'">'+(isIn?'🟢 ':'🔴 ')+esc(x._movement)+'</td><td>'+esc(x.description||x.notes||'—')+'</td><td>'+esc(x._party||'—')+'</td><td>'+fmt(x.amount)+' '+esc(x.currency||'IQD')+'</td><td><span class="pill">'+esc(x._source)+'</span></td><td>'+fmt(x._iqd)+' د.ع</td></tr>';
+ }).join('')||'<tr><td colspan="7" style="text-align:center;padding:20px">لا توجد واردات أو صرفيات مرتبطة بهذه الرحلة حاليًا.</td></tr>';
 }
 function expenseRowsForProgram(programId){
  const manual=TX.filter(x=>x.direction==='out'&&(!programId||x.program_id===programId)).map(x=>({...x,_source:'النظام المالي'}));
