@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>بازار قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--n:#07385d;--g:#d19a18;--bg:#f4f8fb;--w:#fff;--m:#6e818e;--l:#dce7ed;--ok:#18864b;--bad:#b42318}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--n);font-family:Tahoma,Arial,sans-serif}.wrap{width:min(1250px,calc(100% - 28px));margin:22px auto}.head{background:var(--w);border:1px solid var(--l);border-radius:16px;padding:18px 20px;display:flex;justify-content:space-between;align-items:center;gap:15px}.head h1{margin:0 0 6px;font-size:24px}.head p{margin:0;color:var(--m)}.btn{border:0;border-radius:9px;padding:10px 14px;background:var(--n);color:#fff;cursor:pointer;font-weight:700}.btn.gold{background:var(--g)}.btn.gray{background:#e9eff3;color:var(--n)}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:15px 0}.card{background:#fff;border:1px solid var(--l);border-radius:14px;padding:16px}.stat{font-size:25px;font-weight:900;margin-top:6px}.tabs{display:flex;gap:8px;margin:15px 0}.tabs button.active{background:var(--g)}.panel{background:#fff;border:1px solid var(--l);border-radius:14px;padding:18px}.row{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.field{display:flex;flex-direction:column;gap:6px}.field label{font-weight:700;font-size:13px}.field input,.field select,.field textarea{border:1px solid #c8d7df;border-radius:8px;padding:10px;font:inherit;background:#fff}.field textarea{min-height:80px}.wide{grid-column:1/-1}.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}table{width:100%;border-collapse:collapse;margin-top:15px}th,td{padding:10px 8px;border-bottom:1px solid var(--l);text-align:right;font-size:13px}th{background:#f7fafc}.pill{display:inline-block;padding:5px 8px;border-radius:999px;background:#eef3f6;font-size:12px;font-weight:700}.pill.ok{background:#e7f6ed;color:var(--ok)}.pill.bad{background:#fdeceb;color:var(--bad)}.muted{color:var(--m)}.hidden{display:none}@media(max-width:800px){.grid,.row{grid-template-columns:1fr 1fr}.head{align-items:flex-start;flex-direction:column}}@media(max-width:520px){.grid,.row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<div class="head"><div><h1>🛍️ بازار قوافل الحرمين</h1><p>إدارة طلبات الشراء من السعودية وإيصالها إلى العراق</p></div><div><button class="btn gray" onclick="location.href='admin.html'">العودة للإدارة</button></div></div>
+
+<div class="grid">
+<div class="card"><div class="muted">كل الطلبات</div><div class="stat" id="sAll">0</div></div>
+<div class="card"><div class="muted">بانتظار الدفع</div><div class="stat" id="sPay">0</div></div>
+<div class="card"><div class="muted">قيد التنفيذ</div><div class="stat" id="sRun">0</div></div>
+<div class="card"><div class="muted">تم التسليم</div><div class="stat" id="sDone">0</div></div>
+</div>
+
+<div class="tabs">
+<button class="btn active" id="tabOrders" onclick="showTab('orders')">📦 الطلبات</button>
+<button class="btn gray" id="tabProducts" onclick="showTab('products')">🛒 المنتجات</button>
+<button class="btn gray" id="tabNew" onclick="showTab('new')">➕ طلب جديد</button>
+</div>
+
+<section id="orders" class="panel">
+<h2>الطلبات</h2>
+<div class="actions"><button class="btn gold" onclick="loadAll()">🔄 تحديث</button></div>
+<table><thead><tr><th>الطلب</th><th>العميل</th><th>المبلغ</th><th>الدفع</th><th>الحالة</th><th>الرحلة</th><th>تاريخ</th><th></th></tr></thead><tbody id="ordersBody"></tbody></table>
+</section>
+
+<section id="products" class="panel hidden">
+<h2>المنتجات</h2>
+<div class="row">
+<div class="field"><label>اسم المنتج</label><input id="pName"></div>
+<div class="field"><label>التصنيف</label><input id="pCat"></div>
+<div class="field"><label>سعر الشراء بالريال</label><input id="pBuy" type="number" min="0"></div>
+<div class="field"><label>السعر النهائي بالدينار</label><input id="pSell" type="number" min="0"></div>
+<div class="field wide"><label>رابط المنتج</label><input id="pUrl"></div>
+<div class="field wide"><label>وصف</label><textarea id="pDesc"></textarea></div>
+</div>
+<div class="actions"><button class="btn gold" onclick="addProduct()">حفظ المنتج</button></div>
+<table><thead><tr><th>المنتج</th><th>التصنيف</th><th>شراء</th><th>بيع</th><th>الحالة</th></tr></thead><tbody id="productsBody"></tbody></table>
+</section>
+
+<section id="new" class="panel hidden">
+<h2>تسجيل طلب جديد</h2>
+<div class="row">
+<div class="field"><label>اسم العميل</label><input id="oName"></div>
+<div class="field"><label>رقم الهاتف</label><input id="oPhone"></div>
+<div class="field"><label>المنتج المطلوب</label><input id="oProduct"></div>
+<div class="field"><label>الكمية</label><input id="oQty" type="number" value="1" min="1"></div>
+<div class="field"><label>سعر المنتج</label><input id="oProductAmount" type="number" min="0"></div>
+<div class="field"><label>أجور الخدمة</label><input id="oService" type="number" min="0"></div>
+<div class="field"><label>أجور النقل</label><input id="oShip" type="number" min="0"></div>
+<div class="field"><label>الإجمالي بالدينار</label><input id="oTotal" type="number" min="0"></div>
+<div class="field wide"><label>رابط المنتج</label><input id="oUrl"></div>
+<div class="field wide"><label>ملاحظات</label><textarea id="oNotes"></textarea></div>
+</div>
+<div class="actions"><button class="btn gold" onclick="addOrder()">حفظ الطلب</button></div>
+</section>
+</div>
+<script>
+const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+const db=supabase.createClient(U,K);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const statusNames={new:'جديد',pricing:'قيد التسعير',awaiting_payment:'بانتظار الدفع',paid:'مدفوع',purchased:'تم الشراء',assigned_trip:'مرتبط برحلة',in_transit:'في الطريق',arrived:'وصل العراق',ready_for_delivery:'جاهز للتسليم',delivered:'تم التسليم',cancelled:'ملغي'};
+const payNames={unpaid:'غير مدفوع',partial:'جزئي',paid:'مدفوع',refunded:'مسترجع'};
+async function auth(){const {data}=await db.auth.getSession();if(!data.session){location.href='index.html';return false}return true}
+function showTab(t){['orders','products','new'].forEach(x=>$(x).classList.toggle('hidden',x!==t));['tabOrders','tabProducts','tabNew'].forEach(x=>$(x).classList.remove('active'));const m={orders:'tabOrders',products:'tabProducts',new:'tabNew'};$(m[t]).classList.add('active');$(m[t]).classList.remove('gray')}
+async function loadOrders(){const {data,error}=await db.from('bazaar_orders').select('*, programs(title)').order('created_at',{ascending:false});if(error)return alert(error.message);$('ordersBody').innerHTML=(data||[]).map(o=>'<tr><td><b>'+esc(o.order_number)+'</b></td><td>'+esc(o.customer_name)+'<br><span class="muted">'+esc(o.customer_phone)+'</span></td><td>'+Number(o.total_amount_iqd||0).toLocaleString('ar-IQ')+' د.ع</td><td><span class="pill">'+esc(payNames[o.payment_status]||o.payment_status)+'</span></td><td><span class="pill '+(o.status==='delivered'?'ok':o.status==='cancelled'?'bad':'')+'">'+esc(statusNames[o.status]||o.status)+'</span></td><td>'+esc(o.programs?.title||'—')+'</td><td>'+esc((o.created_at||'').slice(0,10))+'</td><td><button class="btn gray" onclick="advanceOrder(\''+o.id+'\',\''+o.status+'\')">تغيير الحالة</button></td></tr>').join('')||'<tr><td colspan="8">لا توجد طلبات.</td></tr>';return data||[]}
+async function loadProducts(){const {data,error}=await db.from('bazaar_products').select('*').order('created_at',{ascending:false});if(error)return alert(error.message);$('productsBody').innerHTML=(data||[]).map(p=>'<tr><td><b>'+esc(p.name)+'</b></td><td>'+esc(p.category||'—')+'</td><td>'+Number(p.purchase_price||0).toLocaleString()+' '+esc(p.purchase_currency)+'</td><td>'+Number(p.selling_price_iqd||0).toLocaleString('ar-IQ')+' د.ع</td><td>'+((p.active)?'<span class="pill ok">نشط</span>':'<span class="pill bad">متوقف</span>')+'</td></tr>').join('')||'<tr><td colspan="5">لا توجد منتجات.</td></tr>'}
+async function loadStats(){const {data}=await db.from('bazaar_orders').select('status,payment_status');const a=data||[];$('sAll').textContent=a.length;$('sPay').textContent=a.filter(x=>['unpaid','partial'].includes(x.payment_status)&&x.status!=='cancelled').length;$('sRun').textContent=a.filter(x=>!['new','delivered','cancelled'].includes(x.status)).length;$('sDone').textContent=a.filter(x=>x.status==='delivered').length}
+async function loadAll(){await Promise.all([loadOrders(),loadProducts(),loadStats()])}
+async function addProduct(){const name=$('pName').value.trim();if(!name)return alert('أدخل اسم المنتج');const r=await db.from('bazaar_products').insert({name,category:$('pCat').value.trim()||null,purchase_price:Number($('pBuy').value||0),selling_price_iqd:Number($('pSell').value||0),source_url:$('pUrl').value.trim()||null,description:$('pDesc').value.trim()||null});if(r.error)return alert(r.error.message);['pName','pCat','pBuy','pSell','pUrl','pDesc'].forEach(x=>$(x).value='');await loadProducts();alert('تم حفظ المنتج')}
+async function addOrder(){const n=$('oName').value.trim(),ph=$('oPhone').value.trim(),pr=$('oProduct').value.trim();if(!n||!ph||!pr)return alert('أكمل اسم العميل والهاتف والمنتج');const r=await db.from('bazaar_orders').insert({customer_name:n,customer_phone:ph,product_request:pr,quantity:Number($('oQty').value||1),quoted_product_amount:Number($('oProductAmount').value||0),service_fee:Number($('oService').value||0),shipping_fee:Number($('oShip').value||0),total_amount_iqd:Number($('oTotal').value||0),source_url:$('oUrl').value.trim()||null,customer_notes:$('oNotes').value.trim()||null,status:'new'});if(r.error)return alert(r.error.message);alert('تم تسجيل الطلب');showTab('orders');await loadAll()}
+async function advanceOrder(id,status){const seq=['new','pricing','awaiting_payment','paid','purchased','assigned_trip','in_transit','arrived','ready_for_delivery','delivered'];const i=seq.indexOf(status);const next=status==='cancelled'?'new':seq[Math.min(i+1,seq.length-1)];const chosen=prompt('الحالة الجديدة:\n'+seq.map((x,j)=>(j+1)+'. '+statusNames[x]).join('\n'),String(seq.indexOf(next)+1));const idx=Number(chosen)-1;if(!Number.isInteger(idx)||idx<0||idx>=seq.length)return;const ns=seq[idx];const r=await db.from('bazaar_orders').update({status:ns,payment_status:ns==='paid'||['purchased','assigned_trip','in_transit','arrived','ready_for_delivery','delivered'].includes(ns)?'paid':undefined}).eq('id',id);if(r.error)return alert(r.error.message);await loadAll()}
+(async()=>{if(await auth())await loadAll()})();
+</script>
+</body>
+</html>
