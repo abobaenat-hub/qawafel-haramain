@@ -23,7 +23,7 @@
 <div class="notice"><b>كيف يعمل الطلب؟</b><br>أرسل لنا اسم المنتج أو رابط المتجر السعودي. نراجع الطلب، ثم نرسل لك السعر النهائي قبل الشراء.</div>
 <div id="productCard" style="display:none;border:1px solid #dfe7ec;border-radius:14px;padding:12px;margin-bottom:15px;background:#fbfdfe">
   <div style="font-size:12px;color:#718390;margin-bottom:6px">المنتج المطلوب</div>
-  <div id="productTitle" style="font-weight:900;font-size:18px;color:#0b3556"></div>
+  <div style="display:flex;gap:12px;align-items:center"><img id="productImage" style="display:none;width:72px;height:72px;object-fit:cover;border-radius:10px;border:1px solid #dfe7ec" alt=""><div><div id="productTitle" style="font-weight:900;font-size:18px;color:#0b3556"></div><div id="productPrice" style="font-size:13px;font-weight:900;color:#c99a32;margin-top:5px"></div></div></div>
   <div id="productCategory" style="font-size:11px;color:#718390;margin-top:4px"></div>
 </div>
 <form id="form">
@@ -42,9 +42,11 @@
 </div></div>
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K);
-const params=new URLSearchParams(location.search), productId=params.get('product'), linkedName=params.get('name'), linkedCategory=params.get('category'), linkedUrl=params.get('url');
+const params=new URLSearchParams(location.search), productId=params.get('product'), linkedName=params.get('name'), linkedCategory=params.get('category'), linkedUrl=params.get('url'), linkedPrice=params.get('price'), linkedImage=params.get('image');
 if(productId && linkedName){
  $('productCard').style.display='block';
+ if(linkedImage){$('productImage').src=linkedImage;$('productImage').style.display='block';}
+ if(linkedPrice){$('productPrice').textContent='السعر: '+Number(linkedPrice).toLocaleString('ar-IQ')+' د.ع';}
  $('productTitle').textContent=linkedName;
  $('productCategory').textContent=linkedCategory||'';
  $('product').value=linkedName;
