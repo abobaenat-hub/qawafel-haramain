@@ -1,29 +1,29 @@
 async function editManualExpense(id){
- const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual'); if(!x)return;
- const trips=PROGS.filter(p=>p&&p.id);
- const currentIndex=x.program_id?trips.findIndex(p=>p.id===x.program_id):-1;
- const opts='<option value="">بدون رحلة</option>'+trips.map(p=>'<option value="'+p.id+'"'+(p.id===x.program_id?' selected':'')+'>'+esc(p.title)+'</option>').join('');
- const html='<div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center"><div style="background:#fff;padding:20px;border-radius:14px;width:min(520px,92vw)"><h3>✏️ تعديل الصرفية</h3><label>جهة الصرف / الرحلة</label><select id="editExpenseProgram" style="width:100%;padding:10px;margin:6px 0 12px">'+opts+'</select><label>المبلغ</label><input id="editExpenseAmount" type="number" value="'+Number(x.amount||0)+'" style="width:100%;padding:10px;margin:6px 0 12px"><label>البيان</label><input id="editExpenseDescription" value="'+esc(x.description||'')+'" style="width:100%;padding:10px;margin:6px 0 12px"><label>التاريخ</label><input id="editExpenseDate" type="date" value="'+String(x.transaction_date).slice(0,10)+'" style="width:100%;padding:10px;margin:6px 0 16px"><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeExpenseEditor()">إلغاء</button><button class="btn primary" onclick="saveEditedExpense(\''+id+'\')">حفظ التعديل</button></div></div></div>';
- const wrap=document.createElement('div');wrap.id='expenseEditor';wrap.innerHTML=html;document.body.appendChild(wrap);
-}
-function editManualExpense(id){
- const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual'); if(!x)return;
+ const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual');
+ if(!x)return;
  closeExpenseEditor();
- const opts='<option value="">بدون رحلة</option>'+PROGS.map(p=>'<option value="'+p.id+'"'+(p.id===x.program_id?' selected':'')+'>'+esc(p.title)+'</option>').join('');
- const wrap=document.createElement('div'); wrap.id='expenseEditor';
- wrap.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px';
- wrap.innerHTML='<div role="dialog" aria-modal="true" style="background:#fff;padding:20px;border-radius:16px;width:min(540px,96vw);max-height:92vh;overflow:auto;box-shadow:0 25px 70px rgba(0,0,0,.25)">'+
- '<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h3 style="margin:0">✏️ تعديل الصرفية</h3><button type="button" class="btn" data-close-expense>✕ إغلاق</button></div>'+
- '<label>الرحلة</label><select id="editExpenseProgram" style="width:100%;padding:10px;margin:6px 0 12px">'+opts+'</select>'+
- '<label>المبلغ</label><input id="editExpenseAmount" type="number" value="'+Number(x.amount||0)+'" style="width:100%;padding:10px;margin:6px 0 12px">'+
- '<label>البيان</label><input id="editExpenseDescription" value="'+esc(x.description||'')+'" style="width:100%;padding:10px;margin:6px 0 12px">'+
- '<label>التاريخ</label><input id="editExpenseDate" type="date" value="'+String(x.transaction_date).slice(0,10)+'" style="width:100%;padding:10px;margin:6px 0 16px">'+
- '<div style="display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap"><button type="button" class="btn" data-close-expense>إلغاء</button><button type="button" class="btn primary" data-save-expense="'+id+'">💾 حفظ التعديل</button></div></div>';
- document.body.appendChild(wrap);
- wrap.addEventListener('click',function(ev){
-   if(ev.target===wrap||ev.target.closest('[data-close-expense]')) closeExpenseEditor();
-   const save=ev.target.closest('[data-save-expense]'); if(save) saveEditedExpense(save.dataset.saveExpense);
- });
+ const wrap=document.createElement('div');
+ wrap.id='expenseEditor';
+ wrap.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;direction:rtl';
+ const card=document.createElement('div');
+ card.style.cssText='background:#fff;padding:20px;border-radius:16px;width:min(540px,96vw);max-height:92vh;overflow:auto;box-shadow:0 25px 70px rgba(0,0,0,.25)';
+ const title=document.createElement('h3'); title.textContent='✏️ تعديل الصرفية'; title.style.margin='0 0 16px';
+ const makeLabel=(t)=>{const l=document.createElement('label');l.textContent=t;l.style.display='block';l.style.margin='10px 0 6px';return l};
+ const makeInput=(type,value)=>{const el=document.createElement('input');el.type=type;el.value=value??'';el.style.cssText='width:100%;padding:10px;margin:0 0 6px;box-sizing:border-box';return el};
+ const labelProgram=makeLabel('جهة الصرف / الرحلة');
+ const program=document.createElement('select');program.id='editExpenseProgram';program.style.cssText='width:100%;padding:10px;margin:0 0 8px;box-sizing:border-box';
+ const empty=document.createElement('option');empty.value='';empty.textContent='بدون رحلة';program.appendChild(empty);
+ PROGS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=(p.title||'')+(p.departure_date?' — '+p.departure_date:'');if(p.id===x.program_id)o.selected=true;program.appendChild(o)});
+ const labelAmount=makeLabel('المبلغ'), amount=makeInput('number',Number(x.amount||0)); amount.id='editExpenseAmount';
+ const labelDesc=makeLabel('البيان'), desc=makeInput('text',x.description||''); desc.id='editExpenseDescription';
+ const labelDate=makeLabel('التاريخ'), date=makeInput('date',String(x.transaction_date||'').slice(0,10)); date.id='editExpenseDate';
+ const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap;margin-top:8px';
+ const cancel=document.createElement('button');cancel.type='button';cancel.className='btn';cancel.textContent='إلغاء';cancel.onclick=closeExpenseEditor;
+ const save=document.createElement('button');save.type='button';save.className='btn primary';save.textContent='💾 حفظ التعديل';save.onclick=()=>saveEditedExpense(id);
+ actions.append(cancel,save);
+ card.append(title,labelProgram,program,labelAmount,amount,labelDesc,desc,labelDate,date,actions);
+ wrap.appendChild(card);document.body.appendChild(wrap);
+ wrap.addEventListener('click',e=>{if(e.target===wrap)closeExpenseEditor()});
 }
 function closeExpenseEditor(){const x=document.getElementById('expenseEditor');if(x)x.remove()}
 async function saveEditedExpense(id){
