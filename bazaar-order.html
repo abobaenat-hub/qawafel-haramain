@@ -21,6 +21,11 @@
 <img class="logo" src="./logo.png" alt="قوافل الحرمين">
 <div class="title"><h1>🛍️ بازار قوافل الحرمين</h1><p>اطلب من السعودية ونحن نشتري لك ونوصله إلى العراق.</p></div>
 <div class="notice"><b>كيف يعمل الطلب؟</b><br>أرسل لنا اسم المنتج أو رابط المتجر السعودي. نراجع الطلب، ثم نرسل لك السعر النهائي قبل الشراء.</div>
+<div id="productCard" style="display:none;border:1px solid #dfe7ec;border-radius:14px;padding:12px;margin-bottom:15px;background:#fbfdfe">
+  <div style="font-size:12px;color:#718390;margin-bottom:6px">المنتج المطلوب</div>
+  <div id="productTitle" style="font-weight:900;font-size:18px;color:#0b3556"></div>
+  <div id="productCategory" style="font-size:11px;color:#718390;margin-top:4px"></div>
+</div>
 <form id="form">
 <div class="grid">
 <div class="field"><label>الاسم الكامل *</label><input id="name" required maxlength="120"></div>
@@ -37,7 +42,26 @@
 </div></div>
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K);
+const params=new URLSearchParams(location.search), productId=params.get('product');
+let selectedProduct=null;
+async function loadLinkedProduct(){
+ if(!productId)return;
+ try{
+  const r=await db.from('bazaar_products').select('id,name,description,source_url,category,active').eq('id',productId).eq('active',true).single();
+  if(r.error||!r.data)return;
+  selectedProduct=r.data;
+  $('productCard').style.display='block';
+  $('productTitle').textContent=r.data.name;
+  $('productCategory').textContent=r.data.category||'';
+  $('product').value=r.data.name;
+  $('product').readOnly=true;
+  if(r.data.source_url&&!$('url').value)$('url').value=r.data.source_url;
+  $('kind').value='منتج من القناة';
+ }catch(e){console.error(e)}
+}
+
 const $=id=>document.getElementById(id);
+loadLinkedProduct();
 $('form').addEventListener('submit',async e=>{
  e.preventDefault(); const b=$('submit'); b.disabled=true;b.textContent='⏳ جارٍ إرسال الطلب...';
  try{
