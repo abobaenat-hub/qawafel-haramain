@@ -1,202 +1,4 @@
-async function editManualExpense(id){
- const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual');
- if(!x)return;
- closeExpenseEditor();
- const wrap=document.createElement('div');
- wrap.id='expenseEditor';
- wrap.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;direction:rtl';
- const card=document.createElement('div');
- card.style.cssText='background:#fff;padding:20px;border-radius:16px;width:min(540px,96vw);max-height:92vh;overflow:auto;box-shadow:0 25px 70px rgba(0,0,0,.25)';
- const title=document.createElement('h3'); title.textContent='✏️ تعديل الصرفية'; title.style.margin='0 0 16px';
- const makeLabel=(t)=>{const l=document.createElement('label');l.textContent=t;l.style.display='block';l.style.margin='10px 0 6px';return l};
- const makeInput=(type,value)=>{const el=document.createElement('input');el.type=type;el.value=value??'';el.style.cssText='width:100%;padding:10px;margin:0 0 6px;box-sizing:border-box';return el};
- const labelProgram=makeLabel('جهة الصرف / الرحلة');
- const program=document.createElement('select');program.id='editExpenseProgram';program.style.cssText='width:100%;padding:10px;margin:0 0 8px;box-sizing:border-box';
- const empty=document.createElement('option');empty.value='';empty.textContent='بدون رحلة';program.appendChild(empty);
- PROGS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=(p.title||'')+(p.departure_date?' — '+p.departure_date:'');if(p.id===x.program_id)o.selected=true;program.appendChild(o)});
- const labelAmount=makeLabel('المبلغ'), amount=makeInput('number',Number(x.amount||0)); amount.id='editExpenseAmount';
- const labelDesc=makeLabel('البيان'), desc=makeInput('text',x.description||''); desc.id='editExpenseDescription';
- const labelDate=makeLabel('التاريخ'), date=makeInput('date',String(x.transaction_date||'').slice(0,10)); date.id='editExpenseDate';
- const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap;margin-top:8px';
- const cancel=document.createElement('button');cancel.type='button';cancel.className='btn';cancel.textContent='إلغاء';cancel.onclick=closeExpenseEditor;
- const save=document.createElement('button');save.type='button';save.className='btn primary';save.textContent='💾 حفظ التعديل';save.onclick=()=>saveEditedExpense(id);
- actions.append(cancel,save);
- card.append(title,labelProgram,program,labelAmount,amount,labelDesc,desc,labelDate,date,actions);
- wrap.appendChild(card);document.body.appendChild(wrap);
- wrap.addEventListener('click',e=>{if(e.target===wrap)closeExpenseEditor()});
-}
-function closeExpenseEditor(){const x=document.getElementById('expenseEditor');if(x)x.remove()}
-async function saveEditedExpense(id){
- const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual');if(!x)return;
- const amount=Number(document.getElementById('editExpenseAmount')?.value||0);
- const description=(document.getElementById('editExpenseDescription')?.value||'').trim();
- const date=document.getElementById('editExpenseDate')?.value;
- const programId=document.getElementById('editExpenseProgram')?.value||null;
- if(!amount||amount<=0){alert('المبلغ غير صحيح.');return}
- if(!date){alert('اختر التاريخ.');return}
- const r=await db.from('finance_transactions').update({amount,description:description||x.description,transaction_date:new Date(date+'T12:00:00').toISOString(),program_id:programId}).eq('id',id).eq('source_type','manual').eq('direction','out');
- if(r.error){alert(r.error.message);return}
- closeExpenseEditor();await loadAll();alert('✅ تم تعديل الصرفية والرحلة.');
-}async function deleteManualExpense(id){
- const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual');if(!x)return;
- if(!confirm('⚠️ هل أنت متأكد من حذف هذه الصرفية؟\\n\\nالمبلغ: '+fmt(x.amount)+' '+x.currency+'\\nالبيان: '+(x.description||'')+'\\n\\nسيتم حذف الحركة نهائيًا من السجل المالي.'))return;
- const r=await db.from('finance_transactions').delete().eq('id',id).eq('source_type','manual').eq('direction','out').select('id');
- if(r.error){alert('تعذر حذف الحركة: '+r.error.message);return}
- if(!r.data||!r.data.length){alert('لم يتم حذف الحركة. تحقق من الصلاحيات ثم أعد المحاولة.');return}
- await loadAll();alert('✅ تم حذف الصرفية من السجل المالي وآخر الحركات.');
-}
-
-async function editWalletExpense(id){
- const x=WALLET_TX.find(a=>a.id===id&&a.transaction_type==='withdrawal');if(!x)return;
- const amount=prompt('المبلغ الحالي: '+fmt(x.amount)+' '+x.currency+'\nأدخل المبلغ الجديد:',x.amount);if(amount===null)return;
- const n=Number(String(amount).replace(/,/g,''));if(!n||n<=0){alert('المبلغ غير صحيح.');return}
- const description=prompt('البيان الحالي:\n'+(x.description||'')+'\n\nأدخل البيان الجديد:',x.description||'');if(description===null)return;
- const date=prompt('التاريخ الحالي: '+fmtDate(x.transaction_date)+'\nأدخل التاريخ الجديد بصيغة YYYY-MM-DD:',String(x.transaction_date).slice(0,10));if(date===null)return;
- if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){alert('صيغة التاريخ غير صحيحة.');return}
- const oldAmount=Number(x.amount||0),oldIqd=Number(x.amount_iqd||0),rate=oldAmount>0&&oldIqd>0?oldIqd/oldAmount:0;
- const r=await db.from('supplier_wallet_transactions').update({amount:n,amount_iqd:rate?Number((n*rate).toFixed(2)):oldIqd,description:description.trim()||x.description,transaction_date:new Date(date+'T12:00:00').toISOString()}).eq('id',id).eq('transaction_type','withdrawal');
- if(r.error){alert(r.error.message);return} await loadAll();alert('✅ تم تعديل حركة خزينة المورد.');
-}
-function expenseRowsForProgram(programId){
- const manual=TX.filter(x=>x.direction==='out'&&(!programId||x.program_id===programId)).map(x=>({...x,_source:'النظام المالي'}));
- const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal'&&(!programId||x.program_id===programId)).map(x=>{
-   const sup=SUPPLIERS.find(a=>a.id===x.supplier_id);
-   return {id:'wallet_'+x.id,direction:'out',category:'supplier_payment',description:x.description||'استخدام من رصيد المورد',party_name:sup?.name||'—',amount:x.amount,currency:x.currency,transaction_date:x.transaction_date,program_id:x.program_id,_source:'خزينة المورد',amount_iqd:x.amount_iqd};
- });
- return [...manual,...wallet].sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
-}
-function fillExpenseProgramFilter(){
- const el=$('expenseProgramFilter'); if(!el)return;
- const cur=el.value||FOCUS_PROGRAM_ID||'';
- el.innerHTML='<option value="">كل الرحلات</option>'+PROGS.map(p=>'<option value="'+p.id+'">'+esc(p.title)+' — '+esc(p.departure_date||'')+'</option>').join('');
- el.value=cur;
-}
-function renderExpenseTable(){
- const selected=$('expenseProgramFilter')?.value||'';
- const arr=expenseRowsForProgram(selected);
- $('expenseRows').innerHTML=arr.map(x=>{
-   const edit=x._source==='النظام المالي'&&x.source_type==='manual'
-     ? '<button type="button" class="btn" data-exp-action="edit" data-exp-id="'+x.id+'">✏️ تعديل</button> <button type="button" class="btn" data-exp-action="delete" data-exp-id="'+x.id+'" style="color:#a00">🗑️ حذف</button>'
-     : x._source==='خزينة المورد'
-       ? '<button type="button" class="btn" data-exp-action="wallet-edit" data-exp-id="'+x.id.replace('wallet_','')+'">✏️ تعديل</button> <button type="button" class="btn" data-exp-action="wallet-delete" data-exp-id="'+x.id.replace('wallet_','')+'" style="color:#a00">🗑️ حذف</button>'
-       : '—';
-   return '<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="out">🔴 '+esc(catLabel[x.category]||x.category)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="out">'+fmt(x.amount)+' '+esc(x.currency||'')+'</td><td>'+esc(programName(x.program_id))+'</td><td><span class="pill">'+esc(x._source)+'</span></td><td>'+edit+'</td></tr>';
- }).join('')||'<tr><td colspan="8" style="text-align:center;padding:18px">لا توجد صرفيات مرتبطة بالاختيار.</td></tr>';
-}
-function renderExpenses(O=officialTx()){
- fillExpenseProgramFilter();
- renderExpenseTable();
-}
-function actualExpenseIqd(O=officialTx()){const manual=TX.filter(x=>x.direction==='out'&&x.currency==='IQD').reduce((s,x)=>s+Number(x.amount||0),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+Number(x.amount_iqd||0),0);return manual+wallet}
-function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=fmt(actualExpenseIqd(O))+' د.ع';$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=TX.length+WALLET_TX.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الصرف الفعلي معروض بالدينار العراقي: المصروفات المسجلة بالدينار + الصرف من خزائن الموردين محسوبًا وفق تفاصيل التحويل.</span>';renderRecent(O);renderIncome();renderBookings();renderLedger(O);renderExpenses(O)}
-function renderIncome(){
- const rows=TX.filter(x=>x.direction==='in').sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
- $('inRows').innerHTML=rows.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td>'+esc(catLabel[x.category]||x.category||'وارد')+'</td><td>'+esc(x.description||'—')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="in"><b>'+fmt(x.amount)+' '+esc(x.currency||'IQD')+'</b></td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="6">لا توجد حركات وارد مسجلة</td></tr>';
-}
-function renderRecent(O=officialTx()){
- const finance=TX.map(x=>({...x,_movement:x.direction==='in'?'وارد':'صرف',_sourceOrder:new Date(x.transaction_date).getTime()}));
- const wallet=WALLET_TX.map(x=>({...x,_movement:x.transaction_type==='deposit'?'إيداع خزينة المورد':'صرف من خزينة المورد',_sourceOrder:new Date(x.transaction_date).getTime()}));
- const arr=[...finance,...wallet].sort((a,b)=>b._sourceOrder-a._sourceOrder).slice(0,15);
- $('recentRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td>'+esc(x._movement)+'</td><td>'+esc(x.description||catLabel[x.category]||'حركة خزينة المورد')+'</td><td>'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="5">لا توجد حركات</td></tr>';
-}
-function bookingPaid(id){return PAY.filter(p=>p.booking_id===id).reduce((s,p)=>s+Number(p.amount||0),0)}
-function renderBookings(){const q=($('pilgrimSearch').value||'').trim().toLowerCase(),pf=$('pilgrimProgramFilter').value,df=$('dueFilter').value;let arr=BOOK.filter(b=>(!q||(b.full_name||'').toLowerCase().includes(q)||(b.booking_number||'').toLowerCase().includes(q))&&(!pf||b.program_id===pf));arr=arr.filter(b=>{const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(b.id));return !df||(df==='due'&&rem>0)||(df==='paid'&&rem===0)});$('bookingRows').innerHTML=arr.map(b=>{const paid=bookingPaid(b.id),rem=Math.max(0,Number(b.total_amount||0)-paid);return '<tr><td><b>'+esc(b.full_name||'—')+'</b><br><span class="pill">'+esc(b.booking_number||'')+'</span></td><td>'+esc(programName(b.program_id))+'</td><td>'+fmt(b.total_amount)+'</td><td class="in">'+fmt(paid)+'</td><td class="'+(rem?'out':'in')+'">'+fmt(rem)+'</td><td><button class="btn primary" onclick="payBooking(\''+b.id+'\')">قبض دفعة</button></td></tr>'}).join('')||'<tr><td colspan="6">لا توجد نتائج</td></tr>'}
-async function payBooking(id){const b=BOOK.find(x=>x.id===id);if(!b)return;const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(id));const amount=prompt('المتبقي: '+fmt(rem)+'\nأدخل المبلغ المقبوض فعليًا:');if(amount===null)return;const n=Number(amount);if(!n||n<=0||n>rem){alert('المبلغ غير صحيح.');return}const r=await db.from('payments').insert({booking_id:id,amount:n,currency:'IQD',payment_method:'cash',payment_date:new Date().toISOString()});if(r.error){alert(r.error.message);return}await loadAll();alert('تم تسجيل القبض وإضافته لصندوق الوارد.')}
-async function addManual(direction){
- const pre=direction==='in'?'in':'out',amount=Number($(pre+'Amount').value);
- if(!amount||amount<=0){alert('أدخل مبلغًا صحيحًا');return}
- const supplierId=direction==='out'&&$('outCat').value==='supplier_payment'?($('outSupplier').value||null):null;
- if(direction==='out'&&$('outCat').value==='supplier_payment'){
-  if(!supplierId){alert('اختر المورد أولاً');return}
-  const cur=$('outWalletCurrency').value;
-  if(!cur){alert('اختر رصيد المورد الذي تريد استخدامه');return}
-  const entries=supplierBalances(supplierId),available=Number((entries.find(([c])=>c===cur)||['',0])[1]||0);
-  if(amount>available+0.000001){alert('المبلغ أكبر من الرصيد المتاح عند المورد. الرصيد المتاح: '+fmt(available)+' '+cur);return}
-  let rate=cur==='IQD'?1:0;
-  if(cur!=='IQD'){
-    const same=WALLET_TX.filter(x=>x.supplier_id===supplierId&&x.currency===cur&&Number(x.amount)>0);
-    let remainingAmount=0,remainingIqd=0;
-    same.forEach(x=>{
-      const a=Number(x.amount||0),iq=Number(x.amount_iqd||0);
-      if(x.transaction_type==='deposit'){remainingAmount+=a;remainingIqd+=iq}
-      else{remainingAmount-=a;remainingIqd-=iq}
-    });
-    if(remainingAmount>0&&remainingIqd>0)rate=Number((remainingIqd/remainingAmount).toFixed(6));
-  }
-  if(!rate){alert('لا يوجد سعر صرف مسجل لهذا الرصيد عند المورد.');return}
-  const amountIqd=Number((amount*rate).toFixed(2));
-  const {data:{user}}=await db.auth.getUser();
-  const r=await db.from('supplier_wallet_transactions').insert({
-    supplier_id:supplierId,transaction_type:'withdrawal',currency:cur,amount,
-    exchange_rate_to_iqd:rate,amount_iqd:amountIqd,
-    transaction_date:$(pre+'Date').value||dateToday(),
-    program_id:$(pre+'Program').value||null,
-    description:$(pre+'Notes').value.trim()||'استخدام من رصيد المورد',
-    created_by:user?.id||null
-  });
-  if(r.error){alert(r.error.message);return}
-  $(pre+'Msg').innerHTML='<div class="msg">✅ تم تسجيل الدفعة واستخدام '+fmt(amount)+' '+cur+' من رصيد المورد، دون تسجيل خروج نقدي جديد.</div>';
-  alert('✅ تم تسجيل الدفعة بنجاح\\n\\nتم استخدام '+fmt(amount)+' '+cur+' من رصيد المورد.');
-  ['Amount','Party','Notes'].forEach(x=>$(pre+x).value='');toggleOutSupplier();await loadAll();return;
- }
- const data={direction,category:$(pre+'Cat').value,description:catLabel[$(pre+'Cat').value],amount,currency:$(pre+'Currency').value,payment_method:$(pre+'Method').value,transaction_date:new Date($(pre+'Date').value+'T12:00:00').toISOString(),program_id:$(pre+'Program').value||null,party_name:$(pre+'Party').value.trim()||null,notes:$(pre+'Notes').value.trim()||null,source_type:'manual',source_id:crypto.randomUUID()};
- const r=await db.from('finance_transactions').insert(data);
- if(r.error){alert(r.error.message);return}
- $(pre+'Msg').innerHTML='<div class="msg">تم تسجيل الحركة بنجاح.</div>';
- ['Amount','Party','Notes'].forEach(x=>$(pre+x).value='');await loadAll();
-}
-function renderLedger(O=officialTx()){const q=($('ledgerSearch').value||'').toLowerCase();const finance=O.map(x=>({...x,_label:catLabel[x.category]||x.category,_party:x.party_name||'—'}));const wallet=WALLET_TX.map(x=>({transaction_date:x.transaction_date,direction:x.transaction_type==='deposit'?'in':'out',_label:x.transaction_type==='deposit'?'إيداع خزينة مورد':'صرف من خزينة مورد',description:x.description||'حركة خزينة المورد',_party:(SUPPLIERS.find(s=>s.id===x.supplier_id)?.name)||'—',amount:x.amount,currency:x.currency,program_id:x.program_id}));const arr=[...finance,...wallet].filter(x=>((x.description||'')+' '+(x._party||'')+' '+(x._label||'')).toLowerCase().includes(q)).sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));$('ledgerRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="'+x.direction+'">'+(x.direction==='in'?'🟢 وارد':'🔴 صرف')+'</td><td>'+esc(x._label)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x._party||'—')+'</td><td class="'+x.direction+'">'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td><td>'+esc(programName(x.program_id))+'</td>').join('')||'<tr><td colspan="8">لا توجد حركات</td></tr>'}
-function reportDate(v){return v?String(v).slice(0,10):''}
-function walletWithdrawalIqd(x){
- const amount=Number(x.amount||0);
- if((x.currency||'')==='IQD')return amount;
- if(x.source_currency==='USD'&&Number(x.source_amount)>0&&Number(x.fx_rate)>0&&Number(x.exchange_rate_to_iqd)>0)return (amount/Number(x.fx_rate))*Number(x.exchange_rate_to_iqd);
- if(x.source_currency==='IQD'&&Number(x.source_amount)>0&&Number(x.amount)>0)return amount*(Number(x.source_amount)/Number(x.amount));
- if(x.currency==='USD'&&Number(x.exchange_rate_to_iqd)>0)return amount*Number(x.exchange_rate_to_iqd);
- return Number(x.amount_iqd||0);
-}
-function financeAmountIqd(x){
- const cur=x.currency||'IQD',amount=Number(x.amount||0);
- if(cur==='IQD')return amount;
- return Number(x.amount_iqd||0);
-}
-function renderFinancialReport(){
- const from=$('reportFrom').value||dateToday().slice(0,8)+'01',to=$('reportTo').value||dateToday();
- if(from>to)return alert('تاريخ البداية يجب أن يكون قبل تاريخ النهاية.');
- const O=officialTx().filter(x=>{const d=reportDate(x.transaction_date);return d>=from&&d<=to});
- const income=O.filter(x=>x.direction==='in').reduce((s,x)=>s+financeAmountIqd(x),0);
- const generalCash=TX.filter(x=>{const d=reportDate(x.transaction_date);return x.direction==='out'&&d>=from&&d<=to}).reduce((s,x)=>s+financeAmountIqd(x),0);
- const generalSupplier=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').filter(x=>{const d=reportDate(x.transaction_date);return d>=from&&d<=to}).reduce((s,x)=>s+walletWithdrawalIqd(x),0);
- const generalExpense=generalCash+generalSupplier;
- const result=income-generalExpense;
- const resultLabel=result>=0?'ربح الفترة':'خسارة الفترة';
- const resultText=result>=0?'ربح':'خسارة';
- const bookings=BOOK.filter(b=>{const p=PROGS.find(p=>p.id===b.program_id);const d=reportDate(p?.departure_date);return d&&d>=from&&d<=to});
- const programs=new Set();O.forEach(x=>{if(x.program_id)programs.add(x.program_id)});
- const html='<div class="grid3">'+
- '<div class="msg"><b>إجمالي الإيرادات</b><br><strong>'+fmt(income)+' د.ع</strong></div>'+
- '<div class="msg"><b>الصرف العام</b><br><strong>'+fmt(generalExpense)+' د.ع</strong><br><span class="muted">يشمل الصرف النقدي + الصرف من خزائن الموردين</span></div>'+
- '<div class="msg"><b style="color:'+(result<0?'#a33':'inherit')+'">'+resultLabel+'</b><br><strong style="color:'+(result<0?'#a33':'inherit')+'">'+fmt(Math.abs(result))+' د.ع</strong></div>'+
- '</div>'+
- '<div class="panel" style="margin-top:12px"><h3 style="margin-top:0">📊 نتيجة الفترة</h3><div class="msg"><b>من '+esc(from)+' إلى '+esc(to)+'</b><br><span style="font-size:20px;font-weight:bold;color:'+(result<0?'#a33':'inherit')+'">'+resultText+': '+fmt(Math.abs(result))+' د.ع '+(result<0?'🥺 (هجم بيتك أبو مريم)':'')+'</span></div>'+
- '<div class="table"><table><thead><tr><th>البند</th><th>المبلغ</th></tr></thead><tbody>'+
- '<tr><td>الإيرادات</td><td>'+fmt(income)+' د.ع</td></tr>'+
- '<tr><td>الصرف العام</td><td>'+fmt(generalExpense)+' د.ع</td></tr>'+
- '<tr><td>الصرف النقدي</td><td>'+fmt(generalCash)+' د.ع</td></tr>'+
- '<tr><td>الصرف من خزائن الموردين</td><td>'+fmt(generalSupplier)+' د.ع</td></tr>'+
- '<tr><td><b>النتيجة النهائية</b></td><td><b style="color:'+(result<0?'#a33':'inherit')+'">'+resultText+' '+fmt(Math.abs(result))+' د.ع</b></td></tr>'+
- '<tr><td>عدد الرحلات المرتبطة بالحركات</td><td>'+programs.size+'</td></tr>'+
- '<tr><td>عدد الحجوزات في رحلات الفترة</td><td>'+bookings.length+'</td></tr>'+
- '</tbody></table></div></div>'+
- '<div class="msg"><b>طريقة الحساب:</b> جميع النتائج معروضة بالدينار العراقي فقط. إيداعات خزائن الموردين لا تُحسب إيرادًا. سحوبات خزائن الموردين تدخل ضمن الصرف العام بعد تحويلها للدينار وفق تفاصيل التحويل المسجلة.</div>';
- $('reportBody').innerHTML=html;
-}
-function printFinancialReport(){
- renderFinancialReport();
- const body=$('reportBody').innerHTML;
- const w=window.open('','_blank');
- if(!w)return alert('يرجى السماح بالنوافذ المنبثقة للطباعة');
- const printHtml='<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>التقرير المالي - قوافل الحرمين</title><style>body{font-family:Tahoma,Arial;padding:25px;color:#18384f}.head{text-align:center;border-bottom:2px solid #18384f;padding-bottom:15px;margin-bottom:15px}table{width:100%;border-collapse:collapse}th,td{padding:9px;border:1px solid #dfe7ec;text-align:right;font-size:11px}th{background:#f1f6f9}.msg{padding:12px;border:1px solid #dfe7ec;border-radius:8px;margin:10px 0;font-size:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.panel{border:1px solid #dfe7ec;border-radius:10px;padding:12px;margin-top:10px}@media print{body{padding:10px}}</style></head><body><div class="head"><h2>شركة قوافل الحرمين للحج والعمرة</h2><h3>التقرير المالي</h3></div>'+body+'<p style="margin-top:30px;text-align:center;font-size:10px">تقرير مستخرج من النظام المالي</p></body></html>';
+<html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>التقرير المالي - قوافل الحرمين</title><style>body{font-family:Tahoma,Arial;padding:25px;color:#18384f}.head{text-align:center;border-bottom:2px solid #18384f;padding-bottom:15px;margin-bottom:15px}table{width:100%;border-collapse:collapse}th,td{padding:9px;border:1px solid #dfe7ec;text-align:right;font-size:11px}th{background:#f1f6f9}.msg{padding:12px;border:1px solid #dfe7ec;border-radius:8px;margin:10px 0;font-size:12px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.panel{border:1px solid #dfe7ec;border-radius:10px;padding:12px;margin-top:10px}@media print{body{padding:10px}}</style></head><body><div class="head"><h2>شركة قوافل الحرمين للحج والعمرة</h2><h3>التقرير المالي</h3></div>'+body+'<p style="margin-top:30px;text-align:center;font-size:10px">تقرير مستخرج من النظام المالي</p></body></html>';
  w.document.open();w.document.write(printHtml);w.document.close();w.focus();setTimeout(()=>w.print(),300);
 }
 function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
@@ -222,15 +24,37 @@ function expenseRows(O=officialTx()){
  });
  return [...manual,...wallet].sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
 }
-async function editManualExpense(id){
- const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual'); if(!x)return;
- const trips=PROGS.filter(p=>p&&p.id);
- const currentIndex=x.program_id?trips.findIndex(p=>p.id===x.program_id):-1;
- const opts='<option value="">بدون رحلة</option>'+trips.map(p=>'<option value="'+p.id+'"'+(p.id===x.program_id?' selected':'')+'>'+esc(p.title)+'</option>').join('');
- const html='<div style="position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;display:flex;align-items:center;justify-content:center"><div style="background:#fff;padding:20px;border-radius:14px;width:min(520px,92vw)"><h3>✏️ تعديل الصرفية</h3><label>جهة الصرف / الرحلة</label><select id="editExpenseProgram" style="width:100%;padding:10px;margin:6px 0 12px">'+opts+'</select><label>المبلغ</label><input id="editExpenseAmount" type="number" value="'+Number(x.amount||0)+'" style="width:100%;padding:10px;margin:6px 0 12px"><label>البيان</label><input id="editExpenseDescription" value="'+esc(x.description||'')+'" style="width:100%;padding:10px;margin:6px 0 12px"><label>التاريخ</label><input id="editExpenseDate" type="date" value="'+String(x.transaction_date).slice(0,10)+'" style="width:100%;padding:10px;margin:6px 0 16px"><div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn" onclick="closeExpenseEditor()">إلغاء</button><button class="btn primary" onclick="saveEditedExpense(\''+id+'\')">حفظ التعديل</button></div></div></div>';
- const wrap=document.createElement('div');wrap.id='expenseEditor';wrap.innerHTML=html;document.body.appendChild(wrap);
+function editManualExpense(id){
+ const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual');
+ if(!x)return;
+ closeExpenseEditor();
+ const wrap=document.createElement('div');
+ wrap.id='expenseEditor';
+ wrap.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.48);z-index:999999;display:flex;align-items:center;justify-content:center;padding:16px;direction:rtl';
+ const card=document.createElement('div');
+ card.style.cssText='background:#fff;padding:20px;border-radius:16px;width:min(540px,96vw);max-height:92vh;overflow:auto;box-shadow:0 25px 70px rgba(0,0,0,.25)';
+ const title=document.createElement('h3'); title.textContent='✏️ تعديل الصرفية'; title.style.margin='0 0 16px';
+ const makeLabel=t=>{const l=document.createElement('label');l.textContent=t;l.style.display='block';l.style.margin='10px 0 6px';return l};
+ const makeInput=(type,value)=>{const el=document.createElement('input');el.type=type;el.value=value??'';el.style.cssText='width:100%;padding:10px;margin:0 0 6px;box-sizing:border-box';return el};
+ const labelProgram=makeLabel('جهة الصرف / الرحلة');
+ const program=document.createElement('select');program.id='editExpenseProgram';program.style.cssText='width:100%;padding:10px;margin:0 0 8px;box-sizing:border-box';
+ const empty=document.createElement('option');empty.value='';empty.textContent='بدون رحلة';program.appendChild(empty);
+ PROGS.forEach(p=>{const o=document.createElement('option');o.value=p.id;o.textContent=(p.title||'')+(p.departure_date?' — '+p.departure_date:'');if(p.id===x.program_id)o.selected=true;program.appendChild(o)});
+ const labelAmount=makeLabel('المبلغ'), amount=makeInput('number',Number(x.amount||0));amount.id='editExpenseAmount';
+ const labelDesc=makeLabel('البيان'), desc=makeInput('text',x.description||'');desc.id='editExpenseDescription';
+ const labelDate=makeLabel('التاريخ'), date=makeInput('date',String(x.transaction_date||'').slice(0,10));date.id='editExpenseDate';
+ const actions=document.createElement('div');actions.style.cssText='display:flex;gap:8px;justify-content:flex-start;flex-wrap:wrap;margin-top:8px';
+ const cancel=document.createElement('button');cancel.type='button';cancel.className='btn';cancel.textContent='إلغاء';cancel.addEventListener('click',closeExpenseEditor);
+ const save=document.createElement('button');save.type='button';save.className='btn primary';save.textContent='💾 حفظ التعديل';save.addEventListener('click',()=>saveEditedExpense(id));
+ actions.append(cancel,save);
+ card.append(title,labelProgram,program,labelAmount,amount,labelDesc,desc,labelDate,date,actions);
+ wrap.appendChild(card);document.body.appendChild(wrap);
+ wrap.addEventListener('click',e=>{if(e.target===wrap)closeExpenseEditor()});
 }
-function closeExpenseEditor(){const x=document.getElementById('expenseEditor');if(x)x.remove()}
+function closeExpenseEditor(){
+ const x=document.getElementById('expenseEditor');
+ if(x)x.remove();
+}
 async function saveEditedExpense(id){
  const x=TX.find(a=>a.id===id&&a.direction==='out'&&a.source_type==='manual');if(!x)return;
  const amount=Number(document.getElementById('editExpenseAmount')?.value||0);
