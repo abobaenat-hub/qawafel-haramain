@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>طلب من بازار قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root{--navy:#0b3556;--gold:#c99a32;--bg:#f5f7f8;--line:#dfe7ec;--muted:#718390}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#18384f;font-family:Tahoma,Arial,sans-serif}
+.wrap{width:min(680px,calc(100% - 24px));margin:24px auto}.card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:22px;box-shadow:0 8px 30px rgba(11,53,86,.08)}
+.logo{width:76px;height:76px;object-fit:contain;display:block;margin:0 auto 10px}.title{text-align:center}.title h1{margin:0;color:var(--navy);font-size:25px}.title p{color:var(--muted);font-size:12px;line-height:1.8;margin:8px 0 20px}
+.notice{background:#fff8e7;border-right:4px solid var(--gold);padding:11px 12px;border-radius:10px;font-size:11px;line-height:1.8;margin-bottom:15px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field{margin-bottom:11px}.field.full{grid-column:1/-1}.field label{display:block;font-size:11px;font-weight:900;margin-bottom:6px}.field input,.field select,.field textarea{width:100%;padding:12px;border:1px solid #ccd9e0;border-radius:11px;background:#fbfdfe;font:inherit;outline:none}.field textarea{min-height:95px;resize:vertical}
+.btn{width:100%;padding:13px;border:0;border-radius:11px;background:var(--navy);color:#fff;font:inherit;font-weight:900;cursor:pointer}.btn:disabled{opacity:.6}.success{display:none;text-align:center;background:#edf8f3;border:1px solid #cfe8da;border-radius:14px;padding:18px;margin-top:15px}.success.show{display:block}.order{font-size:24px;color:var(--navy);font-weight:900;margin:8px}.small{font-size:10px;color:var(--muted);line-height:1.8;margin-top:8px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}.field.full{grid-column:auto}}
+</style>
+</head>
+<body>
+<div class="wrap"><div class="card">
+<img class="logo" src="./logo.png" alt="قوافل الحرمين">
+<div class="title"><h1>🛍️ بازار قوافل الحرمين</h1><p>اطلب من السعودية ونحن نشتري لك ونوصله إلى العراق.</p></div>
+<div class="notice"><b>كيف يعمل الطلب؟</b><br>أرسل لنا اسم المنتج أو رابط المتجر السعودي. نراجع الطلب، ثم نرسل لك السعر النهائي قبل الشراء.</div>
+<form id="form">
+<div class="grid">
+<div class="field"><label>الاسم الكامل *</label><input id="name" required maxlength="120"></div>
+<div class="field"><label>رقم الهاتف *</label><input id="phone" required maxlength="30" inputmode="tel"></div>
+<div class="field"><label>نوع الطلب</label><select id="kind"><option value="منتج من القناة">منتج من القناة</option><option value="رابط من متجر سعودي">رابط من متجر سعودي</option><option value="طلب خاص">طلب خاص</option></select></div>
+<div class="field"><label>الكمية</label><input id="qty" type="number" min="1" value="1" required></div>
+<div class="field full"><label>اسم المنتج أو وصفه *</label><input id="product" required maxlength="500" placeholder="مثال: عطر ... أو جهاز ..."></div>
+<div class="field full"><label>رابط المنتج من المتجر السعودي</label><input id="url" type="url" maxlength="1000" placeholder="https://..."></div>
+<div class="field full"><label>ملاحظات إضافية</label><textarea id="notes" maxlength="2000" placeholder="المقاس، اللون، النوع، أو أي تفاصيل مهمة"></textarea></div>
+</div>
+<button class="btn" id="submit">إرسال طلب الشراء</button>
+</form>
+<div class="success" id="success"><b>تم استلام طلبك بنجاح ✅</b><div class="order" id="order"></div><div>احتفظ برقم الطلب. سنراجع المنتج ونرسل لك السعر النهائي قبل الشراء.</div><div class="small">لا يتم شراء المنتج قبل تأكيد السعر والدفع حسب شروط الطلب.</div></div>
+</div></div>
+<script>
+const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K);
+const $=id=>document.getElementById(id);
+$('form').addEventListener('submit',async e=>{
+ e.preventDefault(); const b=$('submit'); b.disabled=true;b.textContent='⏳ جارٍ إرسال الطلب...';
+ try{
+  const product=$('product').value.trim(),url=$('url').value.trim(),qty=Math.max(1,Number($('qty').value||1));
+  const request='['+$('kind').value+'] '+product;
+  const r=await db.from('bazaar_orders').insert({customer_name:$('name').value.trim(),customer_phone:$('phone').value.trim(),customer_notes:$('notes').value.trim()||null,product_request:request,source_url:url||null,quantity:qty,status:'new',payment_status:'unpaid',quoted_product_amount:0,service_fee:0,shipping_fee:0,total_amount_iqd:0,paid_amount_iqd:0}).select('order_number').single();
+  if(r.error)throw r.error;
+  $('order').textContent='رقم الطلب: '+r.data.order_number;$('form').style.display='none';$('success').classList.add('show');
+ }catch(err){alert('تعذر إرسال الطلب الآن. يرجى المحاولة مرة أخرى.');console.error(err);b.disabled=false;b.textContent='إرسال طلب الشراء'}
+});
+</script>
+</body></html>
