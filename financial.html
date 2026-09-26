@@ -99,7 +99,7 @@ async function saveWalletTx(){const supplier_id=$('walletSupplier').value,type=$
 <div class="field" id="outSharedToggleWrap"><label>ربط المصروف</label><label style="display:flex;align-items:center;gap:8px;background:#fffaf0;border:1px solid #ead9a7;border-radius:10px;padding:10px;cursor:pointer"><input id="outSharedToggle" type="checkbox" onchange="syncTripExpenseMode()"> 🔗 مصروف مشترك بين رحلتين أو أكثر</label></div>
 <div id="sharedTripWrap" class="field hidden" style="grid-column:1/-1;background:#f8fbfd;border:1px solid #d5e5ee;border-radius:12px;padding:12px">
 <label>الرحلات المشتركة</label>
-<select id="outSharedPrograms" multiple size="5" style="width:100%;padding:8px;border:1px solid #d5e0e6;border-radius:10px"></select>
+<div id="outSharedPrograms" style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px"></div>
 <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin-top:10px">
 <div class="field" style="min-width:220px"><label>طريقة توزيع المبلغ</label><select id="outSharedMode" onchange="renderSharedAllocationEditor()"><option value="equal">⚖️ بالتساوي</option><option value="manual">✏️ توزيع يدوي</option></select></div>
 <div class="muted">اختر رحلتين أو أكثر. النظام يسجل المصروف مرة واحدة ويحمّل كل رحلة حصتها فقط.</div>
@@ -254,9 +254,8 @@ function programNamesForTx(x){
 }
 function renderSharedTripChoices(){
  const el=$('outSharedPrograms');if(!el)return;
- const selected=new Set([...el.selectedOptions].map(o=>o.value));
- el.innerHTML=PROGS.map(p=>'<option value="'+p.id+'">'+esc(p.title)+' — '+esc(p.departure_date||'')+'</option>').join('');
- [...el.options].forEach(o=>{if(selected.has(o.value))o.selected=true});
+ const selected=new Set([...el.querySelectorAll('input[type="checkbox"]:checked')].map(o=>o.value));
+ el.innerHTML=PROGS.map(p=>'<label style="display:flex;align-items:center;gap:9px;padding:10px 12px;background:#fff;border:1px solid #d5e0e6;border-radius:10px;cursor:pointer;transition:.15s"><input type="checkbox" value="'+p.id+'" '+(selected.has(p.id)?'checked':'')+' onchange="renderSharedAllocationEditor()" style="width:18px;height:18px;accent-color:#176644"><span><b>'+esc(p.title)+'</b><br><small class="muted">'+esc(p.departure_date||'')+'</small></span></label>').join('')||'<div class="muted">لا توجد رحلات متاحة.</div>';
  renderSharedAllocationEditor();
 }
 function syncTripExpenseMode(){
@@ -271,7 +270,7 @@ function syncTripExpenseMode(){
 function renderSharedAllocationEditor(){
  const box=$('outSharedAllocations'),sel=$('outSharedPrograms'),mode=$('outSharedMode');
  if(!box||!sel||!mode)return;
- const ids=[...sel.selectedOptions].map(o=>o.value);
+ const ids=[...sel.querySelectorAll('input[type="checkbox"]:checked')].map(o=>o.value);
  if(ids.length<2){box.innerHTML='<div class="msg">اختر رحلتين أو أكثر ليظهر توزيع المبلغ.</div>';return}
  const total=Number($('outAmount')?.value||0);
  if(mode.value==='equal'){
@@ -295,7 +294,7 @@ function updateSharedAllocTotal(){
  const el=$('sharedAllocTotal');if(el)el.innerHTML='مجموع التوزيع: <b>'+fmt(sum)+' '+esc(cur)+'</b> '+(Math.abs(sum-total)<0.005?'✅ مطابق للمبلغ':'⚠️ يجب أن يساوي المبلغ '+fmt(total)+' '+esc(cur));
 }
 function getSharedAllocations(){
- const sel=$('outSharedPrograms'),mode=$('outSharedMode'),amount=Number($('outAmount').value||0),ids=[...sel.selectedOptions].map(o=>o.value);
+ const sel=$('outSharedPrograms'),mode=$('outSharedMode'),amount=Number($('outAmount').value||0),ids=[...sel.querySelectorAll('input[type="checkbox"]:checked')].map(o=>o.value);
  if(ids.length<2)return {error:'اختر رحلتين أو أكثر للمصروف المشترك.'};
  let parts=[];
  if(mode.value==='equal'){
@@ -565,7 +564,7 @@ async function addManual(direction){
  $(pre+'Msg').innerHTML='<div class="msg">'+(sharedRows?'✅ تم تسجيل المصروف مرة واحدة وتوزيعه على '+sharedRows.length+' رحلات.':'تم تسجيل الحركة بنجاح.')+'</div>';
  ['Amount','Party','Notes'].forEach(x=>$(pre+x).value='');
  if($('outSharedToggle'))$('outSharedToggle').checked=false;
- if($('outSharedPrograms'))[...$('outSharedPrograms').options].forEach(o=>o.selected=false);
+ if($('outSharedPrograms'))$('outSharedPrograms').querySelectorAll('input[type="checkbox"]').forEach(o=>o.checked=false);
  syncTripExpenseMode();await loadAll();
 }
 function renderLedger(O=officialTx()){const q=($('ledgerSearch').value||'').toLowerCase();const finance=O.map(x=>({...x,_label:catLabel[x.category]||x.category,_party:x.party_name||'—'}));const wallet=WALLET_TX.map(x=>({transaction_date:x.transaction_date,direction:x.transaction_type==='deposit'?'in':'out',_label:x.transaction_type==='deposit'?'إيداع خزينة مورد':'صرف من خزينة مورد',description:x.description||'حركة خزينة المورد',_party:(SUPPLIERS.find(s=>s.id===x.supplier_id)?.name)||'—',amount:x.amount,currency:x.currency,program_id:x.program_id}));const arr=[...finance,...wallet].filter(x=>((x.description||'')+' '+(x._party||'')+' '+(x._label||'')).toLowerCase().includes(q)).sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));$('ledgerRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="'+x.direction+'">'+(x.direction==='in'?'🟢 وارد':'🔴 صرف')+'</td><td>'+esc(x._label)+'</td><td>'+esc(x.description||'')+'</td><td>'+esc(x._party||'—')+'</td><td class="'+x.direction+'">'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td><td>'+esc(programName(x.program_id))+'</td>').join('')||'<tr><td colspan="8">لا توجد حركات</td></tr>'}
