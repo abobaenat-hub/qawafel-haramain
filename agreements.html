@@ -19,6 +19,13 @@
 .detail{background:#f8fafc;border:1px solid var(--line);border-radius:14px;padding:13px;margin-top:10px}.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-top:10px}.slot{background:#fff;border:1px solid #dce5ea;border-radius:12px;padding:10px;min-height:75px}.slot.empty{border-style:dashed;text-align:center}.slot b{display:block;color:var(--n);font-size:11px}.slot small{display:block;color:var(--muted);margin-top:4px;font-size:9px}.slot .slot-actions{display:flex;gap:5px;margin-top:7px}.slot .slot-actions button{font-size:9px;padding:6px 7px}
 .candidate{position:fixed;inset:0;background:#072b49a8;display:flex;align-items:center;justify-content:center;padding:14px;z-index:100}.candidate-card{width:min(700px,100%);max-height:90vh;overflow:auto;background:#fff;border-radius:18px;padding:18px}.candidate-list{display:grid;gap:7px;margin-top:10px}.candidate-item{display:flex;justify-content:space-between;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:10px}.candidate-item b{font-size:11px}.candidate-item small{display:block;color:var(--muted);font-size:9px;margin-top:3px}
 .notice{background:#fff9ec;border:1px solid #efd9a6;color:#72551a;padding:11px;border-radius:11px;font-size:10px;line-height:1.8}
+.trip-checkboxes{display:grid;gap:8px;max-height:260px;overflow:auto;padding:2px}
+.trip-check{display:flex;align-items:center;gap:10px;border:1px solid #d8e1e6;border-radius:11px;padding:10px 11px;background:#fff;cursor:pointer;transition:.15s}
+.trip-check:hover{border-color:var(--g);background:#fffaf0}
+.trip-check input{width:19px;height:19px;accent-color:var(--n);flex:0 0 auto;margin:0}
+.trip-check .trip-text{display:block;min-width:0}
+.trip-check .trip-title{display:block;font-weight:900;color:var(--n);font-size:11px}
+.trip-check .trip-meta{display:block;color:var(--muted);font-size:9px;margin-top:3px}
 @media(max-width:850px){.grid{grid-template-columns:1fr 1fr}.stats{grid-template-columns:1fr 1fr}.slots{grid-template-columns:1fr 1fr}.topin{align-items:flex-start;flex-wrap:wrap}}
 @media(max-width:550px){.grid,.grid2,.stats,.slots{grid-template-columns:1fr}.wrap{padding:13px}}
 </style>
@@ -60,7 +67,7 @@
 <section class="card">
 <h3 style="margin-top:0;color:var(--n)">1) اختر الرحلة أولاً</h3>
 <div class="grid2">
-<div class="field"><label>الرحلات</label><select id="programSelect" multiple size="5" style="min-height:125px"><option value="">جاري تحميل الرحلات...</option></select><div class="notice" style="margin-top:6px">يمكن اختيار أكثر من رحلة. تظهر هنا <b>الرحلات المنشورة فقط</b>.</div></div>
+<div class="field"><label>الرحلات</label><div id="programSelect" class="trip-checkboxes"><label class="trip-check"><input type="checkbox" disabled><span class="trip-text"><span class="trip-title">جاري تحميل الرحلات...</span></span></label></div><div class="notice" style="margin-top:6px">ضع ✓ أمام كل رحلة تريد ربط الاتفاقية بها. تظهر هنا <b>الرحلات المنشورة فقط</b>.</div></div>
 <div class="field"><label>حالة الرحلة</label><div id="programInfo" class="notice" style="min-height:42px">اختر الرحلة التي تريد العمل عليها. الاتفاقيات مشتركة، لكن خانات المعتمرين والترحيل تكون حسب الرحلة.</div></div>
 </div>
 </section>
@@ -145,12 +152,21 @@ async function load(){
  renderPrograms();render();renderPilgrimLinker();
 }
 function renderPrograms(){
- const sel=$('programSelect');
+ const box=$('programSelect');
  const current=new Set(selectedProgramIds);
  const eligible=PROGRAMS.filter(p=>p.status==='published');
- sel.innerHTML=eligible.map(p=>'<option value="'+p.id+'">'+esc(programLabel(p))+'</option>').join('');
- Array.from(sel.options).forEach(o=>{if(current.has(o.value))o.selected=true;});
- if(!eligible.length) sel.innerHTML='<option value="" disabled>لا توجد رحلات منشورة متاحة</option>';
+ if(!eligible.length){
+   box.innerHTML='<div class="notice">لا توجد رحلات منشورة متاحة.</div>';
+   updateProgramInfo();
+   return;
+ }
+ box.innerHTML=eligible.map(p=>`<label class="trip-check">
+   <input type="checkbox" value="${p.id}" ${current.has(p.id)?'checked':''}>
+   <span class="trip-text">
+     <span class="trip-title">${esc(p.title||'رحلة')}</span>
+     <span class="trip-meta">${esc((p.departure_date||'بدون تاريخ')+(p.travel_type?' — '+p.travel_type:''))}</span>
+   </span>
+ </label>`).join('');
  updateProgramInfo();
 }
 function updateProgramInfo(){
@@ -159,7 +175,7 @@ function updateProgramInfo(){
  $('programInfo').innerHTML=selected.length?'<b>تم اختيار '+selected.length+' رحلة</b><br><span style="font-size:9px">'+selected.map(x=>esc(programLabel(x))).join(' | ')+'</span><br><span style="font-size:9px">'+(p?'يمكن الآن العمل على هذه الرحلة.':'عند اختيار أكثر من رحلة، ربط الاتفاقية يشملها كلها. لإدارة خانات المعتمرين يجب اختيار رحلة واحدة فقط.')+'</span>':'اختر رحلة منشورة واحدة أو أكثر. الاتفاقية سترتبط بكل الرحلات المختارة.';
 }
 function selectPrograms(){
- selectedProgramIds=Array.from($('programSelect').selectedOptions||[]).map(o=>o.value).filter(Boolean);
+ selectedProgramIds=Array.from($('programSelect').querySelectorAll('input[type="checkbox"]:checked')).map(o=>o.value).filter(Boolean);
  selectedProgram=selectedProgramIds.length===1?selectedProgramIds[0]:null;
  selectedAgreement=null;selectedSlot=null;
  document.getElementById('agreementDetail')?.remove();
@@ -319,7 +335,7 @@ async function transferOne(id){
 }
 async function start(){
  if(!await auth())return;
- $('programSelect').onchange=selectPrograms;$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('candidateSearch').oninput=renderCandidates;
+ $('programSelect').addEventListener('change',selectPrograms);$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('candidateSearch').oninput=renderCandidates;
  $('add').onclick=addAgreement;$('refresh').onclick=load;$('pilgrimSelect').onchange=e=>loadPilgrimAgreements(e.target.value);$('savePilgrimAgreements').onclick=savePilgrimAgreements;$('logout').onclick=async()=>{await db.auth.signOut();location.href='./index.html'};
  toggleHotelFields();await load();
 }
