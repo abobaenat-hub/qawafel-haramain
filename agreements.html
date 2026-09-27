@@ -105,9 +105,9 @@
 
 <section class="stats">
 <div class="stat"><span>كل الاتفاقيات</span><b id="stAll">0</b></div>
-<div class="stat"><span>اتفاقيات الفنادق</span><b id="stHotel">0</b></div>
-<div class="stat"><span>أسرة الفنادق</span><b id="stBeds">0</b></div>
-<div class="stat"><span>المتبقي من الأسرة</span><b id="stRemain">0</b></div>
+<div class="stat"><span>اتفاقيات المدينة</span><b id="stMadinah">0</b></div>
+<div class="stat"><span>اتفاقيات مكة</span><b id="stMakkah">0</b></div>
+<div class="stat"><span>تفصيل أسرة الفنادق</span><div id="stBedsDetail" style="margin-top:8px;line-height:1.8;font-size:10px">—</div></div>
 </section>
 
 <section class="card">
@@ -185,9 +185,15 @@ function selectedProgramsForAgreement(){return selectedProgramIds.slice();}
 function render(){
  const q=($('search').value||'').trim().toLowerCase(),f=$('filter').value;
  const arr=A.filter(a=>(f==='all'||a.agreement_kind===f)&&(!q||[a.agreement_number,a.hotel_name,cityLabel(a.city)].join(' ').toLowerCase().includes(q)));
- $('stAll').textContent=A.length;$('stHotel').textContent=A.filter(a=>a.agreement_kind==='hotel').length;
- $('stBeds').textContent=A.filter(a=>a.agreement_kind==='hotel').reduce((n,a)=>n+(a.capacity||0),0);
- $('stRemain').textContent=A.filter(a=>a.agreement_kind==='hotel').reduce((n,a)=>n+remaining(a),0);
+ const hotelAgreements=A.filter(a=>a.agreement_kind==='hotel');
+ const madinahHotels=hotelAgreements.filter(a=>a.city==='madinah');
+ const makkahHotels=hotelAgreements.filter(a=>a.city==='makkah');
+ $('stAll').textContent=A.length;
+ $('stMadinah').textContent=madinahHotels.length;
+ $('stMakkah').textContent=makkahHotels.length;
+ $('stBedsDetail').innerHTML=hotelAgreements.length
+   ? hotelAgreements.map(a=>`<div style="padding:4px 0;border-bottom:1px solid var(--line)"><b>${esc(cityLabel(a.city))}</b> — ${esc(a.hotel_name||'فندق')}<br><span style="color:var(--muted)">السعة: ${a.capacity||0} سرير | المستخدم: ${globalAssigned(a.id).length} | المتبقي: ${remaining(a)}</span></div>`).join('')
+   : 'لا توجد اتفاقيات فندقية';
  $('rows').innerHTML=arr.map(a=>{
    const used=globalAssigned(a.id).length, tripUsed=selectedProgram?assigned(a.id,selectedProgram).length:0,rem=remaining(a);
    const status=a.active===false?'<span class="badge b-red">متوقفة</span>':a.agreement_kind==='hotel'&&rem===0?'<span class="badge b-orange">مكتملة</span>':'<span class="badge b-green">متاحة</span>';
