@@ -76,7 +76,7 @@
 <div class="grid2" style="margin-top:10px"><div class="field"><label>الرحلات المختارة</label><div id="linkProgramInfo" class="notice">اختر رحلة من الأعلى أولاً.</div></div><div class="field"><label>عدد المعتمرين المحددين</label><div id="groupSelectionInfo" class="notice">المحدد: 0</div></div></div>
 <div class="grid2" style="margin-top:10px"><div class="field"><label>اتفاقية المدينة <span style="color:var(--muted);font-size:9px">(اختيارية)</span></label><select id="groupMadinahAgreement"><option value="">بدون اتفاقية مدينة</option></select><div id="groupMadinahInfo" class="agreement-capacity" style="margin-top:5px"></div></div><div class="field"><label>اتفاقية مكة <span style="color:var(--muted);font-size:9px">(اختيارية)</span></label><select id="groupMakkahAgreement"><option value="">بدون اتفاقية مكة</option></select><div id="groupMakkahInfo" class="agreement-capacity" style="margin-top:5px"></div></div></div>
 <div class="field" style="margin-top:10px"><label>المعتمرون — اختيار جماعي</label><div class="toolbar" style="margin-bottom:7px"><input id="groupPilgrimSearch" placeholder="بحث بالاسم أو الجواز أو رمز الملف"><button class="btn gray" type="button" id="groupSelectAll">تحديد الكل</button><button class="btn gray" type="button" id="groupClearAll">إلغاء التحديد</button></div><div id="groupPilgrimList" class="group-pilgrim-list"><div class="notice">اختر رحلة من الأعلى أولاً.</div></div></div>
-<div class="toolbar" style="margin-top:11px"><button class="btn primary" id="saveGroupAssignments">ربط المعتمرين المحددين بالاتفاقيات</button></div><div id="linkMsg" class="msg hide"></div>
+<div class="toolbar" style="margin-top:11px"><button class="btn primary" id="saveGroupAssignments">ربط المعتمرين المحددين بالاتفاقيات</button><button class="btn gold" type="button" id="showAgreementMessage">📋 رسالة الاتفاقية</button></div><div id="linkMsg" class="msg hide"></div>
 </section>
 
 <section class="card add-agreement-panel">
@@ -97,6 +97,8 @@
 <div class="table"><table><thead><tr><th>النوع</th><th>رقم الاتفاقية</th><th>الرحلات المرتبطة</th><th>المدينة</th><th>الفندق</th><th>الدخول</th><th>الخروج</th><th>السعة</th><th>المستخدم</th><th>المتبقي</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="rows"><tr><td colspan="12">جاري التحميل...</td></tr></tbody></table></div>
 </section>
 </main>
+
+<div id="agreementMessageModal" class="candidate hide"><div class="candidate-card" style="width:min(720px,100%)"><div class="toolbar" style="justify-content:space-between"><h3 style="margin:0;color:var(--n)">📋 رسالة الاتفاقية</h3><button class="btn gray" type="button" id="closeAgreementMessage">إغلاق</button></div><textarea id="agreementMessageText" readonly style="margin-top:10px;min-height:390px;line-height:1.9;direction:rtl"></textarea><div class="toolbar" style="margin-top:10px"><button class="btn primary" type="button" id="copyAgreementMessage">نسخ الرسالة</button></div></div></div>
 
 <div id="candidateModal" class="candidate hide"><div class="candidate-card"><div class="toolbar" style="justify-content:space-between"><h3 style="margin:0;color:var(--n)">اختيار معتمر للخانة <span id="slotLabel"></span></h3><button class="btn gray" onclick="closeCandidate()">إغلاق</button></div><div class="notice" style="margin-top:10px">تظهر هنا المعتمرون الذين لم يتم ترحيلهم إلى الفيزا بعد. اختيار المعتمر يحجز الخانة فقط، ولا يعتبره مرحّلًا. الترحيل يتم لاحقًا من زر «ترحيل إلى الفيزا».</div><input id="candidateSearch" style="margin-top:10px" placeholder="بحث بالاسم أو الجواز أو رمز الملف"><div id="candidateList" class="candidate-list"></div></div></div>
 
@@ -294,6 +296,47 @@ function updateGroupAgreementInfoOnly(){
  const ids=[['groupMadinahAgreement','groupMadinahInfo'],['groupMakkahAgreement','groupMakkahInfo']];
  ids.forEach(([sid,iid])=>{const el=$(sid),info=$(iid);if(!el||!info)return;const a=A.find(x=>x.id===el.value);info.textContent=a?'السعة: '+(a.capacity||0)+' | المستخدم: '+globalAssigned(a.id).length+' | المتبقي: '+remaining(a):'';});
 }
+function buildAgreementMessage(){
+ const mdId=$('groupMadinahAgreement')?.value||'',mkId=$('groupMakkahAgreement')?.value||'';
+ const md=A.find(a=>a.id===mdId),mk=A.find(a=>a.id===mkId);
+ const ids=groupSelectedIds();
+ const linkedCount=ids.length;
+ const date=(v)=>v?new Date(v+'T00:00:00').toLocaleDateString('en-GB'):''; 
+ const arrival=md?.check_in||'',departure=mk?.check_out||'';
+ return `رقم المجموعة:
+
+عدد المعتمرين: ${linkedCount}
+
+الجنسية: العراق
+
+اسم فندق مكة: ${mk?.hotel_name||''}
+تاريخ الدخول: ${date(mk?.check_in)}
+تاريخ الخروج: ${date(mk?.check_out)}
+رقم الاتفاقية: ${mk?.agreement_number||''}
+
+اسم فندق المدينة: ${md?.hotel_name||''}
+تاريخ الدخول: ${date(md?.check_in)}
+تاريخ الخروج: ${date(md?.check_out)}
+رقم الاتفاقية: ${md?.agreement_number||''}
+
+تاريخ الوصول مع رقم الرحلة:
+التاريخ: ${date(arrival)}
+
+تاريخ المغادرة مع رقم الرحلة:
+التاريخ: ${date(departure)}
+
+شاكرين تعاونكم`;
+}
+function openAgreementMessage(){
+ const t=$('agreementMessageText'); if(!t)return;
+ t.value=buildAgreementMessage();$('agreementMessageModal').classList.remove('hide');
+}
+function closeAgreementMessage(){$('agreementMessageModal')?.classList.add('hide');}
+async function copyAgreementMessage(){
+ const t=$('agreementMessageText'); if(!t)return;
+ try{await navigator.clipboard.writeText(t.value);}catch(e){t.select();document.execCommand('copy');}
+ toast('تم نسخ رسالة الاتفاقية ✅');
+}
 async function saveGroupAssignments(){
  const checkedPrograms=Array.from(document.querySelectorAll('#programSelect input[type="checkbox"]:checked')).map(x=>x.value).filter(Boolean);
  selectedProgramIds=checkedPrograms; selectedProgram=checkedPrograms.length===1?checkedPrograms[0]:null;
@@ -431,6 +474,9 @@ async function start(){
  if(!await auth())return;
  $('programSelect').addEventListener('change',selectPrograms);
  $('toggleAddAgreement').onclick=()=>{$('addAgreementBody').classList.toggle('hide');};$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('groupMadinahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupMakkahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupPilgrimSearch').oninput=renderGroupPilgrims;$('groupPilgrimList').addEventListener('change',updateGroupSelectionInfo);$('groupSelectAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=true);updateGroupSelectionInfo();};$('groupClearAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=false);updateGroupSelectionInfo();};$('saveGroupAssignments').onclick=saveGroupAssignments;
+ $('showAgreementMessage').onclick=openAgreementMessage;
+ $('closeAgreementMessage').onclick=closeAgreementMessage;
+ $('copyAgreementMessage').onclick=copyAgreementMessage;
  $('add').onclick=addAgreement;$('refresh').onclick=load;$('logout').onclick=async()=>{await db.auth.signOut();location.href='./index.html'};
  toggleHotelFields();await load();
 }
