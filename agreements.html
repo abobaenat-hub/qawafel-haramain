@@ -155,20 +155,34 @@ async function auth(){
  return true;
 }
 async function load(){
- const [ar,sr,pr,rr,br]=await Promise.all([
-   db.from('travel_agreements').select('*').order('created_at',{ascending:false}),
-   db.from('travel_agreement_assignments').select('*').order('slot_number'),
-   db.from('pilgrims').select('id,full_name,passport_number,profile_code,visa_status,visa_transferred_at,booking_id').order('created_at',{ascending:false}),
-   db.from('programs').select('id,title,departure_date,return_date,status,travel_type').order('departure_date',{ascending:false}),
-   db.from('bookings').select('id,program_id')
- ]);
- const bad=[ar,sr,pr,rr,br].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
- A=ar.data||[];AS=sr.data||[];P=pr.data||[];PROGRAMS=rr.data||[];
- BOOKING_PROGRAMS=Object.fromEntries((br.data||[]).map(x=>[x.id,x.program_id]));
+ const ar=await db.from('travel_agreements').select('*').order('created_at',{ascending:false});
+ if(ar.error){toast('تعذر تحميل الاتفاقيات: '+ar.error.message,false);return;}
+ A=ar.data||[];
+ render();
+ renderGroupAgreementOptions();
+
+ const rr=await db.from('programs').select('id,title,departure_date,return_date,status,travel_type').order('departure_date',{ascending:false});
+ if(rr.error){toast('تعذر تحميل الرحلات: '+rr.error.message,false);return;}
+ PROGRAMS=rr.data||[];
+ renderPrograms();
+ renderPilgrimLinker();
+
+ const sr=await db.from('travel_agreement_assignments').select('*').order('slot_number');
+ AS=sr.error?[]:(sr.data||[]);
+
+ const br=await db.from('bookings').select('id,program_id');
+ BOOKING_PROGRAMS=br.error?{}:Object.fromEntries((br.data||[]).map(x=>[x.id,x.program_id]));
+
+ const pr=await db.from('pilgrims').select('id,full_name,passport_number,profile_code,visa_status,visa_transferred_at,booking_id').order('created_at',{ascending:false});
+ P=pr.error?[]:(pr.data||[]);
+
  const agr=await db.from('travel_agreement_programs').select('agreement_id,program_id').order('created_at',{ascending:true});
  AGP=agr.error?[]:(agr.data||[]);
- renderPrograms();render();renderPilgrimLinker();
+
+ render();
+ renderPilgrimLinker();
 }
+
 function renderPrograms(){
  const box=$('programSelect');
  const current=new Set(selectedProgramIds);
