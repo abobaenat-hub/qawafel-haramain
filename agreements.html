@@ -190,6 +190,10 @@ function updateProgramInfo(){
  const p=selected.length===1?selected[0]:null;
  $('programInfo').innerHTML=selected.length?'<b>تم اختيار '+selected.length+' رحلة</b><br><span style="font-size:9px">'+selected.map(x=>esc(programLabel(x))).join(' | ')+'</span><br><span style="font-size:9px">'+(p?'يمكن الآن العمل على هذه الرحلة.':'عند اختيار أكثر من رحلة، ربط الاتفاقية يشملها كلها. لإدارة خانات المعتمرين يجب اختيار رحلة واحدة فقط.')+'</span>':'اختر رحلة منشورة واحدة أو أكثر. الاتفاقية سترتبط بكل الرحلات المختارة.';
 }
+function getSelectedProgramId(){
+ const ids=Array.from(document.querySelectorAll('#programSelect input[type="checkbox"]:checked')).map(o=>o.value).filter(Boolean);
+ return ids.length===1?ids[0]:null;
+}
 function selectPrograms(){
  selectedProgramIds=Array.from($('programSelect').querySelectorAll('input[type="checkbox"]:checked')).map(o=>o.value).filter(Boolean);
  selectedProgram=selectedProgramIds.length===1?selectedProgramIds[0]:null;
@@ -241,6 +245,7 @@ function agreementsForProgram(city=null){
  return A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false&&(!city||a.city===city));
 }
 function renderPilgrimLinker(){
+ selectedProgram=getSelectedProgramId();
  const pp=PROGRAMS.find(x=>x.id===selectedProgram);
  $('linkProgramInfo').innerHTML=pp?'<b>'+esc(programLabel(pp))+'</b><br><span style="font-size:9px">يمكن اختيار اتفاقية المدينة ومكة معًا أو اختيار واحدة فقط.</span>':(selectedProgramIds.length>1?'<b>تم اختيار أكثر من رحلة</b><br><span style="font-size:9px">لربط المعتمرين، اختر رحلة واحدة فقط من الأعلى.</span>':'اختر رحلة واحدة من الأعلى أولاً.');
  renderGroupAgreementOptions();
@@ -262,6 +267,7 @@ function updateGroupAgreementInfo(){
  updateGroupSelectionInfo();
 }
 function renderGroupPilgrims(){
+ selectedProgram=getSelectedProgramId();
  const box=$('groupPilgrimList'); if(!box)return;
  const q=($('groupPilgrimSearch').value||'').trim().toLowerCase();
  if(!selectedProgram){box.innerHTML=selectedProgramIds.length>1?'<div class="notice">اختر رحلة واحدة فقط من الأعلى لربط المعتمرين.</div>':'<div class="notice">اختر رحلة واحدة من الأعلى أولاً.</div>';updateGroupSelectionInfo();return;}
@@ -286,6 +292,7 @@ function updateGroupAgreementInfoOnly(){
  ids.forEach(([sid,iid])=>{const el=$(sid),info=$(iid);if(!el||!info)return;const a=A.find(x=>x.id===el.value);info.textContent=a?'السعة: '+(a.capacity||0)+' | المستخدم: '+globalAssigned(a.id).length+' | المتبقي: '+remaining(a):'';});
 }
 async function saveGroupAssignments(){
+ selectedProgram=getSelectedProgramId();
  if(!selectedProgram){toast('اختر رحلة واحدة فقط أولاً.',false);return;}
  const aidList=[$('groupMadinahAgreement').value,$('groupMakkahAgreement').value].filter(Boolean);
  if(!aidList.length){toast('اختر اتفاقية المدينة أو اتفاقية مكة على الأقل.',false);return;}
@@ -331,6 +338,7 @@ async function toggleAgreement(id,wasActive){
  if(r.error){toast(r.error.message,false);return;}await load();
 }
 function openAgreement(id){
+ selectedProgram=getSelectedProgramId();
  if(!selectedProgram){toast('اختر الرحلة أولاً.',false);return;}
  const a=A.find(x=>x.id===id);if(!a)return;selectedAgreement=id;
  const box=document.createElement('div');box.className='card';box.id='agreementDetail';
@@ -351,6 +359,7 @@ function slotHtml(a){
  }).join('');
 }
 function chooseCandidate(aid,slot){
+ selectedProgram=getSelectedProgramId();
  if(!selectedProgram){toast('اختر الرحلة أولاً.',false);return;}
  selectedAgreement=aid;selectedSlot=slot;$('slotLabel').textContent=slot;$('candidateSearch').value='';$('candidateModal').classList.remove('hide');renderCandidates();
 }
@@ -363,6 +372,7 @@ function renderCandidates(){
  $('candidateList').innerHTML=list.map(p=>`<div class="candidate-item"><div><b>${esc(p.full_name)}</b><small>${esc(p.passport_number||'—')} · ${esc(p.profile_code||'—')} · حالة الفيزا: ${esc(p.visa_status||'pending')}</small></div><button class="btn green" onclick="assignCandidate('${p.id}')">اختيار</button></div>`).join('')||'<div style="text-align:center;color:var(--muted);padding:20px">لا يوجد معتمرون غير مرحّلين متاحون لهذه الخانة.</div>';
 }
 async function assignCandidate(pid){
+ selectedProgram=getSelectedProgramId();
  const a=A.find(x=>x.id===selectedAgreement);if(!a)return;
  if(!selectedProgram){toast('اختر الرحلة أولاً.',false);return;}
  if(remaining(a)<=0){toast(`الاتفاقية ${a.agreement_number} مكتملة ولا توجد أسرة متبقية.`,false);closeCandidate();return;}
@@ -390,6 +400,7 @@ async function removeAssignment(id){
  const a=A.find(z=>z.id===x.agreement_id);await load();document.getElementById('agreementDetail')?.remove();if(a)openAgreement(a.id);
 }
 async function transferOne(id){
+ selectedProgram=getSelectedProgramId();
  const x=AS.find(z=>z.id===id);if(!x)return;const p=P.find(z=>z.id===x.pilgrim_id);if(!p)return;
  if(p.visa_transferred_at){toast('هذا المعتمر مرحّل مسبقًا إلى الفيزا.',false);return;}
  const allForPilgrim=AS.filter(z=>z.pilgrim_id===p.id&&z.program_id===selectedProgram);
