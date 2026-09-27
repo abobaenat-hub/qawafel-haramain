@@ -60,7 +60,7 @@
 <section class="card">
 <h3 style="margin-top:0;color:var(--n)">1) اختر الرحلة أولاً</h3>
 <div class="grid2">
-<div class="field"><label>الرحلة</label><select id="programSelect"><option value="">جاري تحميل الرحلات...</option></select></div>
+<div class="field"><label>الرحلات</label><select id="programSelect" multiple size="5" style="min-height:125px"><option value="">جاري تحميل الرحلات...</option></select><div class="notice" style="margin-top:6px">يمكن اختيار أكثر من رحلة. تظهر هنا <b>الرحلات المنشورة فقط</b>.</div></div>
 <div class="field"><label>حالة الرحلة</label><div id="programInfo" class="notice" style="min-height:42px">اختر الرحلة التي تريد العمل عليها. الاتفاقيات مشتركة، لكن خانات المعتمرين والترحيل تكون حسب الرحلة.</div></div>
 </div>
 </section>
@@ -75,7 +75,6 @@
 <div class="field hotelOnly"><label>تاريخ الدخول</label><input id="checkin" type="date"></div>
 <div class="field hotelOnly"><label>تاريخ الخروج</label><input id="checkout" type="date"></div>
 <div class="field hotelOnly"><label>عدد الأسرّة</label><input id="capacity" type="number" min="0" step="1" placeholder="مثلاً 6"></div>
-<div class="field" style="grid-column:1/-1"><label>الرحلات المرتبطة بالاتفاقية</label><select id="agreementPrograms" multiple size="5" style="min-height:125px"></select><div class="notice" style="margin-top:6px">يمكن اختيار أكثر من رحلة. تظهر هنا الرحلات <b>المنشورة فقط</b>، وتُستبعد الرحلات المكتملة أو الموقوفة أو المؤرشفة.</div></div>
 <div class="field"><label>ملاحظات</label><input id="notes" placeholder="ملاحظات اختيارية"></div>
 </div>
 <div class="toolbar" style="margin-top:11px"><button class="btn primary" id="add">+ إضافة الاتفاقية</button></div>
@@ -115,7 +114,7 @@
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K);
-let A=[],AS=[],P=[],PROGRAMS=[],BOOKING_PROGRAMS={},AGP=[],selectedProgram=null,selectedAgreement=null,selectedSlot=null;
+let A=[],AS=[],P=[],PROGRAMS=[],BOOKING_PROGRAMS={},AGP=[],selectedProgramIds=[],selectedProgram=null,selectedAgreement=null,selectedSlot=null;
 
 const $=id=>document.getElementById(id);
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -143,34 +142,30 @@ async function load(){
  ]);
  const bad=[ar,sr,pr,rr,br,agr].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
  A=ar.data||[];AS=sr.data||[];P=pr.data||[];PROGRAMS=rr.data||[];BOOKING_PROGRAMS=Object.fromEntries((br.data||[]).map(x=>[x.id,x.program_id]));AGP=agr.data||[];
- renderPrograms();renderAgreementPrograms();render();renderPilgrimLinker();
+ renderPrograms();render();renderPilgrimLinker();
 }
 function renderPrograms(){
  const sel=$('programSelect');
- const current=selectedProgram;
- sel.innerHTML='<option value="">اختر الرحلة...</option>'+PROGRAMS.map(p=>`<option value="${p.id}">${esc(programLabel(p))} — ${esc(p.status||'')}</option>`).join('');
- if(current&&PROGRAMS.some(p=>p.id===current)) sel.value=current;
+ const current=new Set(selectedProgramIds);
+ const eligible=PROGRAMS.filter(p=>p.status==='published');
+ sel.innerHTML=eligible.map(p=>'<option value="'+p.id+'">'+esc(programLabel(p))+'</option>').join('');
+ Array.from(sel.options).forEach(o=>{if(current.has(o.value))o.selected=true;});
+ if(!eligible.length) sel.innerHTML='<option value="" disabled>لا توجد رحلات منشورة متاحة</option>';
  updateProgramInfo();
 }
-function renderAgreementPrograms(){
- const el=$('agreementPrograms'); if(!el)return;
- const eligible=PROGRAMS.filter(p=>p.status==='published');
- el.innerHTML=eligible.map(p=>'<option value="'+p.id+'">'+esc(programLabel(p))+'</option>').join('');
- if(!eligible.length) el.innerHTML='<option value="" disabled>لا توجد رحلات منشورة متاحة</option>';
-}
-function selectedAgreementProgramIds(){
- return Array.from($('agreementPrograms')?.selectedOptions||[]).map(o=>o.value).filter(Boolean);
-}
-function agreementProgramsLabel(aid){
- return AGP.filter(x=>x.agreement_id===aid).map(x=>PROGRAMS.find(p=>p.id===x.program_id)).filter(Boolean).map(programLabel);
-}
 function updateProgramInfo(){
- const p=PROGRAMS.find(x=>x.id===selectedProgram);
- $('programInfo').innerHTML=p?`<b>${esc(programLabel(p))}</b><br><span style="font-size:9px">الحالة: ${esc(p.status||'—')} — هذه الرحلة هي التي ستظهر معتمروها داخل الخانات.</span>`:'اختر الرحلة التي تريد العمل عليها. الاتفاقيات مشتركة، لكن الخانات والترحيل تكون حسب الرحلة.';
+ const selected=PROGRAMS.filter(x=>selectedProgramIds.includes(x.id));
+ const p=selected.length===1?selected[0]:null;
+ $('programInfo').innerHTML=selected.length?'<b>تم اختيار '+selected.length+' رحلة</b><br><span style="font-size:9px">'+selected.map(x=>esc(programLabel(x))).join(' | ')+'</span><br><span style="font-size:9px">'+(p?'يمكن الآن العمل على هذه الرحلة.':'عند اختيار أكثر من رحلة، ربط الاتفاقية يشملها كلها. لإدارة خانات المعتمرين يجب اختيار رحلة واحدة فقط.')+'</span>':'اختر رحلة منشورة واحدة أو أكثر. الاتفاقية سترتبط بكل الرحلات المختارة.';
 }
-function selectProgram(id){
- selectedProgram=id||null;selectedAgreement=null;selectedSlot=null;document.getElementById('agreementDetail')?.remove();updateProgramInfo();render();renderPilgrimLinker();
+function selectPrograms(){
+ selectedProgramIds=Array.from($('programSelect').selectedOptions||[]).map(o=>o.value).filter(Boolean);
+ selectedProgram=selectedProgramIds.length===1?selectedProgramIds[0]:null;
+ selectedAgreement=null;selectedSlot=null;
+ document.getElementById('agreementDetail')?.remove();
+ updateProgramInfo();render();renderPilgrimLinker();
 }
+function selectedProgramsForAgreement(){return selectedProgramIds.slice();}
 function render(){
  const q=($('search').value||'').trim().toLowerCase(),f=$('filter').value;
  const arr=A.filter(a=>(f==='all'||a.agreement_kind===f)&&(!q||[a.agreement_number,a.hotel_name,cityLabel(a.city)].join(' ').toLowerCase().includes(q)));
@@ -224,7 +219,7 @@ async function savePilgrimAgreements(){
 }
 
 async function addAgreement(){
- const kind=$('kind').value,num=$('number').value.trim(),programIds=selectedAgreementProgramIds();
+ const kind=$('kind').value,num=$('number').value.trim(),programIds=selectedProgramsForAgreement();
  if(!num){toast('أدخل رقم الاتفاقية.',false);return;}
  if(!programIds.length){toast('اختر رحلة منشورة واحدة على الأقل للاتفاقية.',false);return;}
  const invalid=programIds.map(id=>PROGRAMS.find(p=>p.id===id)).find(p=>!p||p.status!=='published');
@@ -241,7 +236,6 @@ async function addAgreement(){
  }
  try{await db.rpc('log_audit_event',{p_action:'create_travel_agreement',p_entity_type:'travel_agreement',p_entity_id:r.data.id,p_entity_label:num,p_details:{...payload,program_ids:programIds},p_page:'agreements.html'});}catch(e){}
  $('number').value='';$('hotel').value='';$('checkin').value='';$('checkout').value='';$('capacity').value='';$('notes').value='';
- Array.from($('agreementPrograms').options).forEach(o=>o.selected=false);
  toast('تمت إضافة الاتفاقية وربطها بالرحلات المحددة ✅');await load();
 }
 function toggleHotelFields(){document.querySelectorAll('.hotelOnly').forEach(x=>x.style.display=$('kind').value==='hotel'?'':'none');}
@@ -325,7 +319,7 @@ async function transferOne(id){
 }
 async function start(){
  if(!await auth())return;
- $('programSelect').onchange=e=>selectProgram(e.target.value);$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('candidateSearch').oninput=renderCandidates;
+ $('programSelect').onchange=selectPrograms;$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('candidateSearch').oninput=renderCandidates;
  $('add').onclick=addAgreement;$('refresh').onclick=load;$('pilgrimSelect').onchange=e=>loadPilgrimAgreements(e.target.value);$('savePilgrimAgreements').onclick=savePilgrimAgreements;$('logout').onclick=async()=>{await db.auth.signOut();location.href='./index.html'};
  toggleHotelFields();await load();
 }
