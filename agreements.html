@@ -147,8 +147,7 @@ function kindLabel(k){return k==='hotel'?'🏨 فندق':k==='air'?'✈️ طي�
 function cityLabel(c){return c==='madinah'?'المدينة المنورة':c==='makkah'?'مكة المكرمة':'—';}
 function assigned(aid,programId=null){return AS.filter(x=>x.agreement_id===aid&&(!programId||x.program_id===programId));}
 function globalAssigned(aid){return AS.filter(x=>x.agreement_id===aid);}
-function remaining(a){return a.agreement_kind==='hotel'?Math.max(0,(a.capacity||0)-globalAssigned(a.id).length):null;}
-function bookingProgramId(bookingId){return BOOKING_PROGRAMS[bookingId]||null;}
+function remaining(a){return a.agreement_kind==='hotel'?Math.max(0,(a.capacity||0)-globalAssigned(a.id).length):null;}function bookingProgramId(bookingId){return BOOKING_PROGRAMS[bookingId]||null;}
 function programLabel(p){return `${p.title||'رحلة'} — ${p.departure_date||'بدون تاريخ'}${p.travel_type?' — '+p.travel_type:''}`;}
 
 async function auth(){
@@ -297,8 +296,7 @@ async function saveGroupAssignments(){
  const usedByAgreement=new Map(uniqueAids.map(aid=>[aid,new Set(globalAssigned(aid).map(x=>x.slot_number))]));
  const rows=[];
  for(const aid of uniqueAids){const used=usedByAgreement.get(aid);for(const pid of ids){if(AS.some(x=>x.agreement_id===aid&&x.program_id===selectedProgram&&x.pilgrim_id===pid))continue;let slot=1;while(used.has(slot))slot++;used.add(slot);rows.push({agreement_id:aid,pilgrim_id:pid,program_id:selectedProgram,slot_number:slot,travel_type:(PROGRAMS.find(p=>p.id===selectedProgram)?.travel_type||null),status:'reserved'});}}
- if(!rows.length){toast('المعتمرون المحددون مرتبطون بالفعل بالاتفاقيات المختارة.',false);return;}
- const r=await db.from('travel_agreement_assignments').insert(rows);
+ if(!rows.length){toast('المعتمرون المحددون مرتبطون بالفعل بالاتفاقيات المختارة.',false);return;} const r=await db.from('travel_agreement_assignments').insert(rows);
  if(r.error){toast(r.error.message,false);return;}
  toast('تم ربط '+ids.length+' معتمر بالاتفاقيات المحددة وتوزيع الخانات تلقائيًا ✅');
  await load();
@@ -398,3 +396,39 @@ async function transferOne(id){
  const cities=new Set(allForPilgrim.map(z=>A.find(a=>a.id===z.agreement_id)?.city).filter(Boolean));
  if(!cities.has('madinah')||!cities.has('makkah')){toast('لا يمكن الترحيل بعد: المعتمر يحتاج اتفاقية مدينة واتفاقية مكة أولًا.',false);return;}
  if(!confirm('تأكيد ترحيل '+(p.full_name||'المعتمر')+' إلى الفيزا؟'))return;
+ const now=new Date().toISOString();
+ const u=await db.from('pilgrims').update({visa_transferred_at:now}).eq('id',p.id).is('visa_transferred_at',null);
+ if(u.error){toast(u.error.message,false);return;}
+ const ar=await db.from('travel_agreement_assignments').update({status:'transferred',transferred_at:now,updated_at:now}).eq('pilgrim_id',p.id).eq('program_id',selectedProgram).eq('status','reserved');
+ if(ar.error){toast('تم تسجيل الترحيل لكن تعذر تحديث حالة الخانات: '+ar.error.message,false);return;}
+ try{await db.rpc('log_audit_event',{p_action:'transfer_pilgrim_to_visa',p_entity_type:'pilgrim',p_entity_id:p.id,p_entity_label:p.full_name,p_details:{agreement_ids:allForPilgrim.map(z=>z.agreement_id)},p_page:'agreements.html'});}catch(e){}
+ toast('تم ترحيل '+(p.full_name||'المعتمر')+' إلى الفيزا وتثبيت الاتفاقيات ✅');await load();document.getElementById('agreementDetail')?.remove();openAgreement(selectedAgreement);
+}
+async function start(){
+ if(!await auth())return;
+ $('programSelect').addEventListener('change',selectPrograms);$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('groupMadinahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupMakkahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupPilgrimSearch').oninput=renderGroupPilgrims;$('groupPilgrimList').addEventListener('change',updateGroupSelectionInfo);$('groupSelectAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=true);updateGroupSelectionInfo();};$('groupClearAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=false);updateGroupSelectionInfo();};$('saveGroupAssignments').onclick=saveGroupAssignments;
+ $('add').onclick=addAgreement;$('refresh').onclick=load;$('logout').onclick=async()=>{await db.auth.signOut();location.href='./index.html'};
+ toggleHotelFields();await load();
+}
+start();
+</script>
+<script id="qawafel-agreements-menu-v287">
+(function(){
+ const d=document.getElementById('qawafelDrawer'),o=document.getElementById('qawafelDrawerOverlay'),b=document.getElementById('qawafelTopMenuBtn'),s=document.getElementById('qdSearch');
+ if(!d||!o||!b)return;
+ b.onclick=()=>{d.classList.toggle('open');o.classList.toggle('show');};
+ o.onclick=()=>{d.classList.remove('open');o.classList.remove('show');};
+ d.querySelectorAll('.qd-section>button').forEach(x=>x.onclick=()=>x.parentElement.classList.toggle('open'));
+ s?.addEventListener('input',()=>{
+   const q=(s.value||'').trim().toLowerCase().replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/^ال/,'');
+   d.classList.toggle('qd-searching',!!q);
+   d.querySelectorAll('.qd-section').forEach(sec=>{
+     const match=!q || (sec.textContent||'').trim().toLowerCase().replace(/[أإآ]/g,'ا').replace(/ة/g,'ه').replace(/^ال/,'').startsWith(q);
+     const box=d.querySelector('[data-links="'+sec.dataset.group+'"]');
+     sec.classList.toggle('match',match); if(box)box.classList.toggle('match',match);
+     if(match&&q)sec.classList.add('open');
+   });
+ });
+ d.querySelectorAll('.qd-link').forEach(a=>a.onclick=()=>{d.classList.remove('open');o.classList.remove('show');});
+})();
+</script></body></html>
