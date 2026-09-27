@@ -296,12 +296,20 @@ function renderGroupPilgrims(){
  const box=$('groupPilgrimList'); if(!box)return;
  const q=($('groupPilgrimSearch').value||'').trim().toLowerCase();
  const selected=new Set(Array.from(box.querySelectorAll('input[type="checkbox"]:checked')).map(x=>x.value));
- const selectedAgreements=[$('groupMadinahAgreement')?.value,$('groupMakkahAgreement')?.value].filter(Boolean);
- const already=new Set();
- selectedAgreements.forEach(aid=>AS.filter(x=>selectedProgramIds.includes(x.program_id)&&x.agreement_id===aid).forEach(x=>already.add(x.pilgrim_id)));
+ const mdAgreement=$('groupMadinahAgreement')?.value||'';
+ const mkAgreement=$('groupMakkahAgreement')?.value||'';
+ const selectedAgreements=[mdAgreement,mkAgreement].filter(Boolean);
  const list=P.filter(p=>{
    const pid=bookingProgramId(p.booking_id);
-   return selectedProgramIds.includes(pid)&&!p.visa_transferred_at&&!already.has(p.id)&&(!q||[p.full_name,p.passport_number,p.profile_code].join(' ').toLowerCase().includes(q));
+   if(!selectedProgramIds.includes(pid)||p.visa_transferred_at)return false;
+   // إذا اختيرت اتفاقية واحدة: أخفِ المعتمر بعد ربطه بها.
+   // إذا اختيرت اتفاقيتا المدينة ومكة: يبقى ظاهرًا حتى يكتمل الربط بالاثنتين.
+   if(selectedAgreements.length){
+     const linked=new Set(AS.filter(x=>x.pilgrim_id===p.id&&x.program_id===pid).map(x=>x.agreement_id));
+     const fullyLinked=selectedAgreements.every(aid=>linked.has(aid));
+     if(fullyLinked)return false;
+   }
+   return !q||[p.full_name,p.passport_number,p.profile_code].join(' ').toLowerCase().includes(q);
  });
  box.innerHTML=list.map(p=>{
    const pid=bookingProgramId(p.booking_id),prog=PROGRAMS.find(x=>x.id===pid);
