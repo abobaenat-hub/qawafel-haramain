@@ -177,7 +177,7 @@ function renderPrograms(){
    return;
  }
  box.innerHTML=eligible.map(p=>`<label class="trip-check">
-   <input type="checkbox" value="${p.id}" ${current.has(p.id)?'checked':''}>
+   <input type="checkbox" value="${p.id}" ${current.has(p.id)?'checked':''} onchange="selectPrograms()">
    <span class="trip-text">
      <span class="trip-title">${esc(p.title||'رحلة')}</span>
      <span class="trip-meta">${esc((p.departure_date||'بدون تاريخ')+(p.travel_type?' — '+p.travel_type:''))}</span>
@@ -245,7 +245,9 @@ function agreementsForProgram(city=null){
  return A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false&&(!city||a.city===city));
 }
 function renderPilgrimLinker(){
- selectedProgram=getSelectedProgramId();
+ const checked=Array.from(document.querySelectorAll('#programSelect input[type="checkbox"]:checked')).map(x=>x.value).filter(Boolean);
+ selectedProgramIds=checked;
+ selectedProgram=checked.length===1?checked[0]:null;
  const pp=PROGRAMS.find(x=>x.id===selectedProgram);
  $('linkProgramInfo').innerHTML=pp?'<b>'+esc(programLabel(pp))+'</b><br><span style="font-size:9px">يمكن اختيار اتفاقية المدينة ومكة معًا أو اختيار واحدة فقط.</span>':(selectedProgramIds.length>1?'<b>تم اختيار أكثر من رحلة</b><br><span style="font-size:9px">لربط المعتمرين، اختر رحلة واحدة فقط من الأعلى.</span>':'اختر رحلة واحدة من الأعلى أولاً.');
  renderGroupAgreementOptions();
@@ -267,7 +269,9 @@ function updateGroupAgreementInfo(){
  updateGroupSelectionInfo();
 }
 function renderGroupPilgrims(){
- selectedProgram=getSelectedProgramId();
+ const checked=Array.from(document.querySelectorAll('#programSelect input[type="checkbox"]:checked')).map(x=>x.value).filter(Boolean);
+ selectedProgramIds=checked;
+ selectedProgram=checked.length===1?checked[0]:null;
  const box=$('groupPilgrimList'); if(!box)return;
  const q=($('groupPilgrimSearch').value||'').trim().toLowerCase();
  if(!selectedProgram){box.innerHTML=selectedProgramIds.length>1?'<div class="notice">اختر رحلة واحدة فقط من الأعلى لربط المعتمرين.</div>':'<div class="notice">اختر رحلة واحدة من الأعلى أولاً.</div>';updateGroupSelectionInfo();return;}
