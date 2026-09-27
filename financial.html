@@ -38,12 +38,14 @@ function calcWalletWithdrawalIqd(){
    iqd=rate>0?amount*rate:0;
  }else if(currency==='SAR'){
    const sourceCur=$('walletSourceCurrency').value||'USD';
-   const sourceAmount=Number($('walletSourceAmount').value||0);
-   const fx=Number($('walletFxRate').value||0)||3.75;
-   const usd=sourceCur==='USD'?(sourceAmount>0?sourceAmount:amount/fx):amount/fx;
+   const fx=Number($('walletFxRate').value||0);
    const usdIqd=Number($('walletIqdRate').value||0);
-   iqd=usd>0&&usdIqd>0?usd*usdIqd:0;
-   if(iqd)$('walletWithdrawalIqd').dataset.usd=usd.toFixed(6);
+   if(sourceCur==='USD'&&fx>0){
+     const usd=amount/fx;
+     $('walletSourceAmount').value=usd.toFixed(6);
+     $('walletWithdrawalIqd').dataset.usd=usd.toFixed(6);
+     iqd=usdIqd>0?usd*usdIqd:0;
+   }
  }
  el.value=iqd?Math.round(iqd).toLocaleString('en-US')+' د.ع':'';
  return iqd
@@ -57,9 +59,11 @@ async function saveWalletTx(){
    if(currency==='SAR'){
      const usdRate=Number($('walletIqdRate').value||0);
      const usdPerSar=Number($('walletFxRate').value||0);
-     const usd=usdPerSar>0?amount/usdPerSar:0;
-     if(!usdPerSar)return alert('أدخل سعر الدولار مقابل الريال');
+     if(!usdPerSar)return alert('أدخل سعر تحويل الدولار إلى الريال');
      if(!usdRate)return alert('أدخل سعر الدولار مقابل الدينار');
+     const usd=amount/usdPerSar;
+     $('walletSourceCurrency').value='USD';
+     $('walletSourceAmount').value=usd.toFixed(6);
      amountIqd=Number((usd*usdRate).toFixed(2));
    }else{
      amountIqd=calcWalletWithdrawalIqd();
@@ -71,7 +75,7 @@ async function saveWalletTx(){
    amountIqd=Number((amount*rate).toFixed(2));
  }
  const {data:{user}}=await db.auth.getUser();
- const payload={supplier_id,transaction_type:type,currency,amount,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:date,program_id,description:$('walletDescription').value.trim()||null,source_currency:sc===currency?null:sc,source_amount:sc===currency?null:sa,fx_rate:sc===currency?null:fx,exchange_rate_to_iqd:type==='withdrawal'?rate:null};
+ const payload={supplier_id,transaction_type:type,currency,amount,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:date,program_id,description:$('walletDescription').value.trim()||null,source_currency:type==='withdrawal'&&currency==='SAR'?'USD':(sc===currency?null:sc),source_amount:type==='withdrawal'&&currency==='SAR'?Number($('walletSourceAmount').value||0):(sc===currency?null:sa),fx_rate:type==='withdrawal'&&currency==='SAR'?fx:(sc===currency?null:fx),exchange_rate_to_iqd:type==='withdrawal'&&currency==='SAR'?Number($('walletIqdRate').value||0):(type==='withdrawal'?rate:null)};
  const r=window.__editingWalletId?await db.from('supplier_wallet_transactions').update(payload).eq('id',window.__editingWalletId):await db.from('supplier_wallet_transactions').insert({...payload,created_by:user?.id||null});
  if(r.error)alert(r.error.message);else {window.__editingWalletId=null;$('walletEditor').classList.add('hidden');$('walletEditor').style.position='';$('walletEditor').style.inset='';$('walletEditor').style.zIndex='';$('walletEditor').style.overflow='';await loadAll();if(CURRENT_SUPPLIER_STATEMENT)showSupplierStatement(CURRENT_SUPPLIER_STATEMENT);['walletAmount','walletSourceAmount','walletFxRate','walletIqdRate','walletDescription'].forEach(id=>{const el=$(id);if(el)el.value=''});$('walletSourceCurrency').value='';$('walletCurrency').value='SAR';$('walletType').value='deposit';$('walletDate').value=dateToday();$('walletProgram').value='';syncWalletFxFields()}}
 
