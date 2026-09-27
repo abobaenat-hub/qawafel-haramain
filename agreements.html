@@ -105,9 +105,8 @@
 
 <section class="stats">
 <div class="stat"><span>كل الاتفاقيات</span><b id="stAll">0</b></div>
-<div class="stat"><span>اتفاقيات المدينة</span><b id="stMadinah">0</b></div>
-<div class="stat"><span>اتفاقيات مكة</span><b id="stMakkah">0</b></div>
-<div class="stat"><span>تفصيل أسرة الفنادق</span><div id="stBedsDetail" style="margin-top:8px;line-height:1.8;font-size:10px">—</div></div>
+<div class="stat"><span>اتفاقيات المدينة</span><b id="stMadinah">0</b><div id="stMadinahDetail" style="margin-top:8px;line-height:1.8;font-size:10px">—</div></div>
+<div class="stat"><span>اتفاقيات مكة</span><b id="stMakkah">0</b><div id="stMakkahDetail" style="margin-top:8px;line-height:1.8;font-size:10px">—</div></div>
 </section>
 
 <section class="card">
@@ -188,12 +187,14 @@ function render(){
  const hotelAgreements=A.filter(a=>a.agreement_kind==='hotel');
  const madinahHotels=hotelAgreements.filter(a=>a.city==='madinah');
  const makkahHotels=hotelAgreements.filter(a=>a.city==='makkah');
+ const hotelDetail=arr=>arr.length
+   ? arr.map(a=>`<div style="padding:3px 0;border-bottom:1px solid var(--line)"><b>${esc(a.hotel_name||'فندق')}</b> — ${a.capacity||0} سرير</div>`).join('')
+   : 'لا توجد اتفاقيات فندقية';
  $('stAll').textContent=A.length;
  $('stMadinah').textContent=madinahHotels.length;
  $('stMakkah').textContent=makkahHotels.length;
- $('stBedsDetail').innerHTML=hotelAgreements.length
-   ? hotelAgreements.map(a=>`<div style="padding:4px 0;border-bottom:1px solid var(--line)"><b>${esc(cityLabel(a.city))}</b> — ${esc(a.hotel_name||'فندق')}<br><span style="color:var(--muted)">السعة: ${a.capacity||0} سرير | المستخدم: ${globalAssigned(a.id).length} | المتبقي: ${remaining(a)}</span></div>`).join('')
-   : 'لا توجد اتفاقيات فندقية';
+ $('stMadinahDetail').innerHTML=hotelDetail(madinahHotels);
+ $('stMakkahDetail').innerHTML=hotelDetail(makkahHotels);
  $('rows').innerHTML=arr.map(a=>{
    const used=globalAssigned(a.id).length, tripUsed=selectedProgram?assigned(a.id,selectedProgram).length:0,rem=remaining(a);
    const status=a.active===false?'<span class="badge b-red">متوقفة</span>':a.agreement_kind==='hotel'&&rem===0?'<span class="badge b-orange">مكتملة</span>':'<span class="badge b-green">متاحة</span>';
