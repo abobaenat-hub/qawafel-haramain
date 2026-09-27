@@ -378,7 +378,7 @@ async function transferOne(id){
 async function start(){
  if(!await auth())return;
  $('programSelect').addEventListener('change',selectPrograms);$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('groupAgreement').onchange=renderGroupPilgrims;$('groupPilgrimSearch').oninput=renderGroupPilgrims;$('groupPilgrimList').addEventListener('change',updateGroupSelectionInfo);$('groupSelectAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=true);updateGroupSelectionInfo();};$('groupClearAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=false);updateGroupSelectionInfo();};$('saveGroupAssignments').onclick=saveGroupAssignments;
- $('add').onclick=addAgreement;$('refresh').onclick=load;$('pilgrimSelect').onchange=e=>loadPilgrimAgreements(e.target.value);$('savePilgrimAgreements').onclick=savePilgrimAgreements;$('logout').onclick=async()=>{await db.auth.signOut();location.href='./index.html'};
+ $('add').onclick=addAgreement;$('refresh').onclick=load;$('logout').onclick=async()=>{await db.auth.signOut();location.href='./index.html'};
  toggleHotelFields();await load();
 }
 start();
