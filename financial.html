@@ -329,20 +329,30 @@ function syncOutWalletCurrency(){
  if(cur)$('outCurrency').value=cur;
 }
 let CURRENT_SUPPLIER_STATEMENT=null;
-function showSupplierStatement(id){
+async function showSupplierStatement(id){
  const s=SUPPLIERS.find(x=>x.id===id); if(!s)return;
  CURRENT_SUPPLIER_STATEMENT=id;
  const rows=WALLET_TX.filter(x=>x.supplier_id===id).sort((a,b)=>new Date(a.transaction_date)-new Date(b.transaction_date));
+ const pr=await db.from('supplier_payments').select('*').eq('supplier_id',id).order('payment_date',{ascending:true});
+ const payments=pr.data||[];
  const byCur={};
  rows.forEach(x=>{(byCur[x.currency] ||= {deposit:0,withdrawal:0,balance:0}); const a=Number(x.amount||0); byCur[x.currency][x.transaction_type==='deposit'?'deposit':'withdrawal']+=a;});
  Object.values(byCur).forEach(v=>v.balance=v.deposit-v.withdrawal);
+ const payByCur={};
+ payments.forEach(x=>{const cur=x.currency||'IQD';payByCur[cur]=(payByCur[cur]||0)+Number(x.amount||0);});
  let html='<div id="printStatement"><div style="text-align:center;margin-bottom:16px"><h2 style="margin:0">شركة قوافل الحرمين للحج والعمرة</h2><h3 style="margin:8px 0">سند حساب المورد</h3></div>';
  html+='<div class="msg"><b>المورد:</b> '+esc(s.name)+' &nbsp; | &nbsp; <b>الهاتف:</b> '+esc(s.phone||'—')+' &nbsp; | &nbsp; <b>الخدمة:</b> '+esc(s.category||'—')+'<br><b>تاريخ السند:</b> '+fmtDate(new Date())+'</div>';
- html+='<div class="grid3" style="margin-bottom:12px">'+Object.entries(byCur).map(([cur,v])=>'<div class="msg"><b>'+esc(cur)+'</b><br>الخزين: '+fmt(v.deposit)+'<br>الصرف: '+fmt(v.withdrawal)+'<br><b>الباقي: '+fmt(v.balance)+'</b></div>').join('')+'</div>';
+ html+='<div class="grid3" style="margin-bottom:12px">'+Object.entries(byCur).map(([cur,v])=>'<div class="msg"><b>خزينة '+esc(cur)+'</b><br>الإيداع: '+fmt(v.deposit)+'<br>السحب: '+fmt(v.withdrawal)+'<br><b>الرصيد: '+fmt(v.balance)+'</b></div>').join('')+'</div>';
+ html+='<div class="panel" style="margin-top:12px"><div class="sectionTitle"><h3 style="margin:0">💳 الدفعات المباشرة للمورد</h3><span class="muted">هذه الدفعات لا تدخل ضمن خزينة المورد</span></div>';
+ html+='<div class="grid3">'+Object.entries(payByCur).map(([cur,v])=>'<div class="msg"><b>'+esc(cur)+'</b><br>إجمالي الدفعات: <strong>'+fmt(v)+'</strong></div>').join('')+'</div>';
+ html+='<div class="table"><table><thead><tr><th>التاريخ</th><th>نوع الحركة</th><th>المبلغ</th><th>المعادل بالدينار</th><th>الرحلة</th><th>طريقة الدفع</th></tr></thead><tbody>';
+ payments.forEach(x=>{html+='<tr><td>'+fmtDate(x.payment_date)+'</td><td class="out">🔴 دفعة مباشرة</td><td>'+fmt(x.amount)+' '+esc(x.currency||'IQD')+'</td><td>'+fmt(x.amount_iqd||0)+' د.ع</td><td>'+esc(programName(x.program_id))+'</td><td>'+esc(x.payment_method||'—')+'</td></tr>'});
+ html+='</tbody></table></div></div>';
+ html+='<div class="panel" style="margin-top:12px"><h3 style="margin-top:0">📦 حركات خزينة المورد</h3>';
  html+='<div class="table"><table><thead><tr><th>التاريخ</th><th>الحركة</th><th>المبلغ</th><th>المصدر</th><th>الرحلة</th><th>البيان</th><th>الرصيد بعد الحركة</th><th>إجراء</th></tr></thead><tbody>';
  const running={};
  rows.forEach(x=>{const a=Number(x.amount||0);running[x.currency]=(running[x.currency]||0)+(x.transaction_type==='deposit'?a:-a);html+='<tr><td>'+fmtDate(x.transaction_date)+'</td><td class="'+(x.transaction_type==='deposit'?'in':'out')+'">'+(x.transaction_type==='deposit'?'إيداع':'سحب')+'</td><td>'+fmt(a)+' '+esc(x.currency)+'</td><td>'+esc(x.source_amount?fmt(x.source_amount)+' '+x.source_currency:'—')+'</td><td>'+esc(programName(x.program_id))+'</td><td>'+esc(x.description||'')+'</td><td>'+fmt(running[x.currency])+' '+esc(x.currency)+'</td><td><button class="btn" onclick="editSupplierWalletTx(\''+x.id+'\')">✏️ تعديل</button> <button class="btn red" onclick="deleteSupplierWalletTx(\''+x.id+'\')">🗑️ حذف</button></td></tr>'});
- html+='</tbody></table></div><div class="msg" style="margin-top:15px">هذا السند يوضح حركات رصيد المورد المسجلة في النظام، ولا يعني أن السحب نفسه موزع على رحلة إلا إذا تم تسجيل توزيع مستقل له.</div></div>';
+ html+='</tbody></table></div><div class="msg" style="margin-top:15px">الدفعات المباشرة للمورد والخزينة عند المورد حركتان مختلفتان: الدفعة المباشرة تُظهر ما دفعناه للمورد، أما الخزينة فتُظهر المبالغ المودعة أو المسحوبة من رصيده.</div></div></div>';
  $('supplierStatementBody').innerHTML=html;$('supplierStatement').classList.remove('hidden');
 }
 async function editSupplierWalletTx(id){$('suppliers').classList.add('hidden');$('wallet').classList.remove('hidden');await editWalletTx(id);$('walletEditor').style.position='fixed';$('walletEditor').style.inset='15px';$('walletEditor').style.zIndex='200';$('walletEditor').style.overflow='auto';}
