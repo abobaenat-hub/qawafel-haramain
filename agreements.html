@@ -12,7 +12,7 @@
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:11px;font-weight:900;margin-bottom:5px;color:var(--n)}input,select,textarea{width:100%;padding:10px;border:1px solid #ccd8df;border-radius:10px;background:#fff}textarea{min-height:70px}
 .btn{border:0;border-radius:9px;padding:10px 13px;font-weight:900;cursor:pointer}.primary{background:var(--n);color:#fff}.gold{background:var(--g);color:#fff}.green{background:var(--green);color:#fff}.gray{background:#edf3f6;color:var(--n)}.red{background:#fff0f0;color:var(--red);border:1px solid #efcaca}.orange{background:#fff6df;color:var(--orange);border:1px solid #ecd59a}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.toolbar input{max-width:380px}.msg{padding:10px;border-radius:10px;margin-top:10px;font-size:11px}.ok{background:#edf8f3;color:#116342}.err{background:#fff0f0;color:#a03434}.hide{display:none!important}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{border:1px solid var(--line);border-radius:13px;padding:13px;background:#fff}.stat b{display:block;font-size:23px;color:var(--n);margin-top:4px}.stat span{font-size:10px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.stat{border:1px solid var(--line);border-radius:13px;padding:14px 15px;background:#fff;min-height:108px}.stat>span{display:block;font-size:10px;color:var(--muted);font-weight:900;margin-bottom:7px}.stat> b{display:block;font-size:24px;color:var(--n);margin-top:0}.stat-detail{display:grid;gap:5px;margin-top:7px}.stat-detail .hotel-line{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid #e5ebee;border-radius:9px;background:#f8fafb;font-size:10px}.stat-detail .hotel-name{font-weight:900;color:var(--n)}.stat-detail .hotel-meta{font-size:9px;color:var(--muted);white-space:nowrap}
 .table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:950px}th,td{text-align:right;padding:10px 8px;border-bottom:1px solid var(--line);font-size:11px;vertical-align:middle}th{background:#f4f7f9;color:var(--n)}
 .badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}.b-green{background:#e8f7ef;color:var(--green)}.b-orange{background:#fff4d9;color:#7b5b0e}.b-gray{background:#edf3f6;color:#526671}.b-red{background:#fff0f0;color:var(--red)}
 .agreement-row{cursor:pointer}.agreement-row:hover td{background:#fbfdfe}
@@ -188,8 +188,8 @@ function render(){
  const madinahHotels=hotelAgreements.filter(a=>a.city==='madinah');
  const makkahHotels=hotelAgreements.filter(a=>a.city==='makkah');
  const hotelDetail=arr=>arr.length
-   ? arr.map(a=>`<div style="padding:3px 0;border-bottom:1px solid var(--line)"><b>${esc(a.hotel_name||'فندق')}</b><br><span style="font-size:9px;color:var(--muted)">رقم الاتفاقية: <b>${esc(a.agreement_number||'—')}</b> — ${a.capacity||0} سرير</span></div>`).join('')
-   : 'لا توجد اتفاقيات فندقية';
+   ? '<div class="stat-detail">'+arr.map(a=>`<div class="hotel-line"><span class="hotel-name">${esc(a.hotel_name||'فندق')}</span><span class="hotel-meta">اتفاقية ${esc(a.agreement_number||'—')} · ${a.capacity||0} سرير</span></div>`).join('')+'</div>'
+   : '<div style="font-size:9px;color:var(--muted);margin-top:8px">لا توجد اتفاقيات فندقية</div>';
  $('stAll').textContent=A.length;
  $('stMadinah').textContent=madinahHotels.length;
  $('stMakkah').textContent=makkahHotels.length;
