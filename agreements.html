@@ -75,6 +75,7 @@
 <div class="field hotelOnly"><label>تاريخ الدخول</label><input id="checkin" type="date"></div>
 <div class="field hotelOnly"><label>تاريخ الخروج</label><input id="checkout" type="date"></div>
 <div class="field hotelOnly"><label>عدد الأسرّة</label><input id="capacity" type="number" min="0" step="1" placeholder="مثلاً 6"></div>
+<div class="field" style="grid-column:1/-1"><label>الرحلات المرتبطة بالاتفاقية</label><select id="agreementPrograms" multiple size="5" style="min-height:125px"></select><div class="notice" style="margin-top:6px">يمكن اختيار أكثر من رحلة. تظهر هنا الرحلات <b>المنشورة فقط</b>، وتُستبعد الرحلات المكتملة أو الموقوفة أو المؤرشفة.</div></div>
 <div class="field"><label>ملاحظات</label><input id="notes" placeholder="ملاحظات اختيارية"></div>
 </div>
 <div class="toolbar" style="margin-top:11px"><button class="btn primary" id="add">+ إضافة الاتفاقية</button></div>
@@ -105,7 +106,7 @@
 
 <section class="card">
 <div class="toolbar"><input id="search" placeholder="بحث برقم الاتفاقية أو الفندق"><select id="filter"><option value="all">كل الأنواع</option><option value="hotel">فنادق</option><option value="air">طيران</option><option value="ground">بر</option></select></div>
-<div class="table"><table><thead><tr><th>النوع</th><th>رقم الاتفاقية</th><th>المدينة</th><th>الفندق</th><th>الدخول</th><th>الخروج</th><th>السعة</th><th>المستخدم</th><th>المتبقي</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="rows"><tr><td colspan="11">جاري التحميل...</td></tr></tbody></table></div>
+<div class="table"><table><thead><tr><th>النوع</th><th>رقم الاتفاقية</th><th>الرحلات المرتبطة</th><th>المدينة</th><th>الفندق</th><th>الدخول</th><th>الخروج</th><th>السعة</th><th>المستخدم</th><th>المتبقي</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody id="rows"><tr><td colspan="12">جاري التحميل...</td></tr></tbody></table></div>
 </section>
 </main>
 
@@ -114,7 +115,7 @@
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K);
-let A=[],AS=[],P=[],PROGRAMS=[],BOOKING_PROGRAMS={},selectedProgram=null,selectedAgreement=null,selectedSlot=null;
+let A=[],AS=[],P=[],PROGRAMS=[],BOOKING_PROGRAMS={},AGP=[],selectedProgram=null,selectedAgreement=null,selectedSlot=null;
 
 const $=id=>document.getElementById(id);
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -132,16 +133,17 @@ async function auth(){
  return true;
 }
 async function load(){
- const [ar,sr,pr,rr,br]=await Promise.all([
+ const [ar,sr,pr,rr,br,agr]=await Promise.all([
    db.from('travel_agreements').select('*').order('created_at',{ascending:false}),
    db.from('travel_agreement_assignments').select('*').order('slot_number'),
    db.from('pilgrims').select('id,full_name,passport_number,profile_code,visa_status,visa_transferred_at,booking_id').order('created_at',{ascending:false}),
    db.from('programs').select('id,title,departure_date,return_date,status,travel_type').order('departure_date',{ascending:false}),
-   db.from('bookings').select('id,program_id')
+   db.from('bookings').select('id,program_id'),
+   db.from('travel_agreement_programs').select('agreement_id,program_id').order('created_at',{ascending:true})
  ]);
- const bad=[ar,sr,pr,rr,br].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
- A=ar.data||[];AS=sr.data||[];P=pr.data||[];PROGRAMS=rr.data||[];BOOKING_PROGRAMS=Object.fromEntries((br.data||[]).map(x=>[x.id,x.program_id]));
- renderPrograms();render();renderPilgrimLinker();
+ const bad=[ar,sr,pr,rr,br,agr].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
+ A=ar.data||[];AS=sr.data||[];P=pr.data||[];PROGRAMS=rr.data||[];BOOKING_PROGRAMS=Object.fromEntries((br.data||[]).map(x=>[x.id,x.program_id]));AGP=agr.data||[];
+ renderPrograms();renderAgreementPrograms();render();renderPilgrimLinker();
 }
 function renderPrograms(){
  const sel=$('programSelect');
@@ -149,6 +151,18 @@ function renderPrograms(){
  sel.innerHTML='<option value="">اختر الرحلة...</option>'+PROGRAMS.map(p=>`<option value="${p.id}">${esc(programLabel(p))} — ${esc(p.status||'')}</option>`).join('');
  if(current&&PROGRAMS.some(p=>p.id===current)) sel.value=current;
  updateProgramInfo();
+}
+function renderAgreementPrograms(){
+ const el=$('agreementPrograms'); if(!el)return;
+ const eligible=PROGRAMS.filter(p=>p.status==='published');
+ el.innerHTML=eligible.map(p=>'<option value="'+p.id+'">'+esc(programLabel(p))+'</option>').join('');
+ if(!eligible.length) el.innerHTML='<option value="" disabled>لا توجد رحلات منشورة متاحة</option>';
+}
+function selectedAgreementProgramIds(){
+ return Array.from($('agreementPrograms')?.selectedOptions||[]).map(o=>o.value).filter(Boolean);
+}
+function agreementProgramsLabel(aid){
+ return AGP.filter(x=>x.agreement_id===aid).map(x=>PROGRAMS.find(p=>p.id===x.program_id)).filter(Boolean).map(programLabel);
 }
 function updateProgramInfo(){
  const p=PROGRAMS.find(x=>x.id===selectedProgram);
@@ -166,8 +180,10 @@ function render(){
  $('rows').innerHTML=arr.map(a=>{
    const used=globalAssigned(a.id).length, tripUsed=selectedProgram?assigned(a.id,selectedProgram).length:0,rem=remaining(a);
    const status=a.active===false?'<span class="badge b-red">متوقفة</span>':a.agreement_kind==='hotel'&&rem===0?'<span class="badge b-orange">مكتملة</span>':'<span class="badge b-green">متاحة</span>';
-   return `<tr class="agreement-row"><td>${kindLabel(a.agreement_kind)}</td><td><b>${esc(a.agreement_number)}</b></td><td>${cityLabel(a.city)}</td><td>${esc(a.hotel_name||'—')}</td><td>${esc(a.check_in||'—')}</td><td>${esc(a.check_out||'—')}</td><td>${a.capacity??'—'}</td><td>${a.agreement_kind==='hotel'?used:'—'}</td><td>${rem??'—'}</td><td>${status}</td><td><div class="toolbar">${a.agreement_kind==='hotel'?`<button class="btn primary" onclick="event.stopPropagation();openAgreement('${a.id}')">فتح الخانات</button>`:''}<button class="btn red" onclick="event.stopPropagation();toggleAgreement('${a.id}',${a.active!==false})">${a.active===false?'تفعيل':'إيقاف'}</button><button class="btn red agreement-delete-btn" onclick="event.stopPropagation();deleteAgreement('${a.id}')">حذف</button></div></td></tr>`;
- }).join('')||'<tr><td colspan="11" style="text-align:center;color:var(--muted)">لا توجد اتفاقيات.</td></tr>';
+   const linked=agreementProgramsLabel(a.id);
+   const linkedHtml=linked.length?linked.map(x=>'<span class="badge b-gray" style="margin:2px">'+esc(x)+'</span>').join(''):'<span class="badge b-gray">غير مرتبطة برحلة</span>';
+   return `<tr class="agreement-row"><td>${kindLabel(a.agreement_kind)}</td><td><b>${esc(a.agreement_number)}</b></td><td>${linkedHtml}</td><td>${cityLabel(a.city)}</td><td>${esc(a.hotel_name||'—')}</td><td>${esc(a.check_in||'—')}</td><td>${esc(a.check_out||'—')}</td><td>${a.capacity??'—'}</td><td>${a.agreement_kind==='hotel'?used:'—'}</td><td>${rem??'—'}</td><td>${status}</td><td><div class="toolbar">${a.agreement_kind==='hotel'?`<button class="btn primary" onclick="event.stopPropagation();openAgreement('${a.id}')">فتح الخانات</button>`:''}<button class="btn red" onclick="event.stopPropagation();toggleAgreement('${a.id}',${a.active!==false})">${a.active===false?'تفعيل':'إيقاف'}</button><button class="btn red agreement-delete-btn" onclick="event.stopPropagation();deleteAgreement('${a.id}')">حذف</button></div></td></tr>`;
+ }).join('')||'<tr><td colspan="12" style="text-align:center;color:var(--muted)">لا توجد اتفاقيات.</td></tr>';
 }
 function agreementOptionLabel(a){return `${a.agreement_number} — ${cityLabel(a.city)} — ${a.hotel_name||'فندق'} — متبقي ${remaining(a)}`;}
 function renderPilgrimLinker(){
@@ -208,15 +224,25 @@ async function savePilgrimAgreements(){
 }
 
 async function addAgreement(){
- const kind=$('kind').value,num=$('number').value.trim();
+ const kind=$('kind').value,num=$('number').value.trim(),programIds=selectedAgreementProgramIds();
  if(!num){toast('أدخل رقم الاتفاقية.',false);return;}
+ if(!programIds.length){toast('اختر رحلة منشورة واحدة على الأقل للاتفاقية.',false);return;}
+ const invalid=programIds.map(id=>PROGRAMS.find(p=>p.id===id)).find(p=>!p||p.status!=='published');
+ if(invalid){toast('يمكن ربط الاتفاقية بالرحلات المنشورة فقط.',false);return;}
  const payload={agreement_number:num,agreement_kind:kind,city:kind==='hotel'?$('city').value:null,hotel_name:kind==='hotel'?($('hotel').value.trim()||null):null,check_in:kind==='hotel'?($('checkin').value||null):null,check_out:kind==='hotel'?($('checkout').value||null):null,capacity:kind==='hotel'?Number($('capacity').value||0):null,notes:$('notes').value.trim()||null};
  if(kind==='hotel' && !payload.capacity){toast('أدخل عدد الأسرة للاتفاقية الفندقية.',false);return;}
  const r=await db.from('travel_agreements').insert(payload).select().single();
  if(r.error){toast(r.error.message,false);return;}
- try{await db.rpc('log_audit_event',{p_action:'create_travel_agreement',p_entity_type:'travel_agreement',p_entity_id:r.data.id,p_entity_label:num,p_details:payload,p_page:'agreements.html'});}catch(e){}
+ const links=programIds.map(program_id=>({agreement_id:r.data.id,program_id}));
+ const lr=await db.from('travel_agreement_programs').insert(links);
+ if(lr.error){
+   await db.from('travel_agreements').delete().eq('id',r.data.id);
+   toast('تعذر حفظ ربط الرحلات: '+lr.error.message,false);return;
+ }
+ try{await db.rpc('log_audit_event',{p_action:'create_travel_agreement',p_entity_type:'travel_agreement',p_entity_id:r.data.id,p_entity_label:num,p_details:{...payload,program_ids:programIds},p_page:'agreements.html'});}catch(e){}
  $('number').value='';$('hotel').value='';$('checkin').value='';$('checkout').value='';$('capacity').value='';$('notes').value='';
- toast('تمت إضافة الاتفاقية ✅');await load();
+ Array.from($('agreementPrograms').options).forEach(o=>o.selected=false);
+ toast('تمت إضافة الاتفاقية وربطها بالرحلات المحددة ✅');await load();
 }
 function toggleHotelFields(){document.querySelectorAll('.hotelOnly').forEach(x=>x.style.display=$('kind').value==='hotel'?'':'none');}
 async function toggleAgreement(id,wasActive){
