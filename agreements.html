@@ -12,7 +12,7 @@
 .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.field label{display:block;font-size:11px;font-weight:900;margin-bottom:5px;color:var(--n)}input,select,textarea{width:100%;padding:10px;border:1px solid #ccd8df;border-radius:10px;background:#fff}textarea{min-height:70px}
 .btn{border:0;border-radius:9px;padding:10px 13px;font-weight:900;cursor:pointer}.primary{background:var(--n);color:#fff}.gold{background:var(--g);color:#fff}.green{background:var(--green);color:#fff}.gray{background:#edf3f6;color:var(--n)}.red{background:#fff0f0;color:var(--red);border:1px solid #efcaca}.orange{background:#fff6df;color:var(--orange);border:1px solid #ecd59a}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.toolbar input{max-width:380px}.msg{padding:10px;border-radius:10px;margin-top:10px;font-size:11px}.ok{background:#edf8f3;color:#116342}.err{background:#fff0f0;color:#a03434}.hide{display:none!important}
-.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.stat{border:1px solid var(--line);border-radius:13px;padding:14px 15px;background:#fff;min-height:108px}.stat>span{display:block;font-size:10px;color:var(--muted);font-weight:900;margin-bottom:7px}.stat> b{display:block;font-size:24px;color:var(--n);margin-top:0}.stat-detail{display:grid;gap:5px;margin-top:7px}.stat-detail .hotel-line{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid #e5ebee;border-radius:9px;background:#f8fafb;font-size:10px}.stat-detail .hotel-name{font-weight:900;color:var(--n)}.stat-detail .hotel-meta{font-size:9px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:5px}.copy-agreement{border:1px solid #ccd8df;background:#fff;color:var(--n);border-radius:6px;padding:3px 6px;font-size:9px;font-weight:900;cursor:pointer}.copy-agreement:hover{background:#edf4f8}
+.stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}.stat{border:1px solid var(--line);border-radius:13px;padding:14px 15px;background:#fff;min-height:108px}.stat>span{display:block;font-size:10px;color:var(--muted);font-weight:900;margin-bottom:7px}.stat> b{display:block;font-size:24px;color:var(--n);margin-top:0}.stat-detail{display:grid;gap:5px;margin-top:7px}.stat-detail .hotel-line{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px 9px;border:1px solid #e5ebee;border-radius:9px;background:#f8fafb;font-size:10px}.stat-detail .hotel-name{font-weight:900;color:var(--n)}.stat-detail .hotel-meta{font-size:9px;color:var(--muted);white-space:nowrap;display:flex;align-items:center;gap:5px}.agreement-choice{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 9px!important}.agreement-choice .agreement-info{display:flex;flex-direction:column;gap:3px;min-width:0}.agreement-choice .agreement-name{font-weight:900;color:var(--n)}.agreement-choice .agreement-capacity{font-size:9px;color:var(--muted)}.agreement-choice .agreement-remain{font-weight:900}.agreement-choice .agreement-remain.full{color:var(--red)}.copy-agreement{border:1px solid #ccd8df;background:#fff;color:var(--n);border-radius:6px;padding:3px 6px;font-size:9px;font-weight:900;cursor:pointer}.copy-agreement:hover{background:#edf4f8}
 .table{overflow:auto}table{width:100%;border-collapse:collapse;min-width:950px}th,td{text-align:right;padding:10px 8px;border-bottom:1px solid var(--line);font-size:11px;vertical-align:middle}th{background:#f4f7f9;color:var(--n)}
 .badge{display:inline-block;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:900}.b-green{background:#e8f7ef;color:var(--green)}.b-orange{background:#fff4d9;color:#7b5b0e}.b-gray{background:#edf3f6;color:#526671}.b-red{background:#fff0f0;color:var(--red)}
 .agreement-row{cursor:pointer}.agreement-row:hover td{background:#fbfdfe}
@@ -208,6 +208,7 @@ function copyAgreementNumber(number){
  }).join('')||'<tr><td colspan="12" style="text-align:center;color:var(--muted)">لا توجد اتفاقيات.</td></tr>';
 }
 function agreementOptionLabel(a){return `${a.agreement_number} — ${cityLabel(a.city)} — ${a.hotel_name||'فندق'} — متبقي ${remaining(a)}`;}
+function agreementRemainingLabel(a){const rem=remaining(a);return rem>0?`متبقي ${rem} من ${a.capacity||0} سرير`:'مكتملة — 0 متبقي';}
 function renderPilgrimLinker(){
  const ps=$('pilgrimSelect');
  if(!ps)return;
@@ -216,7 +217,7 @@ function renderPilgrimLinker(){
  ps.innerHTML='<option value="">اختر المعتمر...</option>'+candidates.map(p=>`<option value="${p.id}">${esc(p.full_name)} — ${esc(p.passport_number||p.profile_code||'بدون جواز')}</option>`).join('');
  if(current&&candidates.some(p=>p.id===current))ps.value=current;
  const hotels=A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false);
- const fill=(id,city)=>{const el=$(id);const cur=el.value;el.innerHTML='<option value="">بدون اتفاقية</option>'+hotels.filter(a=>a.city===city).map(a=>`<option value="${a.id}">${esc(agreementOptionLabel(a))}</option>`).join('');if(cur&&hotels.some(a=>a.id===cur))el.value=cur;};
+ const fill=(id,city)=>{const el=$(id);const cur=el.value;el.innerHTML='<option value="">بدون اتفاقية</option>'+hotels.filter(a=>a.city===city).map(a=>{const rem=remaining(a);return `<option value="${a.id}" ${rem<=0?'disabled':''}>${esc(a.hotel_name||'فندق')} — اتفاقية ${esc(a.agreement_number||'—')} — ${rem<=0?'مكتملة — 0 متبقي':`متبقي ${rem} من ${a.capacity||0}`}</option>`;}).join('');if(cur&&hotels.some(a=>a.id===cur&&remaining(a)>0))el.value=cur;};
  fill('pilgrimMadinahAgreement','madinah');fill('pilgrimMakkahAgreement','makkah');
  const pp=PROGRAMS.find(x=>x.id===selectedProgram);$('linkProgramInfo').innerHTML=pp?`<b>${esc(programLabel(pp))}</b><br><span style="font-size:9px">يمكن اختيار اتفاقية مدينة واتفاقية مكة مختلفتين لهذا المعتمر، حتى لو كانت رحلته بر أو جو.</span>`:'اختر الرحلة من الأعلى أولاً.';
 }
@@ -229,6 +230,7 @@ async function savePilgrimAgreements(){
  const pid=$('pilgrimSelect').value;if(!selectedProgram){toast('اختر الرحلة أولاً.',false);return;}if(!pid){toast('اختر المعتمر.',false);return;}
  const p=P.find(x=>x.id===pid);if(!p)return;
  const chosen=[$('pilgrimMadinahAgreement').value,$('pilgrimMakkahAgreement').value].filter(Boolean);
+ for(const aid of chosen){const a=A.find(x=>x.id===aid);if(a&&remaining(a)<=0){toast(`الاتفاقية ${a.agreement_number} مكتملة ولا توجد أسرة متبقية.`,false);renderPilgrimLinker();return;}}
  const current=AS.filter(x=>x.pilgrim_id===pid&&x.program_id===selectedProgram);
  const currentIds=current.map(x=>x.agreement_id);
  const toRemove=current.filter(x=>!chosen.includes(x.agreement_id)&&x.status!=='transferred');
@@ -305,7 +307,7 @@ function renderCandidates(){
 async function assignCandidate(pid){
  const a=A.find(x=>x.id===selectedAgreement);if(!a)return;
  if(!selectedProgram){toast('اختر الرحلة أولاً.',false);return;}
- if(globalAssigned(a.id).length>=a.capacity){toast('الاتفاقية ممتلئة ولا توجد خانة متاحة.',false);closeCandidate();return;}
+ if(remaining(a)<=0){toast(`الاتفاقية ${a.agreement_number} مكتملة ولا توجد أسرة متبقية.`,false);closeCandidate();return;}
  if(globalAssigned(a.id).some(x=>x.slot_number===selectedSlot)){toast('هذه الخانة مستخدمة بالفعل.',false);closeCandidate();return;}
  const r=await db.from('travel_agreement_assignments').insert({agreement_id:a.id,pilgrim_id:pid,program_id:selectedProgram,slot_number:selectedSlot,travel_type:(PROGRAMS.find(p=>p.id===selectedProgram)?.travel_type||null),status:'reserved'});
  if(r.error){toast(r.error.message,false);return;}
