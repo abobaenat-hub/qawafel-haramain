@@ -239,8 +239,7 @@ function render(){
 function agreementOptionLabel(a){return `${a.agreement_number} — ${cityLabel(a.city)} — ${a.hotel_name||'فندق'} — متبقي ${remaining(a)}`;}
 function agreementRemainingLabel(a){const rem=remaining(a);return rem>0?`متبقي ${rem} من ${a.capacity||0} سرير`:'مكتملة — 0 متبقي';}
 function agreementsForProgram(city=null){
- const linked=new Set(AGP.filter(x=>x.program_id===selectedProgram).map(x=>x.agreement_id));
- return A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false&&(!selectedProgram||linked.has(a.id))&&(!city||a.city===city));
+ return A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false&&(!city||a.city===city));
 }
 function renderPilgrimLinker(){
  const pp=PROGRAMS.find(x=>x.id===selectedProgram);
