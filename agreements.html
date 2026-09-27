@@ -155,14 +155,16 @@ async function auth(){
  return true;
 }
 async function load(){
- const [ar,sr,pr,rr]=await Promise.all([
+ const [ar,sr,pr,rr,br]=await Promise.all([
    db.from('travel_agreements').select('*').order('created_at',{ascending:false}),
    db.from('travel_agreement_assignments').select('*').order('slot_number'),
    db.from('pilgrims').select('id,full_name,passport_number,profile_code,visa_status,visa_transferred_at,booking_id').order('created_at',{ascending:false}),
    db.from('programs').select('id,title,departure_date,return_date,status,travel_type').order('departure_date',{ascending:false}),
+   db.from('bookings').select('id,program_id')
  ]);
- const bad=[ar,sr,pr,rr].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
- A=ar.data||[];AS=sr.data||[];P=pr.data||[];PROGRAMS=rr.data||[];BOOKING_PROGRAMS={};
+ const bad=[ar,sr,pr,rr,br].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
+ A=ar.data||[];AS=sr.data||[];P=pr.data||[];PROGRAMS=rr.data||[];
+ BOOKING_PROGRAMS=Object.fromEntries((br.data||[]).map(x=>[x.id,x.program_id]));
  const agr=await db.from('travel_agreement_programs').select('agreement_id,program_id').order('created_at',{ascending:true});
  AGP=agr.error?[]:(agr.data||[]);
  renderPrograms();render();renderPilgrimLinker();
@@ -249,7 +251,7 @@ function renderPilgrimLinker(){
  selectedProgramIds=checked;
  selectedProgram=checked.length===1?checked[0]:null;
  const pp=PROGRAMS.find(x=>x.id===selectedProgram);
- $('linkProgramInfo').innerHTML=pp?'<b>✓ الرحلة المحددة: '+esc(programLabel(pp))+'</b><br><span style="font-size:9px">تم أخذ الرحلة مباشرة من القسم (1). يمكنك الآن اختيار اتفاقية المدينة ومكة معًا أو اختيار واحدة فقط.</span>':(selectedProgramIds.length>1?'<b>تم اختيار '+selectedProgramIds.length+' رحلات بالأعلى</b><br><span style="font-size:9px">لربط المعتمرين، اترك رحلة واحدة فقط محددة في القسم (1).</span>':'<b>لم يتم تحديد رحلة</b><br><span style="font-size:9px">ضع ✓ أمام رحلة واحدة في القسم (1) أولاً.</span>');
+ $('linkProgramInfo').innerHTML=selectedProgramIds.length?'<b>✓ الرحلات المختارة من الأعلى:</b><br><span style="font-size:10px">'+selectedProgramIds.map(id=>{const p=PROGRAMS.find(x=>x.id===id);return p?'• '+esc(programLabel(p)):'• '+esc(id);}).join('<br>')+'</span><br><span style="font-size:9px">'+(selectedProgramIds.length===1?'يمكنك الآن تحديد المعتمرين وربطهم باتفاقية المدينة أو مكة أو الاثنتين.':'تم اختيار أكثر من رحلة. اختيار الاتفاقيات ظاهر الآن، ولربط المعتمرين اختر رحلة واحدة فقط عند الحاجة.')+'</span>':'<b>لم يتم تحديد رحلة</b><br><span style="font-size:9px">ضع ✓ أمام رحلة واحدة أو أكثر في القسم (1) أولاً.</span>';
  renderGroupAgreementOptions();
  renderGroupPilgrims();
 }
@@ -274,7 +276,7 @@ function renderGroupPilgrims(){
  selectedProgram=checked.length===1?checked[0]:null;
  const box=$('groupPilgrimList'); if(!box)return;
  const q=($('groupPilgrimSearch').value||'').trim().toLowerCase();
- if(!selectedProgram){box.innerHTML=selectedProgramIds.length>1?'<div class="notice">اختر رحلة واحدة فقط من الأعلى لربط المعتمرين.</div>':'<div class="notice">اختر رحلة واحدة من الأعلى أولاً.</div>';updateGroupSelectionInfo();return;}
+ if(!selectedProgram){box.innerHTML=selectedProgramIds.length>1?'<div class="notice">تم اختيار أكثر من رحلة بالأعلى. المعتمرين يتم ربطهم برحلة واحدة في كل عملية؛ اختر رحلة واحدة إذا أردت إظهار قائمة معتمريها.</div>':'<div class="notice">لا توجد رحلة محددة بعد.</div>';updateGroupSelectionInfo();return;}
  const selected=new Set(Array.from(box.querySelectorAll('input[type="checkbox"]:checked')).map(x=>x.value));
  const selectedAgreements=[$('groupMadinahAgreement')?.value,$('groupMakkahAgreement')?.value].filter(Boolean);
  const already=new Set();
