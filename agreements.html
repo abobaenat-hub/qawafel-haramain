@@ -188,7 +188,7 @@ function render(){
  const madinahHotels=hotelAgreements.filter(a=>a.city==='madinah');
  const makkahHotels=hotelAgreements.filter(a=>a.city==='makkah');
  const hotelDetail=arr=>arr.length
-   ? arr.map(a=>`<div style="padding:3px 0;border-bottom:1px solid var(--line)"><b>${esc(a.hotel_name||'فندق')}</b> — ${a.capacity||0} سرير</div>`).join('')
+   ? arr.map(a=>`<div style="padding:3px 0;border-bottom:1px solid var(--line)"><b>${esc(a.hotel_name||'فندق')}</b><br><span style="font-size:9px;color:var(--muted)">رقم الاتفاقية: <b>${esc(a.agreement_number||'—')}</b> — ${a.capacity||0} سرير</span></div>`).join('')
    : 'لا توجد اتفاقيات فندقية';
  $('stAll').textContent=A.length;
  $('stMadinah').textContent=madinahHotels.length;
