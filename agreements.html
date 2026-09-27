@@ -155,16 +155,17 @@ async function auth(){
  return true;
 }
 async function load(){
- const [ar,sr,pr,rr,br,agr]=await Promise.all([
+ const [ar,sr,pr,rr,br]=await Promise.all([
    db.from('travel_agreements').select('*').order('created_at',{ascending:false}),
    db.from('travel_agreement_assignments').select('*').order('slot_number'),
    db.from('pilgrims').select('id,full_name,passport_number,profile_code,visa_status,visa_transferred_at,booking_id').order('created_at',{ascending:false}),
    db.from('programs').select('id,title,departure_date,return_date,status,travel_type').order('departure_date',{ascending:false}),
-   db.from('bookings').select('id,program_id'),
-   db.from('travel_agreement_programs').select('agreement_id,program_id').order('created_at',{ascending:true})
+   db.from('bookings').select('id,program_id')
  ]);
- const bad=[ar,sr,pr,rr,br,agr].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
- A=ar.data||[];AS=sr.data||[];P=pr.data||[];PROGRAMS=rr.data||[];BOOKING_PROGRAMS=Object.fromEntries((br.data||[]).map(x=>[x.id,x.program_id]));AGP=agr.data||[];
+ const bad=[ar,sr,pr,rr,br].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
+ A=ar.data||[];AS=sr.data||[];P=pr.data||[];PROGRAMS=rr.data||[];BOOKING_PROGRAMS=Object.fromEntries((br.data||[]).map(x=>[x.id,x.program_id]));
+ const agr=await db.from('travel_agreement_programs').select('agreement_id,program_id').order('created_at',{ascending:true});
+ AGP=agr.error?[]:(agr.data||[]);
  renderPrograms();render();renderPilgrimLinker();
 }
 function renderPrograms(){
@@ -249,7 +250,7 @@ function renderPilgrimLinker(){
  selectedProgramIds=checked;
  selectedProgram=checked.length===1?checked[0]:null;
  const pp=PROGRAMS.find(x=>x.id===selectedProgram);
- $('linkProgramInfo').innerHTML=pp?'<b>'+esc(programLabel(pp))+'</b><br><span style="font-size:9px">يمكن اختيار اتفاقية المدينة ومكة معًا أو اختيار واحدة فقط.</span>':(selectedProgramIds.length>1?'<b>تم اختيار أكثر من رحلة</b><br><span style="font-size:9px">لربط المعتمرين، اختر رحلة واحدة فقط من الأعلى.</span>':'اختر رحلة واحدة من الأعلى أولاً.');
+ $('linkProgramInfo').innerHTML=pp?'<b>✓ الرحلة المحددة: '+esc(programLabel(pp))+'</b><br><span style="font-size:9px">تم أخذ الرحلة مباشرة من القسم (1). يمكنك الآن اختيار اتفاقية المدينة ومكة معًا أو اختيار واحدة فقط.</span>':(selectedProgramIds.length>1?'<b>تم اختيار '+selectedProgramIds.length+' رحلات بالأعلى</b><br><span style="font-size:9px">لربط المعتمرين، اترك رحلة واحدة فقط محددة في القسم (1).</span>':'<b>لم يتم تحديد رحلة</b><br><span style="font-size:9px">ضع ✓ أمام رحلة واحدة في القسم (1) أولاً.</span>');
  renderGroupAgreementOptions();
  renderGroupPilgrims();
 }
