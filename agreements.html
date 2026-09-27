@@ -394,7 +394,6 @@ async function toggleAgreement(id,wasActive){
 }
 function openAgreement(id){
  selectedProgram=getSelectedProgramId();
- if(!selectedProgram){toast('اختر الرحلة أولاً.',false);return;}
  const a=A.find(x=>x.id===id);if(!a)return;selectedAgreement=id;
  const box=document.createElement('div');box.className='card';box.id='agreementDetail';
  box.innerHTML=`<div class="detail"><div class="toolbar" style="justify-content:space-between"><div><b style="color:var(--n);font-size:15px">${kindLabel(a.agreement_kind)} — ${esc(a.agreement_number)}</b><div style="font-size:10px;color:var(--muted);margin-top:4px">${cityLabel(a.city)} ${a.hotel_name?'— '+esc(a.hotel_name):''}</div></div><button class="btn gray" onclick="document.getElementById('agreementDetail')?.remove()">إغلاق</button></div><div class="notice" style="margin-top:10px">السعة: <b>${a.capacity}</b> | المستخدم إجمالاً: <b>${globalAssigned(a.id).length}</b> | مستخدم في هذه الرحلة: <b>${assigned(a.id,selectedProgram).length}</b> | المتبقي إجمالاً: <b>${remaining(a)}</b>. اختيار المعتمر يحجز الخانة فقط، أما عداد الترحيل فيتثبت عند تنفيذ «ترحيل إلى الفيزا».</div><div class="slots">${slotHtml(a)}</div></div>`;
@@ -407,7 +406,7 @@ function slotHtml(a){
    const n=i+1,x=map.get(n),p=x?P.find(z=>z.id===x.pilgrim_id):null;
    if(!x)return `<div class="slot empty"><b>الخانة ${n}</b><small>فارغة</small><div class="slot-actions"><button class="btn green" onclick="chooseCandidate('${a.id}',${n})">+ اختر معتمر</button></div></div>`;
    const transferred=x.status==='transferred';
-   const otherTrip=x.program_id!==selectedProgram;
+   const otherTrip=!!selectedProgram&&x.program_id!==selectedProgram;
    const op=PROGRAMS.find(z=>z.id===x.program_id);
    if(otherTrip)return `<div class="slot" style="background:#f4f6f8"><b>الخانة ${n}</b><div style="margin-top:5px"><b>${esc(p?.full_name||'معتمر')}</b><small>${esc(p?.passport_number||p?.profile_code||'—')}</small></div><small>🔒 مستخدمة في رحلة أخرى: ${esc(op?programLabel(op):'رحلة سابقة')}</small></div>`;
    return `<div class="slot"><b>الخانة ${n}</b><div style="margin-top:5px"><b>${esc(p?.full_name||'معتمر')}</b><small>${esc(p?.passport_number||p?.profile_code||'—')}</small></div><small>${transferred?'🔵 تم الترحيل إلى الفيزا':'🟡 محجوز ولم يُرحّل'}</small><div class="slot-actions">${!transferred?`<button class="btn orange" onclick="transferOne('${x.id}')">ترحيل إلى الفيزا</button><button class="btn red" onclick="removeAssignment('${x.id}')">إخلاء</button>`:''}</div></div>`;
