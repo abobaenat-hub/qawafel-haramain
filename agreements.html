@@ -65,15 +65,9 @@
 <div class="head"><div><h1>📑 إدارة الاتفاقيات</h1><p>اختر الرحلة أولاً. الاتفاقية نفسها يمكن مشاركتها بين أكثر من رحلة، بينما ربط المعتمرين والخانات والترحيل يكون خاصًا بالرحلة المختارة.</p></div><button class="btn gray" id="refresh">↻ تحديث</button></div>
 
 <section class="card">
-<h3 style="margin-top:0;color:var(--n)">1) اختر الرحلة أولاً</h3>
-<div class="field"><label>الرحلات</label><div id="programSelect" class="trip-checkboxes"><label class="trip-check"><input type="checkbox" disabled><span class="trip-text"><span class="trip-title">جاري تحميل الرحلات...</span></span></label></div><div class="notice" style="margin-top:6px">ضع ✓ أمام كل رحلة تريد ربط الاتفاقية بها. تظهر هنا <b>الرحلات المنشورة فقط</b>.</div></div>
-<div id="programInfo" class="notice" style="margin-top:8px;min-height:42px">اختر رحلة أو أكثر للعمل عليها.</div>
-</section>
-
-<section class="card">
-<h3 style="margin-top:0;color:var(--n)">2) ربط اتفاقيات المعتمرين</h3>
+<h3 style="margin-top:0;color:var(--n)">1) ربط اتفاقيات المعتمرين</h3>
 <div class="notice">يمكنك تحديد مجموعة من المعتمرين دفعة واحدة. لكل معتمر يمكن ربط <b>اتفاقية المدينة</b> و<b>اتفاقية مكة</b> معًا، أو ربط واحدة منهما فقط.</div>
-<div class="grid2" style="margin-top:10px"><div class="field"><label>الرحلات المختارة</label><div id="linkProgramInfo" class="notice">اختر رحلة من الأعلى أولاً.</div></div><div class="field"><label>عدد المعتمرين المحددين</label><div id="groupSelectionInfo" class="notice">المحدد: 0</div></div></div>
+<div class="grid2" style="margin-top:10px"><div class="field"><label>الرحلات المرتبطة بالاتفاقيات</label><div id="linkProgramInfo" class="notice">اختر اتفاقية المدينة أو مكة، وستظهر الرحلات المرتبطة بها تلقائيًا.</div></div><div class="field"><label>عدد المعتمرين المحددين</label><div id="groupSelectionInfo" class="notice">المحدد: 0</div></div></div>
 <div class="grid2" style="margin-top:10px"><div class="field"><label>اتفاقية المدينة <span style="color:var(--muted);font-size:9px">(اختيارية)</span></label><select id="groupMadinahAgreement"><option value="">بدون اتفاقية مدينة</option></select><div id="groupMadinahInfo" class="agreement-capacity" style="margin-top:5px"></div></div><div class="field"><label>اتفاقية مكة <span style="color:var(--muted);font-size:9px">(اختيارية)</span></label><select id="groupMakkahAgreement"><option value="">بدون اتفاقية مكة</option></select><div id="groupMakkahInfo" class="agreement-capacity" style="margin-top:5px"></div></div></div>
 <div class="field" style="margin-top:10px"><label>المعتمرون — اختيار جماعي</label><div class="toolbar" style="margin-bottom:7px"><input id="groupPilgrimSearch" placeholder="بحث بالاسم أو الجواز أو رمز الملف"><button class="btn gray" type="button" id="groupSelectAll">تحديد الكل</button><button class="btn gray" type="button" id="groupClearAll">إلغاء التحديد</button></div><div id="groupPilgrimList" class="group-pilgrim-list"><div class="notice">اختر رحلة من الأعلى أولاً.</div></div></div>
 <div class="toolbar" style="margin-top:11px"><button class="btn primary" id="saveGroupAssignments">ربط المعتمرين المحددين بالاتفاقيات</button><button class="btn gold" type="button" id="showAgreementMessage">📋 رسالة الاتفاقية</button></div><div id="linkMsg" class="msg hide"></div>
@@ -81,8 +75,8 @@
 
 <section class="card add-agreement-panel">
 <div class="toolbar"><button class="btn gold" type="button" id="toggleAddAgreement">＋ إضافة اتفاقية جديدة</button></div>
-<div id="addAgreementBody" class="hide" style="margin-top:12px"><h3 style="margin:0 0 12px;color:var(--n)">3) إضافة اتفاقية جديدة</h3>
-<div class="grid"><div class="field"><label>نوع الاتفاقية</label><select id="kind"><option value="hotel">🏨 فندق</option><option value="air">✈️ طيران</option><option value="ground">🚌 بر</option></select></div><div class="field"><label>رقم الاتفاقية</label><input id="number" placeholder="رقم الاتفاقية"></div><div class="field hotelOnly"><label>المدينة</label><select id="city"><option value="madinah">المدينة المنورة</option><option value="makkah">مكة المكرمة</option></select></div><div class="field hotelOnly"><label>اسم الفندق</label><input id="hotel" placeholder="اسم الفندق"></div><div class="field hotelOnly"><label>تاريخ الدخول</label><input id="checkin" type="date"></div><div class="field hotelOnly"><label>تاريخ الخروج</label><input id="checkout" type="date"></div><div class="field hotelOnly"><label>عدد الأسرّة</label><input id="capacity" type="number" min="0" step="1" placeholder="مثلاً 6"></div><div class="field"><label>ملاحظات</label><input id="notes" placeholder="ملاحظات اختيارية"></div></div>
+<div id="addAgreementBody" class="hide" style="margin-top:12px"><h3 style="margin:0 0 12px;color:var(--n)">2) إضافة اتفاقية جديدة</h3>
+<div class="field" style="margin-bottom:10px"><label>الرحلات المرتبطة بالاتفاقية</label><div id="agreementProgramSelect" class="trip-checkboxes"><div class="notice">جاري تحميل الرحلات...</div></div><div class="notice" style="margin-top:6px">حدد الرحلة أو الرحلات المنشورة التي تنطبق عليها هذه الاتفاقية.</div></div><div class="grid"><div class="field"><label>نوع الاتفاقية</label><select id="kind"><option value="hotel">🏨 فندق</option><option value="air">✈️ طيران</option><option value="ground">🚌 بر</option></select></div><div class="field"><label>رقم الاتفاقية</label><input id="number" placeholder="رقم الاتفاقية"></div><div class="field hotelOnly"><label>المدينة</label><select id="city"><option value="madinah">المدينة المنورة</option><option value="makkah">مكة المكرمة</option></select></div><div class="field hotelOnly"><label>اسم الفندق</label><input id="hotel" placeholder="اسم الفندق"></div><div class="field hotelOnly"><label>تاريخ الدخول</label><input id="checkin" type="date"></div><div class="field hotelOnly"><label>تاريخ الخروج</label><input id="checkout" type="date"></div><div class="field hotelOnly"><label>عدد الأسرّة</label><input id="capacity" type="number" min="0" step="1" placeholder="مثلاً 6"></div><div class="field"><label>ملاحظات</label><input id="notes" placeholder="ملاحظات اختيارية"></div></div>
 <div class="toolbar" style="margin-top:11px"><button class="btn primary" id="add">+ إضافة الاتفاقية</button></div><div id="msg" class="msg hide"></div></div>
 </section>
 
@@ -151,7 +145,7 @@ async function load(){
 }
 
 function renderPrograms(){
- const box=$('programSelect');
+ const box=$('agreementProgramSelect');
  const current=new Set(selectedProgramIds);
  const eligible=PROGRAMS.filter(p=>p.status==='published');
  if(!eligible.length){
@@ -178,13 +172,13 @@ function getSelectedProgramId(){
  return ids.length===1?ids[0]:null;
 }
 function selectPrograms(){
- selectedProgramIds=Array.from($('programSelect').querySelectorAll('input[type="checkbox"]:checked')).map(o=>o.value).filter(Boolean);
+ selectedProgramIds=Array.from($('agreementProgramSelect').querySelectorAll('input[type="checkbox"]:checked')).map(o=>o.value).filter(Boolean);
  selectedProgram=selectedProgramIds.length===1?selectedProgramIds[0]:null;
  selectedAgreement=null;selectedSlot=null;
  document.getElementById('agreementDetail')?.remove();
  updateProgramInfo();render();renderPilgrimLinker();
 }
-function selectedProgramsForAgreement(){return selectedProgramIds.slice();}
+function selectedProgramsForAgreement(){return Array.from($('agreementProgramSelect').querySelectorAll('input[type="checkbox"]:checked')).map(o=>o.value).filter(Boolean);}
 async function copyAgreementNumber(number){
  const value=String(number||'').trim();
  if(!value)return false;
@@ -233,12 +227,15 @@ function agreementRemainingLabel(a){const rem=remaining(a);return rem>0?`متب�
 function agreementsForProgram(city=null){
  return A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false&&(!city||a.city===city));
 }
+function selectedAgreementProgramIds(){
+ const ids=new Set();
+ [$('groupMadinahAgreement')?.value,$('groupMakkahAgreement')?.value].filter(Boolean).forEach(aid=>AGP.filter(x=>x.agreement_id===aid).forEach(x=>ids.add(x.program_id)));
+ return [...ids];
+}
 function renderPilgrimLinker(){
- const checked=Array.from(document.querySelectorAll('#programSelect input[type="checkbox"]:checked')).map(x=>x.value).filter(Boolean);
- selectedProgramIds=checked;
- selectedProgram=checked.length===1?checked[0]:null;
- const pp=PROGRAMS.find(x=>x.id===selectedProgram);
- $('linkProgramInfo').innerHTML=selectedProgramIds.length?'<b>✓ الرحلات المختارة من الأعلى:</b><br><span style="font-size:10px">'+selectedProgramIds.map(id=>{const p=PROGRAMS.find(x=>x.id===id);return p?'• '+esc(programLabel(p)):'• '+esc(id);}).join('<br>')+'</span><br><span style="font-size:9px">'+(selectedProgramIds.length===1?'يمكنك الآن تحديد المعتمرين وربطهم باتفاقية المدينة أو مكة أو الاثنتين.':'تم اختيار أكثر من رحلة. اختيار الاتفاقيات ظاهر الآن، ولربط المعتمرين اختر رحلة واحدة فقط عند الحاجة.')+'</span>':'<b>لم يتم تحديد رحلة</b><br><span style="font-size:9px">ضع ✓ أمام رحلة واحدة أو أكثر في القسم (1) أولاً.</span>';
+ const linked=selectedAgreementProgramIds();
+ const labels=linked.map(id=>PROGRAMS.find(p=>p.id===id)).filter(Boolean).map(programLabel);
+ $('linkProgramInfo').innerHTML=linked.length?'<b>✓ الرحلات المرتبطة تلقائيًا:</b><br><span style="font-size:10px">'+labels.map(esc).join('<br>')+'</span>':'اختر اتفاقية المدينة أو مكة، وستظهر الرحلات المرتبطة بها تلقائيًا.';
  renderGroupAgreementOptions();
  renderGroupPilgrims();
 }
@@ -258,9 +255,7 @@ function updateGroupAgreementInfo(){
  updateGroupSelectionInfo();
 }
 function renderGroupPilgrims(){
- const checked=Array.from(document.querySelectorAll('#programSelect input[type="checkbox"]:checked')).map(x=>x.value).filter(Boolean);
- selectedProgramIds=checked;
- selectedProgram=checked.length===1?checked[0]:null;
+ const linkedProgramIds=selectedAgreementProgramIds();
  const box=$('groupPilgrimList'); if(!box)return;
  const q=($('groupPilgrimSearch').value||'').trim().toLowerCase();
  const selected=new Set(Array.from(box.querySelectorAll('input[type="checkbox"]:checked')).map(x=>x.value));
@@ -269,7 +264,7 @@ function renderGroupPilgrims(){
  const selectedAgreements=[mdAgreement,mkAgreement].filter(Boolean);
  const list=P.filter(p=>{
    const pid=bookingProgramId(p.booking_id);
-   if(!selectedProgramIds.includes(pid)||p.visa_transferred_at)return false;
+   if(!linkedProgramIds.includes(pid)||p.visa_transferred_at)return false;
    // إذا اختيرت اتفاقية واحدة: أخفِ المعتمر بعد ربطه بها.
    // إذا اختيرت اتفاقيتا المدينة ومكة: يبقى ظاهرًا حتى يكتمل الربط بالاثنتين.
    if(selectedAgreements.length){
@@ -339,9 +334,9 @@ async function copyAgreementMessage(){
  toast('تم نسخ رسالة الاتفاقية ✅');
 }
 async function saveGroupAssignments(){
- const checkedPrograms=Array.from(document.querySelectorAll('#programSelect input[type="checkbox"]:checked')).map(x=>x.value).filter(Boolean);
+ const checkedPrograms=selectedAgreementProgramIds();
+ if(!checkedPrograms.length){toast('الاتفاقيات المختارة غير مرتبطة بأي رحلة منشورة.',false);return;}
  selectedProgramIds=checkedPrograms; selectedProgram=checkedPrograms.length===1?checkedPrograms[0]:null;
- if(!checkedPrograms.length){toast('اختر رحلة واحدة أو أكثر أولاً.',false);return;}
  const aidList=[$('groupMadinahAgreement').value,$('groupMakkahAgreement').value].filter(Boolean);
  if(!aidList.length){toast('اختر اتفاقية المدينة أو اتفاقية مكة على الأقل.',false);return;}
  const ids=groupSelectedIds();
@@ -472,7 +467,7 @@ async function transferOne(id){
 }
 async function start(){
  if(!await auth())return;
- $('programSelect').addEventListener('change',selectPrograms);
+ $('agreementProgramSelect').addEventListener('change',selectPrograms);
  $('toggleAddAgreement').onclick=()=>{$('addAgreementBody').classList.toggle('hide');};$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('groupMadinahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupMakkahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupPilgrimSearch').oninput=renderGroupPilgrims;$('groupPilgrimList').addEventListener('change',updateGroupSelectionInfo);$('groupSelectAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=true);updateGroupSelectionInfo();};$('groupClearAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=false);updateGroupSelectionInfo();};$('saveGroupAssignments').onclick=saveGroupAssignments;
  $('showAgreementMessage').onclick=openAgreementMessage;
  $('closeAgreementMessage').onclick=closeAgreementMessage;
