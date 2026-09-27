@@ -256,6 +256,11 @@ function render(){
  }).join('')||'<tr><td colspan="12" style="text-align:center;color:var(--muted)">لا توجد اتفاقيات.</td></tr>';
 }
 function agreementOptionLabel(a){return `${a.agreement_number} — ${cityLabel(a.city)} — ${a.hotel_name||'فندق'} — متبقي ${remaining(a)}`;}
+function agreementProgramsLabel(aid){
+ const ids=AGP.filter(x=>x.agreement_id===aid).map(x=>x.program_id);
+ return ids.map(id=>PROGRAMS.find(p=>p.id===id)).filter(Boolean).map(programLabel);
+}
+
 function agreementRemainingLabel(a){const rem=remaining(a);return rem>0?`متبقي ${rem} من ${a.capacity||0} سرير`:'مكتملة — 0 متبقي';}
 function agreementsForProgram(city=null){
  return A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false&&(!city||a.city===city));
