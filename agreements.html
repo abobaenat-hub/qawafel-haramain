@@ -188,11 +188,22 @@ function render(){
  const madinahHotels=hotelAgreements.filter(a=>a.city==='madinah');
  const makkahHotels=hotelAgreements.filter(a=>a.city==='makkah');
  const hotelDetail=arr=>arr.length
-   ? '<div class="stat-detail">'+arr.map(a=>`<div class="hotel-line"><span class="hotel-name">${esc(a.hotel_name||'فندق')}</span><span class="hotel-meta"><span>اتفاقية ${esc(a.agreement_number||'—')}</span>${a.agreement_number?`<button type="button" class="copy-agreement" onclick="copyAgreementNumber('${esc(a.agreement_number).replace(/'/g,"&#39;")}');event.stopPropagation()">نسخ</button>`:''}<span>· ${a.capacity||0} سرير</span></span></div>`).join('')+'</div>'
+   ? '<div class="stat-detail">'+arr.map(a=>`<div class="hotel-line"><span class="hotel-name">${esc(a.hotel_name||'فندق')}</span><span class="hotel-meta"><span>اتفاقية ${esc(a.agreement_number||'—')}</span>${a.agreement_number?`<button type="button" class="copy-agreement" onclick="event.preventDefault();event.stopPropagation();copyAgreementNumber('${esc(a.agreement_number).replace(/'/g,"&#39;")}');return false">نسخ</button>`:''}<span>· ${a.capacity||0} سرير</span></span></div>`).join('')+'</div>'
    : '<div style="font-size:9px;color:var(--muted);margin-top:8px">لا توجد اتفاقيات فندقية</div>';
-function copyAgreementNumber(number){
- if(!number)return;
- navigator.clipboard?.writeText(number).then(()=>toast('تم نسخ رقم الاتفاقية: '+number,true)).catch(()=>{const t=document.createElement('textarea');t.value=number;document.body.appendChild(t);t.select();document.execCommand('copy');t.remove();toast('تم نسخ رقم الاتفاقية: '+number,true);});
+async function copyAgreementNumber(number){
+ const value=String(number||'').trim();
+ if(!value)return false;
+ try{
+   if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(value);}
+   else{
+     const t=document.createElement('textarea');t.value=value;t.setAttribute('readonly','');
+     t.style.position='fixed';t.style.left='-9999px';t.style.top='0';t.style.opacity='0';
+     document.body.appendChild(t);t.focus();t.select();t.setSelectionRange(0,t.value.length);
+     const ok=document.execCommand('copy');t.remove();if(!ok)throw new Error('copy failed');
+   }
+   toast('تم نسخ رقم الاتفاقية فقط: '+value,true);
+ }catch(e){toast('تعذر النسخ تلقائيًا. اضغط مطولًا على الرقم لنسخه.',false);}
+ return false;
 }
  $('stAll').textContent=A.length;
  $('stMadinah').textContent=madinahHotels.length;
