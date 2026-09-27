@@ -181,15 +181,6 @@ function selectPrograms(){
  updateProgramInfo();render();renderPilgrimLinker();
 }
 function selectedProgramsForAgreement(){return selectedProgramIds.slice();}
-function render(){
- const q=($('search').value||'').trim().toLowerCase(),f=$('filter').value;
- const arr=A.filter(a=>(f==='all'||a.agreement_kind===f)&&(!q||[a.agreement_number,a.hotel_name,cityLabel(a.city)].join(' ').toLowerCase().includes(q)));
- const hotelAgreements=A.filter(a=>a.agreement_kind==='hotel');
- const madinahHotels=hotelAgreements.filter(a=>a.city==='madinah');
- const makkahHotels=hotelAgreements.filter(a=>a.city==='makkah');
- const hotelDetail=arr=>arr.length
-   ? '<div class="stat-detail">'+arr.map(a=>`<div class="hotel-line"><span class="hotel-name">${esc(a.hotel_name||'فندق')}</span><span class="hotel-meta"><span>اتفاقية ${esc(a.agreement_number||'—')}</span>${a.agreement_number?`<button type="button" class="copy-agreement" onclick="event.preventDefault();event.stopPropagation();copyAgreementNumber('${esc(a.agreement_number).replace(/'/g,"&#39;")}');return false">نسخ</button>`:''}<span>· ${a.capacity||0} سرير</span></span></div>`).join('')+'</div>'
-   : '<div style="font-size:9px;color:var(--muted);margin-top:8px">لا توجد اتفاقيات فندقية</div>';
 async function copyAgreementNumber(number){
  const value=String(number||'').trim();
  if(!value)return false;
@@ -205,6 +196,15 @@ async function copyAgreementNumber(number){
  }catch(e){toast('تعذر النسخ تلقائيًا. اضغط مطولًا على الرقم لنسخه.',false);}
  return false;
 }
+function render(){
+ const q=($('search').value||'').trim().toLowerCase(),f=$('filter').value;
+ const arr=A.filter(a=>(f==='all'||a.agreement_kind===f)&&(!q||[a.agreement_number,a.hotel_name,cityLabel(a.city)].join(' ').toLowerCase().includes(q)));
+ const hotelAgreements=A.filter(a=>a.agreement_kind==='hotel');
+ const madinahHotels=hotelAgreements.filter(a=>a.city==='madinah');
+ const makkahHotels=hotelAgreements.filter(a=>a.city==='makkah');
+ const hotelDetail=arr=>arr.length
+   ? '<div class="stat-detail">'+arr.map(a=>`<div class="hotel-line"><span class="hotel-name">${esc(a.hotel_name||'فندق')}</span><span class="hotel-meta"><span>اتفاقية ${esc(a.agreement_number||'—')}</span>${a.agreement_number?`<button type="button" class="copy-agreement" onclick="event.preventDefault();event.stopPropagation();copyAgreementNumber('${esc(a.agreement_number).replace(/'/g,"&#39;")}');return false">نسخ</button>`:''}<span>· ${a.capacity||0} سرير</span></span></div>`).join('')+'</div>'
+   : '<div style="font-size:9px;color:var(--muted);margin-top:8px">لا توجد اتفاقيات فندقية</div>';
  $('stAll').textContent=A.length;
  $('stMadinah').textContent=madinahHotels.length;
  $('stMakkah').textContent=makkahHotels.length;
