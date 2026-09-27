@@ -155,15 +155,14 @@ async function auth(){
  return true;
 }
 async function load(){
- const [ar,sr,pr,rr,br]=await Promise.all([
+ const [ar,sr,pr,rr]=await Promise.all([
    db.from('travel_agreements').select('*').order('created_at',{ascending:false}),
    db.from('travel_agreement_assignments').select('*').order('slot_number'),
-   db.from('pilgrims').select('id,full_name,passport_number,profile_code,visa_status,visa_transferred_at,booking_id').order('created_at',{ascending:false}),
+   db.from('pilgrims').select('id,full_name,passport_number,profile_code,visa_status,visa_transferred_at,program_id').order('created_at',{ascending:false}),
    db.from('programs').select('id,title,departure_date,return_date,status,travel_type').order('departure_date',{ascending:false}),
-   db.from('bookings').select('id,program_id')
  ]);
- const bad=[ar,sr,pr,rr,br].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
- A=ar.data||[];AS=sr.data||[];P=pr.data||[];PROGRAMS=rr.data||[];BOOKING_PROGRAMS=Object.fromEntries((br.data||[]).map(x=>[x.id,x.program_id]));
+ const bad=[ar,sr,pr,rr].find(x=>x.error); if(bad){toast(bad.error.message,false);return;}
+ A=ar.data||[];AS=sr.data||[];P=pr.data||[];PROGRAMS=rr.data||[];BOOKING_PROGRAMS={};
  const agr=await db.from('travel_agreement_programs').select('agreement_id,program_id').order('created_at',{ascending:true});
  AGP=agr.error?[]:(agr.data||[]);
  renderPrograms();render();renderPilgrimLinker();
@@ -280,7 +279,7 @@ function renderGroupPilgrims(){
  const selectedAgreements=[$('groupMadinahAgreement')?.value,$('groupMakkahAgreement')?.value].filter(Boolean);
  const already=new Set();
  selectedAgreements.forEach(aid=>AS.filter(x=>x.agreement_id===aid&&x.program_id===selectedProgram).forEach(x=>already.add(x.pilgrim_id)));
- const list=P.filter(p=>!p.visa_transferred_at&&p.booking_id&&bookingProgramId(p.booking_id)===selectedProgram&&!already.has(p.id)&&(!q||[p.full_name,p.passport_number,p.profile_code].join(' ').toLowerCase().includes(q)));
+ const list=P.filter(p=>!p.visa_transferred_at&&p.program_id===selectedProgram&&!already.has(p.id)&&(!q||[p.full_name,p.passport_number,p.profile_code].join(' ').toLowerCase().includes(q)));
  box.innerHTML=list.map(p=>'<label class="group-pilgrim-item"><input type="checkbox" value="'+p.id+'" '+(selected.has(p.id)?'checked':'')+'><span class="gpi-text"><b>'+esc(p.full_name)+'</b><small>'+esc(p.passport_number||'—')+' · '+esc(p.profile_code||'—')+'</small></span></label>').join('')||'<div class="notice">لا يوجد معتمرون متاحون للربط في هذه الرحلة والاتفاقيات المحددة.</div>';
  updateGroupSelectionInfo();
 }
@@ -373,7 +372,7 @@ window.closeCandidate=closeCandidate;
 function renderCandidates(){
  const q=($('candidateSearch').value||'').trim().toLowerCase();
  const already=new Set(AS.filter(x=>x.agreement_id===selectedAgreement&&x.program_id===selectedProgram).map(x=>x.pilgrim_id));
- const list=P.filter(p=>!p.visa_transferred_at&&p.booking_id&&bookingProgramId(p.booking_id)===selectedProgram&&!already.has(p.id)&&(!q||[p.full_name,p.passport_number,p.profile_code].join(' ').toLowerCase().includes(q)));
+ const list=P.filter(p=>!p.visa_transferred_at&&p.program_id===selectedProgram&&!already.has(p.id)&&(!q||[p.full_name,p.passport_number,p.profile_code].join(' ').toLowerCase().includes(q)));
  $('candidateList').innerHTML=list.map(p=>`<div class="candidate-item"><div><b>${esc(p.full_name)}</b><small>${esc(p.passport_number||'—')} · ${esc(p.profile_code||'—')} · حالة الفيزا: ${esc(p.visa_status||'pending')}</small></div><button class="btn green" onclick="assignCandidate('${p.id}')">اختيار</button></div>`).join('')||'<div style="text-align:center;color:var(--muted);padding:20px">لا يوجد معتمرون غير مرحّلين متاحون لهذه الخانة.</div>';
 }
 async function assignCandidate(pid){
