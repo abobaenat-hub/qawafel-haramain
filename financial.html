@@ -388,14 +388,14 @@ async function init(){const uid=qawafelUserId();if(!uid){$('login').classList.re
 async function loadAll(){
  const withTimeout=(p,ms=15000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة جلب البيانات بعد 15 ثانية')),ms))]);
  const [tx,b,p,pgr,ftp]=await Promise.all([
-  db.from('finance_transactions').select('*').order('transaction_date',{ascending:false}).limit(1000),
-  db.from('bookings').select('id,booking_number,full_name,total_amount,program_id,status').order('created_at',{ascending:false}),
-  db.from('payments').select('id,booking_id,amount,currency,payment_method,payment_date,reference,notes').order('payment_date',{ascending:false}),
-  db.from('programs').select('id,title,departure_date,status,travel_type').order('departure_date',{ascending:false}),
-  db.from('finance_transaction_programs').select('*')
+  withTimeout(db.from('finance_transactions').select('*').order('transaction_date',{ascending:false}).limit(1000)),
+  withTimeout(db.from('bookings').select('id,booking_number,full_name,total_amount,program_id,status').order('created_at',{ascending:false})),
+  withTimeout(db.from('payments').select('id,booking_id,amount,currency,payment_method,payment_date,reference,notes').order('payment_date',{ascending:false})),
+  withTimeout(db.from('programs').select('id,title,departure_date,status,travel_type').order('departure_date',{ascending:false})),
+  withTimeout(db.from('finance_transaction_programs').select('*'))
  ]);
  TX=tx.data||[];BOOK=b.data||[];PAY=p.data||[];PROGS=pgr.data||[];FIN_TX_PROGRAMS=ftp.data||[];
- const [sr,wr]=await Promise.all([db.from('suppliers').select('*').order('created_at',{ascending:false}),db.from('supplier_wallet_transactions').select('*').order('transaction_date',{ascending:false})]);
+ const [sr,wr]=await Promise.all([withTimeout(db.from('suppliers').select('*').order('created_at',{ascending:false})),withTimeout(db.from('supplier_wallet_transactions').select('*').order('transaction_date',{ascending:false}))]);
  SUPPLIERS=sr.data||[];WALLET_TX=wr.data||[];
  fillPrograms();fillSupplierTools();toggleOutSupplier();COMPLETED_PENDING=PROGS.filter(p=>p.status==='full'&&p.departure_date&&p.departure_date<dateToday());renderAll();renderSettlement();
 }
