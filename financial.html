@@ -371,7 +371,10 @@ async function saveWalletTx(){
 <div id="login" class="panel" style="max-width:420px;margin:80px auto"><h2>تسجيل الدخول</h2><input id="email" type="email" placeholder="البريد الإلكتروني" style="width:100%;padding:11px;margin:6px 0"><input id="password" type="password" placeholder="كلمة المرور" style="width:100%;padding:11px;margin:6px 0"><button class="btn primary" style="width:100%;margin-top:8px" onclick="login()">دخول</button><div id="loginMsg"></div></div>
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
-const db=window.supabase.createClient(U,K);const FOCUS_PROGRAM_ID=new URLSearchParams(location.search).get('program')||'';let TX=[],BOOK=[],PAY=[],PROGS=[],FIN_TX_PROGRAMS=[];let COMPLETED_PENDING=[];
+function qawafelAccessToken(){try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i)||'';if(!key.endsWith('-auth-token'))continue;const raw=localStorage.getItem(key);if(!raw)continue;const s=JSON.parse(raw);if(s?.access_token)return s.access_token}}catch(e){console.error('finance token read',e)}return null}
+function qawafelUserId(){const t=qawafelAccessToken();if(!t)return null;try{const p=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return p?.sub||null}catch(e){return null}}
+const db=window.supabase.createClient(U,K,{accessToken:async()=>qawafelAccessToken(),auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,skipAutoInitialize:true}});
+const FOCUS_PROGRAM_ID=new URLSearchParams(location.search).get('program')||'';let TX=[],BOOK=[],PAY=[],PROGS=[],FIN_TX_PROGRAMS=[];let COMPLETED_PENDING=[];
 const $=id=>document.getElementById(id),fmt=n=>new Intl.NumberFormat('ar-IQ',{maximumFractionDigits:2}).format(Number(n||0));
 const catLabel={trip_income:'إيراد رحلة',visa_income:'إيراد تأشيرة',hotel_income:'إيراد فندق',other_income:'إيراد آخر',pilgrim_payment:'قبض معتمر',supplier_payment:'مورد',contractor_payment:'متعهد',supervisor_payment:'مشرف',employee_payment:'موظف',trip_expense:'مصروف رحلة',admin_expense:'مصروف إداري',other_expense:'مصروف آخر',driver_payment:'سائق'};
 function dateToday(){return new Date().toISOString().slice(0,10)}
@@ -380,9 +383,10 @@ $('outAmount')?.addEventListener('input',()=>{if($('outSharedToggle')?.checked)r
 $('outCurrency')?.addEventListener('change',()=>{if($('outSharedToggle')?.checked)renderSharedAllocationEditor()});
 $('outSharedPrograms')?.addEventListener('change',renderSharedAllocationEditor);
 async function login(){const r=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(r.error){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+r.error.message+'</div>';return}if(!r.data?.user){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">تعذر إنشاء جلسة الدخول.</div>';return}init();}
-async function signOut(){await db.auth.signOut();location.reload()}
-async function init(){const s=await db.auth.getSession();if(!s.data.session){$('login').classList.remove('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');await loadAll()}
+async function signOut(){const t=qawafelAccessToken();if(t){try{await fetch(U+'/auth/v1/logout',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+t}})}catch(e){}}try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i)||'';if(key.endsWith('-auth-token'))localStorage.removeItem(key)}}catch(e){}location.href='./internal.html'}
+async function init(){const uid=qawafelUserId();if(!uid){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+esc(e?.message||e)+'</span>'}}
 async function loadAll(){
+ const withTimeout=(p,ms=15000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة جلب البيانات بعد 15 ثانية')),ms))]);
  const [tx,b,p,pgr,ftp]=await Promise.all([
   db.from('finance_transactions').select('*').order('transaction_date',{ascending:false}).limit(1000),
   db.from('bookings').select('id,booking_number,full_name,total_amount,program_id,status').order('created_at',{ascending:false}),
@@ -871,7 +875,6 @@ document.addEventListener('click',function(e){
 });
 function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
 function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-db.auth.onAuthStateChange((e,s)=>{if(e==='SIGNED_IN'&&s)init()});
 init();
 setTimeout(()=>{if(FOCUS_PROGRAM_ID){const ef=$('expenseProgramFilter');if(ef)ef.value=FOCUS_PROGRAM_ID;renderExpenseTable();const outTab=[...document.querySelectorAll('.tab')].find(x=>x.textContent.includes('الصرف'));if(outTab)showTab('out',outTab);renderTripFocus();}},500);
 </script>
