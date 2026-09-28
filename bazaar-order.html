@@ -45,10 +45,10 @@ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5g
 const params=new URLSearchParams(location.search), productId=params.get('product'), linkedName=params.get('name'), linkedCategory=params.get('category'), linkedUrl=params.get('url'), linkedPrice=params.get('price'), linkedImage=params.get('image');
 const $=id=>document.getElementById(id);
 async function loadLinkedProduct(){
-  if(!productId)return;
+  if(!productId && !productCode)return;
   let name=linkedName, category=linkedCategory, url=linkedUrl, price=linkedPrice, image=linkedImage;
   if(!name || !url || !price || !image){
-    const r=await db.from('bazaar_products').select('id,name,category,source_url,selling_price_iqd,image_url').eq('id',productId).single();
+    const r=productCode ? await db.from('bazaar_products').select('id,name,category,source_url,selling_price_iqd,image_url,short_code').eq('short_code',productCode).single() : await db.from('bazaar_products').select('id,name,category,source_url,selling_price_iqd,image_url,short_code').eq('id',productId).single();
     if(!r.error && r.data){
       name=name||r.data.name; category=category||r.data.category; url=url||r.data.source_url;
       price=price||r.data.selling_price_iqd; image=image||r.data.image_url;
