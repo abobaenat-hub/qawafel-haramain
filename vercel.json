@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/b/:id",
-      "destination": "/bazaar-order.html?product=:id"
+      "destination": "/bazaar-order.html?code=:id"
     },
     {
       "source": "/agent",
