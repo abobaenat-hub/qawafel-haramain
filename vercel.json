@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/b/:id",
+      "destination": "/bazaar-order.html?product=:id"
+    },
+    {
       "source": "/agent",
       "destination": "/agent.html"
     },
