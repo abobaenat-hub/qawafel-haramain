@@ -24,8 +24,8 @@ async function saveSupplierPayment(){
  if(paidCur==='USD'&&!usdIqd)return alert('أدخل سعر الدولار مقابل الدينار');
  const amountIqd=paidCur==='IQD'?paid:paidCur==='SAR'?paid*410:paid*usdIqd;
  const date=$('supplierPayDate').value||dateToday(), program_id=$('supplierPayProgram').value||null;
- const {data:{user}}=await db.auth.getUser();
- const wp={supplier_id,transaction_type:'deposit',currency:balanceCur,amount:balance,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:date,program_id,description:$('supplierPayDescription').value.trim()||'رصيد مودع لدى المورد',source_currency:paidCur===balanceCur?null:paidCur,source_amount:paidCur===balanceCur?null:paid,fx_rate:paidCur!==balanceCur?(balanceCur==='SAR'&&paidCur==='USD'?usdSar:balance/paid):null,exchange_rate_to_iqd:paidCur==='USD'?usdIqd:(balanceCur==='SAR'?410:1),created_by:user?.id||null};
+ const userId=qawafelUserId();
+ const wp={supplier_id,transaction_type:'deposit',currency:balanceCur,amount:balance,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:date,program_id,description:$('supplierPayDescription').value.trim()||'رصيد مودع لدى المورد',source_currency:paidCur===balanceCur?null:paidCur,source_amount:paidCur===balanceCur?null:paid,fx_rate:paidCur!==balanceCur?(balanceCur==='SAR'&&paidCur==='USD'?usdSar:balance/paid):null,exchange_rate_to_iqd:paidCur==='USD'?usdIqd:(balanceCur==='SAR'?410:1),created_by:userId||null};
  const wr=await db.from('supplier_wallet_transactions').insert(wp);
  if(wr.error)return alert(wr.error.message);
  await loadAll(); alert('✅ تم حفظ الدفعة وإضافتها إلى رصيد المورد.');
@@ -101,9 +101,9 @@ async function saveWalletTx(){
    if(sc!==currency&&(!sa||!fx))return alert('أدخل المبلغ المصدر وسعر التحويل بين العملتين');
    amountIqd=Number((amount*rate).toFixed(2));
  }
- const {data:{user}}=await db.auth.getUser();
+ const userId=qawafelUserId();
  const payload={supplier_id,transaction_type:type,currency,amount,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:date,program_id,description:$('walletDescription').value.trim()||null,source_currency:type==='withdrawal'&&currency==='SAR'?'USD':(sc===currency?null:sc),source_amount:type==='withdrawal'&&currency==='SAR'?Number($('walletSourceAmount').value||0):(sc===currency?null:sa),fx_rate:type==='withdrawal'&&currency==='SAR'?fx:(sc===currency?null:fx),exchange_rate_to_iqd:type==='withdrawal'&&currency==='SAR'?Number($('walletIqdRate').value||0):(type==='withdrawal'?rate:null)};
- const r=window.__editingWalletId?await db.from('supplier_wallet_transactions').update(payload).eq('id',window.__editingWalletId):await db.from('supplier_wallet_transactions').insert({...payload,created_by:user?.id||null});
+ const r=window.__editingWalletId?await db.from('supplier_wallet_transactions').update(payload).eq('id',window.__editingWalletId):await db.from('supplier_wallet_transactions').insert({...payload,created_by:userId||null});
  if(r.error)alert(r.error.message);else {window.__editingWalletId=null;$('walletEditor').classList.add('hidden');$('walletEditor').style.position='';$('walletEditor').style.inset='';$('walletEditor').style.zIndex='';$('walletEditor').style.overflow='';await loadAll();if(CURRENT_SUPPLIER_STATEMENT)showSupplierStatement(CURRENT_SUPPLIER_STATEMENT);['walletAmount','walletSourceAmount','walletFxRate','walletIqdRate','walletDescription'].forEach(id=>{const el=$(id);if(el)el.value=''});$('walletSourceCurrency').value='';$('walletCurrency').value='SAR';$('walletType').value='deposit';$('walletDate').value=dateToday();$('walletProgram').value='';syncWalletFxFields()}}
 
 </script>
@@ -836,14 +836,14 @@ async function addManual(direction){
   }
   if(!rate){alert('لا يوجد سعر صرف مسجل لهذا الرصيد عند المورد.');return}
   const amountIqd=Number((amount*rate).toFixed(2));
-  const {data:{user}}=await db.auth.getUser();
+  const userId=qawafelUserId();
   const r=await db.from('supplier_wallet_transactions').insert({
     supplier_id:supplierId,transaction_type:'withdrawal',currency:cur,amount,
     exchange_rate_to_iqd:rate,amount_iqd:amountIqd,
     transaction_date:$(pre+'Date').value||dateToday(),
     program_id:$(pre+'Program').value||null,
     description:$(pre+'Notes').value.trim()||'استخدام من رصيد المورد',
-    created_by:user?.id||null
+    created_by:userId||null
   });
   if(r.error){alert(r.error.message);return}
   $(pre+'Msg').innerHTML='<div class="msg">✅ تم تسجيل الدفعة واستخدام '+fmt(amount)+' '+cur+' من رصيد المورد، دون تسجيل خروج نقدي جديد.</div>';
@@ -962,8 +962,8 @@ async function createSupplierWalletWithdrawalForInvoice(invoice,supplierId){
  else {rateIqd=Number($('invoiceSupplierCostFxRate').value||0);if(invoiceCurrency!=='USD'&&currency==='USD'&&!rateIqd)return {error:{message:'أدخل سعر التحويل المطلوب.'}};amountIqd=amount*rateIqd}
  const fx=invoiceCurrency===currency?1:Number($('invoiceSupplierCostFxRate').value||0);
  if(invoiceCurrency!==currency&&!fx)return {error:{message:'أدخل سعر التحويل بين عملة الفاتورة وعملة المورد.'}};
- const {data:{user}}=await db.auth.getUser();
- const tx={supplier_id:supplierId,transaction_type:'withdrawal',currency,amount,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:invoice.issued_at||dateToday(),program_id:null,description:'خصم من رصيد المورد مقابل فاتورة '+invoice.invoice_number+' — '+invoice.service_description,source_currency:invoiceCurrency===currency?null:invoiceCurrency,source_amount:invoice.amount,fx_rate:invoiceCurrency===currency?null:fx,exchange_rate_to_iqd:rateIqd,created_by:user?.id||null};
+ const userId=qawafelUserId();
+ const tx={supplier_id:supplierId,transaction_type:'withdrawal',currency,amount,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:invoice.issued_at||dateToday(),program_id:null,description:'خصم من رصيد المورد مقابل فاتورة '+invoice.invoice_number+' — '+invoice.service_description,source_currency:invoiceCurrency===currency?null:invoiceCurrency,source_amount:invoice.amount,fx_rate:invoiceCurrency===currency?null:fx,exchange_rate_to_iqd:rateIqd,created_by:userId||null};
  const ins=await db.from('supplier_wallet_transactions').insert(tx).select('id').single();
  if(ins.error)return ins;
  const link=await db.from('customer_invoices').update({supplier_wallet_tx_id:ins.data.id,source_type:'supplier_wallet_transaction',source_id:ins.data.id,supplier_id:supplierId}).eq('id',invoice.id);
@@ -994,12 +994,12 @@ async function saveNewCustomerInvoice(){
   const rate=currency==='USD'?Number($('invoiceUsdIqdRate').value||0):currency==='SAR'?410:1;
   if(currency==='USD'&&!rate)return alert('أدخل سعر الدولار مقابل الدينار.');
   const amountIqd=currency==='IQD'?amount:currency==='SAR'?amount*410:amount*rate;
-  const {data:{user}}=await db.auth.getUser();
+  const userId=qawafelUserId();
   const invoicePayload={
    buyer_name:buyer,buyer_type:buyerType,service_description:desc,supplier_id:supplierId,
    supplier_wallet_tx_id:null,source_type:paymentStatus==='paid'?'customer_invoice':'manual_invoice',source_id:null,amount,currency,
    amount_iqd:Number(amountIqd.toFixed(2)),paid_amount:0,paid_amount_iqd:0,status:'unpaid',issued_at:issuedAt,due_date:null,
-   paid_at:null,notes:notes||null,created_by:user?.id||null
+   paid_at:null,notes:notes||null,created_by:userId||null
   };
   const ins=await db.from('customer_invoices').insert(invoicePayload).select('id,invoice_number').single();
   if(ins.error)return alert('تعذر إصدار الفاتورة: '+ins.error.message);
@@ -1021,7 +1021,7 @@ async function saveNewCustomerInvoice(){
    const pay=await db.from('customer_invoice_payments').insert({
     invoice_id:invoice.id,amount,currency,amount_iqd:Number(amountIqd.toFixed(2)),
     payment_method:paymentMethod,payment_date:new Date(issuedAt+'T12:00:00').toISOString(),
-    reference:invoice.invoice_number,notes:'قبض عند إصدار الفاتورة',created_by:user?.id||null
+    reference:invoice.invoice_number,notes:'قبض عند إصدار الفاتورة',created_by:userId||null
    });
    if(pay.error){
     await db.from('finance_transactions').delete().eq('id',finId);
@@ -1101,8 +1101,8 @@ async function registerCustomerInvoicePayment(id){
  const rate=cur==='SAR'?410:cur==='USD'?Number(prompt('سعر الدولار مقابل الدينار:','1600')||0):1;
  if((cur==='USD'||cur==='SAR')&&!rate)return alert('سعر الصرف مطلوب.');
  const amountIqd=cur==='IQD'?amount:cur==='SAR'?amount*410:amount*rate;
- const {data:{user}}=await db.auth.getUser();
- const ins=await db.from('customer_invoice_payments').insert({invoice_id:id,amount,currency:cur,amount_iqd:Number(amountIqd.toFixed(2)),payment_method:method,payment_date:new Date().toISOString(),reference,created_by:user?.id||null});
+ const userId=qawafelUserId();
+ const ins=await db.from('customer_invoice_payments').insert({invoice_id:id,amount,currency:cur,amount_iqd:Number(amountIqd.toFixed(2)),payment_method:method,payment_date:new Date().toISOString(),reference,created_by:userId||null});
  if(ins.error)return alert('تعذر تسجيل الدفعة: '+ins.error.message);
  const newPaid=Number(x.paid_amount||0)+amount,newStatus=newPaid+0.000001>=Number(x.amount||0)?'paid':'partial';
  const up=await db.from('customer_invoices').update({paid_amount:newPaid,paid_amount_iqd:Number((Number(x.paid_amount_iqd||0)+amountIqd).toFixed(2)),status:newStatus,paid_at:newStatus==='paid'?new Date().toISOString():null}).eq('id',id);
