@@ -152,33 +152,6 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
 })();
 </script>
-<script id="supervisors-direct-fallback-v1">
-(function(){
-  const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
-  const K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
-  const row=()=>document.getElementById('supRows');
-  async function run(){
-    try{
-      const raw=localStorage.getItem('sb-ymjkzvdjpuuxkcgkmbtc-auth-token');
-      if(!raw)return;
-      const session=JSON.parse(raw);
-      const token=session?.access_token||session?.currentSession?.access_token;
-      if(!token)return;
-      const r=await fetch(U+'/rest/v1/rpc/get_team_directory',{
-        method:'POST',
-        headers:{apikey:K,Authorization:'Bearer '+token,'Content-Type':'application/json'},
-        body:'{}'
-      });
-      if(!r.ok)return;
-      const data=await r.json();
-      const list=Array.isArray(data?.supervisors)?data.supervisors:[];
-      if(!row()||!list.length)return;
-      row().innerHTML=list.map(s=>'<tr><td><b>'+String(s.full_name||'').replace(/[&<>"]/g,'')+'</b><br><span class="small">'+String(s.phone||'—').replace(/[&<>"]/g,'')+'</span></td><td>'+String(s.passport_number||'—').replace(/[&<>"]/g,'')+'</td><td>'+Number(s.commission_rate||1.5)+'%</td><td>0</td><td><span class="badge '+(s.active?'ok':'warn')+'">'+(s.active?'فعال':'موقوف')+'</span></td><td>—</td></tr>').join('');
-    }catch(e){console.warn('direct supervisor fallback',e)}
-  }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
-})();
-</script>
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K),$=id=>document.getElementById(id);let supervisors=[],drivers=[],programs=[],supervisorEarnings=[],currentUser=null,currentSupervisor=null,currentDriver=null,payProgram=null,paySupervisor=null;function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}function money(v){return Number(v||0).toLocaleString('ar-IQ')+' د.ع'}function msg(t,err=false){$('msg').textContent=t;$('msg').className='msg'+(err?' err':'');$('msg').style.display='block';setTimeout(()=>{$('msg').style.display='none'},5000)}
 function normalizeMrzText(t){return(t||'').toUpperCase().split(/\n+/).map(x=>x.replace(/[^A-Z0-9<]/g,'')).filter(x=>x.length>=25)}function parseMRZ(lines){let xs=lines.map(x=>x.padEnd(44,'<').slice(0,44)),l1=xs.find(x=>/^P[A-Z<]/.test(x))||'',i=xs.indexOf(l1),l2=xs.filter((x,j)=>j!==i&&x.length>=40&&/\d{6}[MF<]\d{6}/.test(x)).sort((a,b)=>b.length-a.length)[0]||xs[i+1]||'';if(!l1||!l2)return null;l2=l2.padEnd(44,'<').slice(0,44);l1=l1.padEnd(44,'<').slice(0,44);let sep=l1.indexOf('<<'),surname='',given='';if(sep>=0){surname=l1.slice(5,sep).replace(/</g,' ').trim();given=l1.slice(sep+2).replace(/</g,' ').trim()}const date=x=>{if(!/^\d{6}$/.test(x))return '';let yy=+x.slice(0,2),mm=x.slice(2,4),dd=x.slice(4,6);if(+mm>12||+dd>31)return '';return (yy>=40?1900+yy:2000+yy)+'-'+mm+'-'+dd};return{name:[given,surname].filter(Boolean).join(' '),passport:l2.slice(0,9).replace(/</g,''),nat:l2.slice(10,13).replace(/</g,''),birth:date(l2.slice(13,19)),gender:l2[20],expiry:date(l2.slice(21,27))}}
