@@ -246,6 +246,8 @@ async function loadData(){
     const teamData=typeof r.data==='string'?JSON.parse(r.data):r.data;
     supervisors=Array.isArray(teamData?.supervisors)?teamData.supervisors:[];
     drivers=Array.isArray(teamData?.drivers)?teamData.drivers:[];
+    // رحلات المشرفين تأتي من نفس الـRPC الإداري، حتى لا تتأثر بحالة الرحلة archived أو RLS الخاص بـ programs.
+    supervisorEarnings=Array.isArray(teamData?.supervisor_trips)?teamData.supervisor_trips:[];
   }catch(e){
     console.error('team directory RPC error',e);
     errors.push(e.message||'تعذر تحميل بيانات الفريق');
@@ -280,36 +282,9 @@ async function loadData(){
     programs=r.error?[]:(r.data||[]);
   }catch(e){ programs=[]; }
 
-  // بناء استحقاقات المشرفين مباشرة من الرحلات والحجوزات.
-  // هذا يتجنب اعتماد القائمة على View قد لا تكون متاحة بصلاحيات الواجهة.
-  try{
-    const br=await db.from('bookings').select('id,program_id,total_amount,status');
-    if(br.error) throw br.error;
-    const bookings=br.data||[];
-    supervisorEarnings=programs.filter(p=>p.supervisor_id).map(p=>{
-      const s=supervisors.find(x=>x.id===p.supervisor_id);
-      const activeBookings=bookings.filter(b=>b.program_id===p.id && String(b.status||'')!=='cancelled');
-      const salesTotal=activeBookings.reduce((sum,b)=>sum+Number(b.total_amount||0),0);
-      const rate=Number(s?.commission_rate||1.5);
-      return {
-        supervisor_id:p.supervisor_id,
-        program_id:p.id,
-        title:p.title,
-        departure_date:p.departure_date,
-        booking_count:activeBookings.length,
-        sales_total:salesTotal,
-        commission_rate:rate,
-        earned_amount:salesTotal*rate/100
-      };
-    });
-  }catch(e){
-    console.error('direct supervisor earnings error',e);
-    try{
-      let er=await db.from('supervisor_earnings').select('*');
-      supervisorEarnings=er.error?[]:(er.data||[]);
-    }catch(e2){ supervisorEarnings=[]; }
-  }
-
+  // الاستحقاقات والرحلات موجودة داخل الاستجابة الإدارية المصرّح بها من get_team_directory.
+  // لا نعتمد هنا على قراءة programs/bookings من المتصفح، لأن الرحلات المؤرشفة قد تُحجب بـRLS.
+  if(!Array.isArray(supervisorEarnings)) supervisorEarnings=[];
   renderSup();
   renderDrv();
 
