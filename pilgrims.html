@@ -635,9 +635,10 @@ function render(){
    const b=B.find(z=>z.id===x.booking_id);
    const pr=PR.find(z=>z.id===b?.program_id);
    const deleteBtn=viewProgramId?'':'<button class="btn danger noPrint" type="button" onclick="deletePilgrimFromTrip(&quot;'+x.id+'&quot;)">حذف من الرحلة</button>';
+   const installmentBtn=viewProgramId?'<button class="btn w" type="button" onclick="openExistingInstallmentSetup(&quot;'+b.id+'&quot;)">💳 '+(I.some(z=>z.booking_id===b?.id)?'إدارة الأقساط':'إضافة تقسيط')+'</button>':'';
    const pv=paymentView(b);
    const paymentBadge=pv.status==='paid'?' <span class="badge ok">مسدد</span>':pv.status==='partial'?' <span class="badge" style="background:#fff8e7;color:#795b16">مدفوع جزئيًا</span>':' <span class="badge" style="background:#fff0f0;color:#a33">غير مسدد</span>';
-   return '<tr><td><b>'+esc(x.full_name)+'</b><br><small>'+esc(x.profile_code)+'</small></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td><td>'+badge(x.visa_status)+(x.birth_date&&calcAge(x.birth_date)<18&&!x.guardian_accompanied&&!x.guardian_authorization_path?' <span class="badge" style="background:#fff8e7;color:#795b16">وكالة مطلوبة</span>':'')+'</td><td>'+esc(pr?.title||'—')+'</td><td>'+money(pv.paid)+' / '+money(pv.remaining)+paymentBadge+'</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn p" onclick="openProfile(&quot;'+x.id+'&quot;)">فتح</button>'+deleteBtn+'</div></td></tr>';
+   return '<tr><td><b>'+esc(x.full_name)+'</b><br><small>'+esc(x.profile_code)+'</small></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td><td>'+badge(x.visa_status)+(x.birth_date&&calcAge(x.birth_date)<18&&!x.guardian_accompanied&&!x.guardian_authorization_path?' <span class="badge" style="background:#fff8e7;color:#795b16">وكالة مطلوبة</span>':'')+'</td><td>'+esc(pr?.title||'—')+'</td><td>'+money(pv.paid)+' / '+money(pv.remaining)+paymentBadge+'</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn p" onclick="openProfile(&quot;'+x.id+'&quot;)">فتح</button>'+installmentBtn+deleteBtn+'</div></td></tr>';
  }).join('')||'<tr><td colspan="7">لا يوجد معتمرون.</td></tr>';
 }
 $('search').oninput=render;
@@ -900,6 +901,42 @@ async function payCashInFull(b){
  if(np)openProfile(np.id);
 }
 
+async function openExistingInstallmentSetup(bookingId){
+ const b=B.find(x=>x.id===bookingId); if(!b)return;
+ const p=P.find(x=>x.booking_id===bookingId);
+ const pr=PR.find(x=>x.id===b.program_id);
+ const existing=I.filter(x=>x.booking_id===bookingId);
+ if(existing.length){ openProfile(p?.id); setTimeout(()=>document.getElementById('manageBtn')?.click(),300); return; }
+ const paid=paymentView(b).paid;
+ const total=Number(b.total_amount||0);
+ const remaining=Math.max(total-paid,0);
+ if(remaining<=0)return alert('هذا المعتمر مسدد كامل المبلغ، ولا يوجد متبقٍ لإنشاء أقساط.');
+ const modal=document.createElement('div');
+ modal.className='modal';
+ modal.innerHTML='<div class="modal-card"><h3 style="margin-top:0;color:#072b49">💳 إنشاء نظام أقساط للمعتمر</h3>'+
+ '<div class="msg" style="background:#f8fafc"><b>'+esc(p?.full_name||b.full_name||'المعتمر')+'</b><br><small>'+esc(pr?.title||'الرحلة')+'</small></div>'+
+ '<div class="cols"><div><label>إجمالي البرنامج</label><div class="moneyBox">'+money(total)+'</div></div><div><label>المدفوع فعليًا</label><div class="moneyBox">'+money(paid)+'</div></div><div><label>المتبقي</label><div class="moneyBox">'+money(remaining)+'</div></div><div><label>عدد الأقساط</label><select id="existingInstCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div><div><label>تاريخ أول قسط *</label><input id="existingInstFirstDate" type="date"></div><div><label>القسط الشهري التقريبي</label><div id="existingInstMonthly" class="moneyBox">—</div></div></div>'+
+ '<div id="existingInstHint" class="msg" style="margin-top:12px">بعد الحفظ يتحول هذا الحجز إلى <b>برنامج قسط</b> وتُنشأ الأقساط على نفس المعتمر والحجز، بدون إنشاء معتمر جديد.</div>'+
+ '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button id="existingInstSave" class="btn p">✓ إنشاء خطة الأقساط</button><button id="existingInstCancel" class="btn w">إلغاء</button></div></div>';
+ document.body.appendChild(modal);
+ const countEl=modal.querySelector('#existingInstCount'),dateEl=modal.querySelector('#existingInstFirstDate'),monthlyEl=modal.querySelector('#existingInstMonthly');
+ const refresh=()=>{const n=Number(countEl.value||1);monthlyEl.textContent=money(Math.floor((remaining/n)*100)/100);};
+ const today=new Date().toISOString().slice(0,10); dateEl.value=today; refresh(); countEl.onchange=refresh;
+ modal.querySelector('#existingInstCancel').onclick=()=>modal.remove();
+ modal.querySelector('#existingInstSave').onclick=async()=>{
+   const btn=modal.querySelector('#existingInstSave'); const n=Number(countEl.value||1); const first=dateEl.value;
+   if(!first)return alert('حدد تاريخ أول قسط.');
+   btn.disabled=true;btn.textContent='جارٍ إنشاء الخطة…';
+   try{
+     const r=await db.rpc('create_existing_booking_installment_plan',{p_booking_id:bookingId,p_count:n,p_first_due_date:first,p_notes:'خطة أقساط أُنشئت للمعتمر الموجود في رحلة مكتملة'});
+     if(r.error)throw r.error;
+     modal.remove();
+     alert('تم إنشاء نظام الأقساط بنجاح ✅\n\n'+(p?.full_name||b.full_name)+'\nالمتبقي: '+money(r.data?.remaining_amount||remaining)+'\nعدد الأقساط: '+n);
+     await load();
+     const np=P.find(x=>x.booking_id===bookingId); if(np)openProfile(np.id);
+   }catch(e){btn.disabled=false;btn.textContent='✓ إنشاء خطة الأقساط';alert('تعذر إنشاء خطة الأقساط: '+(e?.message||e));}
+ };
+}
 async function managePayments(b){
  const box=$('manager');box.classList.remove('hide');box.innerHTML='<h4>إدارة الدفعات والأقساط</h4><div style="background:#f8fafc;border:1px solid #dfe6ea;border-radius:10px;padding:10px;margin-bottom:10px;color:#36566a">عند حضور المعتمر، اختر القسط المستحق نفسه ثم اضغط «تسديد هذا القسط». هكذا تُحفظ الدفعة مرتبطة بالقسط في السجل المالي، ويمكن أيضًا تسجيل دفعة جزئية.</div><div id="pm"></div>';
  const r=await db.from('installment_plans').select('*').eq('booking_id',b.id).order('installment_number');
