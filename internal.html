@@ -547,7 +547,20 @@ function render(){
    groups+=group('visa','متابعة التأشيرات','🛂',pendingVisas.length,body,false);
  }
  if(docs) groups+=group('docs','ملفات الجواز تحتاج استكمالاً','🪪',docs,'<div class="alert">يوجد <b>'+docs+'</b> ملف جواز يحتاج استكمالاً في الرحلات غير المكتملة.</div>',false);
- if(overdue) groups+=group('overdue','أقساط متأخرة تحتاج متابعة','💰',overdue,'<div class="alert">يوجد <b>'+overdue+'</b> قسط متأخر يحتاج متابعة في الرحلات غير المكتملة.</div>',false);
+ if(overdue){
+   const overdueRows=I.filter(x=>x.status!=='paid'&&x.due_date&&x.due_date<today&&activeBookingIds.has(x.booking_id)).map(inst=>{
+     const b=bookingById.get(inst.booking_id)||{};
+     const pilgrim=P.find(p=>p.booking_id===inst.booking_id)||{};
+     const rem=Math.max(Number(inst.amount||0)-Number(inst.paid_amount||0),0);
+     let phone=String(pilgrim.phone||b.phone||'').replace(/[^0-9+]/g,'');
+     if(phone.startsWith('00')) phone=phone.slice(2);
+     if(phone.startsWith('07')) phone='964'+phone.slice(1);
+     const msg='السلام عليكم '+(pilgrim.full_name||b.full_name||'أخي الكريم')+'، نود تذكيركم بأن القسط رقم '+(inst.installment_number||'—')+' من برنامج العمرة مستحق منذ '+(inst.due_date||'—')+'، والمتبقي من هذا القسط '+money(rem)+'. نرجو التفضل بتسديده، ولكم جزيل الشكر.';
+     const notify=phone?'<a class="unpaidPayBtn" target="_blank" rel="noopener" href="https://wa.me/'+encodeURIComponent(phone)+'?text='+encodeURIComponent(msg)+'">🔔 إشعار واتساب</a>':'<span class="unpaidOpenBtn" style="opacity:.55">لا يوجد رقم</span>';
+     return '<div class="compactAlert unpaidAlertCard"><div class="unpaidAlertInfo"><b>🔴 قسط متأخر</b><span>'+esc(pilgrim.full_name||b.full_name||'معتمر')+'</span><small>القسط '+esc(inst.installment_number||'—')+' — الاستحقاق: '+esc(inst.due_date||'—')+' — المتبقي: '+esc(money(rem))+'</small></div><div class="unpaidAlertActions">'+notify+'</div></div>';
+   }).join('');
+   groups+=group('overdue','أقساط متأخرة تحتاج متابعة','💰',overdue,overdueRows||'<div class="alert">يوجد <b>'+overdue+'</b> قسط متأخر يحتاج متابعة.</div>',false);
+ }
  const summary='<div class="alertSummary">'+
    '<button type="button" class="alertStat '+(totalAlerts?'danger':'good')+'" onclick="focusAlertSection()"><span class="asIcon">🔔</span><small>إجمالي المتابعة</small><b>'+totalAlerts+'</b></button>'+
    '<button type="button" class="alertStat '+(unpaidPilgrims.length?'danger':'good')+'" onclick="toggleAlertGroup(\'unpaid\')"><span class="asIcon">💰</span><small>لم يدفعوا</small><b>'+unpaidPilgrims.length+'</b></button>'+
