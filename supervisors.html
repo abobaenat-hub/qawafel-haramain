@@ -290,6 +290,10 @@ $('addDriver').onclick=async()=>{try{let fullName=$('dName').value.trim(),fullNa
       paid=(pays.data||[]).reduce((a,x)=>a+Number(x.amount||0),0);
   let body=`<div class="card"><h2>${esc(s.full_name)} — كشف أرباح المشرف</h2><div class="kpis"><div class="kpi"><span>الرحلات</span><b>${rows.data.length}</b></div><div class="kpi"><span>المبيعات</span><b>${money((rows.data||[]).reduce((a,x)=>a+Number(x.sales_total||0),0))}</b></div><div class="kpi"><span>المستحق</span><b>${money(earned)}</b></div><div class="kpi"><span>المدفوع</span><b>${money(paid)}</b></div></div><div class="actions"><button class="btn primary" onclick="openPay('${id}')">💰 تسجيل دفعة</button><button class="btn ghost" onclick="location.reload()">إغلاق الكشف</button></div><div class="tablewrap" style="margin-top:12px"><table><thead><tr><th>الرحلة</th><th>عدد المعتمرين</th><th>إجمالي البيع</th><th>النسبة</th><th>مستحق المشرف</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody>${(rows.data||[]).map(x=>{let pp=(pays.data||[]).filter(q=>q.program_id===x.program_id).reduce((a,q)=>a+Number(q.amount||0),0);return `<tr><td><b>${esc(x.title)}</b><br>${esc(x.departure_date||'')}</td><td>${x.booking_count||0}</td><td>${money(x.sales_total)}</td><td>${Number(x.commission_rate||1.5)}%</td><td><b>${money(x.earned_amount)}</b></td><td>${money(pp)}</td><td>${money(Math.max(0,Number(x.earned_amount||0)-pp))}</td></tr>`}).join('')||'<tr><td colspan="7">لا توجد رحلات مرتبطة.</td></tr>'}</tbody></table></div></div>`;
   $('managerView').innerHTML=body
+  }catch(e){
+    console.error('openSupervisor error',e);
+    msg(e.message||'تعذر فتح كشف أرباح المشرف.',true);
+  }
 }
 window.openSupervisor=openSupervisor;
 
