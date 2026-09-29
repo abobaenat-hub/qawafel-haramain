@@ -361,7 +361,7 @@ async function saveWalletTx(){
 <div class="tab" onclick="showTab('ledger',this)">📒 كل الحركات</div><div class="tab" onclick="showTab('report',this)">📈 التقرير المالي</div><div class="tab" onclick="showTab('settlement',this)">⏳ تصفية الرحلات المكتملة</div><div class="tab" onclick="showTab('receivables',this)">🧾 الفواتير</div>
 </div>
 
-<div class="tabs"><div class="tab" onclick="showTab('suppliers',this)">🏢 الموردون والخزائن</div><div class="tab" onclick="showTab('installments',this);loadInstallmentCustomers()">💳 جماعة الأقساط</div></div><section id="installments" class="hidden">
+<div class="tabs"><div class="tab" onclick="showTab('suppliers',this)">🏢 الموردون والخزائن</div><div class="tab" onclick="showTab('installments',this);loadInstallmentCustomers()">💳 جماعة الأقساط</div><div class="tab" onclick="showTab('debts',this);loadDebtors()">📌 الذمم المستحقة</div></div><section id="installments" class="hidden">
 <div class="panel">
  <div class="sectionTitle"><h2>💳 إدارة الأقساط</h2><button class="btn primary" onclick="loadInstallmentCustomers()">🔄 تحديث</button></div>
  <div class="grid3">
@@ -370,6 +370,18 @@ async function saveWalletTx(){
  </div>
  <div id="installmentSummary" class="kpis" style="margin-top:12px"></div>
  <div id="installmentRows" class="table" style="margin-top:14px"><div class="msg">اضغط تحديث لجلب المسجلين بنظام الأقساط.</div></div>
+</div>
+</section>
+<section id="debts" class="hidden">
+<div class="panel">
+ <div class="sectionTitle"><div><h2>📌 الذمم المستحقة</h2><span class="muted">جميع المعتمرين الذين عليهم مبالغ، سواء كانوا بنظام الأقساط أو بدون نظام أقساط.</span></div><button class="btn primary" onclick="loadDebtors()">🔄 تحديث</button></div>
+ <div class="grid3">
+  <div class="field"><label>بحث</label><input id="debtSearch" placeholder="اسم المعتمر أو رقم الحجز" oninput="renderDebtors()"></div>
+  <div class="field"><label>الرحلة</label><select id="debtProgram" onchange="renderDebtors()"><option value="">كل الرحلات</option></select></div>
+  <div class="field"><label>الترتيب</label><select id="debtSort" onchange="renderDebtors()"><option value="remaining">الأعلى متبقيًا</option><option value="date">الأحدث</option><option value="name">الاسم</option></option></select></div>
+ </div>
+ <div id="debtSummary" class="kpis" style="margin-top:12px"></div>
+ <div id="debtRows" class="table" style="margin-top:14px"><div class="msg">جاري تجهيز الذمم...</div></div>
 </div>
 </section>
 <section id="dashboard">
@@ -1327,7 +1339,32 @@ async function openFinanceInstallment(bookingId){
  };
 }
 
-function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(id==='receivables')loadCustomerInvoices();if(id==='installments')loadInstallmentCustomers()}
+
+let DEBTORS=[];
+async function loadDebtors(){
+ const box=$('debtRows');if(!box)return;
+ try{
+  const [br,pm]=await Promise.all([
+   db.from('bookings').select('id,booking_number,full_name,total_amount,program_id,status,created_at').order('created_at',{ascending:false}),
+   db.from('payments').select('id,booking_id,amount,currency,payment_method,payment_date,notes').order('payment_date',{ascending:false})
+  ]);
+  if(br.error)throw br.error;if(pm.error)throw pm.error;
+  const paid={};(pm.data||[]).forEach(x=>paid[x.booking_id]=(paid[x.booking_id]||0)+Number(x.amount||0));
+  DEBTORS=(br.data||[]).map(b=>({...b,paid:paid[b.id]||0,remaining:Math.max(Number(b.total_amount||0)-(paid[b.id]||0),0)})).filter(x=>x.remaining>0);
+  const sel=$('debtProgram');if(sel){const old=sel.value;sel.innerHTML='<option value="">كل الرحلات</option>'+PROGS.map(p=>'<option value="'+p.id+'">'+esc(p.title)+'</option>').join('');sel.value=old;}
+  renderDebtors();
+ }catch(e){box.innerHTML='<div class="msg err">تعذر جلب الذمم: '+esc(e?.message||e)+'</div>'}
+}
+function renderDebtors(){
+ const q=String($('debtSearch')?.value||'').trim().toLowerCase(),pf=$('debtProgram')?.value||'',sort=$('debtSort')?.value||'remaining';
+ let a=DEBTORS.filter(x=>(!q||[x.full_name,x.booking_number].join(' ').toLowerCase().includes(q))&&(!pf||x.program_id===pf));
+ a.sort((x,y)=>sort==='name'?String(x.full_name||'').localeCompare(String(y.full_name||''),'ar'):sort==='date'?new Date(y.created_at)-new Date(x.created_at):y.remaining-x.remaining);
+ const total=a.reduce((s,x)=>s+Number(x.total_amount||0),0),paid=a.reduce((s,x)=>s+x.paid,0),rem=a.reduce((s,x)=>s+x.remaining,0);
+ $('debtSummary').innerHTML='<div class="kpi"><span>عدد المديونين</span><b>'+a.length+'</b></div><div class="kpi"><span>إجمالي الحجوزات</span><b>'+fmt(total)+'</b></div><div class="kpi"><span>المدفوع</span><b>'+fmt(paid)+'</b></div><div class="kpi"><span>إجمالي المتبقي</span><b>'+fmt(rem)+'</b></div>';
+ $('debtRows').innerHTML='<table><thead><tr><th>المعتمر</th><th>الرحلة</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>إجراء</th></tr></thead><tbody>'+
+ (a.map(x=>'<tr><td><b>'+esc(x.full_name||'—')+'</b><br><small>'+esc(x.booking_number||'')+'</small></td><td>'+esc(programName(x.program_id))+'</td><td>'+fmt(x.total_amount)+'</td><td>'+fmt(x.paid)+'</td><td><b style="color:#a33">'+fmt(x.remaining)+'</b></td><td>'+((x.paid>0)?'🟠 جزئي':'🔴 غير مسدد')+'</td><td><button class="btn primary" onclick="payBooking(\''+x.id+'\')">💰 تسجيل دفعة</button></td></tr>').join('')||'<tr><td colspan="7">لا توجد ذمم مستحقة.</td></tr>')+'</tbody></table>';
+}
+\nfunction showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(id==='receivables')loadCustomerInvoices();if(id==='installments')loadInstallmentCustomers();if(id==='debts')loadDebtors()}
 function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 init();
 setTimeout(()=>{if(FOCUS_PROGRAM_ID){const ef=$('expenseProgramFilter');if(ef)ef.value=FOCUS_PROGRAM_ID;renderExpenseTable();const outTab=[...document.querySelectorAll('.tab')].find(x=>x.textContent.includes('الصرف'));if(outTab)showTab('out',outTab);renderTripFocus();}},500);
