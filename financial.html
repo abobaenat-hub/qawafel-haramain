@@ -367,7 +367,11 @@ async function saveWalletTx(){
    <div class="field"><label>نوع الطرف</label><select id="invoiceBuyerType"><option value="customer">عميل</option><option value="partner">شريك</option></select></div>
    <div class="field"><label>المبلغ</label><input id="invoiceAmount" type="number" min="0.01" step="0.01" oninput="syncCustomerInvoiceFx()"></div>
    <div class="field"><label>العملة</label><select id="invoiceCurrency" onchange="syncCustomerInvoiceFx()"><option value="IQD">دينار عراقي</option><option value="SAR">ريال سعودي</option><option value="USD">دولار أمريكي</option></select></div>
-   <div class="field"><label>المورد المرتبط <span class="muted">(اختياري)</span></label><select id="invoiceSupplier"><option value="">بدون مورد</option></select></div>
+   <div class="field"><label>المورد المرتبط <span class="muted">(اختياري)</span></label><select id="invoiceSupplier" onchange="syncInvoiceSupplierCostFields()"><option value="">بدون مورد</option></select></div>
+   <div class="field"><label>تكلفة المورد</label><select id="invoiceSupplierCostMode" onchange="syncInvoiceSupplierCostFields()"><option value="none">لا تخصم من رصيد المورد</option><option value="wallet">خصم من رصيد المورد</option></select></div>
+   <div class="field" id="invoiceSupplierCostAmountWrap" style="display:none"><label>مبلغ الخصم من رصيد المورد</label><input id="invoiceSupplierCostAmount" type="number" min="0.01" step="0.01" oninput="syncInvoiceSupplierCostFields()"></div>
+   <div class="field" id="invoiceSupplierCostCurrencyWrap" style="display:none"><label>عملة الخصم</label><select id="invoiceSupplierCostCurrency" onchange="syncInvoiceSupplierCostFields()"><option value="SAR">ريال سعودي</option><option value="USD">دولار أمريكي</option><option value="IQD">دينار عراقي</option></select></div>
+   <div class="field" id="invoiceSupplierCostUsdIqdWrap" style="display:none"><label>سعر الدولار مقابل الدينار</label><input id="invoiceSupplierCostUsdIqd" type="number" step="0.01" placeholder="مثال: 1600"></div>
    <div class="field"><label>تاريخ الإصدار</label><input id="invoiceIssuedAt" type="date"></div>
    <div class="field"><label>حالة القبض</label><select id="invoicePaymentStatus" onchange="toggleCustomerInvoicePaymentFields()"><option value="unpaid">غير مقبوضة</option><option value="paid">مقبوضة</option></select></div>
    <div class="field" id="invoicePaymentMethodWrap" style="display:none"><label>طريقة القبض</label><select id="invoicePaymentMethod"><option value="cash">نقدي</option><option value="transfer">تحويل</option><option value="bank">مصرف</option><option value="other">أخرى</option></select></div>
@@ -912,11 +916,36 @@ function openCustomerInvoiceForm(){
  f.classList.remove('hidden');
  $('invoiceBuyerName').value='';$('invoiceBuyerType').value='customer';$('invoiceAmount').value='';
  $('invoiceCurrency').value='IQD';$('invoiceIssuedAt').value=dateToday();$('invoicePaymentStatus').value='unpaid';$('invoicePaymentMethod').value='cash';$('invoiceUsdIqdRate').value='';
- $('invoiceServiceDescription').value='';$('invoiceNotes').value='';toggleCustomerInvoicePaymentFields();
+ $('invoiceServiceDescription').value='';$('invoiceNotes').value='';$('invoiceSupplierCostMode').value='none';$('invoiceSupplierCostAmount').value='';$('invoiceSupplierCostCurrency').value='SAR';$('invoiceSupplierCostUsdIqd').value='';toggleCustomerInvoicePaymentFields();
  const s=$('invoiceSupplier');if(s)s.innerHTML='<option value="">بدون مورد</option>'+SUPPLIERS.filter(x=>x.active).map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
- syncCustomerInvoiceFx();f.scrollIntoView({behavior:'smooth',block:'center'});
+ syncCustomerInvoiceFx();syncInvoiceSupplierCostFields();f.scrollIntoView({behavior:'smooth',block:'center'});
 }
 function closeCustomerInvoiceForm(){$('customerInvoiceForm')?.classList.add('hidden')}
+function syncInvoiceSupplierCostFields(){
+ const mode=$('invoiceSupplierCostMode')?.value||'none',hasSupplier=!!$('invoiceSupplier')?.value,show=mode==='wallet';
+ const amountWrap=$('invoiceSupplierCostAmountWrap'),curWrap=$('invoiceSupplierCostCurrencyWrap'),usdWrap=$('invoiceSupplierCostUsdIqdWrap');
+ if(amountWrap)amountWrap.style.display=show?'block':'none';
+ if(curWrap)curWrap.style.display=show?'block':'none';
+ const cur=$('invoiceSupplierCostCurrency')?.value||'SAR';
+ if(usdWrap)usdWrap.style.display=show&&cur==='USD'?'block':'none';
+ if(show&&!hasSupplier){$('invoiceSupplierCostMode').value='none';if(amountWrap)amountWrap.style.display='none';if(curWrap)curWrap.style.display='none';if(usdWrap)usdWrap.style.display='none';}
+}
+async function createSupplierWalletWithdrawalForInvoice(invoice,supplierId){
+ const amount=Number($('invoiceSupplierCostAmount').value||0),currency=$('invoiceSupplierCostCurrency').value||invoice.currency||'SAR';
+ if(!supplierId)return {error:{message:'اختر المورد أولًا.'}};
+ if(!amount||amount<=0)return {error:{message:'أدخل مبلغ الخصم من رصيد المورد.'}};
+ let amountIqd=0,rate=0;
+ if(currency==='IQD'){amountIqd=amount;rate=1}
+ else if(currency==='SAR'){amountIqd=amount*410;rate=410}
+ else {rate=Number($('invoiceSupplierCostUsdIqd').value||0);if(!rate)return {error:{message:'أدخل سعر الدولار مقابل الدينار.'}};amountIqd=amount*rate}
+ const {data:{user}}=await db.auth.getUser();
+ const tx={supplier_id:supplierId,transaction_type:'withdrawal',currency,amount,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:invoice.issued_at||dateToday(),program_id:null,description:'خصم من رصيد المورد مقابل فاتورة '+invoice.invoice_number+' — '+invoice.service_description,source_currency:null,source_amount:null,fx_rate:null,exchange_rate_to_iqd:rate,created_by:user?.id||null};
+ const ins=await db.from('supplier_wallet_transactions').insert(tx).select('id').single();
+ if(ins.error)return ins;
+ const link=await db.from('customer_invoices').update({supplier_wallet_tx_id:ins.data.id,source_type:'supplier_wallet_transaction',source_id:ins.data.id,supplier_id:supplierId}).eq('id',invoice.id);
+ if(link.error){await db.from('supplier_wallet_transactions').delete().eq('id',ins.data.id);return link}
+ return {data:ins.data};
+}
 function toggleCustomerInvoicePaymentFields(){
  const paid=$('invoicePaymentStatus')?.value==='paid';
  const wrap=$('invoicePaymentMethodWrap');if(wrap)wrap.style.display=paid?'block':'none';
@@ -975,8 +1004,19 @@ async function saveNewCustomerInvoice(){
      return alert('تعذر تسجيل حركة القبض: '+pay.error.message);
    }
  }
- closeCustomerInvoiceForm();await loadCustomerInvoices();
- alert(paymentStatus==='paid'?'✅ تم إصدار الفاتورة وتسجيلها كمقبوضة، وتمت إضافتها كوارد للشركة دون إنشاء صرف إضافي.':'✅ تم إصدار الفاتورة بنجاح وهي غير مقبوضة.');
+ if($('invoiceSupplierCostMode').value==='wallet'){
+   const wr=await createSupplierWalletWithdrawalForInvoice(invoice,supplierId);
+   if(wr.error){
+     await db.from('finance_transactions').delete().eq('source_id',invoice.id).eq('source_type','customer_invoice');
+     await db.from('customer_invoice_payments').delete().eq('invoice_id',invoice.id);
+     await db.from('customer_invoices').delete().eq('id',invoice.id);
+     return alert('تعذر تسجيل خصم المورد: '+wr.error.message);
+   }
+ }
+ closeCustomerInvoiceForm();await loadAll();await loadCustomerInvoices();
+ alert(paymentStatus==='paid'
+   ? ($('invoiceSupplierCostMode').value==='wallet'?'✅ تم إصدار الفاتورة وقبضها، وسُجل الوارد للشركة، وخصم تكلفة المورد مرة واحدة من رصيده.':'✅ تم إصدار الفاتورة وتسجيلها كمقبوضة، وتمت إضافتها كوارد للشركة دون خصم إضافي من المورد.')
+   : ($('invoiceSupplierCostMode').value==='wallet'?'✅ تم إصدار الفاتورة وخصم تكلفة المورد مرة واحدة من رصيده.':'✅ تم إصدار الفاتورة بنجاح وهي غير مقبوضة.'));
 }
 async function loadCustomerInvoices(){
  const box=$('customerInvoiceRows'),sum=$('receivableSummary'),msg=$('customerInvoiceMsg');
