@@ -817,7 +817,9 @@ async function editBookingAmount(b,p){
  const reason=prompt('سبب تصحيح مبلغ الحجز (اختياري):','تصحيح خطأ في مبلغ الحجز');
  if(reason===null)return;
  const remaining=Math.max(newTotal-paid,0);
- const patch={total_amount:newTotal,remaining_amount:remaining,updated_at:new Date().toISOString()};
+ // remaining_amount is a PostgreSQL GENERATED ALWAYS column and cannot be updated directly.
+ // Updating total_amount/paid_amount is enough; the database recalculates remaining_amount automatically.
+ const patch={total_amount:newTotal,updated_at:new Date().toISOString()};
  if(b.payment_type==='cash'){
    patch.cash_payment_status=paid<=0?'unpaid':(remaining<=0?'paid':'partial');
  }
@@ -827,7 +829,7 @@ async function editBookingAmount(b,p){
    const r=await db.from('bookings').update(patch).eq('id',b.id);
    if(r.error)throw r.error;
    try{await db.rpc('log_audit_event',{p_action:'correct_booking_amount',p_entity_type:'booking',p_entity_id:b.id,p_entity_label:p?.full_name||'حجز',p_details:{old_total:oldTotal,new_total:newTotal,paid_amount:paid,remaining_amount:remaining,reason:reason||null},p_page:'pilgrims.html'});}catch(e){}
-   alert('تم تصحيح مبلغ الحجز بنجاح ✅\n\n'+(p?.full_name||'المعتمر')+'\nالمبلغ الجديد: '+money(newTotal));
+   alert('تم تصحيح مبلغ الحجز بنجاح ✅\n\n'+(p?.full_name||'المعتمر')+'\nالمبلغ الجديد: '+money(newTotal)+'\nالمتبقي الجديد: '+money(remaining));
    await load();
    const np=P.find(x=>x.id===p.id); if(np)openProfile(np.id);
  }catch(e){alert('تعذر تصحيح مبلغ الحجز: '+(e?.message||e));}
