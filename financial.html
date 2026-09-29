@@ -278,7 +278,7 @@ async function saveWalletTx(){
 <div class="tab" onclick="showTab('in',this)">🟢 الوارد</div>
 <div class="tab" onclick="showTab('out',this)">🔴 الصرف</div>
 <div class="tab" onclick="showTab('pilgrims',this)">👤 سداد المعتمرين</div>
-<div class="tab" onclick="showTab('ledger',this)">📒 كل الحركات</div><div class="tab" onclick="showTab('report',this)">📈 التقرير المالي</div><div class="tab" onclick="showTab('settlement',this)">⏳ تصفية الرحلات المكتملة</div><div class="tab" onclick="showTab('receivables',this)">🧾 مستحقات العملاء</div>
+<div class="tab" onclick="showTab('ledger',this)">📒 كل الحركات</div><div class="tab" onclick="showTab('report',this)">📈 التقرير المالي</div><div class="tab" onclick="showTab('settlement',this)">⏳ تصفية الرحلات المكتملة</div><div class="tab" onclick="showTab('receivables',this)">🧾 الفواتير</div>
 </div>
 
 <div class="tabs"><div class="tab" onclick="showTab('suppliers',this)">🏢 الموردون والخزائن</div></div><section id="dashboard">
@@ -354,7 +354,7 @@ async function saveWalletTx(){
 <section id="settlement" class="hidden"><div class="panel"><div class="sectionTitle"><h2>⏳ الرحلات المكتملة — معلقة للتصفية</h2><span class="muted">لا تدخل السجل المالي الرسمي حتى تُصفّى</span></div><div id="settlementRows"></div></div></section>
 <section id="receivables" class="hidden">
  <div class="panel" style="border:2px solid #d8c68d;background:linear-gradient(135deg,#fffaf0,#fff)">
-  <div class="sectionTitle"><div><h2>🧾 مستحقات العملاء والشركاء</h2><span class="muted">أنشئ الفاتورة أولًا، واربطها بالمورد فقط إذا كانت الخدمة مرتبطة بمورد.</span></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn" onclick="loadCustomerInvoices()">↻ تحديث</button><button class="btn primary" onclick="openCustomerInvoiceForm()">➕ فاتورة جديدة</button><button class="btn" onclick="createCustomerInvoiceFromWallet()">من سحب مورد</button></div></div>
+  <div class="sectionTitle"><div><h2>🧾 الفواتير</h2><span class="muted">إصدار ومتابعة الفواتير، مع ربط المورد وتكلفته عند الحاجة.</span></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn" onclick="loadCustomerInvoices()">↻ تحديث</button><button class="btn primary" onclick="openCustomerInvoiceForm()">➕ فاتورة جديدة</button><button class="btn" onclick="createCustomerInvoiceFromWallet()">من سحب مورد</button></div></div>
   <div id="receivableSummary" class="kpis" style="margin:12px 0"></div>
   <div id="customerInvoiceMsg"></div>
   <div class="table"><table style="min-width:1050px"><thead><tr><th>الفاتورة</th><th>العميل / الشريك</th><th>الخدمة</th><th>المورد</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead><tbody id="customerInvoiceRows"></tbody></table></div>
@@ -1027,8 +1027,8 @@ async function loadCustomerInvoices(){
  const rows=r.data||[];
  const totals={unpaid:0,partial:0,paid:0};
  rows.forEach(x=>{const rem=Math.max(0,Number(x.amount||0)-Number(x.paid_amount||0));if(x.status!=='cancelled')totals[x.status]=(totals[x.status]||0)+rem});
- sum.innerHTML='<div class="kpi" style="background:#fff;color:var(--text);border:1px solid var(--line)"><small>إجمالي غير المدفوع</small><b>'+fmt(totals.unpaid||0)+'</b></div>'+
- '<div class="kpi" style="background:#fff;color:var(--text);border:1px solid var(--line)"><small>إجمالي المتبقي الجزئي</small><b>'+fmt(totals.partial||0)+'</b></div>'+
+ sum.innerHTML='<div class="kpi" style="background:#fff;color:var(--text);border:1px solid var(--line)"><small>إجمالي المتبقي</small><b>'+fmt(totals.unpaid||0)+'</b></div>'+
+ '<div class="kpi" style="background:#fff;color:var(--text);border:1px solid var(--line)"><small>المتبقي الجزئي</small><b>'+fmt(totals.partial||0)+'</b></div>'+
  '<div class="kpi" style="background:#fff;color:var(--text);border:1px solid var(--line)"><small>فواتير مسددة</small><b>'+rows.filter(x=>x.status==='paid').length+'</b></div>'+
  '<div class="kpi" style="background:#fff;color:var(--text);border:1px solid var(--line)"><small>عدد الفواتير</small><b>'+rows.length+'</b></div>';
  box.innerHTML=rows.map(x=>{
