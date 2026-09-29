@@ -314,6 +314,12 @@ async function visaSetAll(status){if(!allProgramPilgrims.length)return; if(!conf
 function closeTripModal(){const m=$('tripModal');m.classList.add('hidden');m.setAttribute('aria-hidden','true');activeTrip=null}
 async function openFullTripManagement(id){
  const p=window.__programs?.find(x=>x.id===id); if(!p)return;
+ // الرحلات المكتملة/المؤرشفة لا تُفتح في وضع إدخال أو إدارة رحلة جديدة.
+ // تُفتح مباشرة على قائمة المعتمرين الموجودة، مع إمكانية عرض/تعديل بياناتهم فقط.
+ if(p.status==='archived'||p.status==='full'){
+   await openTripPilgrims(id);
+   return;
+ }
  activeTrip=p;
  $('tripModalTitle').textContent='إدارة الرحلة — '+(p.title||'');
  $('tripModalSub').innerHTML='🗓 '+(p.departure_date||'غير محدد')+' &nbsp; · &nbsp; '+(p.travel_type==='جو'?'✈️ طيران':'🚌 '+esc(p.travel_type||'بر'));
