@@ -908,33 +908,34 @@ async function openExistingInstallmentSetup(bookingId){
  const existing=I.filter(x=>x.booking_id===bookingId);
  if(existing.length){ openProfile(p?.id); setTimeout(()=>document.getElementById('manageBtn')?.click(),300); return; }
  const paid=paymentView(b).paid;
- const total=Number(b.total_amount||0);
- const remaining=Math.max(total-paid,0);
- if(remaining<=0)return alert('هذا المعتمر مسدد كامل المبلغ، ولا يوجد متبقٍ لإنشاء أقساط.');
+ const oldTotal=Number(b.total_amount||0);
  const modal=document.createElement('div');
  modal.className='modal';
  modal.innerHTML='<div class="modal-card"><h3 style="margin-top:0;color:#072b49">💳 إنشاء نظام أقساط للمعتمر</h3>'+
  '<div class="msg" style="background:#f8fafc"><b>'+esc(p?.full_name||b.full_name||'المعتمر')+'</b><br><small>'+esc(pr?.title||'الرحلة')+'</small></div>'+
- '<div class="cols"><div><label>إجمالي البرنامج</label><div class="moneyBox">'+money(total)+'</div></div><div><label>المدفوع فعليًا</label><div class="moneyBox">'+money(paid)+'</div></div><div><label>المتبقي</label><div class="moneyBox">'+money(remaining)+'</div></div><div><label>عدد الأقساط</label><select id="existingInstCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div><div><label>تاريخ أول قسط *</label><input id="existingInstFirstDate" type="date"></div><div><label>القسط الشهري التقريبي</label><div id="existingInstMonthly" class="moneyBox">—</div></div></div>'+
- '<div id="existingInstHint" class="msg" style="margin-top:12px">بعد الحفظ يتحول هذا الحجز إلى <b>برنامج قسط</b> وتُنشأ الأقساط على نفس المعتمر والحجز، بدون إنشاء معتمر جديد.</div>'+
- '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button id="existingInstSave" class="btn p">✓ إنشاء خطة الأقساط</button><button id="existingInstCancel" class="btn w">إلغاء</button></div></div>';
+ '<div class="cols"><div style="grid-column:1/-1"><label>إجمالي البرنامج الجديد *</label><input id="existingInstTotal" type="number" min="'+paid+'" step="0.01" value="'+oldTotal+'"><small style="display:block;color:#6b7788;margin-top:5px">يمكنك تعديل إجمالي البرنامج. يجب ألا يكون أقل من المدفوع فعليًا: '+money(paid)+'</small></div>'+
+ '<div><label>المدفوع فعليًا</label><div class="moneyBox">'+money(paid)+'</div></div><div><label>المتبقي</label><div id="existingInstRemaining" class="moneyBox">—</div></div><div><label>عدد الأقساط</label><select id="existingInstCount"><option value="1">قسط واحد</option><option value="2">قسطان</option><option value="3">3 أقساط</option><option value="4">4 أقساط</option><option value="5">5 أقساط</option><option value="6">6 أقساط</option><option value="12">12 قسطًا</option></select></div><div><label>تاريخ أول قسط *</label><input id="existingInstFirstDate" type="date"></div><div><label>القسط الشهري التقريبي</label><div id="existingInstMonthly" class="moneyBox">—</div></div></div>'+
+ '<div id="existingInstHint" class="msg" style="margin-top:12px">بعد الحفظ يُعتمد السعر الجديد للحجز، ثم تُنشأ الأقساط على نفس المعتمر والحجز بدون إنشاء معتمر جديد.</div>'+
+ '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px"><button id="existingInstSave" class="btn p">✓ اعتماد السعر وإنشاء الأقساط</button><button id="existingInstCancel" class="btn w">إلغاء</button></div></div>';
  document.body.appendChild(modal);
- const countEl=modal.querySelector('#existingInstCount'),dateEl=modal.querySelector('#existingInstFirstDate'),monthlyEl=modal.querySelector('#existingInstMonthly');
- const refresh=()=>{const n=Number(countEl.value||1);monthlyEl.textContent=money(Math.floor((remaining/n)*100)/100);};
- const today=new Date().toISOString().slice(0,10); dateEl.value=today; refresh(); countEl.onchange=refresh;
+ const totalEl=modal.querySelector('#existingInstTotal'),countEl=modal.querySelector('#existingInstCount'),dateEl=modal.querySelector('#existingInstFirstDate'),remEl=modal.querySelector('#existingInstRemaining'),monthlyEl=modal.querySelector('#existingInstMonthly');
+ const refresh=()=>{const total=Math.max(Number(totalEl.value||0),0);const rem=Math.max(total-paid,0);const n=Number(countEl.value||1);remEl.textContent=money(rem);monthlyEl.textContent=money(n?Math.floor((rem/n)*100)/100:0);};
+ const today=new Date().toISOString().slice(0,10); dateEl.value=today; refresh(); totalEl.oninput=refresh; countEl.onchange=refresh;
  modal.querySelector('#existingInstCancel').onclick=()=>modal.remove();
  modal.querySelector('#existingInstSave').onclick=async()=>{
-   const btn=modal.querySelector('#existingInstSave'); const n=Number(countEl.value||1); const first=dateEl.value;
+   const btn=modal.querySelector('#existingInstSave'); const total=Number(totalEl.value||0); const n=Number(countEl.value||1); const first=dateEl.value;
+   if(!Number.isFinite(total)||total<paid)return alert('إجمالي البرنامج لا يمكن أن يكون أقل من المدفوع فعليًا: '+money(paid));
    if(!first)return alert('حدد تاريخ أول قسط.');
-   btn.disabled=true;btn.textContent='جارٍ إنشاء الخطة…';
+   if(total<=paid)return alert('لا يوجد مبلغ متبقٍ لإنشاء أقساط.');
+   btn.disabled=true;btn.textContent='جارٍ اعتماد السعر وإنشاء الخطة…';
    try{
-     const r=await db.rpc('create_existing_booking_installment_plan',{p_booking_id:bookingId,p_count:n,p_first_due_date:first,p_notes:'خطة أقساط أُنشئت للمعتمر الموجود في رحلة مكتملة'});
+     const r=await db.rpc('create_existing_booking_installment_plan',{p_booking_id:bookingId,p_count:n,p_first_due_date:first,p_notes:'خطة أقساط أُنشئت للمعتمر الموجود في رحلة مكتملة',p_total_amount:total});
      if(r.error)throw r.error;
      modal.remove();
-     alert('تم إنشاء نظام الأقساط بنجاح ✅\n\n'+(p?.full_name||b.full_name)+'\nالمتبقي: '+money(r.data?.remaining_amount||remaining)+'\nعدد الأقساط: '+n);
+     alert('تم اعتماد إجمالي البرنامج وإنشاء نظام الأقساط بنجاح ✅\n\n'+(p?.full_name||b.full_name)+'\nالإجمالي: '+money(r.data?.total_amount||total)+'\nالمدفوع: '+money(r.data?.paid_amount||paid)+'\nالمتبقي: '+money(r.data?.remaining_amount||(total-paid))+'\nعدد الأقساط: '+n);
      await load();
      const np=P.find(x=>x.booking_id===bookingId); if(np)openProfile(np.id);
-   }catch(e){btn.disabled=false;btn.textContent='✓ إنشاء خطة الأقساط';alert('تعذر إنشاء خطة الأقساط: '+(e?.message||e));}
+   }catch(e){btn.disabled=false;btn.textContent='✓ اعتماد السعر وإنشاء الأقساط';alert('تعذر إنشاء خطة الأقساط: '+(e?.message||e));}
  };
 }
 async function managePayments(b){
