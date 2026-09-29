@@ -1320,6 +1320,18 @@ function renderInstallmentCustomers(){
  $('installmentRows').innerHTML='<table><thead><tr><th>المعتمر</th><th>الحجز</th><th>إجمالي البرنامج</th><th>المدفوع</th><th>المتبقي</th><th>الأقساط</th><th>الحالة</th><th>إدارة</th></tr></thead><tbody>'+
  (filtered.map(x=>'<tr><td><b>'+esc(x.p?.full_name||x.b?.full_name||'—')+'</b><br><small>'+esc(x.p?.phone||'')+'</small></td><td>'+esc(x.b?.booking_number||'—')+'</td><td>'+fmt(x.total)+'</td><td>'+fmt(x.paid)+'</td><td><b style="color:'+(x.remaining>0?'#a33':'#176644')+'">'+fmt(x.remaining)+'</b></td><td>'+x.plans.length+'</td><td>'+(x.remaining<=0?'🟢 مسدد':x.overdue?'🔴 متأخر':'🟠 مستمر')+'</td><td><button class="btn primary" onclick="openFinanceInstallment(&quot;'+x.bookingId+'&quot;)">💳 إدارة الدفعات</button></td></tr>').join('')||'<tr><td colspan="8">لا توجد نتائج</td></tr>')+'</tbody></table>';
 }
+function printInstallmentReceipt(data,x,amount,method,date,notes){
+ const invoice=data?.invoice_number||'—';
+ const name=x.p?.full_name||x.b?.full_name||'المعتمر';
+ const booking=x.b?.booking_number||'—';
+ const guarantor=x.b?.guarantor_name||'—';
+ const phone=x.b?.guarantor_phone||'—';
+ const remaining=Number(data?.booking_remaining ?? Math.max(Number(x.total||0)-(Number(x.paid||0)+Number(amount||0)),0));
+ const w=window.open('','_blank','width=850,height=900');
+ if(!w){alert('المتصفح منع نافذة الطباعة. اسمح بالنوافذ المنبثقة ثم أعد المحاولة.');return;}
+ w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>فاتورة قبض '+esc(invoice)+'</title><style>body{font-family:Tahoma,Arial;margin:0;background:#f5f5f5;color:#17364e}.receipt{width:760px;max-width:calc(100% - 30px);margin:30px auto;background:#fff;padding:35px;border:1px solid #ddd;border-radius:12px}.head{text-align:center;border-bottom:2px solid #0c3b63;padding-bottom:18px}.head h1{margin:0;color:#0c3b63}.num{margin-top:8px;font-weight:bold}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:22px}.item{border:1px solid #e0e6ea;border-radius:8px;padding:12px}.item span{display:block;color:#71808b;font-size:12px;margin-bottom:5px}.amount{text-align:center;background:#f8fafc;border-radius:10px;padding:20px;margin:22px 0;font-size:28px;font-weight:900;color:#0c3b63}.foot{margin-top:25px;text-align:center;color:#687984;font-size:12px}@media print{body{background:#fff}.receipt{border:0;margin:0;width:auto;max-width:none}}</style></head><body><div class="receipt"><div class="head"><h1>قوافل الحرمين</h1><div>فاتورة قبض — دفعة نظام الأقساط</div><div class="num">رقم الفاتورة: <b>'+esc(invoice)+'</b></div></div><div class="grid"><div class="item"><span>اسم المعتمر</span><b>'+esc(name)+'</b></div><div class="item"><span>رقم الحجز</span><b>'+esc(booking)+'</b></div><div class="item"><span>الكفيل</span><b>'+esc(guarantor)+'</b><small>'+esc(phone)+'</small></div><div class="item"><span>تاريخ الدفع</span><b>'+esc(date||'—')+'</b></div><div class="item"><span>طريقة الدفع</span><b>'+esc(method||'—')+'</b></div><div class="item"><span>البيان</span><b>'+esc(notes||'دفعة من أقساط البرنامج')+'</b></div></div><div class="amount">'+fmt(amount)+' IQD</div><div class="grid"><div class="item"><span>إجمالي البرنامج</span><b>'+fmt(x.total)+'</b></div><div class="item"><span>المتبقي بعد الدفعة</span><b>'+fmt(remaining)+'</b></div></div><div class="foot">هذه الفاتورة تثبت استلام الدفعة المذكورة أعلاه.</div></div><script>window.onload=function(){window.print()}</script></body></html>');
+ w.document.close();
+}
 async function openFinanceInstallment(bookingId){
  const x=INSTALLMENT_CUSTOMERS.find(a=>a.bookingId===bookingId); if(!x)return;
  const modal=document.createElement('div');modal.className='modal';
@@ -1338,9 +1350,11 @@ async function openFinanceInstallment(bookingId){
   try{
    const r=await db.rpc('record_installment_payment_flexible',{p_booking_id:bookingId,p_amount:amount,p_start_installment_id:null,p_payment_date:date+'T12:00:00',p_payment_method:method,p_notes:notes||null});
    if(r.error)throw r.error;
-   alert('تم تسجيل الدفعة بنجاح ✅');
+   const invoiceNo=r.data?.invoice_number||'—';
    await loadInstallmentCustomers(); const nx=INSTALLMENT_CUSTOMERS.find(a=>a.bookingId===bookingId); if(nx){x.plans=nx.plans;x.paid=nx.paid;x.remaining=nx.remaining;x.total=nx.total;draw();}
    modal.querySelector('#finInstAmount').value='';btn.disabled=false;btn.textContent='✓ تسجيل الدفعة';
+   const print=confirm('تم تسجيل الدفعة وإصدار الفاتورة '+invoiceNo+' ✅\n\nهل تريد طباعة الفاتورة الآن؟');
+   if(print)printInstallmentReceipt(r.data,x,amount,method,date,notes);
   }catch(e){btn.disabled=false;btn.textContent='✓ تسجيل الدفعة';alert('تعذر تسجيل الدفعة: '+(e?.message||e))}
  };
 }
