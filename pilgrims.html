@@ -934,7 +934,7 @@ async function openExistingInstallmentSetup(bookingId){
    if(total<=paid)return alert('لا يوجد مبلغ متبقٍ لإنشاء أقساط.');
    btn.disabled=true;btn.textContent='جارٍ اعتماد السعر وإنشاء الخطة…';
    try{
-     const r=await db.rpc('create_existing_booking_installment_plan',{p_booking_id:bookingId,p_count:n,p_first_due_date:first,p_notes:'خطة أقساط أُنشئت للمعتمر الموجود في رحلة مكتملة',p_total_amount:total});
+     const r=await db.rpc('create_existing_booking_installment_plan',{p_booking_id:bookingId,p_count:n,p_first_due_date:first,p_notes:'خطة أقساط أُنشئت للمعتمر الموجود في رحلة مكتملة',p_total_amount:total,p_paid_amount:enteredPaid});
      if(r.error)throw r.error;
      modal.remove();
      alert('تم اعتماد إجمالي البرنامج وإنشاء نظام الأقساط بنجاح ✅\n\n'+(p?.full_name||b.full_name)+'\nالإجمالي: '+money(r.data?.total_amount||total)+'\nالمدفوع: '+money(r.data?.paid_amount||paid)+'\nالمتبقي: '+money(r.data?.remaining_amount||(total-paid))+'\nعدد الأقساط: '+n);
