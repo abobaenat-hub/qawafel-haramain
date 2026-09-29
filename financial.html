@@ -78,7 +78,12 @@ function calcWalletFx(syncCounterpart){
    return {source,target,amount,sourceAmount:sa,fx:1};
  }
  if(syncCounterpart!==false){
-   if(window.__walletLastEdited==='source'&&sa>0&&fx>0){
+   // إذا كان المبلغ الأصلي والمبلغ المثبت عند المورد معروفين، فالسعر يُستنتج منهما تلقائياً:
+   // سعر 1 من العملة الأصلية = المبلغ المثبت ÷ المبلغ الأصلي.
+   if(sa>0&&amount>0&&['source','target','currency'].includes(window.__walletLastEdited)){
+     fx=amount/sa;
+     $('walletFxRate').value=fx.toFixed(6);
+   }else if(window.__walletLastEdited==='source'&&sa>0&&fx>0){
      amount=sa*fx;
      $('walletAmount').value=amount.toFixed(6);
    }else if(window.__walletLastEdited==='target'&&amount>0&&fx>0){
@@ -87,7 +92,7 @@ function calcWalletFx(syncCounterpart){
    }else if(window.__walletLastEdited==='rate'&&sa>0&&fx>0){
      amount=sa*fx;
      $('walletAmount').value=amount.toFixed(6);
-   }else if(sa>0&&amount>0&&fx<=0){
+   }else if(sa>0&&amount>0){
      fx=amount/sa;
      $('walletFxRate').value=fx.toFixed(6);
    }
@@ -119,7 +124,12 @@ function calcWalletWithdrawalIqd(){
 async function saveWalletTx(){
  const conversion=calcWalletFx(true);
  const supplier_id=$('walletSupplier').value,type=$('walletType').value,currency=$('walletCurrency').value,amount=Number($('walletAmount').value||0),date=$('walletDate').value||dateToday(),program_id=$('walletProgram').value||null;
- const sc=$('walletSourceCurrency').value||currency,sa=Number($('walletSourceAmount').value||0),fx=Number($('walletFxRate').value||0);
+ const sc=$('walletSourceCurrency').value||currency;
+ let sa=Number($('walletSourceAmount').value||0),fx=Number($('walletFxRate').value||0);
+ if(sc!==currency&&sa>0&&amount>0){
+   fx=amount/sa;
+   $('walletFxRate').value=fx.toFixed(6);
+ }
  if(!supplier_id||!amount)return alert('أكمل المورد والمبلغ');
  if(type==='withdrawal'){
    if(currency==='SAR'){
@@ -135,7 +145,11 @@ async function saveWalletTx(){
    amountIqd=amount*usdRate;
  }
  if(sc!==currency){
-   if(!sa||!fx)return alert('أكمل المبلغ الأصلي وسعر التحويل.');
+   if(!sa)return alert('أدخل المبلغ الأصلي بالعملة الأصلية.');
+   if(!fx){
+     fx=amount/sa;
+     $('walletFxRate').value=fx.toFixed(6);
+   }
    const expected=sa*fx;
    const diff=Math.abs(expected-amount);
    const tolerance=Math.max(0.01,Math.abs(amount)*0.00001);
