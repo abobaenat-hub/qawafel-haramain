@@ -31,28 +31,73 @@ async function saveSupplierPayment(){
  await loadAll(); alert('✅ تم حفظ الدفعة وإضافتها إلى رصيد المورد.');
  ['supplierPayAmount','supplierPayBalanceAmount','supplierPayUsdSarRate','supplierPayUsdIqdRate','supplierPayDescription'].forEach(id=>{const el=$(id);if(el)el.value=''}); syncSupplierPaymentFx();
 }async function loadWallet(){const r=await db.from('supplier_wallet_transactions').select('*').order('transaction_date',{ascending:false});WALLET_TX=r.data||[]}function renderWallet(){const g={},summary={};WALLET_TX.forEach(x=>{const key=x.supplier_id+'|'+x.currency;const a=Number(x.amount||0);g[key]=(g[key]||0)+(x.transaction_type==='deposit'?a:-a);if(!summary[x.currency])summary[x.currency]={deposit:0,withdrawal:0,balance:0};summary[x.currency][x.transaction_type==='deposit'?'deposit':'withdrawal']+=a});Object.values(summary).forEach(v=>v.balance=v.deposit-v.withdrawal);const sumKeys=Object.keys(summary);$('walletSummary').innerHTML=sumKeys.map(cur=>{const v=summary[cur];return '<div class="kpi" style="background:#fff;color:var(--text);border:1px solid var(--line)"><small>عملة: '+esc(cur)+'</small><b>الخزين: '+fmt(v.deposit)+'</b><span class="muted">الصرف من الخزين: '+fmt(v.withdrawal)+'<br><span style="color:'+(v.balance>0?'#176644':v.balance<0?'#a33':'#718390')+';font-weight:900">'+(v.balance>0?'🟢 الباقي: لنا عند المورد ':v.balance<0?'🔴 الباقي: المورد يطلبنا ':'⚪ الباقي: الحساب متعادل ')+'<b>'+fmt(Math.abs(v.balance))+'</b> '+esc(cur)+'</span></span></div>'}).join('')||'<div class="muted">لا توجد حركات في خزائن الموردين.</div>';$('walletBalances').innerHTML=Object.entries(g).map(([k,v])=>{const s=SUPPLIERS.find(x=>x.id===k.split('|')[0]);return '<div class="msg"><b>'+esc(s?.name||'—')+'</b>: '+fmt(v)+' '+k.split('|')[1]+'</div>'}).join('')||'<div class="muted">لا توجد أرصدة.</div>';$('walletRows').innerHTML=WALLET_TX.map(x=>{const s=SUPPLIERS.find(a=>a.id===x.supplier_id);return '<tr><td>'+fmtDate(x.transaction_date)+'</td><td>'+esc(s?.name||'—')+'</td><td>'+(x.transaction_type==='deposit'?'إيداع':'سحب')+'</td><td>'+x.currency+'</td><td>'+fmt(x.amount)+'</td><td>'+esc(x.source_amount?fmt(x.source_amount)+' '+x.source_currency:'—')+'</td><td>'+esc(programName(x.program_id))+'</td><td>'+esc(x.description||'')+'</td><td><button class="btn" onclick="editWalletTx(\''+x.id+'\')">✏️ تعديل</button></td></tr>'}).join('')||'<tr><td colspan="9">لا توجد حركات</td></tr>'}async function editWalletTx(id){const x=WALLET_TX.find(a=>a.id===id);if(!x)return;$('walletSupplier').value=x.supplier_id||'';$('walletType').value=x.transaction_type||'deposit';$('walletDate').value=x.transaction_date||dateToday();$('walletCurrency').value=x.currency||'SAR';$('walletAmount').value=x.amount||'';$('walletProgram').value=x.program_id||'';$('walletSourceCurrency').value=x.source_currency||'';$('walletSourceAmount').value=x.source_amount||'';$('walletFxRate').value=x.fx_rate||'';$('walletIqdRate').value=x.currency==='IQD'?1:(x.exchange_rate_to_iqd||'');$('walletDescription').value=x.description||'';window.__editingWalletId=id;$('walletEditor').classList.remove('hidden');const b=document.querySelector('#walletEditor button[onclick="saveWalletTx()"]');if(b)b.textContent='💾 تحديث الحركة';syncWalletFxFields();window.scrollTo({top:0,behavior:'smooth'});}
-function closeWalletEditor(){window.__editingWalletId=null;$('walletEditor').classList.add('hidden');const b=document.querySelector('#walletEditor button[onclick="saveWalletTx()"]');if(b)b.textContent='💾 حفظ الحركة';}
-function syncWalletFxFields(){
+function closeWalletEditor(){window.__editingWalletId=null;$('walletEditor').classList.add('hidden');const b=document.querySelector('#walletEditor button[onclick="saveWalletTx()"]');if(b)b.textContent='💾 حفظ الحركة';window.__walletLastEdited=null;}
+
+function walletTargetIqdRate(currency){
+ const cur=currency||$('walletCurrency').value;
+ if(cur==='IQD')return 1;
+ if(cur==='SAR')return 410;
+ if(cur==='USD')return Number($('walletIqdRate').value||0);
+ return 0;
+}
+function walletSetFxLabel(){
  const source=$('walletSourceCurrency').value||$('walletCurrency').value;
  const target=$('walletCurrency').value;
- const showUsdSar=(source==='USD'&&target==='SAR');
- const showIqd=(source==='USD'||target==='USD'||(source==='USD'&&target==='SAR'));
+ const label=$('walletFxRateWrap')?.querySelector('label');
+ if(label)label.textContent='سعر 1 '+source+' مقابل '+target;
+ const input=$('walletFxRate');
+ if(input)input.placeholder=source===target?'لا يوجد تحويل':('مثال: '+(source==='USD'&&target==='SAR'?'3.75':source==='SAR'&&target==='USD'?'0.266667':source==='USD'&&target==='IQD'?'1600':'أدخل السعر'));
+}
+function walletAmountChanged(){window.__walletLastEdited='target';syncWalletFxFields(true);}
+function walletSourceAmountChanged(){window.__walletLastEdited='source';syncWalletFxFields(true);}
+function walletFxChanged(){window.__walletLastEdited='rate';syncWalletFxFields(true);}
+function walletCurrencyChanged(){window.__walletLastEdited='currency';syncWalletFxFields(true);}
+function walletSourceCurrencyChanged(){window.__walletLastEdited='currency';syncWalletFxFields(true);}
+
+function syncWalletFxFields(recalculate){
+ const source=$('walletSourceCurrency').value||$('walletCurrency').value;
+ const target=$('walletCurrency').value;
+ const converted=source!==target;
+ const showUsdSar=converted;
+ const showIqd=$('walletType').value==='withdrawal'||target==='USD'||source==='USD';
  const a=$('walletFxRateWrap'),b=$('walletIqdRateWrap');
  if(a)a.style.display=showUsdSar?'block':'none';
  if(b)b.style.display=showIqd?'block':'none';
- calcWalletFx();calcWalletWithdrawalIqd();
+ walletSetFxLabel();
+ calcWalletFx(recalculate!==false);
+ calcWalletWithdrawalIqd();
 }
-function calcWalletFx(){
- const target=$('walletCurrency').value,source=$('walletSourceCurrency').value||target,sa=Number($('walletSourceAmount').value||0),amount=Number($('walletAmount').value||0),rateInput=Number($('walletFxRate').value||0);
- let fx=rateInput;
- if(source!==target&&fx<=0&&sa>0&&amount>0)fx=Number((amount/sa).toFixed(6));
- if(source===target)fx=0;
- return fx
+
+function calcWalletFx(syncCounterpart){
+ const target=$('walletCurrency').value,source=$('walletSourceCurrency').value||target;
+ let sa=Number($('walletSourceAmount').value||0),amount=Number($('walletAmount').value||0),fx=Number($('walletFxRate').value||0);
+ if(source===target){
+   if(amount>0&&(!sa||window.__walletLastEdited==='target'||window.__walletLastEdited==='currency'))sa=amount;
+   else if(sa>0&&!amount)amount=sa;
+   $('walletSourceAmount').value=sa>0?sa:'';
+   return {source,target,amount,sourceAmount:sa,fx:1};
+ }
+ if(syncCounterpart!==false){
+   if(window.__walletLastEdited==='source'&&sa>0&&fx>0){
+     amount=sa*fx;
+     $('walletAmount').value=amount.toFixed(6);
+   }else if(window.__walletLastEdited==='target'&&amount>0&&fx>0){
+     sa=amount/fx;
+     $('walletSourceAmount').value=sa.toFixed(6);
+   }else if(window.__walletLastEdited==='rate'&&sa>0&&fx>0){
+     amount=sa*fx;
+     $('walletAmount').value=amount.toFixed(6);
+   }else if(sa>0&&amount>0&&fx<=0){
+     fx=amount/sa;
+     $('walletFxRate').value=fx.toFixed(6);
+   }
+ }
+ return {source,target,amount,sourceAmount:sa,fx};
 }
 function refreshWalletTransferOptions(){
  const el=$('walletTransferRef');if(!el)return;
  el.innerHTML='<option value="">سعر الأصل محفوظ مع الرصيد</option>';
- calcWalletWithdrawalIqd()
+ calcWalletWithdrawalIqd();
 }
 function calcWalletWithdrawalIqd(){
  const el=$('walletWithdrawalIqd');if(!el)return 0;
@@ -64,47 +109,68 @@ function calcWalletWithdrawalIqd(){
    const rate=Number($('walletIqdRate').value||0);
    iqd=rate>0?amount*rate:0;
  }else if(currency==='SAR'){
-   const sourceCur=$('walletSourceCurrency').value||'USD';
-   const fx=Number($('walletFxRate').value||0);
-   const usdIqd=Number($('walletIqdRate').value||0);
-   if(sourceCur==='USD'&&fx>0){
-     const usd=amount/fx;
-     $('walletSourceAmount').value=usd.toFixed(6);
-     $('walletWithdrawalIqd').dataset.usd=usd.toFixed(6);
-     iqd=usdIqd>0?usd*usdIqd:0;
-   }
+   iqd=amount*410;
  }
  el.value=iqd?Math.round(iqd).toLocaleString('en-US')+' د.ع':'';
  return iqd
 }
-['walletCurrency','walletSourceCurrency','walletSourceAmount','walletAmount','walletIqdRate'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',()=>{calcWalletFx();calcWalletWithdrawalIqd()});el.addEventListener('change',()=>{calcWalletFx();calcWalletWithdrawalIqd()})}});
+['walletSourceAmount'].forEach(id=>{const el=$(id);if(el){el.addEventListener('input',walletSourceAmountChanged);el.addEventListener('change',walletSourceAmountChanged)}});
+
 async function saveWalletTx(){
- const supplier_id=$('walletSupplier').value,type=$('walletType').value,currency=$('walletCurrency').value,amount=Number($('walletAmount').value||0),date=$('walletDate').value||dateToday(),program_id=$('walletProgram').value||null,sc=$('walletSourceCurrency').value||currency,sa=Number($('walletSourceAmount').value||0),fx=calcWalletFx(),rate=currency==='IQD'?1:Number($('walletIqdRate').value||0);
+ const conversion=calcWalletFx(true);
+ const supplier_id=$('walletSupplier').value,type=$('walletType').value,currency=$('walletCurrency').value,amount=Number($('walletAmount').value||0),date=$('walletDate').value||dateToday(),program_id=$('walletProgram').value||null;
+ const sc=$('walletSourceCurrency').value||currency,sa=Number($('walletSourceAmount').value||0),fx=Number($('walletFxRate').value||0);
  if(!supplier_id||!amount)return alert('أكمل المورد والمبلغ');
- let amountIqd=0;
  if(type==='withdrawal'){
    if(currency==='SAR'){
-     const usdRate=Number($('walletIqdRate').value||0);
-     const usdPerSar=Number($('walletFxRate').value||0);
-     if(!usdPerSar)return alert('أدخل سعر تحويل الدولار إلى الريال');
-     if(!usdRate)return alert('أدخل سعر الدولار مقابل الدينار');
-     const usd=amount/usdPerSar;
-     $('walletSourceCurrency').value='USD';
-     $('walletSourceAmount').value=usd.toFixed(6);
-     amountIqd=Number((usd*usdRate).toFixed(2));
-   }else{
-     amountIqd=calcWalletWithdrawalIqd();
-     if(!amountIqd)return alert('أدخل سعر التحويل المناسب');
+     if(sc==='USD'&&(!fx||!sa))return alert('أدخل المبلغ الأصلي بالدولار وسعر الدولار مقابل الريال.');
+   }
+ }
+ let amountIqd=0;
+ if(currency==='IQD')amountIqd=amount;
+ else if(currency==='SAR')amountIqd=amount*410;
+ else if(currency==='USD'){
+   const usdRate=Number($('walletIqdRate').value||0);
+   if(!usdRate)return alert('أدخل سعر الدولار مقابل الدينار');
+   amountIqd=amount*usdRate;
+ }
+ if(sc!==currency){
+   if(!sa||!fx)return alert('أكمل المبلغ الأصلي وسعر التحويل.');
+   const expected=sa*fx;
+   const diff=Math.abs(expected-amount);
+   const tolerance=Math.max(0.01,Math.abs(amount)*0.00001);
+   if(diff>tolerance){
+     return alert('بيانات التحويل غير متطابقة.\\n\\nالمبلغ المثبت عند المورد: '+fmt(amount)+' '+currency+'\\nالمتوقع من المبلغ الأصلي وسعر التحويل: '+fmt(expected)+' '+currency+'\\nالفرق: '+fmt(diff)+' '+currency+'\\n\\nصحح المبلغ أو سعر التحويل.');
    }
  }else{
-   if(!rate)return alert('أدخل سعر الدولار مقابل الدينار');
-   if(sc!==currency&&(!sa||!fx))return alert('أدخل المبلغ المصدر وسعر التحويل بين العملتين');
-   amountIqd=Number((amount*rate).toFixed(2));
+   $('walletSourceAmount').value=amount;
  }
  const userId=qawafelUserId();
- const payload={supplier_id,transaction_type:type,currency,amount,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:date,program_id,description:$('walletDescription').value.trim()||null,source_currency:type==='withdrawal'&&currency==='SAR'?'USD':(sc===currency?null:sc),source_amount:type==='withdrawal'&&currency==='SAR'?Number($('walletSourceAmount').value||0):(sc===currency?null:sa),fx_rate:type==='withdrawal'&&currency==='SAR'?fx:(sc===currency?null:fx),exchange_rate_to_iqd:type==='withdrawal'&&currency==='SAR'?Number($('walletIqdRate').value||0):(type==='withdrawal'?rate:null)};
- const r=window.__editingWalletId?await db.from('supplier_wallet_transactions').update(payload).eq('id',window.__editingWalletId):await db.from('supplier_wallet_transactions').insert({...payload,created_by:userId||null});
- if(r.error)alert(r.error.message);else {window.__editingWalletId=null;$('walletEditor').classList.add('hidden');$('walletEditor').style.position='';$('walletEditor').style.inset='';$('walletEditor').style.zIndex='';$('walletEditor').style.overflow='';await loadAll();if(CURRENT_SUPPLIER_STATEMENT)showSupplierStatement(CURRENT_SUPPLIER_STATEMENT);['walletAmount','walletSourceAmount','walletFxRate','walletIqdRate','walletDescription'].forEach(id=>{const el=$(id);if(el)el.value=''});$('walletSourceCurrency').value='';$('walletCurrency').value='SAR';$('walletType').value='deposit';$('walletDate').value=dateToday();$('walletProgram').value='';syncWalletFxFields()}}
+ const payload={
+   supplier_id,transaction_type:type,currency,amount,
+   amount_iqd:Number(amountIqd.toFixed(2)),
+   transaction_date:date,program_id,
+   description:$('walletDescription').value.trim()||null,
+   source_currency:sc===currency?null:sc,
+   source_amount:sc===currency?null:sa,
+   fx_rate:sc===currency?null:fx,
+   exchange_rate_to_iqd:currency==='IQD'?1:(currency==='SAR'?410:Number($('walletIqdRate').value||0))
+ };
+ const r=window.__editingWalletId
+   ?await db.from('supplier_wallet_transactions').update(payload).eq('id',window.__editingWalletId)
+   :await db.from('supplier_wallet_transactions').insert({...payload,created_by:userId||null});
+ if(r.error)alert(r.error.message);
+ else {
+   window.__editingWalletId=null;
+   window.__walletLastEdited=null;
+   $('walletEditor').classList.add('hidden');
+   $('walletEditor').style.position='';$('walletEditor').style.inset='';$('walletEditor').style.zIndex='';$('walletEditor').style.overflow='';
+   await loadAll();
+   if(CURRENT_SUPPLIER_STATEMENT)showSupplierStatement(CURRENT_SUPPLIER_STATEMENT);
+   ['walletAmount','walletSourceAmount','walletFxRate','walletIqdRate','walletDescription'].forEach(id=>{const el=$(id);if(el)el.value=''});
+   $('walletSourceCurrency').value='';$('walletCurrency').value='SAR';$('walletType').value='deposit';$('walletDate').value=dateToday();$('walletProgram').value='';syncWalletFxFields(false)
+ }
+}
 
 </script>
 <style>
@@ -400,7 +466,7 @@ async function saveWalletTx(){
 <div class="field"><label>التاريخ</label><input id="supplierPayDate" type="date"></div></div>
 <div class="msg">💱 إذا دفعت بالدولار وتحول المبلغ إلى ريال عند المورد، أدخل المبلغ المدفوع بالدولار والمبلغ الذي أصبح رصيدًا بالريال، ثم أدخل سعري التحويل. النظام يحفظ أصل الرصيد.</div>
 <div class="field"><label>البيان</label><input id="supplierPayDescription" placeholder="مثال: رصيد مودع لدى المورد"></div>
-<button class="btn primary" onclick="saveSupplierPayment()">💾 حفظ الدفعة</button></div></section><section id="wallet" class="hidden"><div id="walletEditor" class="panel hidden"><div class="sectionTitle"><h2>✏️ تعديل حركة خزينة المورد</h2><button class="btn" onclick="closeWalletEditor()">إغلاق</button></div><div class="grid"><div class="field"><label>المورد</label><select id="walletSupplier"></select></div><div class="field"><label>نوع الحركة</label><select id="walletType"><option value="deposit">إيداع</option><option value="withdrawal">سحب</option></select></div><div class="field"><label>التاريخ</label><input id="walletDate" type="date"></div><div class="field"><label>عملة الرصيد</label><select id="walletCurrency" onchange="calcWalletFx()"><option value="SAR">ريال سعودي</option><option value="USD">دولار</option><option value="IQD">دينار عراقي</option></select></div><div class="field"><label>المبلغ المثبت عند المورد</label><input id="walletAmount" type="number" step="0.01" oninput="calcWalletFx()"></div><div class="field"><label>الرحلة</label><select id="walletProgram"></select></div></div><div class="msg"><b>💱 تحويل العملات</b><br>مثال: 10,000 دولار تتحول إلى 37,500 ريال؛ الرصيد يسجل 37,500 ريال مع حفظ مبلغ المصدر وسعر التحويل.</div><div id="walletFxEntry" class="msg" style="margin-top:10px"><b>💱 بيانات التحويل</b><div class="grid3" style="margin-top:8px"><div class="field"><label>العملة الأصلية</label><select id="walletSourceCurrency" onchange="syncWalletFxFields()"><option value="">نفس العملة</option><option>USD</option><option>SAR</option><option>IQD</option></select></div><div class="field"><label>المبلغ الأصلي</label><input id="walletSourceAmount" type="number" step="0.01" oninput="calcWalletFx()"></div><div class="field" id="walletFxRateWrap"><label>سعر 1 دولار مقابل الريال السعودي</label><input id="walletFxRate" type="number" step="0.000001" placeholder="مثال: 3.75" oninput="calcWalletWithdrawalIqd()"></div><div class="field" id="walletIqdRateWrap"><label>سعر 1 دولار مقابل الدينار العراقي</label><input id="walletIqdRate" type="number" step="0.000001" placeholder="مثال: 1600" oninput="calcWalletWithdrawalIqd()"></div></div></div><div class="grid"><div class="field" id="walletTransferWrap"><label>التحويل المعتمد لحساب الدينار عند السحب</label><select id="walletTransferRef" onchange="calcWalletWithdrawalIqd()"><option value="">يظهر عند اختيار السحب</option></select></div><div class="field"><label>الدينار الناتج من التحويل</label><input id="walletWithdrawalIqd" type="text" readonly placeholder="يحسب تلقائيًا عند السحب"></div></div><div class="field"><label>البيان</label><input id="walletDescription"></div><button class="btn primary" onclick="saveWalletTx()">💾 حفظ الحركة</button></div><div class="panel"><div class="sectionTitle"><h2>📊 ملخص خزائن الموردين</h2><span class="muted">لا نجمع العملات المختلفة معًا</span></div><div id="walletSummary" class="kpis" style="margin-top:12px"></div></div><div class="panel"><h2>💰 الأرصدة حسب المورد</h2><div id="walletBalances"></div></div><div class="panel"><h2>📒 كشف الحركات</h2><div class="table"><table><thead><tr><th>التاريخ</th><th>المورد</th><th>الحركة</th><th>العملة</th><th>المبلغ</th><th>المصدر</th><th>الرحلة</th><th>البيان</th><th>إجراء</th></tr></thead><tbody id="walletRows"></tbody></table></div></div></section>
+<button class="btn primary" onclick="saveSupplierPayment()">💾 حفظ الدفعة</button></div></section><section id="wallet" class="hidden"><div id="walletEditor" class="panel hidden"><div class="sectionTitle"><h2>✏️ تعديل حركة خزينة المورد</h2><button class="btn" onclick="closeWalletEditor()">إغلاق</button></div><div class="grid"><div class="field"><label>المورد</label><select id="walletSupplier"></select></div><div class="field"><label>نوع الحركة</label><select id="walletType"><option value="deposit">إيداع</option><option value="withdrawal">سحب</option></select></div><div class="field"><label>التاريخ</label><input id="walletDate" type="date"></div><div class="field"><label>عملة الرصيد</label><select id="walletCurrency" onchange="walletCurrencyChanged()"><option value="SAR">ريال سعودي</option><option value="USD">دولار</option><option value="IQD">دينار عراقي</option></select></div><div class="field"><label>المبلغ المثبت عند المورد</label><input id="walletAmount" type="number" step="0.01" oninput="walletAmountChanged()"></div><div class="field"><label>الرحلة</label><select id="walletProgram"></select></div></div><div class="msg"><b>💱 تحويل العملات</b><br>مثال: 10,000 دولار تتحول إلى 37,500 ريال؛ الرصيد يسجل 37,500 ريال مع حفظ مبلغ المصدر وسعر التحويل.</div><div id="walletFxEntry" class="msg" style="margin-top:10px"><b>💱 بيانات التحويل</b><div class="grid3" style="margin-top:8px"><div class="field"><label>العملة الأصلية</label><select id="walletSourceCurrency" onchange="walletSourceCurrencyChanged()"><option value="">نفس العملة</option><option>USD</option><option>SAR</option><option>IQD</option></select></div><div class="field"><label>المبلغ الأصلي</label><input id="walletSourceAmount" type="number" step="0.01" oninput="calcWalletFx()"></div><div class="field" id="walletFxRateWrap"><label>سعر 1 دولار مقابل الريال السعودي</label><input id="walletFxRate" type="number" step="0.000001" placeholder="مثال: 3.75" oninput="walletFxChanged()"></div><div class="field" id="walletIqdRateWrap"><label>سعر 1 دولار مقابل الدينار العراقي</label><input id="walletIqdRate" type="number" step="0.000001" placeholder="مثال: 1600" oninput="calcWalletWithdrawalIqd()"></div></div></div><div class="grid"><div class="field" id="walletTransferWrap"><label>التحويل المعتمد لحساب الدينار عند السحب</label><select id="walletTransferRef" onchange="calcWalletWithdrawalIqd()"><option value="">يظهر عند اختيار السحب</option></select></div><div class="field"><label>الدينار الناتج من التحويل</label><input id="walletWithdrawalIqd" type="text" readonly placeholder="يحسب تلقائيًا عند السحب"></div></div><div class="field"><label>البيان</label><input id="walletDescription"></div><button class="btn primary" onclick="saveWalletTx()">💾 حفظ الحركة</button></div><div class="panel"><div class="sectionTitle"><h2>📊 ملخص خزائن الموردين</h2><span class="muted">لا نجمع العملات المختلفة معًا</span></div><div id="walletSummary" class="kpis" style="margin-top:12px"></div></div><div class="panel"><h2>💰 الأرصدة حسب المورد</h2><div id="walletBalances"></div></div><div class="panel"><h2>📒 كشف الحركات</h2><div class="table"><table><thead><tr><th>التاريخ</th><th>المورد</th><th>الحركة</th><th>العملة</th><th>المبلغ</th><th>المصدر</th><th>الرحلة</th><th>البيان</th><th>إجراء</th></tr></thead><tbody id="walletRows"></tbody></table></div></div></section>
 <div id="supplierStatement" class="hidden" style="position:fixed;inset:0;background:#0008;z-index:100;padding:15px;overflow:auto">
 <div class="panel" style="max-width:1050px;margin:20px auto">
 <div class="sectionTitle"><h2>📄 سند حساب المورد</h2><div><button class="btn primary" onclick="printSupplierStatement()">🖨️ طباعة</button> <button class="btn" onclick="$('supplierStatement').classList.add('hidden')">إغلاق</button></div></div>
