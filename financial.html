@@ -984,63 +984,77 @@ function syncCustomerInvoiceFx(){
  return iqd;
 }
 async function saveNewCustomerInvoice(){
- const buyer=$('invoiceBuyerName').value.trim(),buyerType=$('invoiceBuyerType').value,amount=Number($('invoiceAmount').value||0),currency=$('invoiceCurrency').value;
- const supplierId=$('invoiceSupplier').value||null,issuedAt=$('invoiceIssuedAt').value||dateToday(),desc=$('invoiceServiceDescription').value.trim(),notes=$('invoiceNotes').value.trim();
- const paymentStatus=$('invoicePaymentStatus').value,paymentMethod=$('invoicePaymentMethod').value;
- if(!buyer)return alert('أدخل اسم العميل أو الشريك.');
- if(!amount||amount<=0)return alert('أدخل مبلغ الفاتورة.');
- if(!desc)return alert('أدخل وصف الخدمة.');
- const rate=currency==='USD'?Number($('invoiceUsdIqdRate').value||0):currency==='SAR'?410:1;
- if(currency==='USD'&&!rate)return alert('أدخل سعر الدولار مقابل الدينار.');
- const amountIqd=currency==='IQD'?amount:currency==='SAR'?amount*410:amount*rate;
- const {data:{user}}=await db.auth.getUser();
- const invoicePayload={
+ try{
+  const buyer=$('invoiceBuyerName').value.trim(),buyerType=$('invoiceBuyerType').value,amount=Number($('invoiceAmount').value||0),currency=$('invoiceCurrency').value;
+  const supplierId=$('invoiceSupplier').value||null,issuedAt=$('invoiceIssuedAt').value||dateToday(),desc=$('invoiceServiceDescription').value.trim(),notes=$('invoiceNotes').value.trim();
+  const paymentStatus=$('invoicePaymentStatus').value,paymentMethod=$('invoicePaymentMethod').value;
+  if(!buyer)return alert('أدخل اسم العميل أو الشريك.');
+  if(!amount||amount<=0)return alert('أدخل مبلغ الفاتورة.');
+  if(!desc)return alert('أدخل وصف الخدمة.');
+  const rate=currency==='USD'?Number($('invoiceUsdIqdRate').value||0):currency==='SAR'?410:1;
+  if(currency==='USD'&&!rate)return alert('أدخل سعر الدولار مقابل الدينار.');
+  const amountIqd=currency==='IQD'?amount:currency==='SAR'?amount*410:amount*rate;
+  const {data:{user}}=await db.auth.getUser();
+  const invoicePayload={
    buyer_name:buyer,buyer_type:buyerType,service_description:desc,supplier_id:supplierId,
    supplier_wallet_tx_id:null,source_type:paymentStatus==='paid'?'customer_invoice':'manual_invoice',source_id:null,amount,currency,
-   amount_iqd:Number(amountIqd.toFixed(2)),paid_amount:paymentStatus==='paid'?amount:0,paid_amount_iqd:paymentStatus==='paid'?Number(amountIqd.toFixed(2)):0,
-   status:paymentStatus==='paid'?'paid':'unpaid',issued_at:issuedAt,due_date:null,
-   paid_at:paymentStatus==='paid'?new Date().toISOString():null,notes:notes||null,created_by:user?.id||null
- };
- const ins=await db.from('customer_invoices').insert(invoicePayload).select('id,invoice_number').single();
- if(ins.error)return alert('تعذر إصدار الفاتورة: '+ins.error.message);
- const invoice=ins.data;
- if(paymentStatus==='paid'){
+   amount_iqd:Number(amountIqd.toFixed(2)),paid_amount:0,paid_amount_iqd:0,status:'unpaid',issued_at:issuedAt,due_date:null,
+   paid_at:null,notes:notes||null,created_by:user?.id||null
+  };
+  const ins=await db.from('customer_invoices').insert(invoicePayload).select('id,invoice_number').single();
+  if(ins.error)return alert('تعذر إصدار الفاتورة: '+ins.error.message);
+  const invoice=ins.data;
+  let finId=null,payCreated=false;
+
+  if(paymentStatus==='paid'){
    const fin=await db.from('finance_transactions').insert({
-     direction:'in',category:'other_income',description:'قبض فاتورة '+invoice.invoice_number+' — '+desc,
-     amount,currency,payment_method:paymentMethod,
-     transaction_date:new Date(issuedAt+'T12:00:00').toISOString(),
-     program_id:null,party_name:buyer,
-     notes:notes||'قبض فاتورة عميل',
-     source_type:'customer_invoice',source_id:invoice.id
+    direction:'in',category:'other_income',description:'قبض فاتورة '+invoice.invoice_number+' — '+desc,
+    amount,currency,payment_method:paymentMethod,
+    transaction_date:new Date(issuedAt+'T12:00:00').toISOString(),program_id:null,party_name:buyer,
+    notes:notes||'قبض فاتورة عميل',source_type:'customer_invoice',source_id:invoice.id
    }).select('id').single();
    if(fin.error){
-     await db.from('customer_invoices').delete().eq('id',invoice.id);
-     return alert('تعذر تسجيل قبض الفاتورة كوارد للشركة: '+fin.error.message);
+    alert('تم إنشاء الفاتورة '+invoice.invoice_number+' لكن تعذر تسجيل القبض في المالية:\n'+fin.error.message+'\n\nتم إبقاء الفاتورة محفوظة كـ غير مقبوضة حتى لا تضيع.');
+    closeCustomerInvoiceForm();await loadCustomerInvoices();return;
    }
+   finId=fin.data.id;
    const pay=await db.from('customer_invoice_payments').insert({
-     invoice_id:invoice.id,amount,currency,amount_iqd:Number(amountIqd.toFixed(2)),
-     payment_method:paymentMethod,payment_date:new Date(issuedAt+'T12:00:00').toISOString(),
-     reference:invoice.invoice_number,notes:'قبض عند إصدار الفاتورة',created_by:user?.id||null
+    invoice_id:invoice.id,amount,currency,amount_iqd:Number(amountIqd.toFixed(2)),
+    payment_method:paymentMethod,payment_date:new Date(issuedAt+'T12:00:00').toISOString(),
+    reference:invoice.invoice_number,notes:'قبض عند إصدار الفاتورة',created_by:user?.id||null
    });
    if(pay.error){
-     await db.from('finance_transactions').delete().eq('id',fin.data.id);
-     await db.from('customer_invoices').delete().eq('id',invoice.id);
-     return alert('تعذر تسجيل حركة القبض: '+pay.error.message);
+    await db.from('finance_transactions').delete().eq('id',finId);
+    alert('تم إنشاء الفاتورة '+invoice.invoice_number+' لكن تعذر تسجيل حركة القبض:\n'+pay.error.message+'\n\nتم إبقاء الفاتورة محفوظة كـ غير مقبوضة.');
+    closeCustomerInvoiceForm();await loadCustomerInvoices();return;
    }
- }
- if($('invoiceSupplierCostMode').value==='wallet'){
+   payCreated=true;
+   const up=await db.from('customer_invoices').update({paid_amount:amount,paid_amount_iqd:Number(amountIqd.toFixed(2)),status:'paid',paid_at:new Date().toISOString()}).eq('id',invoice.id);
+   if(up.error){
+    await db.from('customer_invoice_payments').delete().eq('invoice_id',invoice.id).eq('reference',invoice.invoice_number);
+    await db.from('finance_transactions').delete().eq('id',finId);
+    alert('تم إنشاء الفاتورة '+invoice.invoice_number+' لكن تعذر تحديث حالتها إلى مقبوضة:\n'+up.error.message+'\n\nتم إبقاء الفاتورة محفوظة كـ غير مقبوضة.');
+    closeCustomerInvoiceForm();await loadCustomerInvoices();return;
+   }
+  }
+
+  if($('invoiceSupplierCostMode').value==='wallet'){
    const wr=await createSupplierWalletWithdrawalForInvoice(invoice,supplierId);
    if(wr.error){
-     await db.from('finance_transactions').delete().eq('source_id',invoice.id).eq('source_type','customer_invoice');
-     await db.from('customer_invoice_payments').delete().eq('invoice_id',invoice.id);
-     await db.from('customer_invoices').delete().eq('id',invoice.id);
-     return alert('تعذر تسجيل خصم المورد: '+wr.error.message);
+    if(payCreated)await db.from('customer_invoice_payments').delete().eq('invoice_id',invoice.id).eq('reference',invoice.invoice_number);
+    if(finId)await db.from('finance_transactions').delete().eq('id',finId);
+    await db.from('customer_invoices').update({paid_amount:0,paid_amount_iqd:0,status:'unpaid',paid_at:null,supplier_wallet_tx_id:null,source_type:'manual_invoice',source_id:null}).eq('id',invoice.id);
+    return alert('تم إنشاء الفاتورة '+invoice.invoice_number+' لكن تعذر خصم تكلفة المورد:\n'+wr.error.message+'\n\nتم إبقاء الفاتورة محفوظة كـ غير مقبوضة ولم يتم خصم المورد.');
    }
- }
- closeCustomerInvoiceForm();await loadAll();await loadCustomerInvoices();
- alert(paymentStatus==='paid'
-   ? ($('invoiceSupplierCostMode').value==='wallet'?'✅ تم إصدار الفاتورة وقبضها، وسُجل الوارد للشركة، وخصم تكلفة المورد مرة واحدة من رصيده.':'✅ تم إصدار الفاتورة وتسجيلها كمقبوضة، وتمت إضافتها كوارد للشركة دون خصم إضافي من المورد.')
+  }
+  closeCustomerInvoiceForm();await loadAll();await loadCustomerInvoices();
+  alert(paymentStatus==='paid'
+   ? ($('invoiceSupplierCostMode').value==='wallet'?'✅ تم إصدار الفاتورة وقبضها، وسُجل الوارد للشركة، وخصم تكلفة المورد مرة واحدة من رصيده.':'✅ تم إصدار الفاتورة وتسجيلها كمقبوضة، وتمت إضافتها كوارد للشركة.')
    : ($('invoiceSupplierCostMode').value==='wallet'?'✅ تم إصدار الفاتورة وخصم تكلفة المورد مرة واحدة من رصيده.':'✅ تم إصدار الفاتورة بنجاح وهي غير مقبوضة.'));
+ }catch(e){
+  console.error('saveNewCustomerInvoice error',e);
+  alert('تعذر إصدار الفاتورة بسبب خطأ غير متوقع:\n'+(e?.message||e));
+ }
 }
 async function loadCustomerInvoices(){
  const box=$('customerInvoiceRows'),sum=$('receivableSummary'),msg=$('customerInvoiceMsg');
