@@ -599,18 +599,25 @@ async function load(){
 function archiveAlreadyInProgram(archiveId,programId){return P.some(p=>p.archive_id===archiveId && B.some(b=>b.id===p.booking_id && b.program_id===programId && b.status!=='cancelled'));}
 function render(){
  const q=$('search').value.trim().toLowerCase();
- const sourcePilgrims=viewProgramId?P.filter(x=>B.some(b=>b.id===x.booking_id&&String(b.program_id)===String(viewProgramId))):P;
- const unpaidNames=sourcePilgrims.map(x=>{const b=B.find(z=>z.id===x.booking_id);return {p:x,b}}).filter(({b})=>b&&b.status!=='cancelled'&&Number(b.paid_amount||0)<=0).map(({p})=>p.full_name).filter(Boolean);
+ const sourcePilgrims=viewProgramId
+   ?P.filter(x=>B.some(b=>b.id===x.booking_id&&String(b.program_id)===String(viewProgramId)))
+   :P;
+ const unpaidNames=sourcePilgrims.map(x=>({p:x,b:B.find(z=>z.id===x.booking_id)})).filter(({b})=>b&&b.status!=='cancelled'&&Number(b.paid_amount||0)<=0).map(({p})=>p.full_name).filter(Boolean);
  const unpaidAlert=$('unpaidAlert');
  if(unpaidAlert){
    if(unpaidNames.length){
      unpaidAlert.classList.remove('hide');
      unpaidAlert.innerHTML='⚠️ <b>تنبيه السداد:</b> المعتمر'+(unpaidNames.length>1?'ون':'')+' الذي'+(unpaidNames.length>1?'ن':'')+' لم يدفع'+(unpaidNames.length>1?'وا':'')+' شيئًا: '+unpaidNames.map(esc).join('، ')+' — يرجى متابعة السداد.';
-   } else { unpaidAlert.classList.add('hide'); unpaidAlert.innerHTML=''; }
+   }else{
+     unpaidAlert.classList.add('hide');
+     unpaidAlert.innerHTML='';
+   }
  }
- $('rows').innerHTML=sourcePilgrims.filter(x=>[x.full_name,x.phone,x.passport_number,x.profile_code].some(v=>String(v||\'\').toLowerCase().includes(q))).map(x=>{
-  const b=B.find(z=>z.id===x.booking_id),pr=PR.find(z=>z.id===b?.program_id);
-  return '<tr><td><b>'+esc(x.full_name)+'</b><br><small>'+esc(x.profile_code)+'</small></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td><td>'+badge(x.visa_status)+(x.birth_date&&calcAge(x.birth_date)<18&&!x.guardian_accompanied&&!x.guardian_authorization_path?' <span class="badge" style="background:#fff8e7;color:#795b16">وكالة مطلوبة</span>':'')+'</td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b?.paid_amount)+' / '+money(b?.remaining_amount)+(b?.cash_payment_status==='unpaid'?' <span class="badge" style="background:#fff0f0;color:#a33">لم يدفع</span>':'')+'</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn p" onclick="openProfile(\''+x.id+'\')">فتح</button>'+(viewProgramId?'':'<button class="btn danger noPrint" type="button" onclick="deletePilgrimFromTrip(\''+x.id+'\')">حذف من الرحلة</button></div></td></tr>'
+ $('rows').innerHTML=sourcePilgrims.filter(x=>[x.full_name,x.phone,x.passport_number,x.profile_code].some(v=>String(v||'').toLowerCase().includes(q))).map(x=>{
+   const b=B.find(z=>z.id===x.booking_id);
+   const pr=PR.find(z=>z.id===b?.program_id);
+   const deleteBtn=viewProgramId?'':'<button class="btn danger noPrint" type="button" onclick="deletePilgrimFromTrip(&quot;'+x.id+'&quot;)">حذف من الرحلة</button>';
+   return '<tr><td><b>'+esc(x.full_name)+'</b><br><small>'+esc(x.profile_code)+'</small></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td><td>'+badge(x.visa_status)+(x.birth_date&&calcAge(x.birth_date)<18&&!x.guardian_accompanied&&!x.guardian_authorization_path?' <span class="badge" style="background:#fff8e7;color:#795b16">وكالة مطلوبة</span>':'')+'</td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b?.paid_amount)+' / '+money(b?.remaining_amount)+(b?.cash_payment_status==='unpaid'?' <span class="badge" style="background:#fff0f0;color:#a33">لم يدفع</span>':'')+'</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn p" onclick="openProfile(&quot;'+x.id+'&quot;)">فتح</button>'+deleteBtn+'</div></td></tr>';
  }).join('')||'<tr><td colspan="7">لا يوجد معتمرون.</td></tr>';
 }
 $('search').oninput=render;
