@@ -340,7 +340,6 @@ const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 const $=id=>document.getElementById(id);
 let B=[],P=[],PR=[],I=[],E=[],PAY=[];
-let dashboardRefreshing=false;
 function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function showLoginMsg(t,e=false){$('loginMsg').className='msg'+(e?' err':'');$('loginMsg').textContent=t||''}
@@ -464,9 +463,6 @@ async function loadAgents(){
 }
 
 async function load(){
- if(dashboardRefreshing)return;
- dashboardRefreshing=true;
- try{
  const me=await getCurrentStaff();
  const canFinance=!!me && me.active!==false && (me.role==='super_admin'||me.role==='manager'||(Array.isArray(me.permissions)&&me.permissions.includes('finance')));
  const fs=document.getElementById('financeSummary');
@@ -476,7 +472,6 @@ async function load(){
    db.from('pilgrims').select('*'),
    db.from('programs').select('*').order('departure_date'),
    db.from('installment_plans').select('*').order('due_date'),
-   db.from('payments').select('booking_id,amount,payment_date'),
    canFinance ? db.from('expenses').select('*').order('expense_date',{ascending:false}) : Promise.resolve({data:[],error:null}),
    db.from('visa_email_events').select('id,subject,attachment_name,received_at,viewed_at,matched_pilgrim_id,status').is('viewed_at',null).order('received_at',{ascending:false}).limit(20)
  ]);
@@ -496,16 +491,12 @@ async function load(){
  $('bookings').textContent=activeBookings.length;
  $('seats').textContent=PR.filter(x=>x.status==='published').reduce((s,x)=>s+Number(x.seats_available||0),0);
  if(canFinance){
-   const paidByBooking=new Map(); PAY.forEach(x=>paidByBooking.set(x.booking_id,(paidByBooking.get(x.booking_id)||0)+Number(x.amount||0));
-   const financeBookings=B.filter(x=>x.status!=='cancelled');
-   $('sales').textContent=money(financeBookings.reduce((s,x)=>s+Number(x.total_amount||0),0));
-   $('received').textContent=money(financeBookings.reduce((s,x)=>s+Math.min(Number(x.total_amount||0),paidByBooking.get(x.id)||0),0));
-   $('remaining').textContent=money(financeBookings.reduce((s,x)=>s+Math.max(Number(x.total_amount||0)-(paidByBooking.get(x.id)||0),0),0));
+   $('sales').textContent=money(B.reduce((s,x)=>s+Number(x.total_amount||0),0));
+   $('received').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
+   $('remaining').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
    $('expenses').textContent=money(E.reduce((s,x)=>s+Number(x.amount||0),0));
  }
  render();
- }catch(e){console.error('dashboard refresh',e); $('alerts').innerHTML='<div class="alert">تعذر تحديث لوحة الإدارة: '+esc(e?.message||e)+'</div>';
- }finally{dashboardRefreshing=false;}
 }
 function render(){
  const today=new Date().toISOString().slice(0,10);
@@ -518,9 +509,7 @@ function render(){
  const docs=P.filter(x=>(!x.passport_number||!x.passport_expiry)&&activeBookingIds.has(x.booking_id)).length;
  const calcAgeLocal=d=>{if(!d)return null;const b=new Date(d+'T00:00:00');if(Number.isNaN(b.getTime()))return null;const t=new Date();let a=t.getFullYear()-b.getFullYear();const m=t.getMonth()-b.getMonth();if(m<0||(m===0&&t.getDate()<b.getDate()))a--;return a;};
  const pendingVisas=P.filter(x=>{const b=bookingById.get(x.booking_id);return activeBookingIds.has(x.booking_id)&&(!x.visa_status||x.visa_status!=='issued');});
- const paidByBooking=new Map();
- PAY.forEach(x=>paidByBooking.set(x.booking_id,(paidByBooking.get(x.booking_id)||0)+Number(x.amount||0)));
- const unpaidPilgrims=P.filter(x=>{const b=bookingById.get(x.booking_id);if(!b||b.status==='cancelled'||!x.booking_id||!activeBookingIds.has(x.booking_id))return false;const paid=paidByBooking.get(b.id)||0;const total=Number(b.total_amount||0);return paid<=0&&total>0;});
+ const paidByBooking=new Map(); PAY.forEach(x=>paidByBooking.set(x.booking_id,(paidByBooking.get(x.booking_id)||0)+Number(x.amount||0)));\n const unpaidPilgrims=P.filter(x=>{const b=bookingById.get(x.booking_id);if(!b||b.status==='cancelled'||!x.booking_id||!activeBookingIds.has(x.booking_id))return false;const paid=paidByBooking.get(b.id)||0;return paid<=0&&Number(b.total_amount||0)>0;});
  const missingBy={phone:[],residence:[],governorate:[],guardian:[]};
  P.forEach(x=>{
    if(!String(x.phone||'').trim()) missingBy.phone.push(x);
@@ -604,7 +593,6 @@ setToday();
    document.body.classList.remove('auth-checking');
  }
 })();
-setInterval(async()=>{try{if(document.visibilityState==='visible' && document.getElementById('app')?.classList.contains('hide')===false && await isAdmin()) await load();}catch(e){console.debug('dashboard auto refresh',e)}},60000);
 </script>
 <script>
 /* V65 Audit Trail */
