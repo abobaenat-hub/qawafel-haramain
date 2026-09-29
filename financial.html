@@ -1101,78 +1101,7 @@ async function loadCustomerInvoices(){
    if(!totalsByCur[cur])totalsByCur[cur]={amount:0,paid:0,remaining:0};
    totalsByCur[cur].amount+=amount;totalsByCur[cur].paid+=paid;totalsByCur[cur].remaining+=rem;
  });
- const currencyLabels={IQD:'د.ع',SAR:'ر.س',USD:'
- box.innerHTML=rows.map(x=>{
-   const rem=Math.max(0,Number(x.amount||0)-Number(x.paid_amount||0)),cur=x.currency||'IQD';
-   const label=x.status==='paid'?'مدفوعة':x.status==='partial'?'مدفوعة جزئيًا':x.status==='cancelled'?'ملغاة':'غير مدفوعة';
-   return '<tr><td><b>'+esc(x.invoice_number)+'</b></td><td>'+esc(x.buyer_name||'—')+'<br><span class="pill">'+esc(x.buyer_type||'عميل')+'</span></td><td>'+esc(x.service_description||'—')+'</td><td>'+esc(x.suppliers?.name||'—')+'</td><td><b>'+fmt(x.amount)+' '+esc(cur)+'</b></td><td class="in">'+fmt(x.paid_amount||0)+' '+esc(cur)+'</td><td class="'+(rem?'out':'in')+'"><b>'+fmt(rem)+' '+esc(cur)+'</b></td><td><span class="invoice-status invoice-'+esc(x.status)+'">'+label+'</span></td><td>'+fmtDate(x.issued_at)+'</td><td><button class="btn" onclick="showCustomerInvoice(\''+x.id+'\')">📄 فتح</button> <button class="btn gold" onclick="editCustomerInvoice(\''+x.id+'\')">✏️ تعديل</button> '+(x.status!=='paid'&&x.status!=='cancelled'?'<button class="btn green" onclick="registerCustomerInvoicePayment(\''+x.id+'\')">💳 قبض</button>':'')+'</td></tr>';
- }).join('')||'<tr><td colspan="10" style="text-align:center;padding:20px">لا توجد فواتير مستحقات.</td></tr>';
-}
-async function showCustomerInvoice(id){
- const box=$('customerInvoiceDetail');if(!box)return;
- const r=await db.from('customer_invoices').select('*,suppliers(name)').eq('id',id).maybeSingle();
- if(r.error||!r.data)return alert(r.error?.message||'الفاتورة غير موجودة');
- const x=r.data,pr=await db.from('customer_invoice_payments').select('*').eq('invoice_id',id).order('payment_date',{ascending:false});
- const pays=pr.data||[],rem=Math.max(0,Number(x.amount||0)-Number(x.paid_amount||0)),cur=x.currency||'IQD';
- box.innerHTML='<div class="sectionTitle"><div><h2>🧾 فاتورة '+esc(x.invoice_number)+'</h2><span class="muted">'+esc(x.service_description||'')+'</span></div><div style="display:flex;gap:7px"><button class="btn primary" onclick="printCustomerInvoice(\''+x.id+'\')">🖨️ طباعة</button><button class="btn gold" onclick="editCustomerInvoice(\''+x.id+'\')">✏️ تعديل</button><button class="btn" onclick="$(\'customerInvoiceDetail\').classList.add(\'hidden\')">إغلاق</button></div></div>'+
- '<div class="grid3" style="margin-top:12px"><div class="msg"><b>العميل</b><br>'+esc(x.buyer_name||'—')+'</div><div class="msg"><b>المورد</b><br>'+esc(x.suppliers?.name||'—')+'</div><div class="msg"><b>المرجع</b><br>'+esc(x.notes||'—')+'</div></div>'+
- '<div class="grid3"><div class="msg"><b>الإجمالي</b><br><span class="invoice-total">'+fmt(x.amount)+' '+esc(cur)+'</span></div><div class="msg"><b>المدفوع</b><br><span class="in invoice-total">'+fmt(x.paid_amount||0)+' '+esc(cur)+'</span></div><div class="msg"><b>المتبقي</b><br><span class="'+(rem?'out':'in')+' invoice-total">'+fmt(rem)+' '+esc(cur)+'</span></div></div>'+
- '<div class="msg"><b>الخدمة:</b> '+esc(x.service_description||'—')+'<br><b>المصدر:</b> '+esc(x.source_type||'—')+' '+esc(x.source_id||'')+'<br><b>تاريخ الإصدار:</b> '+fmtDate(x.issued_at)+'</div>'+
- '<h3>💳 سجل الدفعات</h3><div class="table"><table><thead><tr><th>التاريخ</th><th>المبلغ</th><th>العملة</th><th>طريقة الدفع</th><th>المرجع</th></tr></thead><tbody>'+
- (pays.map(p=>'<tr><td>'+fmtDate(p.payment_date)+'</td><td class="in"><b>'+fmt(p.amount)+'</b></td><td>'+esc(p.currency||cur)+'</td><td>'+esc(p.payment_method||'—')+'</td><td>'+esc(p.reference||'—')+'</td></tr>').join('')||'<tr><td colspan="5">لا توجد دفعات بعد.</td></tr>')+'</tbody></table></div>';
- if(x.status!=='paid'&&x.status!=='cancelled')box.innerHTML+='<div style="margin-top:12px"><button class="btn green" onclick="registerCustomerInvoicePayment(\''+x.id+'\')">💳 تسجيل دفعة جديدة</button></div>';
- box.classList.remove('hidden');box.scrollIntoView({behavior:'smooth',block:'start'});
-}
-async function registerCustomerInvoicePayment(id){
- const r=await db.from('customer_invoices').select('*').eq('id',id).maybeSingle();if(r.error||!r.data)return alert(r.error?.message||'الفاتورة غير موجودة');
- const x=r.data,cur=x.currency||'IQD',remaining=Math.max(0,Number(x.amount||0)-Number(x.paid_amount||0));
- if(!remaining)return alert('الفاتورة مسددة بالكامل.');
- const amount=Number(prompt('المتبقي: '+fmt(remaining)+' '+cur+'\\nأدخل المبلغ المقبوض فعليًا:',remaining));
- if(!amount||amount<=0||amount>remaining+0.000001)return alert('المبلغ غير صحيح.');
- const method=prompt('طريقة الدفع: نقدي / تحويل / مصرف', 'نقدي')||'نقدي';
- const reference=prompt('المرجع (اختياري):','')||null;
- const rate=cur==='SAR'?410:cur==='USD'?Number(prompt('سعر الدولار مقابل الدينار:','1600')||0):1;
- if((cur==='USD'||cur==='SAR')&&!rate)return alert('سعر الصرف مطلوب.');
- const amountIqd=cur==='IQD'?amount:cur==='SAR'?amount*410:amount*rate;
- const userId=qawafelUserId();
- const ins=await db.from('customer_invoice_payments').insert({invoice_id:id,amount,currency:cur,amount_iqd:Number(amountIqd.toFixed(2)),payment_method:method,payment_date:new Date().toISOString(),reference,created_by:userId||null});
- if(ins.error)return alert('تعذر تسجيل الدفعة: '+ins.error.message);
- const newPaid=Number(x.paid_amount||0)+amount,newStatus=newPaid+0.000001>=Number(x.amount||0)?'paid':'partial';
- const up=await db.from('customer_invoices').update({paid_amount:newPaid,paid_amount_iqd:Number((Number(x.paid_amount_iqd||0)+amountIqd).toFixed(2)),status:newStatus,paid_at:newStatus==='paid'?new Date().toISOString():null}).eq('id',id);
- if(up.error){alert('تم تسجيل الدفعة لكن تعذر تحديث حالة الفاتورة: '+up.error.message);return}
- await loadCustomerInvoices();await showCustomerInvoice(id);alert('✅ تم تسجيل الدفعة وتحديث حالة الفاتورة إلى '+(newStatus==='paid'?'مدفوعة':'مدفوعة جزئيًا')+'.');
-}
-async function createCustomerInvoiceFromWallet(){
- const used=(await db.from('customer_invoices').select('supplier_wallet_tx_id')).data||[];
- const usedIds=new Set(used.map(x=>x.supplier_wallet_tx_id).filter(Boolean));
- const candidates=WALLET_TX.filter(x=>x.transaction_type==='withdrawal'&&!usedIds.has(x.id));
- if(!candidates.length)return alert('لا توجد سحوبات من خزائن الموردين غير مرتبطة بفاتورة.');
- const labels=candidates.map((x,i)=>{const s=SUPPLIERS.find(a=>a.id===x.supplier_id);return (i+1)+'. '+(s?.name||'مورد')+' — '+fmt(x.amount)+' '+x.currency+' — '+(x.description||'حركة خزينة')}).join('\\n');
- const pick=prompt('اختر رقم حركة السحب التي تريد إصدار فاتورة عليها:\\n\\n'+labels,'1');if(pick===null)return;
- const x=candidates[Number(pick)-1];if(!x)return alert('الاختيار غير صحيح.');
- const buyer=prompt('اسم العميل / الشريك:', 'الشريك')||'الشريك';
- const desc=prompt('وصف الخدمة:',x.description||'خدمة مشتراة لصالح العميل')||x.description||'خدمة مشتراة لصالح العميل';
- const notes=prompt('ملاحظات الفاتورة:','فاتورة صادرة مقابل خدمة تم شراؤها لصالح العميل. لا تنشئ خصمًا ثانيًا من خزينة المورد.')||'';
- const supplier=SUPPLIERS.find(a=>a.id===x.supplier_id);
- const ins=await db.from('customer_invoices').insert({buyer_name:buyer,buyer_type:'customer',service_description:desc,supplier_id:x.supplier_id,supplier_wallet_tx_id:x.id,source_type:'supplier_wallet_transaction',source_id:x.id,amount:x.amount,currency:x.currency,amount_iqd:x.amount_iqd,paid_amount:0,paid_amount_iqd:0,status:'unpaid',issued_at:x.transaction_date,due_date:null,notes:notes});
- if(ins.error)return alert('تعذر إنشاء الفاتورة: '+ins.error.message);
- await loadCustomerInvoices();alert('✅ تم إنشاء الفاتورة وربطها بحركة خزينة المورد '+(supplier?.name||'')+'. لم يتم خصم أي مبلغ إضافي.');
-}
-function printCustomerInvoice(id){
- db.from('customer_invoices').select('*,suppliers(name)').eq('id',id).maybeSingle().then(r=>{
-  if(r.error||!r.data)return alert(r.error?.message||'الفاتورة غير موجودة');
-  const x=r.data,cur=x.currency||'IQD',rem=Math.max(0,Number(x.amount||0)-Number(x.paid_amount||0));
-  const w=window.open('','_blank');if(!w)return alert('يرجى السماح بالنوافذ المنبثقة للطباعة');
-  w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>'+esc(x.invoice_number)+'</title><style>body{font-family:Tahoma,Arial;padding:28px;color:#18384f}.head{display:flex;justify-content:space-between;border-bottom:3px solid #c99a32;padding-bottom:15px;margin-bottom:18px}.box{border:1px solid #dfe7ec;border-radius:10px;padding:12px;margin:10px 0}.total{font-size:22px;font-weight:900}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}table{width:100%;border-collapse:collapse;margin-top:15px}th,td{border:1px solid #dfe7ec;padding:9px;text-align:right;font-size:11px}th{background:#f1f6f9}@media print{body{padding:10px}}</style></head><body><div class="head"><div><h2 style="margin:0">شركة قوافل الحرمين للحج والعمرة</h2><div>فاتورة مستحقات داخلية</div></div><div><b>'+esc(x.invoice_number)+'</b><br>'+fmtDate(x.issued_at)+'</div></div><div class="grid"><div class="box"><b>العميل</b><br>'+esc(x.buyer_name||'—')+'</div><div class="box"><b>المورد</b><br>'+esc(x.suppliers?.name||'—')+'</div><div class="box"><b>الحالة</b><br>'+esc(x.status)+'</div></div><div class="box"><b>الخدمة</b><br>'+esc(x.service_description||'—')+'</div><table><thead><tr><th>البيان</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th></tr></thead><tbody><tr><td>مستحق العميل</td><td class="total">'+fmt(x.amount)+' '+esc(cur)+'</td><td>'+fmt(x.paid_amount||0)+' '+esc(cur)+'</td><td class="total">'+fmt(rem)+' '+esc(cur)+'</td></tr></tbody></table><div class="box">المعادل بالدينار العراقي: <b>'+fmt(x.amount_iqd||0)+' د.ع</b><br>'+esc(x.notes||'')+'</div><div style="margin-top:45px;font-size:10px;text-align:center">هذه الفاتورة مرتبطة بالحركة الأصلية ولا تنشئ خصمًا ماليًا ثانيًا.</div></body></html>');
-  w.document.close();w.focus();setTimeout(()=>w.print(),300);
- });
-}
-function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(id==='receivables')loadCustomerInvoices()}
-function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-init();
-setTimeout(()=>{if(FOCUS_PROGRAM_ID){const ef=$('expenseProgramFilter');if(ef)ef.value=FOCUS_PROGRAM_ID;renderExpenseTable();const outTab=[...document.querySelectorAll('.tab')].find(x=>x.textContent.includes('الصرف'));if(outTab)showTab('out',outTab);renderTripFocus();}},500);
-</script>
-</body></html>};
+ const currencyLabels={IQD:'د.ع',SAR:'ر.س',USD:'$'};
  const currencyCards=Object.entries(totalsByCur).map(([cur,v])=>
    '<div class="kpi" style="background:#fff;color:var(--text);border:1px solid var(--line)"><small>إجمالي المتبقي — '+(currencyLabels[cur]||cur)+'</small><b>'+fmt(v.remaining)+' '+(currencyLabels[cur]||cur)+'</b><span class="muted">المدفوع: '+fmt(v.paid)+' '+(currencyLabels[cur]||cur)+' — الإجمالي: '+fmt(v.amount)+' '+(currencyLabels[cur]||cur)+'</span></div>'
  ).join('');
@@ -1249,4 +1178,4 @@ function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'
 init();
 setTimeout(()=>{if(FOCUS_PROGRAM_ID){const ef=$('expenseProgramFilter');if(ef)ef.value=FOCUS_PROGRAM_ID;renderExpenseTable();const outTab=[...document.querySelectorAll('.tab')].find(x=>x.textContent.includes('الصرف'));if(outTab)showTab('out',outTab);renderTripFocus();}},500);
 </script>
-</body></html>
+</body></html
