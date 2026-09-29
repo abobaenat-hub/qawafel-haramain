@@ -268,6 +268,12 @@ async function saveWalletTx(){
 #qawafelAdminDrawer{z-index:100001}
 #qawafelAdminDrawerOverlay{z-index:100000}
 
+
+/* Installment payment modal */
+.modal{position:fixed;inset:0;z-index:99999;background:rgba(7,43,73,.48);display:flex;align-items:center;justify-content:center;padding:18px;overflow:auto;backdrop-filter:blur(2px)}
+.modal-card{width:min(1050px,100%);max-height:92vh;overflow:auto;background:#fff;border:1px solid #dfe6ea;border-radius:18px;box-shadow:0 20px 60px #0004;padding:20px;direction:rtl}
+.modal-card .sectionTitle{display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:-20px;background:#fff;padding:2px 0 12px;z-index:2;border-bottom:1px solid #eef2f4}
+.modal-card .table{max-height:42vh;overflow:auto}
 </style>
 </head>
 <body class="auth-pending">
