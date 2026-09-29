@@ -361,7 +361,18 @@ async function saveWalletTx(){
 <div class="tab" onclick="showTab('ledger',this)">📒 كل الحركات</div><div class="tab" onclick="showTab('report',this)">📈 التقرير المالي</div><div class="tab" onclick="showTab('settlement',this)">⏳ تصفية الرحلات المكتملة</div><div class="tab" onclick="showTab('receivables',this)">🧾 الفواتير</div>
 </div>
 
-<div class="tabs"><div class="tab" onclick="showTab('suppliers',this)">🏢 الموردون والخزائن</div></div><section id="dashboard">
+<div class="tabs"><div class="tab" onclick="showTab('suppliers',this)">🏢 الموردون والخزائن</div><div class="tab" onclick="showTab('installments',this);loadInstallmentCustomers()">💳 جماعة الأقساط</div></div><section id="installments" class="hidden">
+<div class="panel">
+ <div class="sectionTitle"><h2>💳 إدارة الأقساط</h2><button class="btn primary" onclick="loadInstallmentCustomers()">🔄 تحديث</button></div>
+ <div class="grid3">
+  <div class="field"><label>بحث عن المعتمر</label><input id="installmentSearch" placeholder="الاسم أو رقم الحجز أو الهاتف" oninput="renderInstallmentCustomers()"></div>
+  <div class="field"><label>الحالة</label><select id="installmentFilter" onchange="renderInstallmentCustomers()"><option value="all">الكل</option><option value="remaining">عليهم متبقي</option><option value="paid">مسددون</option><option value="overdue">عليهم أقساط متأخرة</option></select></div>
+ </div>
+ <div id="installmentSummary" class="kpis" style="margin-top:12px"></div>
+ <div id="installmentRows" class="table" style="margin-top:14px"><div class="msg">اضغط تحديث لجلب المسجلين بنظام الأقساط.</div></div>
+</div>
+</section>
+<section id="dashboard">
 <div class="panel"><div class="sectionTitle"><h2>الصورة المالية الآن</h2><button class="btn primary" onclick="loadAll()">تحديث</button></div><div id="dashboardText" class="msg">جاري التحميل...</div></div>
 <div class="panel"><div class="sectionTitle"><h2>آخر الحركات</h2></div><div class="table"><table><thead><tr><th>التاريخ</th><th>الحركة</th><th>البيان</th><th>المبلغ</th><th>الرحلة</th></tr></thead><tbody id="recentRows"></tbody></table></div></div>
 </section>
@@ -1253,7 +1264,70 @@ function printCustomerInvoice(id){
   w.document.close();w.focus();setTimeout(()=>w.print(),300);
  });
 }
-function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(id==='receivables')loadCustomerInvoices()}
+
+let INSTALLMENT_CUSTOMERS=[];
+async function loadInstallmentCustomers(){
+ const box=$('installmentRows'); if(!box)return;
+ box.innerHTML='<div class="msg">جاري جلب المسجلين بنظام الأقساط...</div>';
+ try{
+  const [ir,pr,br,pm]=await Promise.all([
+   db.from('installment_plans').select('*').order('due_date',{ascending:true}),
+   db.from('pilgrims').select('id,booking_id,full_name,phone'),
+   db.from('bookings').select('id,booking_number,full_name,total_amount,program_id,status'),
+   db.from('payments').select('id,booking_id,amount,currency,payment_method,payment_date,notes').order('payment_date',{ascending:false})
+  ]);
+  if(ir.error)throw ir.error;if(pr.error)throw pr.error;if(br.error)throw br.error;if(pm.error)throw pm.error;
+  const plans=ir.data||[], pilgrims=pr.data||[], bookings=br.data||[], payments=pm.data||[];
+  const map={};
+  plans.forEach(x=>{if(!map[x.booking_id])map[x.booking_id]={plans:[],paid:0};map[x.booking_id].plans.push(x);});
+  payments.forEach(x=>{if(map[x.booking_id])map[x.booking_id].paid+=Number(x.amount||0);});
+  INSTALLMENT_CUSTOMERS=Object.entries(map).map(([bookingId,v])=>{
+   const b=bookings.find(x=>x.id===bookingId)||{}; const p=pilgrims.find(x=>x.booking_id===bookingId)||{};
+   const total=Number(b.total_amount||v.plans.reduce((s,x)=>s+Number(x.amount||0),0)); const paid=Math.min(Number(v.paid||0),total);
+   const remaining=Math.max(total-paid,0); const today=new Date().toISOString().slice(0,10);
+   const overdue=v.plans.some(x=>Number(x.amount||0)>Number(x.paid_amount||0)&&x.due_date&&x.due_date<today);
+   return {bookingId,b,p,total,paid,remaining,overdue,plans:v.plans,payments:payments.filter(x=>x.booking_id===bookingId)};
+  });
+  renderInstallmentCustomers();
+ }catch(e){box.innerHTML='<div class="msg err">تعذر جلب بيانات الأقساط: '+esc(e?.message||e)+'</div>'}
+}
+function renderInstallmentCustomers(){
+ const rows=INSTALLMENT_CUSTOMERS||[], q=String($('installmentSearch')?.value||'').trim().toLowerCase(), f=$('installmentFilter')?.value||'all';
+ const filtered=rows.filter(x=>{
+  const hay=[x.p?.full_name,x.b?.full_name,x.p?.phone,x.b?.booking_number].join(' ').toLowerCase();
+  return (!q||hay.includes(q))&&(f==='all'||(f==='remaining'&&x.remaining>0)||(f==='paid'&&x.remaining<=0)||(f==='overdue'&&x.overdue));
+ });
+ const total=rows.reduce((s,x)=>s+x.total,0),paid=rows.reduce((s,x)=>s+x.paid,0),rem=rows.reduce((s,x)=>s+x.remaining,0);
+ $('installmentSummary').innerHTML='<div class="kpi"><span>عدد المسجلين</span><b>'+rows.length+'</b></div><div class="kpi"><span>إجمالي البرامج</span><b>'+fmt(total)+'</b></div><div class="kpi"><span>المدفوع</span><b>'+fmt(paid)+'</b></div><div class="kpi"><span>المتبقي بذمتهم</span><b>'+fmt(rem)+'</b></div>';
+ $('installmentRows').innerHTML='<table><thead><tr><th>المعتمر</th><th>الحجز</th><th>إجمالي البرنامج</th><th>المدفوع</th><th>المتبقي</th><th>الأقساط</th><th>الحالة</th><th>إدارة</th></tr></thead><tbody>'+
+ (filtered.map(x=>'<tr><td><b>'+esc(x.p?.full_name||x.b?.full_name||'—')+'</b><br><small>'+esc(x.p?.phone||'')+'</small></td><td>'+esc(x.b?.booking_number||'—')+'</td><td>'+fmt(x.total)+'</td><td>'+fmt(x.paid)+'</td><td><b style="color:'+(x.remaining>0?'#a33':'#176644')+'">'+fmt(x.remaining)+'</b></td><td>'+x.plans.length+'</td><td>'+(x.remaining<=0?'🟢 مسدد':x.overdue?'🔴 متأخر':'🟠 مستمر')+'</td><td><button class="btn primary" onclick="openFinanceInstallment(''+x.bookingId+'')">💳 إدارة الدفعات</button></td></tr>').join('')||'<tr><td colspan="8">لا توجد نتائج</td></tr>')+'</tbody></table>';
+}
+async function openFinanceInstallment(bookingId){
+ const x=INSTALLMENT_CUSTOMERS.find(a=>a.bookingId===bookingId); if(!x)return;
+ const modal=document.createElement('div');modal.className='modal';
+ modal.innerHTML='<div class="modal-card" style="max-width:1050px"><div class="sectionTitle"><h3 style="margin:0">💳 إدارة أقساط '+esc(x.p?.full_name||x.b?.full_name||'المعتمر')+'</h3><button class="btn" id="closeFinInst">إغلاق</button></div>'+
+ '<div class="kpis"><div class="kpi"><span>الإجمالي</span><b>'+fmt(x.total)+'</b></div><div class="kpi"><span>المدفوع</span><b>'+fmt(x.paid)+'</b></div><div class="kpi"><span>المتبقي</span><b>'+fmt(x.remaining)+'</b></div></div>'+
+ '<div class="saleBox" style="margin-top:12px"><div class="saleTitle">💰 تسجيل دفعة</div><div class="cols"><div><label>مبلغ الدفعة *</label><input id="finInstAmount" type="number" min="0.01" step="0.01"></div><div><label>طريقة الدفع</label><select id="finInstMethod"><option>نقد</option><option>تحويل مصرفي</option><option>بطاقة</option><option>كي كارد</option><option>أخرى</option></select></div><div><label>تاريخ الدفع</label><input id="finInstDate" type="date" value="'+new Date().toISOString().slice(0,10)+'"></div><div><label>ملاحظات</label><input id="finInstNotes" placeholder="ملاحظات"></div></div><button id="finInstSave" class="btn p" style="margin-top:10px">✓ تسجيل الدفعة</button></div>'+
+ '<div class="table" style="margin-top:14px"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th></tr></thead><tbody id="finInstPlans"></tbody></table></div></div>';
+ document.body.appendChild(modal);
+ const draw=()=>{modal.querySelector('#finInstPlans').innerHTML=x.plans.map(p=>{const rem=Math.max(Number(p.amount||0)-Number(p.paid_amount||0),0);return '<tr><td>'+p.installment_number+'</td><td>'+esc(p.due_date||'—')+'</td><td>'+fmt(p.amount)+'</td><td>'+fmt(p.paid_amount)+'</td><td>'+fmt(rem)+'</td><td>'+(rem<=0?'🟢 مسدد':p.due_date<new Date().toISOString().slice(0,10)?'🔴 متأخر':'🟠 مستحق')+'</td></tr>'}).join('')};
+ draw(); modal.querySelector('#closeFinInst').onclick=()=>modal.remove();
+ modal.querySelector('#finInstSave').onclick=async()=>{
+  const btn=modal.querySelector('#finInstSave'),amount=Number(modal.querySelector('#finInstAmount').value||0),method=modal.querySelector('#finInstMethod').value,date=modal.querySelector('#finInstDate').value,notes=modal.querySelector('#finInstNotes').value.trim();
+  if(!amount||amount<=0)return alert('أدخل مبلغ الدفعة.');
+  if(amount>x.remaining)return alert('المبلغ أكبر من المتبقي بذمة المعتمر: '+fmt(x.remaining));
+  btn.disabled=true;btn.textContent='جارٍ التسجيل...';
+  try{
+   const r=await db.rpc('record_installment_payment_flexible',{p_booking_id:bookingId,p_amount:amount,p_start_installment_id:null,p_payment_date:date+'T12:00:00',p_payment_method:method,p_notes:notes||null});
+   if(r.error)throw r.error;
+   alert('تم تسجيل الدفعة بنجاح ✅');
+   await loadInstallmentCustomers(); const nx=INSTALLMENT_CUSTOMERS.find(a=>a.bookingId===bookingId); if(nx){x.plans=nx.plans;x.paid=nx.paid;x.remaining=nx.remaining;x.total=nx.total;draw();}
+   modal.querySelector('#finInstAmount').value='';btn.disabled=false;btn.textContent='✓ تسجيل الدفعة';
+  }catch(e){btn.disabled=false;btn.textContent='✓ تسجيل الدفعة';alert('تعذر تسجيل الدفعة: '+(e?.message||e))}
+ };
+}
+
+function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(id==='receivables')loadCustomerInvoices();if(id==='installments')loadInstallmentCustomers()}
 function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 init();
 setTimeout(()=>{if(FOCUS_PROGRAM_ID){const ef=$('expenseProgramFilter');if(ef)ef.value=FOCUS_PROGRAM_ID;renderExpenseTable();const outTab=[...document.querySelectorAll('.tab')].find(x=>x.textContent.includes('الصرف'));if(outTab)showTab('out',outTab);renderTripFocus();}},500);
