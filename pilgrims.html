@@ -939,37 +939,82 @@ async function openExistingInstallmentSetup(bookingId){
  };
 }
 async function managePayments(b){
- const box=$('manager');box.classList.remove('hide');box.innerHTML='<h4>إدارة الدفعات والأقساط</h4><div style="background:#f8fafc;border:1px solid #dfe6ea;border-radius:10px;padding:10px;margin-bottom:10px;color:#36566a">عند حضور المعتمر، اختر القسط المستحق نفسه ثم اضغط «تسديد هذا القسط». هكذا تُحفظ الدفعة مرتبطة بالقسط في السجل المالي، ويمكن أيضًا تسجيل دفعة جزئية.</div><div id="pm"></div>';
+ const box=$('manager');box.classList.remove('hide');
+ box.innerHTML='<h4>إدارة الدفعات والأقساط</h4>'+
+ '<div class="msg" style="background:#f8fafc;border:1px solid #dfe6ea;color:#36566a">يمكنك تسجيل أي مبلغ مرن، حتى لو كان أكبر من قيمة قسط واحد. النظام يوزع المبلغ تلقائيًا على القسط المحدد ثم الأقساط التالية، ويسجل الدفعة مرة واحدة في السجل المالي.</div>'+
+ '<div class="saleBox" style="margin-top:12px">'+
+ '<div class="saleTitle">💳 تسجيل دفعة جديدة</div>'+
+ '<div class="cols">'+
+ '<div><label>مبلغ الدفعة *</label><input id="flexPayAmount" type="number" min="0.01" step="0.01" placeholder="مثلاً 200000"></div>'+
+ '<div><label>طريقة الدفع</label><select id="flexPayMethod"><option>نقد</option><option>تحويل مصرفي</option><option>بطاقة</option><option>كي كارد</option><option>أخرى</option></select></div>'+
+ '<div><label>تاريخ الدفع</label><input id="flexPayDate" type="date"></div>'+
+ '<div><label>ملاحظات</label><input id="flexPayNotes" type="text" placeholder="مثلاً دفعة أولية"></div>'+
+ '</div>'+
+ '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px"><button id="flexPayBtn" class="btn p noPrint">💰 تسجيل الدفعة</button></div>'+
+ '<div id="flexPayMsg" style="margin-top:8px;font-size:12px;color:#687984">الدفعة ستُوزع ابتداءً من أول قسط غير مسدد.</div>'+
+ '</div>'+
+ '<div id="pm"></div>';
+ $('flexPayDate').value=new Date().toISOString().slice(0,10);
  const r=await db.from('installment_plans').select('*').eq('booking_id',b.id).order('installment_number');
  if(r.error){$('pm').innerHTML='<div class="msg err">'+esc(r.error.message)+'</div>';return;}
- $('pm').innerHTML=r.data?.length?'<div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>'+r.data.map(x=>{const rem=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);const today=new Date().toISOString().slice(0,10);const overdue=rem>0&&x.due_date&&x.due_date<today;return '<tr><td>'+x.installment_number+'</td><td>'+esc(x.due_date||'—')+(overdue?' <span class="badge" style="background:#fff0f0;color:#a33">متأخر</span>':'')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+money(rem)+'</td><td>'+badge(rem<=0?'paid':overdue?'overdue':x.status)+'</td><td>'+(rem>0?'<button class="btn p noPrint" data-pay-inst="'+x.id+'" data-pay-booking="'+b.id+'" data-due="'+rem+'">💰 تسديد هذا القسط</button>':'<span class="badge ok">مسدد</span>')+'</td></tr>';}).join('')+'</tbody></table></div>':'لا توجد أقساط.';
+ const plans=r.data||[];
+ $('pm').innerHTML=plans.length?'<div class="table"><table><thead><tr><th>القسط</th><th>الاستحقاق</th><th>المبلغ</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>الإجراء</th></tr></thead><tbody>'+plans.map(x=>{
+   const rem=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0);
+   const today=new Date().toISOString().slice(0,10);
+   const overdue=rem>0&&x.due_date&&x.due_date<today;
+   return '<tr><td>'+x.installment_number+'</td><td>'+esc(x.due_date||'—')+(overdue?' <span class="badge" style="background:#fff0f0;color:#a33">متأخر</span>':'')+'</td><td>'+money(x.amount)+'</td><td>'+money(x.paid_amount)+'</td><td>'+money(rem)+'</td><td>'+badge(rem<=0?'paid':overdue?'overdue':x.status)+'</td><td>'+(rem>0?'<button class="btn p noPrint" data-pay-inst="'+x.id+'" data-pay-booking="'+b.id+'" data-due="'+rem+'">💰 تسديد هذا القسط</button>':'<span class="badge ok">مسدد</span>')+'</td></tr>';
+ }).join('')+'</tbody></table></div>':'لا توجد أقساط.';
+ $('flexPayBtn').onclick=()=>saveFlexiblePayment(b,null);
  document.querySelectorAll('[data-pay-inst]').forEach(btn=>btn.onclick=()=>paySpecificInstallment(b,btn.dataset.payInst,Number(btn.dataset.due||0)));
 }
 
 async function paySpecificInstallment(b,installmentId,due){
- const amountRaw=prompt('مبلغ السداد لهذا القسط (المتبقي '+money(due)+')',String(due));
+ const amountRaw=prompt('مبلغ السداد — يمكنك دفع أكثر من هذا القسط، وسيُرحّل الزائد تلقائيًا للأقساط التالية.\nالمتبقي لهذا القسط: '+money(due),String(due));
  if(amountRaw===null)return;
  const amount=Number(amountRaw);
- if(!amount||amount<=0)return alert('أدخل مبلغًا صحيحًا.');
- if(amount>due)return alert('المبلغ أكبر من المتبقي لهذا القسط: '+money(due));
+ if(!Number.isFinite(amount)||amount<=0)return alert('أدخل مبلغًا صحيحًا.');
  const method=prompt('طريقة الدفع','نقد');
  if(method===null)return;
  const notes=prompt('ملاحظات (اختياري)','');
- const {data,error}=await db.rpc('record_installment_payment',{p_booking_id:b.id,p_installment_id:installmentId,p_amount:amount,p_payment_date:new Date().toISOString(),p_payment_method:method||'نقد',p_notes:notes||null});
+ const {data,error}=await db.rpc('record_installment_payment_flexible',{
+   p_booking_id:b.id,
+   p_amount:amount,
+   p_start_installment_id:installmentId,
+   p_payment_date:new Date().toISOString(),
+   p_payment_method:method||'نقد',
+   p_notes:notes||null
+ });
  if(error)return alert(error.message||'تعذر تسجيل الدفعة.');
- alert(data?.installment_remaining>0?'تم تسجيل الدفعة الجزئية للقسط.':'تم تسديد القسط بالكامل ✅');
- await load();const np=P.find(x=>x.booking_id===b.id);if(np)openProfile(np.id);
-}
-async function savePayment(b){
- const amount=Number($('payAmount')?.value||0);if(amount<=0)return msg('pm','أدخل مبلغًا صحيحًا.',true);
- const r=await db.from('installment_plans').select('*').eq('booking_id',b.id).neq('status','paid').order('installment_number');
- if(r.error)return msg('pm',r.error.message,true);
- let left=amount;
- for(const x of r.data||[]){ if(left<=0)break; const due=Math.max(Number(x.amount||0)-Number(x.paid_amount||0),0); if(due<=0)continue; const add=Math.min(left,due); const {error}=await db.rpc('record_installment_payment',{p_booking_id:b.id,p_installment_id:x.id,p_amount:add,p_payment_date:$('payDate')?.value||new Date().toISOString(),p_payment_method:$('payMethod')?.value||'نقد',p_notes:$('payNotes')?.value||null}); if(error)return msg('pm',error.message,true); left-=add; }
- if(left>0)return msg('pm','مبلغ الدفعة أكبر من إجمالي الأقساط المتبقية.',true);
+ const count=(data?.allocations||[]).length;
+ alert('تم تسجيل الدفعة بنجاح ✅\nالمبلغ: '+money(amount)+'\nتم توزيعه على '+count+' قسط/أقساط.');
  await load();const np=P.find(x=>x.booking_id===b.id);if(np)openProfile(np.id);
 }
 
+async function saveFlexiblePayment(b,startInstallmentId=null){
+ const amount=Number($('flexPayAmount')?.value||0);
+ if(!Number.isFinite(amount)||amount<=0)return msg('flexPayMsg','أدخل مبلغًا صحيحًا.',true);
+ const date=$('flexPayDate')?.value||new Date().toISOString();
+ const method=$('flexPayMethod')?.value||'نقد';
+ const notes=$('flexPayNotes')?.value||null;
+ const btn=$('flexPayBtn'); if(btn){btn.disabled=true;btn.textContent='جارٍ تسجيل الدفعة…';}
+ const {data,error}=await db.rpc('record_installment_payment_flexible',{
+   p_booking_id:b.id,
+   p_amount:amount,
+   p_start_installment_id:startInstallmentId,
+   p_payment_date:date,
+   p_payment_method:method,
+   p_notes:notes
+ });
+ if(error){
+   if(btn){btn.disabled=false;btn.textContent='💰 تسجيل الدفعة';}
+   return msg('flexPayMsg',error.message||'تعذر تسجيل الدفعة.',true);
+ }
+ const allocations=data?.allocations||[];
+ const detail=allocations.map(x=>'القسط '+x.installment_number+': '+money(x.allocated_amount)).join('، ');
+ if(btn){btn.disabled=false;btn.textContent='💰 تسجيل الدفعة';}
+ alert('تم تسجيل الدفعة بنجاح ✅\n\nالمبلغ: '+money(amount)+'\n'+(detail?'التوزيع: '+detail:''));
+ await load();const np=P.find(x=>x.booking_id===b.id);if(np)openProfile(np.id);
+}
 function bindFilePair(cameraId,uploadId,hintId,previewId){
  const cam=$(cameraId), up=$(uploadId), hint=$(hintId), prev=previewId?$(previewId):null;
  const handle=(src)=>{const f=src.files?.[0];if(!f)return; if(hint)hint.textContent='تم اختيار الملف: '+f.name; if(prev){prev.src=URL.createObjectURL(f);prev.classList.remove('hide');}};
