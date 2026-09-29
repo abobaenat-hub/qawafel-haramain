@@ -466,11 +466,12 @@ async function loadAgents(){
 async function load(){
  if(dashboardRefreshing)return;
  dashboardRefreshing=true;
+ try{
  const me=await getCurrentStaff();
  const canFinance=!!me && me.active!==false && (me.role==='super_admin'||me.role==='manager'||(Array.isArray(me.permissions)&&me.permissions.includes('finance')));
  const fs=document.getElementById('financeSummary');
  if(fs) fs.style.display='none';
- const [b,p,pr,i,e,v]=await Promise.all([
+ const [b,p,pr,i,pay,e,v]=await Promise.all([
    db.from('bookings').select('*').order('created_at',{ascending:false}),
    db.from('pilgrims').select('*'),
    db.from('programs').select('*').order('departure_date'),
