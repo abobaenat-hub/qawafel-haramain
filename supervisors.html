@@ -210,23 +210,24 @@ async function loadData(){
   let errors=[];
   const timeout=(ms)=>new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة الاتصال بقاعدة البيانات')),ms));
 
-  // القائمة الأساسية للمشرفين والسائقين تُحمّل مباشرة من الجداول المصرّح بها.
-  // لا نجعل تحميل القائمة متوقفًا على RPC المالي حتى لا تبقى الواجهة على "جاري التحميل".
+  // المشرفون يُحمّلون من RPC إداري بسيط ومحمي بـ SECURITY DEFINER،
+  // حتى لا تتأثر القائمة بسياسات RLS المباشرة على جدول supervisors.
   try{
     const result=await Promise.race([
       Promise.all([
-        db.from('supervisors').select('*').order('full_name'),
+        db.rpc('get_supervisor_directory'),
         db.from('drivers').select('*').order('full_name_ar',{ascending:true})
       ]),
-      timeout(5000)
+      timeout(8000)
     ]);
     const [sr,dr]=result;
     if(sr.error) throw sr.error;
     if(dr.error) throw dr.error;
-    supervisors=sr.data||[];
+    const supervisorData=typeof sr.data==='string'?JSON.parse(sr.data):sr.data;
+    supervisors=Array.isArray(supervisorData)?supervisorData:[];
     drivers=dr.data||[];
   }catch(e){
-    console.error('team direct load error',e);
+    console.error('team directory load error',e);
     supervisors=[];
     drivers=[];
     errors.push(e.message||'تعذر تحميل بيانات المشرفين والسائقين');
