@@ -413,6 +413,7 @@ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5g
 function qawafelAccessToken(){try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i)||'';if(!key.endsWith('-auth-token'))continue;const raw=localStorage.getItem(key);if(!raw)continue;const s=JSON.parse(raw);if(s?.access_token)return s.access_token}}catch(e){console.error('finance token read',e)}return null}
 function qawafelUserId(){const t=qawafelAccessToken();if(!t)return null;try{const p=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return p?.sub||null}catch(e){return null}}
 const db=window.supabase.createClient(U,K,{accessToken:async()=>qawafelAccessToken(),auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,skipAutoInitialize:true}});
+let editingCustomerInvoiceId=null;
 const FOCUS_PROGRAM_ID=new URLSearchParams(location.search).get('program')||'';let TX=[],BOOK=[],PAY=[],PROGS=[],FIN_TX_PROGRAMS=[];let COMPLETED_PENDING=[];
 const $=id=>document.getElementById(id),fmt=n=>new Intl.NumberFormat('ar-IQ',{maximumFractionDigits:2}).format(Number(n||0));
 const catLabel={trip_income:'إيراد رحلة',visa_income:'إيراد تأشيرة',hotel_income:'إيراد فندق',other_income:'إيراد آخر',pilgrim_payment:'قبض معتمر',supplier_payment:'مورد',contractor_payment:'متعهد',supervisor_payment:'مشرف',employee_payment:'موظف',trip_expense:'مصروف رحلة',admin_expense:'مصروف إداري',other_expense:'مصروف آخر',driver_payment:'سائق'};
@@ -928,16 +929,21 @@ document.addEventListener('click',function(e){
  const id=b.dataset.expId,a=b.dataset.expAction;
  if(a==='details')showExpenseDetails(id);else if(a==='edit')editManualExpense(id);else if(a==='wallet-edit')editWalletExpense(id);else if(a==='wallet-delete')deleteWalletExpense(id);
 });
-function openCustomerInvoiceForm(){
+function openCustomerInvoiceForm(invoice=null){
  const f=$('customerInvoiceForm');if(!f)return;
  f.classList.remove('hidden');
- $('invoiceBuyerName').value='';$('invoiceBuyerType').value='customer';$('invoiceAmount').value='';
- $('invoiceCurrency').value='IQD';$('invoiceIssuedAt').value=dateToday();$('invoicePaymentStatus').value='unpaid';$('invoicePaymentMethod').value='cash';$('invoiceUsdIqdRate').value='';
- $('invoiceServiceDescription').value='';$('invoiceNotes').value='';$('invoiceSupplierCostMode').value='none';$('invoiceSupplierCostAmount').value='';$('invoiceSupplierCostCurrency').value='SAR';$('invoiceSupplierCostFxRate').value='';$('invoiceSupplierCostInvoiceEquivalent').value='';toggleCustomerInvoicePaymentFields();
- const s=$('invoiceSupplier');if(s)s.innerHTML='<option value="">بدون مورد</option>'+SUPPLIERS.filter(x=>x.active).map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
- syncCustomerInvoiceFx();syncInvoiceSupplierCostFields();f.scrollIntoView({behavior:'smooth',block:'center'});
+ editingCustomerInvoiceId=invoice?.id||null;
+ $('invoiceBuyerName').value=invoice?.buyer_name||'';$('invoiceBuyerType').value='customer';$('invoiceAmount').value='';
+ $('invoiceCurrency').value=invoice?.currency||'IQD';$('invoiceIssuedAt').value=invoice?.issued_at?String(invoice.issued_at).slice(0,10):dateToday();$('invoicePaymentStatus').value=invoice?.status==='paid'?'paid':'unpaid';$('invoicePaymentMethod').value='cash';$('invoiceUsdIqdRate').value='';
+ $('invoiceServiceDescription').value=invoice?.service_description||'';$('invoiceNotes').value=invoice?.notes||'';$('invoiceSupplierCostMode').value='none';$('invoiceSupplierCostAmount').value='';$('invoiceSupplierCostCurrency').value='SAR';$('invoiceSupplierCostFxRate').value='';$('invoiceSupplierCostInvoiceEquivalent').value='';toggleCustomerInvoicePaymentFields();
+ const s=$('invoiceSupplier');if(s){s.innerHTML='<option value="">بدون مورد</option>'+SUPPLIERS.filter(x=>x.active).map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');s.value=invoice?.supplier_id||'';}
+ syncCustomerInvoiceFx();syncInvoiceSupplierCostFields();
+ const title=f.querySelector('h2'),saveBtn=f.querySelector('button.btn.primary[onclick="saveNewCustomerInvoice()"]');
+ if(title)title.textContent=editingCustomerInvoiceId?'✏️ تعديل الفاتورة':'➕ إصدار فاتورة جديدة';
+ if(saveBtn)saveBtn.textContent=editingCustomerInvoiceId?'💾 حفظ تعديل الفاتورة':'💾 إصدار الفاتورة';
+ f.scrollIntoView({behavior:'smooth',block:'center'});
 }
-function closeCustomerInvoiceForm(){$('customerInvoiceForm')?.classList.add('hidden')}
+function closeCustomerInvoiceForm(){editingCustomerInvoiceId=null;$('customerInvoiceForm')?.classList.add('hidden');const f=$('customerInvoiceForm');const title=f?.querySelector('h2'),saveBtn=f?.querySelector('button.btn.primary[onclick="saveNewCustomerInvoice()"]');if(title)title.textContent='➕ إصدار فاتورة جديدة';if(saveBtn)saveBtn.textContent='💾 إصدار الفاتورة'}
 function syncInvoiceSupplierCostFields(){
  const mode=$('invoiceSupplierCostMode')?.value||'none',hasSupplier=!!$('invoiceSupplier')?.value,show=mode==='wallet';
  const amountWrap=$('invoiceSupplierCostAmountWrap'),curWrap=$('invoiceSupplierCostCurrencyWrap'),fxWrap=$('invoiceSupplierCostFxWrap'),help=$('invoiceSupplierCostFxHelp');
@@ -983,6 +989,15 @@ function syncCustomerInvoiceFx(){
  out.value=iqd>0?Math.round(iqd).toLocaleString('en-US')+' د.ع':'';
  return iqd;
 }
+async function editCustomerInvoice(id){
+ const r=await db.from('customer_invoices').select('*,suppliers(name)').eq('id',id).maybeSingle();
+ if(r.error||!r.data)return alert(r.error?.message||'الفاتورة غير موجودة');
+ const x=r.data;
+ if(x.status==='cancelled')return alert('لا يمكن تعديل فاتورة ملغاة.');
+ openCustomerInvoiceForm(x);
+ const cur=$('invoiceCurrency');
+ if(cur)cur.disabled=Number(x.paid_amount||0)>0;
+}
 async function saveNewCustomerInvoice(){
  try{
   const buyer=$('invoiceBuyerName').value.trim(),buyerType=$('invoiceBuyerType').value,amount=Number($('invoiceAmount').value||0),currency=$('invoiceCurrency').value;
@@ -991,6 +1006,22 @@ async function saveNewCustomerInvoice(){
   if(!buyer)return alert('أدخل اسم العميل أو الشريك.');
   if(!amount||amount<=0)return alert('أدخل مبلغ الفاتورة.');
   if(!desc)return alert('أدخل وصف الخدمة.');
+  if(editingCustomerInvoiceId){
+   const old=await db.from('customer_invoices').select('*').eq('id',editingCustomerInvoiceId).maybeSingle();
+   if(old.error||!old.data)throw new Error(old.error?.message||'الفاتورة غير موجودة');
+   const paid=Number(old.data.paid_amount||0);
+   if(amount<paid)throw new Error('لا يمكن جعل إجمالي الفاتورة أقل من المبلغ المدفوع: '+fmt(paid)+' '+(old.data.currency||currency));
+   if(paid>0 && currency!==old.data.currency)throw new Error('لا يمكن تغيير عملة فاتورة عليها دفعات مسجلة.');
+   const rateEdit=currency==='USD'?Number($('invoiceUsdIqdRate').value||0):currency==='SAR'?410:1;
+   if(currency==='USD'&&!rateEdit)throw new Error('أدخل سعر الدولار مقابل الدينار.');
+   const amountIqdEdit=currency==='IQD'?amount:currency==='SAR'?amount*410:amount*rateEdit;
+   const up=await db.from('customer_invoices').update({buyer_name:buyer,buyer_type:buyerType,service_description:desc,amount,currency,amount_iqd:Number(amountIqdEdit.toFixed(2)),issued_at:issuedAt,notes:notes||null,updated_at:new Date().toISOString()}).eq('id',editingCustomerInvoiceId);
+   if(up.error)throw up.error;
+   const doneId=editingCustomerInvoiceId;
+   closeCustomerInvoiceForm();await loadAll();await loadCustomerInvoices();await showCustomerInvoice(doneId);
+   alert('✅ تم تعديل الفاتورة بنجاح.');
+   return;
+  }
   const rate=currency==='USD'?Number($('invoiceUsdIqdRate').value||0):currency==='SAR'?410:1;
   if(currency==='USD'&&!rate)return alert('أدخل سعر الدولار مقابل الدينار.');
   const amountIqd=currency==='IQD'?amount:currency==='SAR'?amount*410:amount*rate;
