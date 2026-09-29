@@ -966,6 +966,7 @@ async function managePayments(b){
  }).join('')+'</tbody></table></div>':'لا توجد أقساط.';
  $('flexPayBtn').onclick=()=>saveFlexiblePayment(b,null);
  document.querySelectorAll('[data-pay-inst]').forEach(btn=>btn.onclick=()=>paySpecificInstallment(b,btn.dataset.payInst,Number(btn.dataset.due||0)));
+ box.scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 async function paySpecificInstallment(b,installmentId,due){
