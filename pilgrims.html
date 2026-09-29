@@ -25,6 +25,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 @media(max-width:850px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:1fr 1fr}}
 @media(max-width:550px){.cols,.stats{grid-template-columns:1fr}}
 @media print{.top,#login,.noPrint,#app>.stats,#app>.grid{display:none!important}.panel{box-shadow:none;border:0}}
+.program-readonly-view .grid{display:block!important}.program-readonly-view #newPilgrimPanel,.program-readonly-view #previousClientsPanel{display:none!important}.program-readonly-view #programViewBanner{display:block!important}
 
  .badge-tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.badge-tools select{max-width:360px}.photo-preview{width:90px;height:110px;border:1px dashed #b9c7d0;border-radius:10px;object-fit:cover;background:#f5f7f8;display:block;margin-top:7px}
 .badge-grid{display:grid;grid-template-columns:repeat(2,60mm);gap:8mm;padding:10mm;justify-content:center}
@@ -210,6 +211,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 </div>
 
 <main id="app" class="wrap hide">
+<div id="programViewBanner" class="panel noPrint" style="display:none;margin-top:0;background:#f7fbfd;border-color:#cbdde7"><h2 id="programViewTitle" style="margin:0;color:#0c3b63">إدارة معتمري الرحلة</h2><div id="programViewSub" style="margin-top:5px;color:#6b7780;font-size:12px"></div></div>
 <div class="stats">
 <div class="stat">المعتمرون<b id="pc">0</b></div>
 <div class="stat">الحجوزات<b id="bc">0</b></div>
@@ -218,7 +220,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 </div>
 
 <div class="grid">
-<section class="panel">
+<section id="newPilgrimPanel" class="panel">
 <h2>إضافة معتمر</h2><div id="formMsg"></div>
 <form id="form">
 <!-- 1. Passport first -->
@@ -318,7 +320,7 @@ input,select,textarea{width:100%;padding:12px;border:1px solid #ccd7df;border-ra
 </form>
 </section>
 
-<section class="panel archive-box noPrint">
+<section id="previousClientsPanel" class="panel archive-box noPrint">
 <h3>♻️ العملاء السابقون</h3>
 <p style="margin:6px 0;color:#6b7780">عند إدخال اسم معتمر مسجل سابقًا، سيكتشفه النظام تلقائيًا ويعرض خيار إضافته إلى الرحلة الحالية مع استرجاع بيانات ملفه من الأرشيف.</p>
 </section>
@@ -348,6 +350,7 @@ const $=id=>document.getElementById(id);
   }
 })();
 let P=[],B=[],PR=[],I=[],A=[];
+let viewProgramId=null;
 let nameDuplicate=false;
 let nameCheckTimer=null;
 function normalizeName(v){
@@ -562,9 +565,23 @@ async function load(){
  const er=[a,b,c,i,ar].find(x=>x.error);
  if(er)return msg('listMsg',er.error.message,true);
  P=a.data||[];B=b.data||[];PR=c.data||[];I=i.data||[];A=ar.data||[];
- $('pc').textContent=P.length;$('bc').textContent=B.length;
- $('paid').textContent=money(B.reduce((s,x)=>s+Number(x.paid_amount||0),0));
- $('rem').textContent=money(B.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
+ const qs=new URLSearchParams(window.location.search);
+ viewProgramId=qs.get('program')||null;
+ if(viewProgramId){
+   const vp=PR.find(x=>String(x.id)===String(viewProgramId));
+   document.getElementById('app')?.classList.add('program-readonly-view');
+   const banner=document.getElementById('programViewBanner');
+   if(banner)banner.style.display='block';
+   if(vp){
+     $('programViewTitle').textContent='👥 إدارة معتمري الرحلة — '+(vp.title||'');
+     $('programViewSub').textContent='هذه رحلة مكتملة/مؤرشفة. لا يمكن إضافة معتمر جديد من هذا المسار؛ يمكنك فقط عرض وتعديل بيانات المعتمرين الموجودين.';
+   }
+ }
+ const viewBookings=viewProgramId?B.filter(x=>String(x.program_id)===String(viewProgramId)):B;
+ const viewPilgrims=viewProgramId?P.filter(x=>viewBookings.some(b=>b.id===x.booking_id)):P;
+ $('pc').textContent=viewPilgrims.length;$('bc').textContent=viewBookings.length;
+ $('paid').textContent=money(viewBookings.reduce((s,x)=>s+Number(x.paid_amount||0),0));
+ $('rem').textContent=money(viewBookings.reduce((s,x)=>s+Number(x.remaining_amount||0),0));
 
  $('program').innerHTML='<option value="">اختر البرنامج</option>'+PR.filter(x=>x.status==='published').map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  render();
@@ -582,7 +599,8 @@ async function load(){
 function archiveAlreadyInProgram(archiveId,programId){return P.some(p=>p.archive_id===archiveId && B.some(b=>b.id===p.booking_id && b.program_id===programId && b.status!=='cancelled'));}
 function render(){
  const q=$('search').value.trim().toLowerCase();
- const unpaidNames=P.map(x=>{const b=B.find(z=>z.id===x.booking_id);return {p:x,b}}).filter(({b})=>b&&b.status!=='cancelled'&&Number(b.paid_amount||0)<=0).map(({p})=>p.full_name).filter(Boolean);
+ const sourcePilgrims=viewProgramId?P.filter(x=>B.some(b=>b.id===x.booking_id&&String(b.program_id)===String(viewProgramId))):P;
+ const unpaidNames=sourcePilgrims.map(x=>{const b=B.find(z=>z.id===x.booking_id);return {p:x,b}}).filter(({b})=>b&&b.status!=='cancelled'&&Number(b.paid_amount||0)<=0).map(({p})=>p.full_name).filter(Boolean);
  const unpaidAlert=$('unpaidAlert');
  if(unpaidAlert){
    if(unpaidNames.length){
@@ -590,9 +608,9 @@ function render(){
      unpaidAlert.innerHTML='⚠️ <b>تنبيه السداد:</b> المعتمر'+(unpaidNames.length>1?'ون':'')+' الذي'+(unpaidNames.length>1?'ن':'')+' لم يدفع'+(unpaidNames.length>1?'وا':'')+' شيئًا: '+unpaidNames.map(esc).join('، ')+' — يرجى متابعة السداد.';
    } else { unpaidAlert.classList.add('hide'); unpaidAlert.innerHTML=''; }
  }
- $('rows').innerHTML=P.filter(x=>[x.full_name,x.phone,x.passport_number,x.profile_code].some(v=>String(v||'').toLowerCase().includes(q))).map(x=>{
+ $('rows').innerHTML=sourcePilgrims.filter(x=>[x.full_name,x.phone,x.passport_number,x.profile_code].some(v=>String(v||\'\').toLowerCase().includes(q))).map(x=>{
   const b=B.find(z=>z.id===x.booking_id),pr=PR.find(z=>z.id===b?.program_id);
-  return '<tr><td><b>'+esc(x.full_name)+'</b><br><small>'+esc(x.profile_code)+'</small></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td><td>'+badge(x.visa_status)+(x.birth_date&&calcAge(x.birth_date)<18&&!x.guardian_accompanied&&!x.guardian_authorization_path?' <span class="badge" style="background:#fff8e7;color:#795b16">وكالة مطلوبة</span>':'')+'</td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b?.paid_amount)+' / '+money(b?.remaining_amount)+(b?.cash_payment_status==='unpaid'?' <span class="badge" style="background:#fff0f0;color:#a33">لم يدفع</span>':'')+'</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn p" onclick="openProfile(\''+x.id+'\')">فتح</button><button class="btn danger noPrint" type="button" onclick="deletePilgrimFromTrip(\''+x.id+'\')">حذف من الرحلة</button></div></td></tr>'
+  return '<tr><td><b>'+esc(x.full_name)+'</b><br><small>'+esc(x.profile_code)+'</small></td><td>'+esc(x.phone||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td><td>'+badge(x.visa_status)+(x.birth_date&&calcAge(x.birth_date)<18&&!x.guardian_accompanied&&!x.guardian_authorization_path?' <span class="badge" style="background:#fff8e7;color:#795b16">وكالة مطلوبة</span>':'')+'</td><td>'+esc(pr?.title||'—')+'</td><td>'+money(b?.paid_amount)+' / '+money(b?.remaining_amount)+(b?.cash_payment_status==='unpaid'?' <span class="badge" style="background:#fff0f0;color:#a33">لم يدفع</span>':'')+'</td><td><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn p" onclick="openProfile(\''+x.id+'\')">فتح</button>'+(viewProgramId?'':'<button class="btn danger noPrint" type="button" onclick="deletePilgrimFromTrip(\''+x.id+'\')">حذف من الرحلة</button></div></td></tr>'
  }).join('')||'<tr><td colspan="7">لا يوجد معتمرون.</td></tr>';
 }
 $('search').oninput=render;
