@@ -208,64 +208,64 @@ async function guard(){
 
 async function loadData(){
   let errors=[];
-  // لا نترك الجدول عالقًا على "جاري التحميل" إذا تأخر طلب الشبكة.
   const timeout=(ms)=>new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة الاتصال بقاعدة البيانات')),ms));
+
+  // القائمة الأساسية للمشرفين والسائقين تُحمّل مباشرة من الجداول المصرّح بها.
+  // لا نجعل تحميل القائمة متوقفًا على RPC المالي حتى لا تبقى الواجهة على "جاري التحميل".
   try{
-    const r=await Promise.race([
-      db.rpc('get_team_directory'),
+    const result=await Promise.race([
+      Promise.all([
+        db.from('supervisors').select('*').order('full_name'),
+        db.from('drivers').select('*').order('full_name_ar',{ascending:true})
+      ]),
       timeout(5000)
     ]);
-    if(r.error) throw r.error;
-    const teamData=typeof r.data==='string'?JSON.parse(r.data):r.data;
-    supervisors=Array.isArray(teamData?.supervisors)?teamData.supervisors:[];
-    drivers=Array.isArray(teamData?.drivers)?teamData.drivers:[];
-    // رحلات المشرفين تأتي من نفس الـRPC الإداري، حتى لا تتأثر بحالة الرحلة archived أو RLS الخاص بـ programs.
-    supervisorEarnings=Array.isArray(teamData?.supervisor_trips)?teamData.supervisor_trips:[];
+    const [sr,dr]=result;
+    if(sr.error) throw sr.error;
+    if(dr.error) throw dr.error;
+    supervisors=sr.data||[];
+    drivers=dr.data||[];
   }catch(e){
-    console.error('team directory RPC error',e);
-    errors.push(e.message||'تعذر تحميل بيانات الفريق');
-    try{
-      const result=await Promise.race([
-        Promise.all([
-          db.from('supervisors').select('*').order('full_name'),
-          db.from('drivers').select('*').order('full_name_ar',{ascending:true})
-        ]),
-        timeout(5000)
-      ]);
-      const [sr,dr]=result;
-      if(sr.error) throw sr.error;
-      if(dr.error) throw dr.error;
-      supervisors=sr.data||[];
-      drivers=dr.data||[];
-      errors=[];
-    }catch(e2){
-      console.error('team directory direct load error',e2);
-      supervisors=[];
-      drivers=[];
-      errors.push(e2.message||'تعذر تحميل بيانات الفريق مباشرة');
-    }
+    console.error('team direct load error',e);
+    supervisors=[];
+    drivers=[];
+    errors.push(e.message||'تعذر تحميل بيانات المشرفين والسائقين');
   }
 
-  // عرض ما تم تحميله فورًا.
+  // نعرض القائمة فورًا، حتى لو تعذر تحميل الاستحقاقات.
   renderSup();
   renderDrv();
 
+  // الرحلات والاستحقاقات المؤرشفة تأتي من RPC الإداري المحمي.
   try{
-    let r=await db.from('programs').select('id,title,departure_date,supervisor_id,driver_id,driver_fee,assistant_driver_id').order('departure_date');
-    programs=r.error?[]:(r.data||[]);
-  }catch(e){ programs=[]; }
+    const r=await Promise.race([
+      db.rpc('get_team_directory'),
+      timeout(8000)
+    ]);
+    if(r.error) throw r.error;
+    const teamData=typeof r.data==='string'?JSON.parse(r.data):r.data;
+    supervisorEarnings=Array.isArray(teamData?.supervisor_trips)?teamData.supervisor_trips:[];
+  }catch(e){
+    console.error('supervisor trips RPC error',e);
+    supervisorEarnings=[];
+    errors.push(e.message||'تعذر تحميل رحلات المشرفين');
+  }
 
-  // الاستحقاقات والرحلات موجودة داخل الاستجابة الإدارية المصرّح بها من get_team_directory.
-  // لا نعتمد هنا على قراءة programs/bookings من المتصفح، لأن الرحلات المؤرشفة قد تُحجب بـRLS.
-  if(!Array.isArray(supervisorEarnings)) supervisorEarnings=[];
+  // بيانات السائقين التشغيلية قد تعتمد على programs، وهي مستقلة عن قائمة المشرفين.
+  try{
+    const r=await db.from('programs').select('id,title,departure_date,supervisor_id,driver_id,driver_fee,assistant_driver_id').order('departure_date');
+    programs=r.error?[]:(r.data||[]);
+  }catch(e){
+    programs=[];
+  }
+
   renderSup();
   renderDrv();
 
   if(errors.length){
-    msg('تعذر تحميل قائمة المشرفين: '+errors.join(' | '),true);
+    msg('تنبيه: '+errors.join(' | '),true);
   }
 }
-
 function switchSection(id,btn){
   document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
   document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
