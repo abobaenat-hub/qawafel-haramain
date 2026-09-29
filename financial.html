@@ -354,12 +354,28 @@ async function saveWalletTx(){
 <section id="settlement" class="hidden"><div class="panel"><div class="sectionTitle"><h2>⏳ الرحلات المكتملة — معلقة للتصفية</h2><span class="muted">لا تدخل السجل المالي الرسمي حتى تُصفّى</span></div><div id="settlementRows"></div></div></section>
 <section id="receivables" class="hidden">
  <div class="panel" style="border:2px solid #d8c68d;background:linear-gradient(135deg,#fffaf0,#fff)">
-  <div class="sectionTitle"><div><h2>🧾 مستحقات العملاء والشركاء</h2><span class="muted">الفاتورة مستقلة عن حركة المورد، ولا تُنشئ خصمًا ثانيًا من خزينة المورد.</span></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn" onclick="loadCustomerInvoices()">↻ تحديث</button><button class="btn primary" onclick="createCustomerInvoiceFromWallet()">➕ فاتورة من سحب مورد</button></div></div>
+  <div class="sectionTitle"><div><h2>🧾 مستحقات العملاء والشركاء</h2><span class="muted">أنشئ الفاتورة أولًا، واربطها بالمورد فقط إذا كانت الخدمة مرتبطة بمورد.</span></div><div style="display:flex;gap:7px;flex-wrap:wrap"><button class="btn" onclick="loadCustomerInvoices()">↻ تحديث</button><button class="btn primary" onclick="openCustomerInvoiceForm()">➕ فاتورة جديدة</button><button class="btn" onclick="createCustomerInvoiceFromWallet()">من سحب مورد</button></div></div>
   <div id="receivableSummary" class="kpis" style="margin:12px 0"></div>
   <div id="customerInvoiceMsg"></div>
   <div class="table"><table style="min-width:1050px"><thead><tr><th>الفاتورة</th><th>العميل / الشريك</th><th>الخدمة</th><th>المورد</th><th>الإجمالي</th><th>المدفوع</th><th>المتبقي</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead><tbody id="customerInvoiceRows"></tbody></table></div>
  </div>
  <div id="customerInvoiceDetail" class="panel hidden"></div>
+ <div id="customerInvoiceForm" class="panel hidden" style="border:2px solid #c99a32;background:#fffdf7">
+  <div class="sectionTitle"><div><h2>➕ إصدار فاتورة جديدة</h2><span class="muted">المورد اختياري — الفاتورة لا تنشئ أي حركة مالية عند حفظها.</span></div><button class="btn" onclick="closeCustomerInvoiceForm()">إغلاق</button></div>
+  <div class="grid">
+   <div class="field"><label>اسم العميل / الشريك</label><input id="invoiceBuyerName" placeholder="مثال: الشريك"></div>
+   <div class="field"><label>نوع الطرف</label><select id="invoiceBuyerType"><option value="customer">عميل</option><option value="partner">شريك</option></select></div>
+   <div class="field"><label>المبلغ</label><input id="invoiceAmount" type="number" min="0.01" step="0.01" oninput="syncCustomerInvoiceFx()"></div>
+   <div class="field"><label>العملة</label><select id="invoiceCurrency" onchange="syncCustomerInvoiceFx()"><option value="IQD">دينار عراقي</option><option value="SAR">ريال سعودي</option><option value="USD">دولار أمريكي</option></select></div>
+   <div class="field"><label>المورد المرتبط <span class="muted">(اختياري)</span></label><select id="invoiceSupplier"><option value="">بدون مورد</option></select></div>
+   <div class="field"><label>تاريخ الإصدار</label><input id="invoiceIssuedAt" type="date"></div>
+   <div class="field" id="invoiceUsdIqdRateWrap" style="display:none"><label>سعر الدولار مقابل الدينار</label><input id="invoiceUsdIqdRate" type="number" step="0.01" placeholder="مثال: 1600" oninput="syncCustomerInvoiceFx()"></div>
+   <div class="field"><label>المعادل بالدينار العراقي</label><input id="invoiceAmountIqd" readonly></div>
+  </div>
+  <div class="field" style="margin-top:10px"><label>وصف الخدمة</label><textarea id="invoiceServiceDescription" placeholder="مثال: حجز فندق، تأشيرة، نقل، خدمة داخل الشركة..."></textarea></div>
+  <div class="field" style="margin-top:10px"><label>ملاحظات</label><textarea id="invoiceNotes" placeholder="ملاحظات اختيارية"></textarea></div>
+  <div style="margin-top:12px"><button class="btn primary" onclick="saveNewCustomerInvoice()">💾 إصدار الفاتورة</button></div>
+ </div>
 </section>
 <section id="ledger" class="hidden">
 <div class="panel"><div class="sectionTitle"><h2>📒 سجل كل الحركات</h2><input id="ledgerSearch" oninput="renderLedger()" style="max-width:300px;padding:9px;border:1px solid #d5e0e6;border-radius:10px" placeholder="بحث"></div><div class="table" style="margin-top:12px"><table><thead><tr><th>التاريخ</th><th>وارد/صرف</th><th>النوع</th><th>البيان</th><th>الطرف</th><th>المبلغ</th><th>الرحلة</th></tr></thead><tbody id="ledgerRows"></tbody></table></div></div>
@@ -889,6 +905,45 @@ document.addEventListener('click',function(e){
  const id=b.dataset.expId,a=b.dataset.expAction;
  if(a==='edit')editManualExpense(id);else if(a==='delete')deleteManualExpense(id);else if(a==='wallet-edit')editWalletExpense(id);else if(a==='wallet-delete')deleteWalletExpense(id);
 });
+function openCustomerInvoiceForm(){
+ const f=$('customerInvoiceForm');if(!f)return;
+ f.classList.remove('hidden');
+ $('invoiceBuyerName').value='';$('invoiceBuyerType').value='customer';$('invoiceAmount').value='';
+ $('invoiceCurrency').value='IQD';$('invoiceIssuedAt').value=dateToday();$('invoiceUsdIqdRate').value='';
+ $('invoiceServiceDescription').value='';$('invoiceNotes').value='';
+ const s=$('invoiceSupplier');if(s)s.innerHTML='<option value="">بدون مورد</option>'+SUPPLIERS.filter(x=>x.active).map(x=>'<option value="'+x.id+'">'+esc(x.name)+'</option>').join('');
+ syncCustomerInvoiceFx();f.scrollIntoView({behavior:'smooth',block:'center'});
+}
+function closeCustomerInvoiceForm(){$('customerInvoiceForm')?.classList.add('hidden')}
+function syncCustomerInvoiceFx(){
+ const cur=$('invoiceCurrency')?.value||'IQD',amount=Number($('invoiceAmount')?.value||0);
+ const wrap=$('invoiceUsdIqdRateWrap'),rateEl=$('invoiceUsdIqdRate'),out=$('invoiceAmountIqd');
+ if(wrap)wrap.style.display=cur==='USD'?'block':'none';
+ if(!out)return;
+ let iqd=cur==='IQD'?amount:cur==='SAR'?amount*410:amount*Number(rateEl?.value||0);
+ out.value=iqd>0?Math.round(iqd).toLocaleString('en-US')+' د.ع':'';
+ return iqd;
+}
+async function saveNewCustomerInvoice(){
+ const buyer=$('invoiceBuyerName').value.trim(),buyerType=$('invoiceBuyerType').value,amount=Number($('invoiceAmount').value||0),currency=$('invoiceCurrency').value;
+ const supplierId=$('invoiceSupplier').value||null,issuedAt=$('invoiceIssuedAt').value||dateToday(),desc=$('invoiceServiceDescription').value.trim(),notes=$('invoiceNotes').value.trim();
+ if(!buyer)return alert('أدخل اسم العميل أو الشريك.');
+ if(!amount||amount<=0)return alert('أدخل مبلغ الفاتورة.');
+ if(!desc)return alert('أدخل وصف الخدمة.');
+ const rate=currency==='USD'?Number($('invoiceUsdIqdRate').value||0):currency==='SAR'?410:1;
+ if(currency==='USD'&&!rate)return alert('أدخل سعر الدولار مقابل الدينار.');
+ const amountIqd=currency==='IQD'?amount:currency==='SAR'?amount*410:amount*rate;
+ const {data:{user}}=await db.auth.getUser();
+ const ins=await db.from('customer_invoices').insert({
+   buyer_name:buyer,buyer_type:buyerType,service_description:desc,supplier_id:supplierId,
+   supplier_wallet_tx_id:null,source_type:null,source_id:null,amount,currency,
+   amount_iqd:Number(amountIqd.toFixed(2)),paid_amount:0,paid_amount_iqd:0,status:'unpaid',
+   issued_at:issuedAt,due_date:null,notes:notes||null,created_by:user?.id||null
+ });
+ if(ins.error)return alert('تعذر إصدار الفاتورة: '+ins.error.message);
+ closeCustomerInvoiceForm();await loadCustomerInvoices();
+ alert('✅ تم إصدار الفاتورة بنجاح. '+(supplierId?'تم ربطها بالمورد المحدد.':'الفاتورة غير مرتبطة بمورد.'));
+}
 async function loadCustomerInvoices(){
  const box=$('customerInvoiceRows'),sum=$('receivableSummary'),msg=$('customerInvoiceMsg');
  if(!box)return;
@@ -967,7 +1022,7 @@ function printCustomerInvoice(id){
   w.document.close();w.focus();setTimeout(()=>w.print(),300);
  });
 }
-function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active')}
+function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(id==='receivables')loadCustomerInvoices()}
 function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
 init();
 setTimeout(()=>{if(FOCUS_PROGRAM_ID){const ef=$('expenseProgramFilter');if(ef)ef.value=FOCUS_PROGRAM_ID;renderExpenseTable();const outTab=[...document.querySelectorAll('.tab')].find(x=>x.textContent.includes('الصرف'));if(outTab)showTab('out',outTab);renderTripFocus();}},500);
