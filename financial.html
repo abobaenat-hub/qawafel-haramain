@@ -24,7 +24,7 @@ async function saveSupplierPayment(){
  if(paidCur==='USD'&&!usdIqd)return alert('أدخل سعر الدولار مقابل الدينار');
  const amountIqd=paidCur==='IQD'?paid:paidCur==='SAR'?paid*410:paid*usdIqd;
  const date=$('supplierPayDate').value||dateToday(), program_id=$('supplierPayProgram').value||null;
- const userId=qawafelUserId();
+ const userId=CURRENT_USER_ID;
  const wp={supplier_id,transaction_type:'deposit',currency:balanceCur,amount:balance,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:date,program_id,description:$('supplierPayDescription').value.trim()||'رصيد مودع لدى المورد',source_currency:paidCur===balanceCur?null:paidCur,source_amount:paidCur===balanceCur?null:paid,fx_rate:paidCur!==balanceCur?(balanceCur==='SAR'&&paidCur==='USD'?usdSar:balance/paid):null,exchange_rate_to_iqd:paidCur==='USD'?usdIqd:(balanceCur==='SAR'?410:1),created_by:userId||null};
  const wr=await db.from('supplier_wallet_transactions').insert(wp);
  if(wr.error)return alert(wr.error.message);
@@ -159,7 +159,7 @@ async function saveWalletTx(){
  }else{
    $('walletSourceAmount').value=amount;
  }
- const userId=qawafelUserId();
+ const userId=CURRENT_USER_ID;
  const payload={
    supplier_id,transaction_type:type,currency,amount,
    amount_iqd:Number(amountIqd.toFixed(2)),
@@ -521,7 +521,8 @@ async function saveWalletTx(){
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 function qawafelAccessToken(){try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i)||'';if(!key.endsWith('-auth-token'))continue;const raw=localStorage.getItem(key);if(!raw)continue;const s=JSON.parse(raw);if(s?.access_token)return s.access_token}}catch(e){console.error('finance token read',e)}return null}
 function qawafelUserId(){const t=qawafelAccessToken();if(!t)return null;try{const p=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return p?.sub||null}catch(e){return null}}
-const db=window.supabase.createClient(U,K,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+const db=window.supabase.createClient(U,K);
+let CURRENT_USER_ID=null;
 let editingCustomerInvoiceId=null;
 const FOCUS_PROGRAM_ID=new URLSearchParams(location.search).get('program')||'';let TX=[],BOOK=[],PAY=[],PROGS=[],FIN_TX_PROGRAMS=[];let COMPLETED_PENDING=[];
 const $=id=>document.getElementById(id),fmt=n=>new Intl.NumberFormat('ar-IQ',{maximumFractionDigits:2}).format(Number(n||0));
@@ -531,9 +532,10 @@ $('inDate').value=dateToday();$('outDate').value=dateToday();$('reportFrom').val
 $('outAmount')?.addEventListener('input',()=>{if($('outSharedToggle')?.checked)renderSharedAllocationEditor()});
 $('outCurrency')?.addEventListener('change',()=>{if($('outSharedToggle')?.checked)renderSharedAllocationEditor()});
 $('outSharedPrograms')?.addEventListener('change',renderSharedAllocationEditor);
-async function login(){const r=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(r.error){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+r.error.message+'</div>';return}if(!r.data?.user){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">تعذر إنشاء جلسة الدخول.</div>';return}init();}
-async function signOut(){const t=qawafelAccessToken();if(t){try{await fetch(U+'/auth/v1/logout',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+t}})}catch(e){}}try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i)||'';if(key.endsWith('-auth-token'))localStorage.removeItem(key)}}catch(e){}location.href='./internal.html'}
-async function init(){const uid=qawafelUserId();if(!uid){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+esc(e?.message||e)+'</span>'}}
+async function login(){const r=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(r.error){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+esc(r.error.message)+'</div>';return}if(!r.data?.user){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">تعذر إنشاء جلسة الدخول.</div>';return}CURRENT_USER_ID=r.data.user.id;await init();}
+async function signOut(){await db.auth.signOut();location.href='./internal.html'}
+async function init(){const s=await db.auth.getSession();CURRENT_USER_ID=s.data?.session?.user?.id||null;if(!CURRENT_USER_ID){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+esc(e?.message||e)+'</span>'}}
+db.auth.onAuthStateChange((_event,session)=>{CURRENT_USER_ID=session?.user?.id||null;});
 async function loadAll(){
  const withTimeout=(p,ms=15000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة جلب البيانات بعد 15 ثانية')),ms))]);
  const [tx,b,p,pgr,ftp]=await Promise.all([
@@ -946,7 +948,7 @@ async function addManual(direction){
   }
   if(!rate){alert('لا يوجد سعر صرف مسجل لهذا الرصيد عند المورد.');return}
   const amountIqd=Number((amount*rate).toFixed(2));
-  const userId=qawafelUserId();
+  const userId=CURRENT_USER_ID;
   const r=await db.from('supplier_wallet_transactions').insert({
     supplier_id:supplierId,transaction_type:'withdrawal',currency:cur,amount,
     exchange_rate_to_iqd:rate,amount_iqd:amountIqd,
@@ -1077,7 +1079,7 @@ async function createSupplierWalletWithdrawalForInvoice(invoice,supplierId){
  else {rateIqd=Number($('invoiceSupplierCostFxRate').value||0);if(invoiceCurrency!=='USD'&&currency==='USD'&&!rateIqd)return {error:{message:'أدخل سعر التحويل المطلوب.'}};amountIqd=amount*rateIqd}
  const fx=invoiceCurrency===currency?1:Number($('invoiceSupplierCostFxRate').value||0);
  if(invoiceCurrency!==currency&&!fx)return {error:{message:'أدخل سعر التحويل بين عملة الفاتورة وعملة المورد.'}};
- const userId=qawafelUserId();
+ const userId=CURRENT_USER_ID;
  const tx={supplier_id:supplierId,transaction_type:'withdrawal',currency,amount,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:invoice.issued_at||dateToday(),program_id:null,description:'خصم من رصيد المورد مقابل فاتورة '+invoice.invoice_number+' — '+invoice.service_description,source_currency:invoiceCurrency===currency?null:invoiceCurrency,source_amount:invoice.amount,fx_rate:invoiceCurrency===currency?null:fx,exchange_rate_to_iqd:rateIqd,created_by:userId||null};
  const ins=await db.from('supplier_wallet_transactions').insert(tx).select('id').single();
  if(ins.error)return ins;
@@ -1134,7 +1136,7 @@ async function saveNewCustomerInvoice(){
   const rate=currency==='USD'?Number($('invoiceUsdIqdRate').value||0):currency==='SAR'?410:1;
   if(currency==='USD'&&!rate)return alert('أدخل سعر الدولار مقابل الدينار.');
   const amountIqd=currency==='IQD'?amount:currency==='SAR'?amount*410:amount*rate;
-  const userId=qawafelUserId();
+  const userId=CURRENT_USER_ID;
   const invoicePayload={
    buyer_name:buyer,buyer_type:buyerType,service_description:desc,supplier_id:supplierId,
    supplier_wallet_tx_id:null,source_type:paymentStatus==='paid'?'customer_invoice':'manual_invoice',source_id:null,amount,currency,
@@ -1249,7 +1251,7 @@ async function registerCustomerInvoicePayment(id){
  const rate=cur==='SAR'?410:cur==='USD'?Number(prompt('سعر الدولار مقابل الدينار:','1600')||0):1;
  if((cur==='USD'||cur==='SAR')&&!rate)return alert('سعر الصرف مطلوب.');
  const amountIqd=cur==='IQD'?amount:cur==='SAR'?amount*410:amount*rate;
- const userId=qawafelUserId();
+ const userId=CURRENT_USER_ID;
  const ins=await db.from('customer_invoice_payments').insert({invoice_id:id,amount,currency:cur,amount_iqd:Number(amountIqd.toFixed(2)),payment_method:method,payment_date:new Date().toISOString(),reference,created_by:userId||null});
  if(ins.error)return alert('تعذر تسجيل الدفعة: '+ins.error.message);
  const newPaid=Number(x.paid_amount||0)+amount,newStatus=newPaid+0.000001>=Number(x.amount||0)?'paid':'partial';
