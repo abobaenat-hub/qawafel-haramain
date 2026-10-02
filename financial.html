@@ -532,9 +532,37 @@ $('inDate').value=dateToday();$('outDate').value=dateToday();$('reportFrom').val
 $('outAmount')?.addEventListener('input',()=>{if($('outSharedToggle')?.checked)renderSharedAllocationEditor()});
 $('outCurrency')?.addEventListener('change',()=>{if($('outSharedToggle')?.checked)renderSharedAllocationEditor()});
 $('outSharedPrograms')?.addEventListener('change',renderSharedAllocationEditor);
-async function login(){const r=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(r.error){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+esc(r.error.message)+'</div>';return}if(!r.data?.user){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">تعذر إنشاء جلسة الدخول.</div>';return}CURRENT_USER_ID=r.data.user.id;await init();}
+async function login(){
+ const email=$('email').value.trim(), password=$('password').value;
+ if(!email||!password){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">أدخل البريد الإلكتروني وكلمة المرور.</div>';return}
+ $('loginMsg').innerHTML='<div class="msg">جاري التحقق من بيانات الدخول...</div>';
+ try{
+  const r=await db.auth.signInWithPassword({email,password});
+  if(r.error){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+String(r.error.message||'تعذر تسجيل الدخول.')+'</div>';return}
+  const uid=r.data?.user?.id||r.data?.session?.user?.id||null;
+  if(!uid){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">تمت محاولة الدخول لكن لم تُنشأ جلسة. أعد المحاولة.</div>';return}
+  CURRENT_USER_ID=uid;
+  $('login').classList.add('hidden');
+  $('app').classList.remove('hidden');
+  $('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';
+  try{await loadAll()}catch(e){
+   console.error('finance loadAll',e);
+   $('dashboardText').innerHTML='<span style="color:#a33">تم تسجيل الدخول، لكن تعذر جلب البيانات المالية: '+String(e?.message||e)+'</span>';
+  }
+ }catch(e){
+  console.error('finance login',e);
+  $('loginMsg').innerHTML='<div class="msg" style="color:#a33">تعذر تسجيل الدخول: '+String(e?.message||e)+'</div>';
+ }
+}
 async function signOut(){await db.auth.signOut();location.href='./internal.html'}
-async function init(){const s=await db.auth.getSession();CURRENT_USER_ID=s.data?.session?.user?.id||null;if(!CURRENT_USER_ID){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+esc(e?.message||e)+'</span>'}}
+async function init(){
+ const s=await db.auth.getSession();
+ CURRENT_USER_ID=s.data?.session?.user?.id||null;
+ if(!CURRENT_USER_ID){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}
+ $('login').classList.add('hidden');$('app').classList.remove('hidden');
+ $('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';
+ try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+String(e?.message||e)+'</span>'}
+}
 db.auth.onAuthStateChange((_event,session)=>{CURRENT_USER_ID=session?.user?.id||null;});
 async function loadAll(){
  const withTimeout=(p,ms=15000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة جلب البيانات بعد 15 ثانية')),ms))]);
