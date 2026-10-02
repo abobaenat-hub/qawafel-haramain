@@ -347,7 +347,7 @@ async function isAdmin(){
  const r=await db.auth.getUser();
  if(!r.data.user)return null;
  const s=await db.from('staff_profiles').select('role,active').eq('user_id',r.data.user.id).maybeSingle();
- if(!s.error&&s.data?.active)return r.data.user;
+ if(!s.error&&s.data&&s.data.active!==false)return r.data.user;
  const q=await db.from('admin_users').select('role').eq('user_id',r.data.user.id).maybeSingle();
  return q.error||!q.data?null:r.data.user;
 }
