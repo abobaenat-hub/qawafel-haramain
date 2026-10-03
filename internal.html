@@ -167,7 +167,7 @@
   async function init(){
     if(!window.supabase) return;
     const bar=boot();
-    const db=window.qawafelDb || (window.qawafelDb=window.qawafelDb);
+    const db=window.qawafelDb;
     const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{try{localStorage.removeItem('qawafel_auth_bridge');sessionStorage.removeItem('qawafel_auth_handoff')}catch(_e){} await db.auth.signOut();location.href='./internal.html';};
