@@ -599,7 +599,7 @@ async function restoreFinanceSession(){
 async function init(){
   const session=await restoreFinanceSession();
   CURRENT_USER_ID=session?.user?.id||null;
- if(!CURRENT_USER_ID){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}
+ if(!CURRENT_USER_ID){location.replace('./internal.html?return=financial');return}
  $('login').classList.add('hidden');$('app').classList.remove('hidden');
  $('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';
  try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+String(e?.message||e)+'</span>'}
