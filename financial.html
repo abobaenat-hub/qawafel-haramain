@@ -24,7 +24,7 @@ async function saveSupplierPayment(){
  if(paidCur==='USD'&&!usdIqd)return alert('أدخل سعر الدولار مقابل الدينار');
  const amountIqd=paidCur==='IQD'?paid:paidCur==='SAR'?paid*410:paid*usdIqd;
  const date=$('supplierPayDate').value||dateToday(), program_id=$('supplierPayProgram').value||null;
- const userId=CURRENT_USER_ID;
+ const userId=qawafelUserId();
  const wp={supplier_id,transaction_type:'deposit',currency:balanceCur,amount:balance,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:date,program_id,description:$('supplierPayDescription').value.trim()||'رصيد مودع لدى المورد',source_currency:paidCur===balanceCur?null:paidCur,source_amount:paidCur===balanceCur?null:paid,fx_rate:paidCur!==balanceCur?(balanceCur==='SAR'&&paidCur==='USD'?usdSar:balance/paid):null,exchange_rate_to_iqd:paidCur==='USD'?usdIqd:(balanceCur==='SAR'?410:1),created_by:userId||null};
  const wr=await db.from('supplier_wallet_transactions').insert(wp);
  if(wr.error)return alert(wr.error.message);
@@ -159,7 +159,7 @@ async function saveWalletTx(){
  }else{
    $('walletSourceAmount').value=amount;
  }
- const userId=CURRENT_USER_ID;
+ const userId=qawafelUserId();
  const payload={
    supplier_id,transaction_type:type,currency,amount,
    amount_iqd:Number(amountIqd.toFixed(2)),
@@ -282,10 +282,6 @@ async function saveWalletTx(){
   const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
   const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const PAGE_TITLE='الإدارة المالية';
-  // Create the single browser Supabase client synchronously, before DOMContentLoaded.
-  // This prevents the finance script below from creating a second client/session store.
-  const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  window.qawafelDb=db;
   function boot(){
     if(document.getElementById('qawafelGlobalAdminBar')) return document.getElementById('qawafelGlobalAdminBar');
     const bar=document.createElement('div'); bar.id='qawafelGlobalAdminBar';
@@ -300,13 +296,13 @@ async function saveWalletTx(){
       </div>
     </div>`;
     document.body.insertBefore(bar,document.body.firstChild);
-    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="passports.html" href="./passports.html"><span class="qad-ico">🛂</span><span>جوازات المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=196"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html?v=128"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
+    if(!document.getElementById('qawafelAdminDrawer')){document.body.insertAdjacentHTML('afterbegin',`<div id="qawafelAdminDrawerOverlay"></div><aside id="qawafelAdminDrawer"><div class="qad-head"><b>قائمة إدارة الشركة</b><small>التنقل السريع بين أقسام قوافل الحرمين</small></div><div class="qad-section">الرئيسية</div><a class="qad-link" data-page="internal.html" href="./internal.html"><span class="qad-ico">⌂</span><span>لوحة الإدارة</span></a><div class="qad-section">العمليات</div><a class="qad-link" data-page="programs.html" href="./programs.html"><span class="qad-ico">◫</span><span>إدارة الرحلات</span></a><a class="qad-link" data-page="pilgrims.html" href="./pilgrims.html"><span class="qad-ico">♙</span><span>إدارة المعتمرين</span></a><a class="qad-link" data-page="passports.html" href="./passports.html"><span class="qad-ico">🛂</span><span>جوازات المعتمرين</span></a><a class="qad-link" data-page="agents.html" href="./agents.html"><span class="qad-ico">👥</span><span>إدارة المتعهدين</span></a><a class="qad-link" data-page="supervisors.html" href="./supervisors.html?v=196"><span class="qad-ico">🚌</span><span>المشرفون والسائقون</span></a><a class="qad-link" data-page="archive.html" href="./archive.html"><span class="qad-ico">🗃️</span><span>أرشيف المعتمرين</span></a><div class="qad-section">المالية والإدارة</div><a class="qad-link" data-page="financial.html" href="./financial.html?v=114"><span class="qad-ico">د.ع</span><span>الإدارة المالية</span></a><a class="qad-link" data-page="employees.html" href="./employees.html"><span class="qad-ico">♟</span><span>الموظفون والصلاحيات</span></a><a class="qad-link" data-page="audit.html" href="./audit.html"><span class="qad-ico">▤</span><span>سجل نشاط الموظفين</span></a><div class="qad-foot"><b>قوافل الحرمين للحج والعمرة</b><br>القائمة متاحة من أي صفحة داخل الإدارة.</div></aside>`);}
     return bar;
   }
   async function init(){
     if(!window.supabase) return;
     const bar=boot();
-    const db=window.qawafelDb;
+    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
     const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
@@ -316,7 +312,6 @@ async function saveWalletTx(){
     document.getElementById('qgaMenu').onclick=()=>{const d=document.getElementById('qawafelAdminDrawer'),o=document.getElementById('qawafelAdminDrawerOverlay'); if(d&&o){d.classList.toggle('open');o.classList.toggle('show');}};
     async function load(session){
       if(!session?.user){bar.style.display='none';return;}
-      window.qawafelFinanceSession=session;
       try{
         const u=session.user;
         let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',u.id).maybeSingle();
@@ -351,7 +346,7 @@ async function saveWalletTx(){
 <div class="kpi"><small>الصرف الفعلي (د.ع)</small><b id="outTotal" style="font-size:14px;line-height:1.7">0 د.ع</b></div>
 <div class="kpi"><small>صافي حركة النقد</small><b id="netTotal" style="font-size:14px;line-height:1.7">0</b></div>
 <div class="kpi"><small>ذمم المعتمرين</small><b id="dueTotal">0</b></div>
-<div class="kpi"><small>حركات مسجلة</small><b id="txCount">0</b></div>\n<div class="kpi"><small>رصيدنا عند الموردين (د.ع)</small><b id="supplierBalanceTotal">0 د.ع</b></div>
+<div class="kpi"><small>حركات مسجلة</small><b id="txCount">0</b></div>
 </div>
 </section>
 <section id="tripFocusPanel" class="hidden" style="margin:14px 0">
@@ -521,13 +516,12 @@ async function saveWalletTx(){
 <div id="supplierStatementBody"></div>
 </div></div></main>
 </div>
-<div id="login" class="panel" style="max-width:420px;margin:80px auto"><h2>جاري فتح الإدارة المالية…</h2><div id="loginMsg" class="msg">يتم التحقق من جلسة المدير، انتظر لحظات.</div></div>
+<div id="login" class="panel" style="max-width:420px;margin:80px auto"><h2>تسجيل الدخول</h2><input id="email" type="email" placeholder="البريد الإلكتروني" style="width:100%;padding:11px;margin:6px 0"><input id="password" type="password" placeholder="كلمة المرور" style="width:100%;padding:11px;margin:6px 0"><button class="btn primary" style="width:100%;margin-top:8px" onclick="login()">دخول</button><div id="loginMsg"></div></div>
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 function qawafelAccessToken(){try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i)||'';if(!key.endsWith('-auth-token'))continue;const raw=localStorage.getItem(key);if(!raw)continue;const s=JSON.parse(raw);if(s?.access_token)return s.access_token}}catch(e){console.error('finance token read',e)}return null}
 function qawafelUserId(){const t=qawafelAccessToken();if(!t)return null;try{const p=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return p?.sub||null}catch(e){return null}}
-const db=window.qawafelDb || (window.qawafelDb=window.supabase.createClient(U,K,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})); window.qawafelDb=db;
-let CURRENT_USER_ID=null;
+const db=window.supabase.createClient(U,K,{accessToken:async()=>qawafelAccessToken(),auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,skipAutoInitialize:true}});
 let editingCustomerInvoiceId=null;
 const FOCUS_PROGRAM_ID=new URLSearchParams(location.search).get('program')||'';let TX=[],BOOK=[],PAY=[],PROGS=[],FIN_TX_PROGRAMS=[];let COMPLETED_PENDING=[];
 const $=id=>document.getElementById(id),fmt=n=>new Intl.NumberFormat('ar-IQ',{maximumFractionDigits:2}).format(Number(n||0));
@@ -537,92 +531,9 @@ $('inDate').value=dateToday();$('outDate').value=dateToday();$('reportFrom').val
 $('outAmount')?.addEventListener('input',()=>{if($('outSharedToggle')?.checked)renderSharedAllocationEditor()});
 $('outCurrency')?.addEventListener('change',()=>{if($('outSharedToggle')?.checked)renderSharedAllocationEditor()});
 $('outSharedPrograms')?.addEventListener('change',renderSharedAllocationEditor);
-async function login(){
- const email=$('email').value.trim(), password=$('password').value;
- if(!email||!password){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">أدخل البريد الإلكتروني وكلمة المرور.</div>';return}
- $('loginMsg').innerHTML='<div class="msg">جاري التحقق من بيانات الدخول...</div>';
- try{
-  const r=await db.auth.signInWithPassword({email,password});
-  if(r.error){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+String(r.error.message||'تعذر تسجيل الدخول.')+'</div>';return}
-  const uid=r.data?.user?.id||r.data?.session?.user?.id||null;
-  if(!uid){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">تمت محاولة الدخول لكن لم تُنشأ جلسة. أعد المحاولة.</div>';return}
-  CURRENT_USER_ID=uid;
-  $('login').classList.add('hidden');
-  $('app').classList.remove('hidden');
-  $('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';
-  try{await loadAll()}catch(e){
-   console.error('finance loadAll',e);
-   $('dashboardText').innerHTML='<span style="color:#a33">تم تسجيل الدخول، لكن تعذر جلب البيانات المالية: '+String(e?.message||e)+'</span>';
-  }
- }catch(e){
-  console.error('finance login',e);
-  $('loginMsg').innerHTML='<div class="msg" style="color:#a33">تعذر تسجيل الدخول: '+String(e?.message||e)+'</div>';
- }
-}
-async function signOut(){await db.auth.signOut();location.href='./internal.html'}
-async function restoreFinanceSession(){
-  if(window.qawafelFinanceSession?.user) return window.qawafelFinanceSession;
-
-  // استعادة جلسة المدير أولاً من الجسر الذي تنشئه لوحة الإدارة.
-  // هذا يتجنب انتظار getSession إذا كان قفل Supabase Auth مشغولاً أثناء انتقال الصفحة.
-  const bridgeKeys=['qawafel_auth_handoff','qawafel_auth_bridge'];
-  for(const bridgeKey of bridgeKeys){
-    try{
-      const store=bridgeKey==='qawafel_auth_handoff'?sessionStorage:localStorage;
-      const raw=store.getItem(bridgeKey);
-      const s=JSON.parse(raw||'null');
-      if(s?.access_token&&s?.refresh_token){
-        const r=await db.auth.setSession({access_token:s.access_token,refresh_token:s.refresh_token});
-        if(r.data?.session) return r.data.session;
-      }
-    }catch(_e){}
-  }
-
-  // بعدها فقط نحاول قراءة الجلسة الحالية، مع مهلة حتى لا تبقى الصفحة معلقة.
-  try{
-    const current=await Promise.race([
-      db.auth.getSession(),
-      new Promise((_,reject)=>setTimeout(()=>reject(new Error('session-timeout')),2500))
-    ]);
-    if(current.data?.session) return current.data.session;
-  }catch(_e){}
-
-  // جسر إضافي لنفس التبويب عند الحاجة.
-  try{
-    const marker='qawafel_finance_handoff:';
-    if(typeof window.name==='string'&&window.name.startsWith(marker)){
-      const s=JSON.parse(atob(window.name.slice(marker.length)));
-      window.name='';
-      if(s?.access_token&&s?.refresh_token){
-        const r=await db.auth.setSession({access_token:s.access_token,refresh_token:s.refresh_token});
-        if(r.data?.session) return r.data.session;
-      }
-    }
-  }catch(_e){}
-
-  // محاولة أخيرة من أي مخزن جلسة Supabase موجود في المتصفح.
-  try{
-    for(let i=0;i<localStorage.length;i++){
-      const k=localStorage.key(i)||'';
-      if(!k.endsWith('-auth-token')) continue;
-      const s=JSON.parse(localStorage.getItem(k)||'null');
-      if(s?.access_token&&s?.refresh_token){
-        const r=await db.auth.setSession({access_token:s.access_token,refresh_token:s.refresh_token});
-        if(r.data?.session) return r.data.session;
-      }
-    }
-  }catch(_e){}
-  return null;
-}
-async function init(){
-  const session=await restoreFinanceSession();
-  CURRENT_USER_ID=session?.user?.id||null;
- if(!CURRENT_USER_ID){location.replace('./internal.html?return=financial');return}
- $('login').classList.add('hidden');$('app').classList.remove('hidden');
- $('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';
- try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+String(e?.message||e)+'</span>'}
-}
-db.auth.onAuthStateChange((_event,session)=>{CURRENT_USER_ID=session?.user?.id||null;});
+async function login(){const r=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(r.error){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+r.error.message+'</div>';return}if(!r.data?.user){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">تعذر إنشاء جلسة الدخول.</div>';return}init();}
+async function signOut(){const t=qawafelAccessToken();if(t){try{await fetch(U+'/auth/v1/logout',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+t}})}catch(e){}}try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i)||'';if(key.endsWith('-auth-token'))localStorage.removeItem(key)}}catch(e){}location.href='./internal.html'}
+async function init(){const uid=qawafelUserId();if(!uid){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+esc(e?.message||e)+'</span>'}}
 async function loadAll(){
  const withTimeout=(p,ms=15000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة جلب البيانات بعد 15 ثانية')),ms))]);
  const [tx,b,p,pgr,ftp]=await Promise.all([
@@ -997,8 +908,8 @@ function renderSharedExpenses(){
  }).join('')||'<tr><td colspan="6" style="text-align:center;padding:20px">لا توجد مصروفات مشتركة مسجلة حاليًا.</td></tr>';
 }
 function renderExpenses(O=officialTx()){fillExpenseProgramFilter();renderExpenseTable();}
-function actualExpenseIqd(O=officialTx()){const manual=TX.filter(x=>x.direction==='out').reduce((s,x)=>s+financeAmountIqd(x),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+walletWithdrawalIqd(x),0);return manual+wallet}\nfunction supplierWalletBalanceIqd(){return WALLET_TX.reduce((s,x)=>{const v=x.transaction_type==='deposit'?1:-1;return s+v*walletWithdrawalIqd({...x,amount_iqd:x.amount_iqd})},0)}
-function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=fmt(actualExpenseIqd(O))+' د.ع';$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=TX.length+WALLET_TX.length;const supplierBalance=supplierWalletBalanceIqd();$('supplierBalanceTotal').textContent=fmt(supplierBalance)+' د.ع';$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الصرف الفعلي معروض بالدينار العراقي: جميع المصروفات الخارجة + السحب من خزائن الموردين بعد احتساب قيمة التحويل المسجلة.</span><br><b>رصيدنا عند الموردين:</b> <span class="in">'+fmt(supplierBalance)+' د.ع</span> <span class="muted">(إجمالي الإيداعات لدى الموردين ناقص المسحوبات، محسوبة بالدينار العراقي)</span>';renderRecent(O);renderIncome();renderBookings();renderLedger(O);renderExpenses(O);renderSharedExpenses();renderTripFocus()}
+function actualExpenseIqd(O=officialTx()){const manual=TX.filter(x=>x.direction==='out').reduce((s,x)=>s+financeAmountIqd(x),0);const wallet=WALLET_TX.filter(x=>x.transaction_type==='withdrawal').reduce((s,x)=>s+walletWithdrawalIqd(x),0);return manual+wallet}
+function renderAll(){const O=officialTx(),insRows=O.filter(x=>x.direction==='in'),outRows=O.filter(x=>x.direction==='out'),allExpenseRows=expenseRows(O);const due=BOOK.reduce((s,b)=>s+Math.max(0,Number(b.total_amount||0)-PAY.filter(p=>p.booking_id===b.id).reduce((a,p)=>a+Number(p.amount||0),0)),0);$('inTotal').innerHTML=moneyByCurrency(insRows);$('outTotal').innerHTML=fmt(actualExpenseIqd(O))+' د.ع';$('netTotal').innerHTML=netByCurrency(insRows,outRows);$('dueTotal').textContent=fmt(due)+' د.ع';$('txCount').textContent=TX.length+WALLET_TX.length;$('dashboardText').innerHTML='<b>الأرصدة النقدية حسب العملة</b><br><span class="muted">الصرف الفعلي معروض بالدينار العراقي: جميع المصروفات الخارجة + السحب من خزائن الموردين بعد احتساب قيمة التحويل المسجلة.</span>';renderRecent(O);renderIncome();renderBookings();renderLedger(O);renderExpenses(O);renderSharedExpenses();renderTripFocus()}
 function renderIncome(){
  const rows=TX.filter(x=>x.direction==='in').sort((a,b)=>new Date(b.transaction_date)-new Date(a.transaction_date));
  $('inRows').innerHTML=rows.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td>'+esc(catLabel[x.category]||x.category||'وارد')+'</td><td>'+esc(x.description||'—')+'</td><td>'+esc(x.party_name||'—')+'</td><td class="in"><b>'+fmt(x.amount)+' '+esc(x.currency||'IQD')+'</b></td><td>'+esc(x._programNames||programNamesForTx(x)||programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="6">لا توجد حركات وارد مسجلة</td></tr>';
@@ -1035,7 +946,7 @@ async function addManual(direction){
   }
   if(!rate){alert('لا يوجد سعر صرف مسجل لهذا الرصيد عند المورد.');return}
   const amountIqd=Number((amount*rate).toFixed(2));
-  const userId=CURRENT_USER_ID;
+  const userId=qawafelUserId();
   const r=await db.from('supplier_wallet_transactions').insert({
     supplier_id:supplierId,transaction_type:'withdrawal',currency:cur,amount,
     exchange_rate_to_iqd:rate,amount_iqd:amountIqd,
@@ -1166,7 +1077,7 @@ async function createSupplierWalletWithdrawalForInvoice(invoice,supplierId){
  else {rateIqd=Number($('invoiceSupplierCostFxRate').value||0);if(invoiceCurrency!=='USD'&&currency==='USD'&&!rateIqd)return {error:{message:'أدخل سعر التحويل المطلوب.'}};amountIqd=amount*rateIqd}
  const fx=invoiceCurrency===currency?1:Number($('invoiceSupplierCostFxRate').value||0);
  if(invoiceCurrency!==currency&&!fx)return {error:{message:'أدخل سعر التحويل بين عملة الفاتورة وعملة المورد.'}};
- const userId=CURRENT_USER_ID;
+ const userId=qawafelUserId();
  const tx={supplier_id:supplierId,transaction_type:'withdrawal',currency,amount,amount_iqd:Number(amountIqd.toFixed(2)),transaction_date:invoice.issued_at||dateToday(),program_id:null,description:'خصم من رصيد المورد مقابل فاتورة '+invoice.invoice_number+' — '+invoice.service_description,source_currency:invoiceCurrency===currency?null:invoiceCurrency,source_amount:invoice.amount,fx_rate:invoiceCurrency===currency?null:fx,exchange_rate_to_iqd:rateIqd,created_by:userId||null};
  const ins=await db.from('supplier_wallet_transactions').insert(tx).select('id').single();
  if(ins.error)return ins;
@@ -1223,7 +1134,7 @@ async function saveNewCustomerInvoice(){
   const rate=currency==='USD'?Number($('invoiceUsdIqdRate').value||0):currency==='SAR'?410:1;
   if(currency==='USD'&&!rate)return alert('أدخل سعر الدولار مقابل الدينار.');
   const amountIqd=currency==='IQD'?amount:currency==='SAR'?amount*410:amount*rate;
-  const userId=CURRENT_USER_ID;
+  const userId=qawafelUserId();
   const invoicePayload={
    buyer_name:buyer,buyer_type:buyerType,service_description:desc,supplier_id:supplierId,
    supplier_wallet_tx_id:null,source_type:paymentStatus==='paid'?'customer_invoice':'manual_invoice',source_id:null,amount,currency,
@@ -1338,7 +1249,7 @@ async function registerCustomerInvoicePayment(id){
  const rate=cur==='SAR'?410:cur==='USD'?Number(prompt('سعر الدولار مقابل الدينار:','1600')||0):1;
  if((cur==='USD'||cur==='SAR')&&!rate)return alert('سعر الصرف مطلوب.');
  const amountIqd=cur==='IQD'?amount:cur==='SAR'?amount*410:amount*rate;
- const userId=CURRENT_USER_ID;
+ const userId=qawafelUserId();
  const ins=await db.from('customer_invoice_payments').insert({invoice_id:id,amount,currency:cur,amount_iqd:Number(amountIqd.toFixed(2)),payment_method:method,payment_date:new Date().toISOString(),reference,created_by:userId||null});
  if(ins.error)return alert('تعذر تسجيل الدفعة: '+ins.error.message);
  const newPaid=Number(x.paid_amount||0)+amount,newStatus=newPaid+0.000001>=Number(x.amount||0)?'paid':'partial';
