@@ -282,6 +282,10 @@ async function saveWalletTx(){
   const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
   const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const PAGE_TITLE='الإدارة المالية';
+  // Create the single browser Supabase client synchronously, before DOMContentLoaded.
+  // This prevents the finance script below from creating a second client/session store.
+  const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+  window.qawafelDb=db;
   function boot(){
     if(document.getElementById('qawafelGlobalAdminBar')) return document.getElementById('qawafelGlobalAdminBar');
     const bar=document.createElement('div'); bar.id='qawafelGlobalAdminBar';
@@ -302,8 +306,7 @@ async function saveWalletTx(){
   async function init(){
     if(!window.supabase) return;
     const bar=boot();
-    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-    window.qawafelDb=db;
+    const db=window.qawafelDb;
     const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
