@@ -168,7 +168,7 @@
     window.qawafelDb=db;
     const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
-    document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
+    document.getElementById('qgaLogout').onclick=async()=>{try{localStorage.removeItem('qawafel_auth_bridge');sessionStorage.removeItem('qawafel_auth_handoff')}catch(_e){} await db.auth.signOut();location.href='./internal.html';};
     const qad=document.getElementById('qawafelAdminDrawer'),qao=document.getElementById('qawafelAdminDrawerOverlay');
     document.querySelectorAll('#qawafelAdminDrawer .qad-link').forEach(a=>{if(a.dataset.page===location.pathname.split('/').pop())a.classList.add('active');a.addEventListener('click',()=>{qad.classList.remove('open');qao.classList.remove('show');});});
     document.querySelectorAll('#qawafelAdminDrawer .qad-section-btn').forEach(btn=>btn.addEventListener('click',()=>btn.closest('.qad-collapsible').classList.toggle('open')));
@@ -204,7 +204,11 @@
     async function load(session){
       if(!session?.user){bar.style.display='none';return;}
       try{
-        try{sessionStorage.setItem('qawafel_auth_handoff',JSON.stringify({access_token:session.access_token,refresh_token:session.refresh_token}));}catch(_e){}
+        try{
+          const bridge={access_token:session.access_token,refresh_token:session.refresh_token,updated_at:Date.now()};
+          sessionStorage.setItem('qawafel_auth_handoff',JSON.stringify(bridge));
+          localStorage.setItem('qawafel_auth_bridge',JSON.stringify(bridge));
+        }catch(_e){}
         const u=session.user;
         let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',u.id).maybeSingle();
         if(!s.error && s.data && s.data.active!==false){show(s.data.full_name||u.email||'موظف',s.data.role);return;}
