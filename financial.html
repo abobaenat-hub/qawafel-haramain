@@ -525,7 +525,7 @@ async function saveWalletTx(){
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 function qawafelAccessToken(){try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i)||'';if(!key.endsWith('-auth-token'))continue;const raw=localStorage.getItem(key);if(!raw)continue;const s=JSON.parse(raw);if(s?.access_token)return s.access_token}}catch(e){console.error('finance token read',e)}return null}
 function qawafelUserId(){const t=qawafelAccessToken();if(!t)return null;try{const p=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return p?.sub||null}catch(e){return null}}
-const db=window.qawafelDb || (window.qawafelDb=window.qawafelDb);
+const db=window.qawafelDb || (window.qawafelDb=window.supabase.createClient(U,K,{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}})); window.qawafelDb=db;
 let CURRENT_USER_ID=null;
 let editingCustomerInvoiceId=null;
 const FOCUS_PROGRAM_ID=new URLSearchParams(location.search).get('program')||'';let TX=[],BOOK=[],PAY=[],PROGS=[],FIN_TX_PROGRAMS=[];let COMPLETED_PENDING=[];
