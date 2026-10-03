@@ -204,6 +204,7 @@
     async function load(session){
       if(!session?.user){bar.style.display='none';return;}
       try{
+        try{sessionStorage.setItem('qawafel_auth_handoff',JSON.stringify({access_token:session.access_token,refresh_token:session.refresh_token}));}catch(_e){}
         const u=session.user;
         let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',u.id).maybeSingle();
         if(!s.error && s.data && s.data.active!==false){show(s.data.full_name||u.email||'موظف',s.data.role);return;}
