@@ -455,7 +455,7 @@ async function saveWalletTx(){
 </section>
 
 <section id="pilgrims" class="hidden">
-<div class="panel"><div class="sectionTitle"><h2>👤 سداد المعتمرين</h2><span class="muted">لا نعتبر الحجز مدفوعًا إلا إذا توجد عملية قبض فعلية</span></div>
+<div class="panel"><div class="sectionTitle"><h2>👤 سداد المعتمرين</h2><div><span class="muted">لا نعتبر الحجز مدفوعًا إلا إذا توجد عملية قبض فعلية</span> <button class="btn primary" onclick="printPilgrimPaymentReport()">🖨️ طباعة كشف الرحلة</button></div></div>
 <div class="grid3"><div class="field"><label>بحث</label><input id="pilgrimSearch" oninput="renderBookings()" placeholder="اسم المعتمر أو رقم الحجز"></div><div class="field"><label>الرحلة</label><select id="pilgrimProgramFilter" onchange="renderBookings()"><option value="">كل الرحلات</option></select></div><div class="field"><label>الحالة</label><select id="dueFilter" onchange="renderBookings()"><option value="">الكل</option><option value="due">عليه مبلغ</option><option value="paid">مسدد</option></select></div></div>
 <div class="table" style="margin-top:12px"><table><thead><tr><th>المعتمر/الحجز</th><th>الرحلة</th><th>قيمة الحجز</th><th>المقبوض فعليًا</th><th>المتبقي</th><th>إجراء</th></tr></thead><tbody id="bookingRows"></tbody></table></div></div>
 </section>
@@ -921,6 +921,19 @@ function renderRecent(O=officialTx()){
  $('recentRows').innerHTML=arr.map(x=>'<tr><td>'+fmtDate(x.transaction_date)+'</td><td>'+esc(x._movement)+'</td><td>'+esc(x.description||catLabel[x.category]||'حركة خزينة المورد')+'</td><td>'+fmt(x.amount)+' '+x.currency+'</td><td>'+esc(programName(x.program_id))+'</td></tr>').join('')||'<tr><td colspan="5">لا توجد حركات</td></tr>';
 }
 function bookingPaid(id){return PAY.filter(p=>p.booking_id===id).reduce((s,p)=>s+Number(p.amount||0),0)}
+function printPilgrimPaymentReport(){
+ const pf=$('pilgrimProgramFilter').value;
+ if(!pf){alert('اختر الرحلة أولًا لطباعة كشف سداد المعتمرين');return;}
+ const q=($('pilgrimSearch').value||'').trim().toLowerCase(),df=$('dueFilter').value;
+ let arr=BOOK.filter(b=>b.program_id===pf&&(!q||(b.full_name||'').toLowerCase().includes(q)||(b.booking_number||'').toLowerCase().includes(q)));
+ arr=arr.filter(b=>{const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(b.id));return !df||(df==='due'&&rem>0)||(df==='paid'&&rem===0)});
+ if(!arr.length){alert('لا توجد نتائج مطابقة');return;}
+ const rows=arr.map((b,i)=>{const total=Number(b.total_amount||0),paid=bookingPaid(b.id),rem=Math.max(0,total-paid);return '<tr><td>'+(i+1)+'</td><td>'+esc(b.full_name||'—')+'</td><td>'+esc(programName(b.program_id))+'</td><td>'+fmt(total)+'</td><td>'+fmt(paid)+'</td><td>'+fmt(rem)+'</td></tr>'}).join('');
+ const total=arr.reduce((s,b)=>s+Number(b.total_amount||0),0),paid=arr.reduce((s,b)=>s+bookingPaid(b.id),0);
+ const w=window.open('','_blank');if(!w){alert('اسمح بالنوافذ المنبثقة للطباعة');return;}
+ w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>كشف سداد المعتمرين</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Tahoma,Arial;color:#18384f;margin:0}h1{text-align:center;font-size:22px}p{text-align:center}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #9aa9b3;padding:8px;text-align:right}th{background:#edf3f7}tfoot{font-weight:bold;background:#edf3f7}.foot{margin-top:25px;display:flex;justify-content:space-between}</style></head><body><h1>قوافل الحرمين — كشف سداد المعتمرين</h1><p><b>الرحلة: '+esc(programName(pf))+'</b> | تاريخ الطباعة: '+esc(new Date().toLocaleDateString('ar-IQ'))+'</p><table><thead><tr><th>ت</th><th>اسم المعتمر</th><th>الرحلة</th><th>قيمة الحجز</th><th>المقبوض فعليًا</th><th>المتبقي</th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr><td colspan="3">الإجمالي ('+arr.length+' معتمر)</td><td>'+fmt(total)+'</td><td>'+fmt(paid)+'</td><td>'+fmt(Math.max(0,total-paid))+'</td></tr></tfoot></table><div class="foot"><span>إعداد: ____________</span><span>التوقيع: ____________</span></div></body></html>');
+ w.document.close();w.focus();setTimeout(()=>w.print(),350);
+}
 function renderBookings(){const q=($('pilgrimSearch').value||'').trim().toLowerCase(),pf=$('pilgrimProgramFilter').value,df=$('dueFilter').value;let arr=BOOK.filter(b=>(!q||(b.full_name||'').toLowerCase().includes(q)||(b.booking_number||'').toLowerCase().includes(q))&&(!pf||b.program_id===pf));arr=arr.filter(b=>{const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(b.id));return !df||(df==='due'&&rem>0)||(df==='paid'&&rem===0)});$('bookingRows').innerHTML=arr.map(b=>{const paid=bookingPaid(b.id),rem=Math.max(0,Number(b.total_amount||0)-paid);return '<tr><td><b>'+esc(b.full_name||'—')+'</b><br><span class="pill">'+esc(b.booking_number||'')+'</span></td><td>'+esc(programName(b.program_id))+'</td><td>'+fmt(b.total_amount)+'</td><td class="in">'+fmt(paid)+'</td><td class="'+(rem?'out':'in')+'">'+fmt(rem)+'</td><td><button class="btn primary" onclick="payBooking(\''+b.id+'\')">قبض دفعة</button></td></tr>'}).join('')||'<tr><td colspan="6">لا توجد نتائج</td></tr>'}
 async function payBooking(id){const b=BOOK.find(x=>x.id===id);if(!b)return;const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(id));const amount=prompt('المتبقي: '+fmt(rem)+'\nأدخل المبلغ المقبوض فعليًا:');if(amount===null)return;const n=Number(amount);if(!n||n<=0||n>rem){alert('المبلغ غير صحيح.');return}const r=await db.from('payments').insert({booking_id:id,amount:n,currency:'IQD',payment_method:'cash',payment_date:new Date().toISOString()});if(r.error){alert(r.error.message);return}await loadAll();alert('تم تسجيل القبض وإضافته لصندوق الوارد.')}
 async function addManual(direction){
