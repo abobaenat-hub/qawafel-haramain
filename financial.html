@@ -560,6 +560,8 @@ async function login(){
 }
 async function signOut(){await db.auth.signOut();location.href='./internal.html'}
 async function restoreFinanceSession(){
+  if(window.qawafelFinanceSession?.user) return window.qawafelFinanceSession;
+
   // استعادة جلسة المدير أولاً من الجسر الذي تنشئه لوحة الإدارة.
   // هذا يتجنب انتظار getSession إذا كان قفل Supabase Auth مشغولاً أثناء انتقال الصفحة.
   const bridgeKeys=['qawafel_auth_handoff','qawafel_auth_bridge'];
