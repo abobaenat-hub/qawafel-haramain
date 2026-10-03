@@ -306,7 +306,7 @@ async function saveWalletTx(){
   async function init(){
     if(!window.supabase) return;
     const bar=boot();
-    const db=window.qawafelDb; window.qawafelFinanceSession=session;
+    const db=window.qawafelDb;
     const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
@@ -316,6 +316,7 @@ async function saveWalletTx(){
     document.getElementById('qgaMenu').onclick=()=>{const d=document.getElementById('qawafelAdminDrawer'),o=document.getElementById('qawafelAdminDrawerOverlay'); if(d&&o){d.classList.toggle('open');o.classList.toggle('show');}};
     async function load(session){
       if(!session?.user){bar.style.display='none';return;}
+      window.qawafelFinanceSession=session;
       try{
         const u=session.user;
         let s=await db.from('staff_profiles').select('full_name,role,active').eq('user_id',u.id).maybeSingle();
