@@ -561,8 +561,15 @@ async function login(){
 async function signOut(){await db.auth.signOut();location.href='./internal.html'}
 async function restoreFinanceSession(){
  try{
-  const current=await db.auth.getSession();
-  if(current.data?.session) return current.data.session;
+  // انتظر تهيئة جلسة Supabase قبل الحكم بأن المستخدم غير مسجل.
+  // هذا يمنع ظهور شاشة الدخول لحظيًا عند الانتقال من لوحة الإدارة إلى المالية.
+  for(let i=0;i<15;i++){
+   try{
+    const current=await db.auth.getSession();
+    if(current.data?.session) return current.data.session;
+   }catch(_e){}
+   await new Promise(r=>setTimeout(r,200));
+  }
   // Same-tab handoff: survives even when browser storage is unavailable or stale.
   try{
    const marker='qawafel_finance_handoff:';
