@@ -206,7 +206,7 @@
     document.getElementById('qgaMenu').onclick=()=>{const d=document.getElementById('qawafelAdminDrawer'),o=document.getElementById('qawafelAdminDrawerOverlay'); if(d&&o){d.classList.toggle('open');o.classList.toggle('show');}};
     async function load(session){
       if(!session?.user){bar.style.display='none';return;}
-      if(new URLSearchParams(location.search).get('return')==='financial'){location.replace('./financial.html?v=134');return;}
+      if(new URLSearchParams(location.search).get('return')==='financial'){location.replace('./financial.html?v=135');return;}
       try{
         try{
           const bridge={access_token:session.access_token,refresh_token:session.refresh_token,updated_at:Date.now()};
@@ -371,7 +371,7 @@ async function signIn(){
    if(!r.data?.user)throw Error('تعذر إنشاء جلسة الدخول.');
    if(!await isAdmin()){await db.auth.signOut();throw Error('هذا الحساب غير مخول للدخول إلى الإدارة.')}
    if(await routeStaffPortal()) return;
-   if(new URLSearchParams(location.search).get('return')==='financial'){location.replace('./financial.html?v=134');return;}
+   if(new URLSearchParams(location.search).get('return')==='financial'){location.replace('./financial.html?v=135');return;}
    $('login').classList.add('hide');$('app').classList.remove('hide');await load(r.data?.session);
  }catch(e){
    const raw=String(e?.message||e||'');
