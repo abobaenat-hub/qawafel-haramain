@@ -520,7 +520,7 @@ async function saveWalletTx(){
 <div id="supplierStatementBody"></div>
 </div></div></main>
 </div>
-<div id="login" class="panel" style="display:none!important;max-width:420px;margin:80px auto"><h2>تسجيل الدخول</h2><input id="email" type="email" placeholder="البريد الإلكتروني" style="width:100%;padding:11px;margin:6px 0"><input id="password" type="password" placeholder="كلمة المرور" style="width:100%;padding:11px;margin:6px 0"><button class="btn primary" style="width:100%;margin-top:8px" onclick="login()">دخول</button><div id="loginMsg"></div></div>
+<div id="login" class="panel" style="max-width:420px;margin:80px auto"><h2>جاري فتح الإدارة المالية…</h2><div id="loginMsg" class="msg">يتم التحقق من جلسة المدير، انتظر لحظات.</div></div>
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 function qawafelAccessToken(){try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i)||'';if(!key.endsWith('-auth-token'))continue;const raw=localStorage.getItem(key);if(!raw)continue;const s=JSON.parse(raw);if(s?.access_token)return s.access_token}}catch(e){console.error('finance token read',e)}return null}
