@@ -563,6 +563,18 @@ async function restoreFinanceSession(){
  try{
   const current=await db.auth.getSession();
   if(current.data?.session) return current.data.session;
+  // Same-tab handoff: survives even when browser storage is unavailable or stale.
+  try{
+   const marker='qawafel_finance_handoff:';
+   if(typeof window.name==='string'&&window.name.startsWith(marker)){
+    const s=JSON.parse(atob(window.name.slice(marker.length)));
+    window.name='';
+    if(s?.access_token&&s?.refresh_token){
+     const r=await db.auth.setSession({access_token:s.access_token,refresh_token:s.refresh_token});
+     if(r.data?.session) return r.data.session;
+    }
+   }
+  }catch(_e){}
   const bridgeKeys=['qawafel_auth_bridge','qawafel_auth_handoff'];
   for(const bridgeKey of bridgeKeys){
    try{
