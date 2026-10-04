@@ -293,7 +293,74 @@ function openUpdate(id){current=all.find(x=>x.id===id);if(!current)return;$('mod
 function close(){current=null;$('modal').classList.add('hide')}
 async function update(status){if(!current)return;const patch={visa_status:status,visa_number:status==='issued'?($('visaNumber').value.trim()||null):null,visa_issued_at:status==='issued'?($('visaDate').value||new Date().toISOString().slice(0,10)):null};const {error}=await db.from('pilgrims').update(patch).eq('id',current.id);if(error){alert('تعذر حفظ الحالة: '+error.message);return;}close();await load()}
 async function uploadVisaPdf(id){current=all.find(x=>x.id===id);if(!current)return;const input=$('visaPdfInput');input.value='';input.onchange=async()=>{const file=input.files?.[0];if(!file)return;if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)){alert('يرجى اختيار ملف PDF فقط.');return;}const safePassport=String(current.passport_number||'NO-PASSPORT').replace(/[^A-Za-z0-9_-]/g,'');const path='visa-'+safePassport+'-'+Date.now()+'.pdf';try{const up=await db.storage.from('pilgrim-photos').upload(path,file,{upsert:false,contentType:'application/pdf'});if(up.error)throw up.error;const ur=await db.from('pilgrims').update({visa_document_path:path,visa_status:'issued',visa_issued_at:current.visa_issued_at||new Date().toISOString().slice(0,10)}).eq('id',current.id);if(ur.error)throw ur.error;alert('تم حفظ التأشيرة PDF وربطها بالمعتمر بنجاح ✅');await load();}catch(e){alert('تعذر حفظ ملف التأشيرة: '+(e?.message||e));}};input.click()}
-let visaBrandLibs=null;async function brandPdfInBrowser(path,pilgrimId,eventId){if(!path)return null;if(String(path).startsWith('visa-branded-'))return path;const s=await db.storage.from('pilgrim-photos').createSignedUrl(path,3600);if(s.error||!s.data?.signedUrl)throw s.error||new Error('تعذر إنشاء رابط ملف التأشيرة');const raw=await fetch(s.data.signedUrl,{cache:'no-store'});if(!raw.ok)throw new Error('تعذر تحميل ملف التأشيرة');const source=new Uint8Array(await raw.arrayBuffer());if(!visaBrandLibs){const [pl,fk,rs]=await Promise.all([import('https://esm.sh/pdf-lib@1.17.1'),import('https://esm.sh/@pdf-lib/fontkit@1.1.1'),import('https://esm.sh/arabic-persian-reshaper@1.0.1')]);visaBrandLibs={...pl,fontkit:fk.default,ArabicShaper:rs.ArabicShaper};}const doc=await visaBrandLibs.PDFDocument.load(source);doc.registerFontkit(visaBrandLibs.fontkit);const fr=await fetch('https://cdn.jsdelivr.net/gh/googlefonts/noto-fonts@main/hinted/ttf/NotoNaskhArabic/NotoNaskhArabic-Bold.ttf',{cache:'force-cache'});if(!fr.ok)throw new Error('تعذر تحميل الخط العربي');const font=await doc.embedFont(new Uint8Array(await fr.arrayBuffer()),{subset:true});const page=doc.getPages()[0];page.drawRectangle({x:214,y:352,width:170,height:27,color:visaBrandLibs.rgb(1,1,1)});page.drawLine({start:{x:33.74,y:379.44},end:{x:561.26,y:379.44},thickness:.45,color:visaBrandLibs.rgb(0x55/255,0x36/255,0x78/255)});page.drawLine({start:{x:33.74,y:351.32},end:{x:561.26,y:351.32},thickness:.45,color:visaBrandLibs.rgb(0x55/255,0x36/255,0x78/255)});const visual=[...visaBrandLibs.ArabicShaper.convertArabic('شركة قوافل الحرمين للحج والعمرة')].reverse().join('');const size=11.25,width=font.widthOfTextAtSize(visual,size);page.drawText(visual,{x:296.8-width/2,y:355.2,size,font,color:visaBrandLibs.rgb(0x37/255,0x12/255,0x60/255)});const branded=await doc.save();const newPath='visa-branded-'+(pilgrimId||'pdf')+'-'+Date.now()+'.pdf';const up=await db.storage.from('pilgrim-photos').upload(newPath,branded,{upsert:false,contentType:'application/pdf'});if(up.error)throw up.error;if(eventId)await db.from('visa_email_events').update({attachment_path:newPath}).eq('id',eventId);if(pilgrimId)await db.from('pilgrims').update({visa_document_path:newPath}).eq('id',pilgrimId);return newPath;}async function openBrandedVisa(path,pilgrimId,eventId){const finalPath=await brandPdfInBrowser(path,pilgrimId,eventId);const s=await db.storage.from('pilgrim-photos').createSignedUrl(finalPath||path,3600);if(s.error||!s.data?.signedUrl)throw s.error||new Error('تعذر إنشاء رابط التأشيرة');window.open(s.data.signedUrl,'_blank','noopener');return finalPath||path;}async function viewEmailPdf(path,eventId){if(!path)return alert('لا يوجد ملف PDF محفوظ.');try{const ev=emailEvents.find(x=>x.id===eventId);await openBrandedVisa(path,ev?.matched_pilgrim_id||null,eventId);if(eventId){await db.from('visa_email_events').update({viewed_at:new Date().toISOString()}).eq('id',eventId);if(ev)ev.viewed_at=new Date().toISOString();renderVisaEmailLog();}}catch(e){alert('تعذر فتح التأشيرة: '+(e?.message||e))}}async function viewVisaPdf(id){const x=all.find(v=>v.id===id);if(!x?.visa_document_path)return alert('لا يوجد ملف تأشيرة محفوظ.');try{await openBrandedVisa(x.visa_document_path,id,null);const viewedAt=new Date().toISOString();const mr=await db.from('visa_email_events').update({viewed_at:viewedAt}).eq('matched_pilgrim_id',id).is('viewed_at',null);if(!mr.error){emailEvents=emailEvents.map(ev=>ev.matched_pilgrim_id===id?{...ev,viewed_at:viewedAt}:ev);renderVisaEmailLog();}}catch(e){alert('تعذر فتح التأشيرة: '+(e?.message||e))}}
+let visaBrandLibs=null;
+async function brandPdfInBrowser(path,pilgrimId,eventId){
+ if(!path)return null;
+ if(String(path).startsWith('visa-branded-'))return path;
+ const s=await db.storage.from('pilgrim-photos').createSignedUrl(path,3600);
+ if(s.error||!s.data?.signedUrl)throw s.error||new Error('تعذر إنشاء رابط ملف التأشيرة');
+ const raw=await fetch(s.data.signedUrl,{cache:'no-store'});
+ if(!raw.ok)throw new Error('تعذر تحميل ملف التأشيرة');
+ const source=new Uint8Array(await raw.arrayBuffer());
+ if(!visaBrandLibs){
+   const [pl,fk]=await Promise.all([
+     import('https://esm.sh/pdf-lib@1.17.1'),
+     import('https://esm.sh/@pdf-lib/fontkit@1.1.1')
+   ]);
+   visaBrandLibs={...pl,fontkit:fk.default};
+ }
+ const doc=await visaBrandLibs.PDFDocument.load(source);
+ doc.registerFontkit(visaBrandLibs.fontkit);
+ const page=doc.getPages()[0];
+ const purple=visaBrandLibs.rgb(0x37/255,0x12/255,0x60/255);
+ const linePurple=visaBrandLibs.rgb(0x55/255,0x36/255,0x78/255);
+ // External Agent row: this template places it one row ABOVE the row we previously covered.
+ page.drawRectangle({x:214,y:380,width:170,height:27,color:visaBrandLibs.rgb(1,1,1)});
+ page.drawLine({start:{x:33.74,y:407.44},end:{x:561.26,y:407.44},thickness:.45,color:linePurple});
+ page.drawLine({start:{x:33.74,y:379.32},end:{x:561.26,y:379.32},thickness:.45,color:linePurple});
+ // Render Arabic through the browser canvas so RTL shaping/order is correct.
+ const canvas=document.createElement('canvas');
+ canvas.width=900;canvas.height=100;
+ const ctx=canvas.getContext('2d');
+ ctx.direction='rtl';ctx.textAlign='center';ctx.textBaseline='middle';
+ ctx.font='bold 54px "Noto Naskh Arabic", "Noto Sans Arabic", Arial';
+ ctx.fillStyle='#371260';
+ ctx.fillText('شركة قوافل الحرمين للحج والعمرة',450,50);
+ const png=await fetch(canvas.toDataURL('image/png')).then(r=>r.arrayBuffer());
+ const image=await doc.embedPng(png);
+ const scale=11.25/54;
+ page.drawImage(image,{x:296.8-(900*scale)/2,y:383.2,width:900*scale,height:100*scale});
+ const branded=await doc.save();
+ const newPath='visa-branded-'+(pilgrimId||'pdf')+'-'+Date.now()+'.pdf';
+ const up=await db.storage.from('pilgrim-photos').upload(newPath,branded,{upsert:false,contentType:'application/pdf'});
+ if(up.error)throw up.error;
+ if(eventId)await db.from('visa_email_events').update({attachment_path:newPath}).eq('id',eventId);
+ if(pilgrimId)await db.from('pilgrims').update({visa_document_path:newPath}).eq('id',pilgrimId);
+ return newPath;
+}
+async function openBrandedVisa(path,pilgrimId,eventId){
+ const finalPath=await brandPdfInBrowser(path,pilgrimId,eventId);
+ const s=await db.storage.from('pilgrim-photos').createSignedUrl(finalPath||path,3600);
+ if(s.error||!s.data?.signedUrl)throw s.error||new Error('تعذر إنشاء رابط التأشيرة');
+ window.open(s.data.signedUrl,'_blank','noopener');
+ return finalPath||path;
+}
+async function viewEmailPdf(path,eventId){
+ if(!path)return alert('لا يوجد ملف PDF محفوظ.');
+ try{
+   const ev=emailEvents.find(x=>x.id===eventId);
+   await openBrandedVisa(path,ev?.matched_pilgrim_id||null,eventId);
+   if(eventId){await db.from('visa_email_events').update({viewed_at:new Date().toISOString()}).eq('id',eventId);if(ev)ev.viewed_at=new Date().toISOString();renderVisaEmailLog();}
+ }catch(e){alert('تعذر فتح التأشيرة: '+(e?.message||e))}
+}
+async function viewVisaPdf(id){
+ const x=all.find(v=>v.id===id);if(!x?.visa_document_path)return alert('لا يوجد ملف تأشيرة محفوظ.');
+ try{
+   await openBrandedVisa(x.visa_document_path,id,null);
+   const viewedAt=new Date().toISOString();const mr=await db.from('visa_email_events').update({viewed_at:viewedAt}).eq('matched_pilgrim_id',id).is('viewed_at',null);
+   if(!mr.error){emailEvents=emailEvents.map(ev=>ev.matched_pilgrim_id===id?{...ev,viewed_at:viewedAt}:ev);renderVisaEmailLog();}
+ }catch(e){alert('تعذر فتح التأشيرة: '+(e?.message||e))}
+}
 $('search').addEventListener('input',()=>{renderTripVisas();renderArchive()});
 $('visaTripSelect').addEventListener('change',e=>{selectedTripId=e.target.value;renderTripVisas()});
 $('archiveTripSelect').addEventListener('change',e=>{archiveTripId=e.target.value;renderArchive()});
