@@ -257,7 +257,7 @@ function render(){
  renderTripOptions();
  renderArchiveOptions();
 }
-async async function applyVisaBranding(){
+async function applyVisaBranding(){
  try{
   const r=await fetch('https://ymjkzvdjpuuxkcgkmbtc.supabase.co/functions/v1/zoho-visa-mail?action=brand-current',{cache:'no-store'});
   if(r.ok){await load();await loadVisaEmailLog();}
