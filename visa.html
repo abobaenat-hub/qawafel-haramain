@@ -263,14 +263,22 @@ async function applyVisaBranding(){
   if(r.ok){await load();await loadVisaEmailLog();}
  }catch(e){console.warn('visa branding',e)}
 }
-function load(){
+async function load(){
  try{
-  const [pr,pg]=await Promise.all([
-   withTimeout(db.from('pilgrims').select('id,full_name,profile_code,passport_number,passport_first_name,visa_status,visa_number,visa_issued_at,visa_document_path,booking_id,bookings:booking_id(id,program_id,created_at,programs(title))').order('created_at',{ascending:false}).limit(5000),8000),
-   withTimeout(db.from('programs').select('id,title,status,departure_date,travel_type').order('departure_date',{ascending:false}).limit(500),8000)
+  const [pr,bk,pg]=await Promise.all([
+   withTimeout(db.from('pilgrims').select('id,full_name,profile_code,passport_number,passport_first_name,visa_status,visa_number,visa_issued_at,visa_document_path,booking_id,created_at').order('created_at',{ascending:false}).limit(5000),20000),
+   withTimeout(db.from('bookings').select('id,program_id,created_at').limit(5000),20000),
+   withTimeout(db.from('programs').select('id,title,status,departure_date,travel_type').order('departure_date',{ascending:false}).limit(500),20000)
   ]);
-  if(pr.error)throw pr.error;if(pg.error)throw pg.error;
-  all=pr.data||[];programsList=pg.data||[];
+  if(pr.error)throw pr.error;if(bk.error)throw bk.error;if(pg.error)throw pg.error;
+  const bookings=bk.data||[];
+  const bookingMap=new Map(bookings.map(b=>[b.id,b]));
+  const programMap=new Map((pg.data||[]).map(p=>[p.id,p]));
+  all=(pr.data||[]).map(p=>{
+    const b=bookingMap.get(p.booking_id)||null;
+    return {...p,bookings:b?{...b,programs:programMap.get(b.program_id)||null}:null};
+  });
+  programsList=pg.data||[];
   render();return all;
  }catch(e){
   all=[];programsList=[];render();
