@@ -75,9 +75,9 @@
 
 <section class="card add-agreement-panel">
 <div class="toolbar"><button class="btn gold" type="button" id="toggleAddAgreement">＋ إضافة اتفاقية جديدة</button></div>
-<div id="addAgreementBody" class="hide" style="margin-top:12px"><h3 style="margin:0 0 12px;color:var(--n)">2) إضافة اتفاقية جديدة</h3>
+<div id="addAgreementBody" class="hide" style="margin-top:12px"><input type="hidden" id="editAgreementId"><h3 id="agreementFormTitle" style="margin:0 0 12px;color:var(--n)">2) إضافة اتفاقية جديدة</h3>
 <div class="field" style="margin-bottom:10px"><label>الرحلات المرتبطة بالاتفاقية</label><div id="agreementProgramSelect" class="trip-checkboxes"><div class="notice">جاري تحميل الرحلات...</div></div><div class="notice" style="margin-top:6px">حدد الرحلة أو الرحلات المنشورة التي تنطبق عليها هذه الاتفاقية.</div></div><div class="grid"><div class="field"><label>نوع الاتفاقية</label><select id="kind"><option value="hotel">🏨 فندق</option><option value="air">✈️ طيران</option><option value="ground">🚌 بر</option></select></div><div class="field"><label>رقم الاتفاقية</label><input id="number" placeholder="رقم الاتفاقية"></div><div class="field hotelOnly"><label>المدينة</label><select id="city"><option value="madinah">المدينة المنورة</option><option value="makkah">مكة المكرمة</option></select></div><div class="field hotelOnly"><label>اسم الفندق</label><input id="hotel" placeholder="اسم الفندق"></div><div class="field hotelOnly"><label>تاريخ الدخول</label><input id="checkin" type="date"></div><div class="field hotelOnly"><label>تاريخ الخروج</label><input id="checkout" type="date"></div><div class="field hotelOnly"><label>عدد الأسرّة</label><input id="capacity" type="number" min="0" step="1" placeholder="مثلاً 6"></div><div class="field"><label>ملاحظات</label><input id="notes" placeholder="ملاحظات اختيارية"></div></div>
-<div class="toolbar" style="margin-top:11px"><button class="btn primary" id="add">+ إضافة الاتفاقية</button></div><div id="msg" class="msg hide"></div></div>
+<div class="toolbar" style="margin-top:11px"><button class="btn primary" id="add">+ إضافة الاتفاقية</button><button class="btn gray hide" type="button" id="cancelEditAgreement">إلغاء التعديل</button></div><div id="msg" class="msg hide"></div></div>
 </section>
 
 <section class="stats">
@@ -264,7 +264,7 @@ function renderGroupPilgrims(){
  const selectedAgreements=[mdAgreement,mkAgreement].filter(Boolean);
  const list=P.filter(p=>{
    const pid=bookingProgramId(p.booking_id);
-   if(!linkedProgramIds.includes(pid)||p.visa_transferred_at)return false;
+   if(!linkedProgramIds.includes(pid))return false;
    // إذا اختيرت اتفاقية واحدة: أخفِ المعتمر بعد ربطه بها.
    // إذا اختيرت اتفاقيتا المدينة ومكة: يبقى ظاهرًا حتى يكتمل الربط بالاثنتين.
    if(selectedAgreements.length){
@@ -276,7 +276,7 @@ function renderGroupPilgrims(){
  });
  box.innerHTML=list.map(p=>{
    const pid=bookingProgramId(p.booking_id),prog=PROGRAMS.find(x=>x.id===pid);
-   return '<label class="group-pilgrim-item"><input type="checkbox" value="'+p.id+'" data-program-id="'+esc(pid||'')+'" '+(selected.has(p.id)?'checked':'')+'><span class="gpi-text"><b>'+esc(p.full_name)+'</b><small>'+esc(p.passport_number||'—')+' · '+esc(p.profile_code||'—')+' · '+esc(prog?.title||'رحلة غير معروفة')+'</small></span></label>';
+   return '<label class="group-pilgrim-item"><input type="checkbox" value="'+p.id+'" data-program-id="'+esc(pid||'')+'" '+(selected.has(p.id)?'checked':'')+'><span class="gpi-text"><b>'+esc(p.full_name)+'</b><small>'+esc(p.passport_number||'—')+' · '+esc(p.profile_code||'—')+' · '+esc(prog?.title||'رحلة غير معروفة')+(p.visa_transferred_at?' · 🔵 مرحّل للفيزا':' · 🟡 غير مرحّل')+'</small></span></label>';
  }).join('')||'<div class="notice">لا يوجد معتمرون متاحون ضمن الرحلات المحددة.</div>';
  updateGroupSelectionInfo();
 }
@@ -363,25 +363,34 @@ async function saveGroupAssignments(){
  renderGroupPilgrims();
 }
 
+function resetAgreementForm(){
+ $('editAgreementId').value='';$('agreementFormTitle').textContent='2) إضافة اتفاقية جديدة';$('add').textContent='+ إضافة الاتفاقية';$('cancelEditAgreement').classList.add('hide');
+ ['number','hotel','checkin','checkout','capacity','notes'].forEach(id=>$(id).value='');document.querySelectorAll('#agreementProgramSelect input[type="checkbox"]').forEach(x=>x.checked=false);toggleHotelFields();
+}
+function editAgreement(id){
+ const a=A.find(x=>x.id===id);if(!a)return;
+ $('editAgreementId').value=id;$('agreementFormTitle').textContent='2) تعديل الاتفاقية';$('add').textContent='💾 حفظ تعديل الاتفاقية';$('cancelEditAgreement').classList.remove('hide');$('addAgreementBody').classList.remove('hide');
+ $('kind').value=a.agreement_kind||'hotel';$('number').value=a.agreement_number||'';$('city').value=a.city||'madinah';$('hotel').value=a.hotel_name||'';$('checkin').value=a.check_in||'';$('checkout').value=a.check_out||'';$('capacity').value=a.capacity??'';$('notes').value=a.notes||'';
+ const links=new Set(AGP.filter(x=>x.agreement_id===id).map(x=>x.program_id));document.querySelectorAll('#agreementProgramSelect input[type="checkbox"]').forEach(x=>x.checked=links.has(x.value));toggleHotelFields();$('addAgreementBody').scrollIntoView({behavior:'smooth',block:'start'});
+}
 async function addAgreement(){
- const kind=$('kind').value,num=$('number').value.trim(),programIds=selectedProgramsForAgreement();
- if(!num){toast('أدخل رقم الاتفاقية.',false);return;}
- if(!programIds.length){toast('اختر رحلة منشورة واحدة على الأقل للاتفاقية.',false);return;}
- const invalid=programIds.map(id=>PROGRAMS.find(p=>p.id===id)).find(p=>!p||p.status!=='published');
- if(invalid){toast('يمكن ربط الاتفاقية بالرحلات المنشورة فقط.',false);return;}
+ const editId=$('editAgreementId').value||null,kind=$('kind').value,num=$('number').value.trim(),programIds=selectedProgramsForAgreement();
+ if(!num){toast('أدخل رقم الاتفاقية.',false);return;}if(!programIds.length){toast('اختر رحلة منشورة واحدة على الأقل للاتفاقية.',false);return;}
+ const invalid=programIds.map(id=>PROGRAMS.find(p=>p.id===id)).find(p=>!p||p.status!=='published');if(invalid){toast('يمكن ربط الاتفاقية بالرحلات المنشورة فقط.',false);return;}
  const payload={agreement_number:num,agreement_kind:kind,city:kind==='hotel'?$('city').value:null,hotel_name:kind==='hotel'?($('hotel').value.trim()||null):null,check_in:kind==='hotel'?($('checkin').value||null):null,check_out:kind==='hotel'?($('checkout').value||null):null,capacity:kind==='hotel'?Number($('capacity').value||0):null,notes:$('notes').value.trim()||null};
- if(kind==='hotel' && !payload.capacity){toast('أدخل عدد الأسرة للاتفاقية الفندقية.',false);return;}
- const r=await db.from('travel_agreements').insert(payload).select().single();
- if(r.error){toast(r.error.message,false);return;}
- const links=programIds.map(program_id=>({agreement_id:r.data.id,program_id}));
- const lr=await db.from('travel_agreement_programs').insert(links);
- if(lr.error){
-   await db.from('travel_agreements').delete().eq('id',r.data.id);
-   toast('تعذر حفظ ربط الرحلات: '+lr.error.message,false);return;
+ if(kind==='hotel'&&!payload.capacity){toast('أدخل عدد الأسرة للاتفاقية الفندقية.',false);return;}
+ if(editId){
+  const old=A.find(x=>x.id===editId),used=globalAssigned(editId).length;if(old?.agreement_kind==='hotel'&&payload.capacity<used){toast('لا يمكن جعل السعة أقل من عدد الأسرّة المستخدمة حاليًا ('+used+').',false);return;}
+  const r=await db.from('travel_agreements').update({...payload,updated_at:new Date().toISOString()}).eq('id',editId);if(r.error){toast('تعذر تعديل الاتفاقية: '+r.error.message,false);return;}
+  const dr=await db.from('travel_agreement_programs').delete().eq('agreement_id',editId);if(dr.error){toast('تم تعديل الاتفاقية لكن تعذر تحديث الرحلات المرتبطة: '+dr.error.message,false);return;}
+  const lr=await db.from('travel_agreement_programs').insert(programIds.map(program_id=>({agreement_id:editId,program_id})));if(lr.error){toast('تم تعديل بيانات الاتفاقية لكن تعذر حفظ ربط الرحلات: '+lr.error.message,false);return;}
+  toast('تم تعديل الاتفاقية وحفظ التغييرات ✅');
+ }else{
+  const r=await db.from('travel_agreements').insert(payload).select().single();if(r.error){toast(r.error.message,false);return;}
+  const lr=await db.from('travel_agreement_programs').insert(programIds.map(program_id=>({agreement_id:r.data.id,program_id})));if(lr.error){await db.from('travel_agreements').delete().eq('id',r.data.id);toast('تعذر حفظ ربط الرحلات: '+lr.error.message,false);return;}
+  toast('تمت إضافة الاتفاقية وربطها بالرحلات المحددة ✅');
  }
- try{await db.rpc('log_audit_event',{p_action:'create_travel_agreement',p_entity_type:'travel_agreement',p_entity_id:r.data.id,p_entity_label:num,p_details:{...payload,program_ids:programIds},p_page:'agreements.html'});}catch(e){}
- $('number').value='';$('hotel').value='';$('checkin').value='';$('checkout').value='';$('capacity').value='';$('notes').value='';
- toast('تمت إضافة الاتفاقية وربطها بالرحلات المحددة ✅');await load();
+ resetAgreementForm();await load();
 }
 function toggleHotelFields(){document.querySelectorAll('.hotelOnly').forEach(x=>x.style.display=$('kind').value==='hotel'?'':'none');}
 async function toggleAgreement(id,wasActive){
@@ -469,7 +478,7 @@ async function start(){
  if(!await auth())return;
  $('agreementProgramSelect').addEventListener('change',selectPrograms);
  $('toggleAddAgreement').onclick=()=>{$('addAgreementBody').classList.toggle('hide');};$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('groupMadinahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupMakkahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupPilgrimSearch').oninput=renderGroupPilgrims;$('groupPilgrimList').addEventListener('change',updateGroupSelectionInfo);$('groupSelectAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=true);updateGroupSelectionInfo();};$('groupClearAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=false);updateGroupSelectionInfo();};$('saveGroupAssignments').onclick=saveGroupAssignments;
- $('showAgreementMessage').onclick=openAgreementMessage;
+ $('showAgreementMessage').onclick=openAgreementMessage;$('cancelEditAgreement').onclick=resetAgreementForm;
  $('closeAgreementMessage').onclick=closeAgreementMessage;
  $('copyAgreementMessage').onclick=copyAgreementMessage;
  $('add').onclick=addAgreement;$('refresh').onclick=load;$('logout').onclick=async()=>{await db.auth.signOut();location.href='./index.html'};
