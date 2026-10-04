@@ -294,10 +294,24 @@ function close(){current=null;$('modal').classList.add('hide')}
 async function update(status){if(!current)return;const patch={visa_status:status,visa_number:status==='issued'?($('visaNumber').value.trim()||null):null,visa_issued_at:status==='issued'?($('visaDate').value||new Date().toISOString().slice(0,10)):null};const {error}=await db.from('pilgrims').update(patch).eq('id',current.id);if(error){alert('تعذر حفظ الحالة: '+error.message);return;}close();await load()}
 async function uploadVisaPdf(id){current=all.find(x=>x.id===id);if(!current)return;const input=$('visaPdfInput');input.value='';input.onchange=async()=>{const file=input.files?.[0];if(!file)return;if(file.type!=='application/pdf'&&!/\.pdf$/i.test(file.name)){alert('يرجى اختيار ملف PDF فقط.');return;}const safePassport=String(current.passport_number||'NO-PASSPORT').replace(/[^A-Za-z0-9_-]/g,'');const path='visa-'+safePassport+'-'+Date.now()+'.pdf';try{const up=await db.storage.from('pilgrim-photos').upload(path,file,{upsert:false,contentType:'application/pdf'});if(up.error)throw up.error;const ur=await db.from('pilgrims').update({visa_document_path:path,visa_status:'issued',visa_issued_at:current.visa_issued_at||new Date().toISOString().slice(0,10)}).eq('id',current.id);if(ur.error)throw ur.error;alert('تم حفظ التأشيرة PDF وربطها بالمعتمر بنجاح ✅');await load();}catch(e){alert('تعذر حفظ ملف التأشيرة: '+(e?.message||e));}};input.click()}
 let visaBrandLibs=null;
+async function resolveVisaSourcePath(path,pilgrimId){
+ if(!path || !String(path).startsWith('visa-branded-') || !pilgrimId)return path;
+ const prefix='visa-email-'+pilgrimId+'-';
+ const r=await db.storage.from('pilgrim-photos').list('',{
+   limit:1000,
+   search:prefix,
+   sortBy:{column:'name',order:'desc'}
+ });
+ if(!r.error){
+   const names=(r.data||[]).filter(x=>x&&x.id&&String(x.name||'').startsWith(prefix)).map(x=>String(x.name));
+   if(names.length)return names[0];
+ }
+ return path;
+}
 async function brandPdfInBrowser(path,pilgrimId,eventId){
  if(!path)return null;
- if(String(path).startsWith('visa-branded-'))return path;
- const s=await db.storage.from('pilgrim-photos').createSignedUrl(path,3600);
+ const sourcePath=await resolveVisaSourcePath(path,pilgrimId);
+ const s=await db.storage.from('pilgrim-photos').createSignedUrl(sourcePath,3600);
  if(s.error||!s.data?.signedUrl)throw s.error||new Error('تعذر إنشاء رابط ملف التأشيرة');
  const raw=await fetch(s.data.signedUrl,{cache:'no-store'});
  if(!raw.ok)throw new Error('تعذر تحميل ملف التأشيرة');
