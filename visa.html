@@ -205,9 +205,15 @@ function visaRow(x,includeTrip=false){
  const pdf=x.visa_document_path?'<button class="btn green" data-view-pdf="'+esc(x.id)+'">📄 عرض PDF</button>':'<span class="badge b-pending">لم يتم ربط التأشيرة</span>';
  return '<tr><td><b>'+esc(x.full_name)+'</b></td><td>'+esc(x.profile_code||'—')+'</td><td>'+esc(x.passport_number||'—')+'</td>'+(includeTrip?'<td>'+esc(tripInfo(x).title)+'</td>':'')+'<td>'+badge(x.visa_status)+'</td><td>'+esc(x.visa_number||'—')+'</td><td>'+esc(x.visa_issued_at||'—')+'</td><td>'+pdf+'</td></tr>'
 }
+function isCurrentVisaProgram(p){
+ if(!p||p.status!=='published')return false;
+ if(!p.departure_date)return true;
+ const today=new Date().toISOString().slice(0,10);
+ return p.departure_date>=today;
+}
 function renderTripOptions(){
  const sel=$('visaTripSelect'); if(!sel)return;
- const currentPrograms=programsList.filter(p=>p.status!=='full');
+ const currentPrograms=programsList.filter(isCurrentVisaProgram);
  const requested=new URLSearchParams(location.search).get('program')||'';
  if(requested&&currentPrograms.some(x=>x.id===requested)) selectedTripId=requested;
  sel.innerHTML='<option value="">اختر الرحلة...</option>'+currentPrograms.map(p=>{
