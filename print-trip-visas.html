@@ -27,15 +27,9 @@ async function getBrandFont(){
 async function originalVisaPath(path,pilgrimId){
  const s=String(path||'');
  if(!s.startsWith('visa-branded-'))return s;
- const prefix='visa-email-'+pilgrimId+'-';
- const r=await db.storage.from('pilgrim-photos').list('',{limit:1000,search:prefix,sortBy:{column:'name',order:'desc'}});
- if(r.error)throw r.error;
- const names=(r.data||[]).filter(x=>x&&x.id&&String(x.name||'').startsWith(prefix)).map(x=>String(x.name));
- if(!names.length)throw new Error('لم يتم العثور على النسخة الأصلية للتأشيرة');
- const stamp=Number((s.match(/-(\\d+)\\.pdf$/)||[])[1]||0);
- const originals=names.map(n=>({n,t:Number((n.match(/-(\\d+)\\.pdf$/)||[])[1]||0)})).sort((a,b)=>b.t-a.t);
- const before=originals.find(x=>!stamp||x.t<=stamp);
- return (before||originals[0]).n;
+ // If an already-branded file exists, use it directly for printing.
+ // Do not fail the whole print page just because its original source cannot be listed.
+ return s;
 }
 async function brandVisaForPrint(sourceBytes){
  const doc=await PDFDocument.load(sourceBytes);doc.registerFontkit(fontkit);
@@ -57,6 +51,8 @@ async function getPrintablePdfData(p){
  const raw=await fetch(signed.data.signedUrl,{cache:'no-store'});
  if(!raw.ok)throw new Error('تعذر تحميل ملف التأشيرة');
  const bytes=new Uint8Array(await raw.arrayBuffer());
+ // Re-brand only original PDFs. Existing branded PDFs are already printable.
+ if(String(source).startsWith('visa-branded-')) return bytes;
  return await brandVisaForPrint(bytes);
 }
 async function auth(){
