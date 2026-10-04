@@ -258,7 +258,13 @@ function render(){
  renderTripOptions();
  renderArchiveOptions();
 }
-async function load(){
+async async function applyVisaBranding(){
+ try{
+  const r=await fetch('https://ymjkzvdjpuuxkcgkmbtc.supabase.co/functions/v1/zoho-visa-mail?action=brand-current',{cache:'no-store'});
+  if(r.ok){await load();await loadVisaEmailLog();}
+ }catch(e){console.warn('visa branding',e)}
+}
+function load(){
  try{
   const [pr,pg]=await Promise.all([
    withTimeout(db.from('pilgrims').select('id,full_name,profile_code,passport_number,passport_first_name,visa_status,visa_number,visa_issued_at,visa_document_path,booking_id,bookings:booking_id(id,program_id,created_at,programs(title))').order('created_at',{ascending:false}).limit(5000),8000),
@@ -295,7 +301,11 @@ $('closeModal').onclick=close;
 $('closeInquiry').onclick=()=>{$('inquiryModal').classList.add('hide');current=null};
 $('saveIssued').onclick=()=>update('issued');$('savePending').onclick=()=>update('pending');$('saveProcessing').onclick=()=>update('processing');$('saveRejected').onclick=()=>update('rejected');
 document.addEventListener('click',e=>{const t=e.target.closest('[data-view-email-pdf],[data-view-pdf],[data-inquiry],[data-update],[data-upload-pdf]');if(!t)return;if(t.dataset.viewEmailPdf)viewEmailPdf(t.dataset.viewEmailPdf,t.dataset.emailEventId);else if(t.dataset.viewPdf)viewVisaPdf(t.dataset.viewPdf);else if(t.dataset.inquiry)openInquiry(t.dataset.inquiry);else if(t.dataset.update)openUpdate(t.dataset.update);else if(t.dataset.uploadPdf)uploadVisaPdf(t.dataset.uploadPdf)});
-Promise.allSettled([markUnreadVisaEventsViewedOnOpen(),load(),loadVisaEmailLog(),zohoStatus()]).then(()=>{const id=new URLSearchParams(location.search).get('open');if(id)openUpdate(id)});
+Promise.allSettled([markUnreadVisaEventsViewedOnOpen(),load(),loadVisaEmailLog(),zohoStatus()]).then(async()=>{
+ await applyVisaBranding();
+ const id=new URLSearchParams(location.search).get('open');
+ if(id)openUpdate(id);
+});
 </script>
 <script id="qawafel-audit-v169">
 (function(){
