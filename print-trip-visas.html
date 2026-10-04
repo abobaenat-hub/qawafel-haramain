@@ -50,16 +50,14 @@ async function brandVisaForPrint(sourceBytes){
  page.drawText(visual,{x:296.8-width/2,y:355.2,size,font,color:purple});
  return await doc.save();
 }
-async function getPrintablePdfPath(p){
+async function getPrintablePdfData(p){
  const source=await originalVisaPath(p.visa_document_path,p.id);
  const signed=await db.storage.from('pilgrim-photos').createSignedUrl(source,3600);
  if(signed.error||!signed.data?.signedUrl)throw signed.error||new Error('تعذر إنشاء رابط PDF');
  const raw=await fetch(signed.data.signedUrl,{cache:'no-store'});
  if(!raw.ok)throw new Error('تعذر تحميل ملف التأشيرة');
  const bytes=new Uint8Array(await raw.arrayBuffer());
- const branded=await brandVisaForPrint(bytes);
- const blob=new Blob([branded],{type:'application/pdf'});
- return URL.createObjectURL(blob);
+ return await brandVisaForPrint(bytes);
 }
 async function auth(){
  const {data}=await db.auth.getSession(); if(!data.session){location.href='./internal.html';return false}
@@ -88,8 +86,8 @@ async function main(){
   wrap.innerHTML='<h3>'+esc(p.full_name||'—')+'</h3><small>الجواز: '+esc(p.passport_number||'—')+(p.visa_number?' — رقم التأشيرة: '+esc(p.visa_number):'')+'</small>';
   box.appendChild(wrap);
   try{
-   const printableUrl=await getPrintablePdfPath(p);
-   const pdf=await pdfjsLib.getDocument(printableUrl).promise;
+   const printableData=await getPrintablePdfData(p);
+   const pdf=await pdfjsLib.getDocument({data:printableData}).promise;
    for(let n=1;n<=pdf.numPages;n++){
     const pg=await pdf.getPage(n),vp=pg.getViewport({scale:1.55});
     const c=document.createElement('canvas');c.className='pdfpage';c.width=Math.ceil(vp.width);c.height=Math.ceil(vp.height);
