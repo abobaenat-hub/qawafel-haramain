@@ -314,22 +314,23 @@ async function brandPdfInBrowser(path,pilgrimId,eventId){
  const page=doc.getPages()[0];
  const purple=visaBrandLibs.rgb(0x37/255,0x12/255,0x60/255);
  const linePurple=visaBrandLibs.rgb(0x55/255,0x36/255,0x78/255);
- // External Agent row: this template places it one row ABOVE the row we previously covered.
- page.drawRectangle({x:214,y:380,width:170,height:27,color:visaBrandLibs.rgb(1,1,1)});
- page.drawLine({start:{x:33.74,y:407.44},end:{x:561.26,y:407.44},thickness:.45,color:linePurple});
- page.drawLine({start:{x:33.74,y:379.32},end:{x:561.26,y:379.32},thickness:.45,color:linePurple});
+ // External Agent row: replace ONLY the External Agent company name.
+ // The Operator row above it must remain untouched.
+ page.drawRectangle({x:214,y:352,width:170,height:27,color:visaBrandLibs.rgb(1,1,1)});
+ page.drawLine({start:{x:33.74,y:379.44},end:{x:561.26,y:379.44},thickness:.45,color:linePurple});
+ page.drawLine({start:{x:33.74,y:351.32},end:{x:561.26,y:351.32},thickness:.45,color:linePurple});
  // Render Arabic through the browser canvas so RTL shaping/order is correct.
  const canvas=document.createElement('canvas');
- canvas.width=900;canvas.height=100;
+ canvas.width=760;canvas.height=100;
  const ctx=canvas.getContext('2d');
  ctx.direction='rtl';ctx.textAlign='center';ctx.textBaseline='middle';
- ctx.font='bold 54px "Noto Naskh Arabic", "Noto Sans Arabic", Arial';
+ ctx.font='bold 50px "Noto Naskh Arabic", "Noto Sans Arabic", Arial';
  ctx.fillStyle='#371260';
- ctx.fillText('شركة قوافل الحرمين للحج والعمرة',450,50);
+ ctx.fillText('شركة قوافل الحرمين للحج والعمرة',380,50);
  const png=await fetch(canvas.toDataURL('image/png')).then(r=>r.arrayBuffer());
  const image=await doc.embedPng(png);
- const scale=11.25/54;
- page.drawImage(image,{x:296.8-(900*scale)/2,y:383.2,width:900*scale,height:100*scale});
+ const scale=11.25/50;
+ page.drawImage(image,{x:296.8-(760*scale)/2,y:355.2,width:760*scale,height:100*scale});
  const branded=await doc.save();
  const newPath='visa-branded-'+(pilgrimId||'pdf')+'-'+Date.now()+'.pdf';
  const up=await db.storage.from('pilgrim-photos').upload(newPath,branded,{upsert:false,contentType:'application/pdf'});
