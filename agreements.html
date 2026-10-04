@@ -144,10 +144,16 @@ async function load(){
  renderPilgrimLinker();
 }
 
+function isCurrentActiveProgram(p){
+ if(!p||p.status!=='published')return false;
+ if(!p.departure_date)return true;
+ const today=new Date().toISOString().slice(0,10);
+ return p.departure_date>=today;
+}
 function renderPrograms(){
  const box=$('agreementProgramSelect');
  const current=new Set(selectedProgramIds);
- const eligible=PROGRAMS.filter(p=>p.status==='published');
+ const eligible=PROGRAMS.filter(isCurrentActiveProgram);
  if(!eligible.length){
    box.innerHTML='<div class="notice">لا توجد رحلات منشورة متاحة.</div>';
    updateProgramInfo();
@@ -225,11 +231,22 @@ function agreementProgramsLabel(aid){
 
 function agreementRemainingLabel(a){const rem=remaining(a);return rem>0?`متبقي ${rem} من ${a.capacity||0} سرير`:'مكتملة — 0 متبقي';}
 function agreementsForProgram(city=null){
- return A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false&&(!city||a.city===city));
+ const activeProgramIds=new Set(
+   PROGRAMS.filter(isCurrentActiveProgram).map(p=>p.id)
+ );
+ const selectedIds=new Set(selectedProgramIds.filter(id=>activeProgramIds.has(id)));
+ return A.filter(a=>{
+   if(a.agreement_kind!=='hotel'||a.active===false|| (city&&a.city!==city))return false;
+   const linked=AGP.filter(x=>x.agreement_id===a.id).some(x=>selectedIds.has(x.program_id));
+   return linked;
+ });
 }
 function selectedAgreementProgramIds(){
  const ids=new Set();
- [$('groupMadinahAgreement')?.value,$('groupMakkahAgreement')?.value].filter(Boolean).forEach(aid=>AGP.filter(x=>x.agreement_id===aid).forEach(x=>ids.add(x.program_id)));
+ [$('groupMadinahAgreement')?.value,$('groupMakkahAgreement')?.value].filter(Boolean).forEach(aid=>AGP.filter(x=>x.agreement_id===aid).forEach(x=>{
+   const p=PROGRAMS.find(z=>z.id===x.program_id);
+   if(isCurrentActiveProgram(p))ids.add(x.program_id);
+ }));
  return [...ids];
 }
 function renderPilgrimLinker(){
