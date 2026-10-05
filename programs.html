@@ -532,12 +532,71 @@ $('zamzamStickersTrip')?.addEventListener('click',printTripZamzamStickers);
 $('baggageStickersTrip')?.addEventListener('click',printTripBaggageStickers);
 function baggageStickerData(p){return {flight:activeTrip?.flight_number||'',name:p?.full_name||'',phone:p?.phone||'',departureAirport:activeTrip?.departure_airport||'',arrivalAirport:activeTrip?.arrival_airport||''};}
 function baggageStickerHtml(d){
- const qr='https://api.qrserver.com/v1/create-qr-code/?size=260x260&margin=6&data='+encodeURIComponent('https://www.qawafialharamainiq.com/');
- return `<article class="baggage-sticker"><div class="bag-top"><img src="./logo.png" alt=""><div class="bag-brand">قوافل الحرمين<small>للحج والعمرة</small></div></div><div class="bag-flight"><span>رقم الرحلة</span><b>${esc(d.flight)}</b> ✈️</div><div class="bag-label">اسم المعتمر</div><div class="bag-field bag-name">${esc(d.name)}</div><div class="bag-label">رقم الهاتف</div><div class="bag-field">${esc(d.phone)}</div><div class="bag-air"><div><span>مطار المغادرة</span><b>🛫 ${esc(d.departureAirport)}</b></div><div><span>مطار الوصول</span><b>🛬 ${esc(d.arrivalAirport)}</b></div></div><div class="bag-scene"><div class="bag-kaaba">🕋</div><div class="bag-mosque">الحرم المكي • الحرم النبوي</div></div><div class="bag-contact"><div class="bag-qr"><img src="${qr}" alt=""><small>موقع الشركة</small></div><div class="bag-phones"><b>للتواصل والاستفسار</b><span>🇸🇦 +966 548 769 707</span><span>🇮🇶 +964 778 007 7122</span><span>🇮🇶 +964 781 479 9623</span><small>العراق - بغداد - العامرية</small></div></div><div class="bag-end">تقبل الله مناسككم</div></article>`;
+ return `<article class="baggage-sticker">
+   <div class="bag-brandbar"><img src="./logo.png" alt=""><div><b>قوافل الحرمين</b><small>للحج والعمرة</small></div></div>
+   <div class="bag-title">🏷️ بطاقة أمتعة</div>
+   <div class="bag-flight"><span>رقم الرحلة</span><b>${esc(d.flight||'—')}</b></div>
+   <div class="bag-label">اسم المعتمر</div>
+   <div class="bag-field bag-name">${esc(d.name||'—')}</div>
+   <div class="bag-label">رقم الهاتف</div>
+   <div class="bag-field">${esc(d.phone||'—')}</div>
+   <div class="bag-route">
+     <div><span>من</span><b>🛫 ${esc(d.departureAirport||'—')}</b></div>
+     <div class="route-arrow">✈</div>
+     <div><span>إلى</span><b>🛬 ${esc(d.arrivalAirport||'—')}</b></div>
+   </div>
+   <div class="bag-main">
+     <div class="bag-icon">🧳</div>
+     <b>قوافل الحرمين</b>
+     <span>للحج والعمرة</span>
+     <small>يرجى المحافظة على هذه البطاقة</small>
+   </div>
+   <div class="bag-fold">
+     <b>✂ منطقة الطي والتثبيت</b>
+     <span>تُلف حول مقبض الحقيبة ثم تُثبت</span>
+   </div>
+   <div class="bag-contact"><b>للتواصل والاستفسار</b><span>+966 548 769 707</span><span>+964 778 007 7122</span><span>+964 781 479 9623</span></div>
+   <div class="bag-end">تقبل الله مناسككم</div>
+ </article>`;
 }
 function baggageStickerPrintCSS(){return `
-*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;font-family:Tahoma,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}.baggage-page{width:297mm;height:210mm;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);page-break-after:always}.baggage-cell{height:210mm;display:flex;align-items:center;justify-content:center;border-left:.3mm dashed #777}.baggage-cell:first-child{border-left:0}.baggage-sticker{width:70mm;height:198mm;overflow:hidden;position:relative;border:.35mm solid #c79a3b;border-radius:4mm;background:linear-gradient(180deg,#fbfaf6 0%,#fff 64%,#072b49 64%,#072b49 100%);color:#072b49}.bag-top{height:29mm;padding:4mm;display:flex;align-items:center;gap:2mm;direction:rtl}.bag-top img{width:15mm;height:15mm;object-fit:contain;border:1px solid #c79a3b;border-radius:3mm;background:#fff}.bag-brand{font-weight:900;font-size:4.4mm}.bag-brand small{display:block;color:#b07c19;font-size:2.8mm}.bag-flight{margin:0 4mm 3mm;height:15mm;border-radius:3mm;background:#062f50;color:#fff;border:1px solid #c79a3b;display:flex;align-items:center;justify-content:center;gap:2mm;font-size:3mm}.bag-flight b{font-size:5mm;min-width:18mm;text-align:center;direction:ltr}.bag-label{font-size:2.7mm;font-weight:900;text-align:right;margin:2mm 5mm .8mm}.bag-field{margin:0 4mm;height:10mm;border:1px solid #d9e1e6;border-radius:2.5mm;background:#fff;display:flex;align-items:center;justify-content:center;font-size:3.4mm;font-weight:900;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;direction:rtl}.bag-name{font-size:3.7mm}.bag-air{margin:3mm 4mm;display:grid;grid-template-columns:1fr 1fr;gap:2mm;direction:rtl}.bag-air>div{height:17mm;border:1px solid #d6a947;border-radius:2.5mm;background:#fff;padding:2mm;text-align:center;overflow:hidden}.bag-air span{display:block;font-size:2.4mm;font-weight:900;margin-bottom:1.5mm}.bag-air b{display:block;font-size:2.55mm;line-height:1.25}.bag-scene{margin-top:2mm;height:35mm;background:linear-gradient(135deg,#e8c77a,#fff 48%,#d7e6ee);display:flex;align-items:center;justify-content:center;flex-direction:column;border-top:1px solid #c79a3b;border-bottom:1px solid #c79a3b}.bag-kaaba{font-size:19mm}.bag-mosque{font-size:2.5mm;font-weight:900;margin-top:1mm}.bag-contact{height:35mm;padding:3mm;display:flex;gap:2mm;direction:rtl;color:#fff}.bag-qr{width:22mm;flex:0 0 22mm;background:#fff;border-radius:2mm;padding:1mm;text-align:center;color:#072b49}.bag-qr img{width:19mm;height:19mm;display:block}.bag-qr small{font-size:1.8mm;font-weight:900}.bag-phones{flex:1;display:flex;flex-direction:column;gap:1mm;font-size:2.25mm;line-height:1.15;direction:ltr;text-align:left}.bag-phones b{direction:rtl;text-align:right;font-size:2.7mm}.bag-phones small{direction:rtl;text-align:right;font-size:2mm;color:#f0d487;margin-top:auto}.bag-end{position:absolute;bottom:0;left:0;right:0;height:10mm;color:#f1d487;text-align:center;font-size:3.3mm;font-weight:900;padding-top:2.5mm;border-top:1px solid #c79a3b}@page{size:A4 landscape;margin:0}@media print{html,body{width:297mm;height:210mm}.baggage-sticker{-webkit-print-color-adjust:exact;print-color-adjust:exact}}`;
-}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:#fff;font-family:Tahoma,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.baggage-page{width:297mm;height:210mm;margin:0 auto;display:grid;grid-template-columns:repeat(4,1fr);page-break-after:always}
+.baggage-cell{height:210mm;display:flex;align-items:center;justify-content:center;border-left:.25mm dashed #b7b7b7}
+.baggage-cell:first-child{border-left:0}
+.baggage-sticker{width:68mm;height:198mm;overflow:hidden;position:relative;border:.35mm solid #c79a3b;border-radius:3mm;background:#fff;color:#082f50;display:flex;flex-direction:column}
+.bag-brandbar{height:23mm;padding:4mm 4mm 3mm;display:flex;align-items:center;gap:3mm;border-bottom:.35mm solid #c79a3b;direction:rtl;background:#fbfaf6}
+.bag-brandbar img{width:15mm;height:15mm;object-fit:contain;border:1px solid #c79a3b;border-radius:2.5mm;background:#fff}
+.bag-brandbar b{display:block;font-size:4.6mm;font-weight:900}
+.bag-brandbar small{display:block;color:#b17c1a;font-size:2.7mm;margin-top:1mm}
+.bag-title{margin:4mm 4mm 2mm;height:10mm;border-radius:2.5mm;background:#082f50;color:#fff;border:1px solid #c79a3b;display:flex;align-items:center;justify-content:center;font-size:4mm;font-weight:900}
+.bag-flight{margin:0 4mm 2mm;height:15mm;border:1px solid #c79a3b;border-radius:2.5mm;background:#f8f1dd;display:flex;align-items:center;justify-content:space-between;padding:0 3mm;direction:rtl}
+.bag-flight span{font-size:2.7mm;font-weight:900}
+.bag-flight b{font-size:5.2mm;direction:ltr}
+.bag-label{font-size:2.6mm;font-weight:900;margin:2mm 4mm .8mm;text-align:right}
+.bag-field{margin:0 4mm;height:11mm;border:1px solid #d7e0e5;border-radius:2.2mm;background:#fff;display:flex;align-items:center;justify-content:center;padding:0 2mm;font-size:3.2mm;font-weight:900;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;direction:rtl}
+.bag-name{font-size:3.7mm}
+.bag-route{margin:4mm 4mm 3mm;display:grid;grid-template-columns:1fr 8mm 1fr;gap:1.5mm;align-items:stretch;direction:rtl}
+.bag-route>div:not(.route-arrow){min-height:23mm;border:1px solid #d6a947;border-radius:2.5mm;background:#fff8e7;padding:2mm;text-align:center;display:flex;flex-direction:column;justify-content:center}
+.bag-route span{font-size:2.4mm;font-weight:900;color:#6c7074;margin-bottom:1.5mm}
+.bag-route b{font-size:2.55mm;line-height:1.35}
+.route-arrow{display:flex;align-items:center;justify-content:center;font-size:4.5mm;color:#b17c1a}
+.bag-main{margin-top:1mm;height:51mm;background:linear-gradient(135deg,#e9c977,#fff 52%,#e4edf1);border-top:1px solid #c79a3b;border-bottom:1px solid #c79a3b;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.bag-icon{font-size:18mm;line-height:1;margin-bottom:2mm}
+.bag-main b{font-size:4mm}
+.bag-main span{font-size:2.8mm;color:#b17c1a;font-weight:900;margin-top:1mm}
+.bag-main small{font-size:2.25mm;margin-top:5mm;color:#405463}
+.bag-fold{margin:3mm 4mm 0;height:24mm;border:1px dashed #9b7a36;border-radius:2.5mm;background:#f5f1e7;display:flex;align-items:center;justify-content:center;flex-direction:column;text-align:center}
+.bag-fold b{font-size:2.7mm;color:#80611d}
+.bag-fold span{font-size:2.25mm;color:#59666d;margin-top:2mm}
+.bag-contact{margin-top:auto;min-height:25mm;background:#082f50;color:#fff;padding:3mm 4mm;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.3mm;text-align:center;direction:ltr;font-size:2.45mm}
+.bag-contact b{direction:rtl;font-size:2.8mm;color:#f1d487}
+.bag-contact span{line-height:1.15}
+.bag-end{height:9mm;background:#082f50;color:#f1d487;text-align:center;font-size:3mm;font-weight:900;padding-top:2.3mm;border-top:1px solid #c79a3b}
+@page{size:A4 landscape;margin:0}
+@media print{html,body{width:297mm;height:210mm}.baggage-sticker{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+`;}
 async function printTripBaggageStickers(){if(!activeTrip?.id)return alert('افتح الرحلة أولاً.');if(activeTrip.travel_type!=='جو')return alert('ستيكر الحقيبة مخصص للرحلات الجوية.');const list=allProgramPilgrims||[];if(!list.length)return alert('لا يوجد معتمرون في هذه الرحلة.');if(!activeTrip.flight_number||!activeTrip.departure_airport||!activeTrip.arrival_airport){if(!confirm('بيانات الرحلة الجوية غير مكتملة. احفظها من تعديل الرحلة ثم أعد الطباعة. هل تريد المتابعة؟'))return;}const w=window.open('about:blank','_blank');if(!w)return alert('المتصفح منع نافذة الطباعة. اسمح بالنوافذ المنبثقة للمنصة.');w.document.open();w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>ستيكرات الحقائب</title><style>'+baggageStickerPrintCSS()+'</style></head><body><div id="bagPrint"></div></body></html>');w.document.close();const area=w.document.getElementById('bagPrint');const cards=list.map(x=>baggageStickerHtml(baggageStickerData(x)));for(let i=0;i<cards.length;i+=4){const page=w.document.createElement('section');page.className='baggage-page';for(const card of cards.slice(i,i+4)){const cell=w.document.createElement('div');cell.className='baggage-cell';cell.innerHTML=card;page.appendChild(cell);}while(page.children.length<4){const cell=w.document.createElement('div');cell.className='baggage-cell';page.appendChild(cell);}area.appendChild(page);}setTimeout(()=>{w.focus();w.print()},700);}
 async function zamzamStickerData(p){
  return {name:p.full_name||'—'};
