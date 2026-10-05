@@ -431,12 +431,13 @@ async function loadTeamLists(){
  }catch(e){console.warn('team lists',e)}
 }
 async function loadPrograms(){
- await loadTeamLists();
- const [{data,error},{data:bookings}] = await Promise.all([
+ try{
+  await loadTeamLists();
+  const [{data,error},{data:bookings}] = await Promise.all([
    db.from('programs').select('*').order('departure_date',{ascending:true}),
    db.from('bookings').select('id,program_id,status')
- ]);
- if(error)return msg($('listMsg'),error.message,'err');
+  ]);
+  if(error){msg($('listMsg'),error.message,'err');return false;}
  const B=bookings||[];
  window.__programs=data;
  function render(){
@@ -479,6 +480,12 @@ async function loadPrograms(){
  });
 }
 
+ return true;
+ }catch(e){
+  console.error('loadPrograms',e);
+  msg($('listMsg'),'تعذر تحديث قائمة الرحلات: '+(e?.message||e),'err');
+  return false;
+ }
 }
 $('tripPilgrimSearch')?.addEventListener('input',renderTripPilgrims);
 async function tripBadgeData(p){
