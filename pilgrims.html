@@ -443,7 +443,8 @@ $('name')?.addEventListener('blur',checkDuplicateName);
 function msg(id,text,error=false){const e=$(id);if(e){e.className='msg'+(error?' err':'');e.textContent=text||''}}
 let saveSuccessTimer=null;
 function showSaveSuccess(){const o=$('saveSuccessOverlay');if(!o)return;o.classList.add('show');clearTimeout(saveSuccessTimer);saveSuccessTimer=setTimeout(()=>o.classList.remove('show'),3500)}
-function money(n){return Number(n||0).toLocaleString('ar-IQ')+' د.ع'}
+function currentCurrency(){const pr=PR.find(x=>x.id===$('program')?.value);return pr?.currency||'IQD'}
+function money(n,currency=currentCurrency()){const code=currency||'IQD';const label=({IQD:'د.ع',USD:'دولار',SAR:'ريال'}[code]||code);return Number(n||0).toLocaleString('ar-IQ')+' '+label}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
 function badge(s){return '<span class="badge '+(['paid','صادرة','مدفوع'].includes(String(s||''))?'ok':'')+'">'+esc(s||'قيد الإجراء')+'</span>'}
 
@@ -480,7 +481,7 @@ async function loadPackagesForProgram(programId){
  const {data,error}=await db.from('program_packages').select('*').eq('program_id',programId).eq('active',true).order('created_at',{ascending:true});
  if(error){console.error(error);PK=[];$('packageWrap').classList.add('hide');return;}
  PK=data||[];$('packageWrap').classList.toggle('hide',!PK.length);
- $('package').innerHTML='<option value="">اختر الباقة...</option>'+PK.map(x=>'<option value="'+x.id+'">'+esc(x.name)+' — نقد: '+money(x.price)+' | قسط: '+money(x.installment_price??x.price)+' — متاح: '+Number(x.seats_available??0)+'</option>').join('');
+ $('package').innerHTML='<option value="">اختر الباقة...</option>'+PK.map(x=>'<option value="'+x.id+'">'+esc(x.name)+' — نقد: '+money(x.price,pr?.currency)+' | قسط: '+money(x.installment_price??x.price,pr?.currency)+' — متاح: '+Number(x.seats_available??0)+'</option>').join('');
 }
 function selectedPackage(){return PK.find(x=>x.id===$('package').value)||null;}
 function selectedBasePrice(){
@@ -494,8 +495,8 @@ function saleValues(){
 }
 function updateSaleBox(){
  const {base,discount,total}=saleValues();
- const pk=selectedPackage();$('basePriceBox').textContent=base?money(base):'اختر البرنامج';$('basePriceBox').title=pk?('الباقة: '+(pk.name||'')+' | المدينة: '+(pk.city_hotel||'—')+' | مكة: '+(pk.makkah_hotel||'—')):'';
- $('finalPrice').textContent=base?money(total):'—';
+ const pk=selectedPackage();$('basePriceBox').textContent=base?money(base,currentCurrency()):'اختر البرنامج';$('basePriceBox').title=pk?('الباقة: '+(pk.name||'')+' | المدينة: '+(pk.city_hotel||'—')+' | مكة: '+(pk.makkah_hotel||'—')):'';
+ $('finalPrice').textContent=base?money(total,currentCurrency()):'—';
  const hint=$('discountHint');
  if(discount>base&&base>0){hint.style.color='#b3261e';hint.textContent='❌ الخصم أكبر من سعر البرنامج. خفّض قيمة الخصم.';$('finalPriceBox').style.background='#fff0f0';$('finalPriceBox').style.borderColor='#efb4b0';}
  else {hint.style.color='#6b7780';hint.textContent=discount?'تم تطبيق خصم '+money(discount)+'. السعر النهائي هو المبلغ الذي سيُسجّل على المعتمر ويُحتسب به الربح.':'إذا لم يوجد خصم، اتركه صفرًا. السعر النهائي هو الذي تعتمد عليه المالية والربح.';$('finalPriceBox').style.background='#eaf7ef';$('finalPriceBox').style.borderColor='#b8dec9';}
@@ -504,11 +505,11 @@ function updateSaleBox(){
 function updateInstallmentSummary(total,balance,count){
  const box=$('installmentDetails');
  if(!box)return;
- $('installmentTotal').textContent=money(total);$('installmentPriceHint').textContent='السعر النهائي بعد الخصم: '+money(total);
- $('installmentRemaining').textContent=money(balance);
+ $('installmentTotal').textContent=money(total,currentCurrency());$('installmentPriceHint').textContent='السعر النهائي بعد الخصم: '+money(total,currentCurrency());
+ $('installmentRemaining').textContent=money(balance,currentCurrency());
  const monthly=count>0?Math.floor((balance/count)*100)/100:0;
- $('monthlyAmount').textContent=money(monthly);
- $('lastInstallment').textContent=money(balance-monthly*Math.max(count-1,0));
+ $('monthlyAmount').textContent=money(monthly,currentCurrency());
+ $('lastInstallment').textContent=money(balance-monthly*Math.max(count-1,0),currentCurrency());
 }
 $('paymentType').onchange=()=>{updateSaleBox();const i=$('paymentType').value==='installment';$('installmentDetails').classList.toggle('hide',!i);$('scheduleWrap').classList.toggle('hide',!i);$('cashDetails').classList.toggle('hide',i);if(i)buildSchedule();else updateCashPaymentBox()};
 $('paymentType').onchange();
@@ -552,7 +553,7 @@ function updateCashPaymentBox(){
  if(status==='paid'){inp.value=total;inp.readOnly=true;$('cashDueDate').value='';}
  else if(status==='unpaid'){inp.value=0;inp.readOnly=true;$('cashDueDate').value='';}
  else {inp.readOnly=false;if(Number(inp.value)>=total)inp.value=Math.max(total-1,0);}
- const rem=Math.max(total-Number(inp.value||0),0);$('cashRemaining').textContent=money(rem);
+ const rem=Math.max(total-Number(inp.value||0),0);$('cashRemaining').textContent=money(rem,currentCurrency());
  if(wrap&&!wrap.classList.contains('hide')){const trip=pr.departure_date||pr.departure||pr.start_date;const d=$('cashDueDate');if(trip)d.max=trip;}
 }
 $('cashPaymentStatus')?.addEventListener('change',updateCashPaymentBox);
@@ -1141,7 +1142,7 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
     if(dates.some(x=>!x))throw Error('حدد تاريخ أول قسط، وسيحسب النظام بقية المواعيد تلقائيًا كل 30 يومًا.');
     amounts.forEach((amount,i)=>installmentRows.push({installment_number:i+1,due_date:dates[i],amount,paid_amount:0,status:'pending',notes:null}));
   }
-  const payment=paid>0?{amount:paid,currency:'IQD',payment_method:'نقد',payment_date:new Date().toISOString().slice(0,10),notes:paymentType==='cash'?(cashStatus==='paid'?'دفع كامل':'دفعة مقدمة — المتبقي قبل السفر'):'دفعة أولى'}:null;
+  const payment=paid>0?{amount:paid,currency:pr.currency||'IQD',payment_method:'نقد',payment_date:new Date().toISOString().slice(0,10),notes:paymentType==='cash'?(cashStatus==='paid'?'دفع كامل':'دفعة مقدمة — المتبقي قبل السفر'):'دفعة أولى'}:null;
   const rpc=await db.rpc('create_pilgrim_booking_atomic',{p_booking:booking,p_pilgrim:payload,p_payment:payment,p_installments:installmentRows});
   if(rpc.error)throw rpc.error;
   showSaveSuccess();msg('formMsg','تم إنشاء ملف المعتمر والحجز بنجاح ✅');formDirty=false;e.target.reset();clearNameDuplicate();clearArchiveMatch();archiveMatch=null;archiveConfirmed=false;$('gender').value='';$('governorate').value='';$('currentResidence').value='';$('englishName').value='';$('pissueDate').value='';$('pissueCity').value='';$('pissueCountry').value='';$('initial').value=0;$('guarantorName').value='';$('guarantorPhone').value='';$('guarantorRelation').value='';$('foodSubscribed').value='no';$('foodAmount').value=0;$('foodMealsCount').value=0;$('foodMealType').value='all';$('foodPaymentStatus').value='paid';$('foodNotes').value='';updateFoodSubscription();$('discountAmount').value=0;$('discountReason').value='';$('basePriceBox').textContent='اختر البرنامج';$('finalPrice').textContent='—';$('paymentType').value='cash';$('cashPaymentStatus').value='paid';$('cashInitial').value=0;$('cashDueDate').value='';$('paymentType').onchange();$('schedule').innerHTML='';$('firstInstallmentDate').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('passportCamera').value='';$('passportUpload').value='';$('guardianCamera').value='';$('guardianUpload').value='';$('birthDate').value='';updateMinor();$('photoCamera').value='';$('photoUpload').value='';$('photoPreviewWrap').classList.add('hide');$('photoPreview').classList.add('hide');$('photoPreview').removeAttribute('src');$('usePassportPhotoBtn').style.display='none';$('passportPhotoStatus').textContent='';passportPhotoFile=null;usePassportPhoto=false;editedPhotoFile=null;originalPassportFile=null;$('photoCropBtn').style.display='none';$('passportSmartCancelBtn')?.classList.add('hide');window.resetPassportEntryUI?.();validatePassportExpiry(false);await load();
