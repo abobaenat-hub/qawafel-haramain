@@ -499,7 +499,7 @@ function updateSaleBox(){
  $('finalPrice').textContent=base?money(total,currentCurrency()):'—';
  const hint=$('discountHint');
  if(discount>base&&base>0){hint.style.color='#b3261e';hint.textContent='❌ الخصم أكبر من سعر البرنامج. خفّض قيمة الخصم.';$('finalPriceBox').style.background='#fff0f0';$('finalPriceBox').style.borderColor='#efb4b0';}
- else {hint.style.color='#6b7780';hint.textContent=discount?'تم تطبيق خصم '+money(discount)+'. السعر النهائي هو المبلغ الذي سيُسجّل على المعتمر ويُحتسب به الربح.':'إذا لم يوجد خصم، اتركه صفرًا. السعر النهائي هو الذي تعتمد عليه المالية والربح.';$('finalPriceBox').style.background='#eaf7ef';$('finalPriceBox').style.borderColor='#b8dec9';}
+ else {hint.style.color='#6b7780';hint.textContent=discount?'تم تطبيق خصم '+money(discount,currentCurrency())+'. السعر النهائي هو المبلغ الذي سيُسجّل على المعتمر ويُحتسب به الربح.':'إذا لم يوجد خصم، اتركه صفرًا. السعر النهائي هو الذي تعتمد عليه المالية والربح.';$('finalPriceBox').style.background='#eaf7ef';$('finalPriceBox').style.borderColor='#b8dec9';}
  return total;
 }
 function updateInstallmentSummary(total,balance,count){
