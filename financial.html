@@ -369,7 +369,7 @@ async function saveWalletTx(){
 
 <div class="tabs"><div class="tab" onclick="showTab('suppliers',this)">🏢 الموردون والخزائن</div><div class="tab" onclick="showTab('installments',this);loadInstallmentCustomers()">💳 جماعة الأقساط</div><div class="tab" onclick="showTab('debts',this);loadDebtors()">📌 الذمم المستحقة</div></div><section id="installments" class="hidden">
 <div class="panel">
- <div class="sectionTitle"><h2>💳 إدارة الأقساط</h2><button class="btn primary" onclick="loadInstallmentCustomers()">🔄 تحديث</button></div>
+ <div class="sectionTitle"><h2>💳 إدارة الأقساط</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" type="button" onclick="printOverdueInstallmentCustomers()">🖨️ طباعة المتأخرين</button><button class="btn primary" onclick="loadInstallmentCustomers()">🔄 تحديث</button></div></div>
  <div class="grid3">
   <div class="field"><label>بحث عن المعتمر</label><input id="installmentSearch" placeholder="الاسم أو رقم الحجز أو الهاتف" oninput="renderInstallmentCustomers()"></div>
   <div class="field"><label>الحالة</label><select id="installmentFilter" onchange="renderInstallmentCustomers()"><option value="all">الكل</option><option value="remaining">عليهم متبقي</option><option value="paid">مسددون</option><option value="overdue">عليهم أقساط متأخرة</option></select></div>
@@ -1333,6 +1333,33 @@ function renderInstallmentCustomers(){
  $('installmentRows').innerHTML='<table><thead><tr><th>المعتمر</th><th>الحجز</th><th>إجمالي البرنامج</th><th>المدفوع</th><th>المتبقي</th><th>الأقساط</th><th>الحالة</th><th>إدارة</th></tr></thead><tbody>'+
  (filtered.map(x=>'<tr><td><b>'+esc(x.p?.full_name||x.b?.full_name||'—')+'</b><br><small>'+esc(x.p?.phone||'')+'</small></td><td>'+esc(x.b?.booking_number||'—')+'</td><td>'+fmt(x.total)+'</td><td>'+fmt(x.paid)+'</td><td><b style="color:'+(x.remaining>0?'#a33':'#176644')+'">'+fmt(x.remaining)+'</b></td><td>'+x.plans.length+'</td><td>'+(x.remaining<=0?'🟢 مسدد':x.overdue?'🔴 متأخر':'🟠 مستمر')+'</td><td><button class="btn primary" onclick="openFinanceInstallment(&quot;'+x.bookingId+'&quot;)">💳 إدارة الدفعات</button></td></tr>').join('')||'<tr><td colspan="8">لا توجد نتائج</td></tr>')+'</tbody></table>';
 }
+function printOverdueInstallmentCustomers(){
+ const today=new Date().toISOString().slice(0,10);
+ const q=String($('installmentSearch')?.value||'').trim().toLowerCase();
+ const overdue=(INSTALLMENT_CUSTOMERS||[]).map(x=>{
+  const plans=(x.plans||[]).filter(p=>{
+   const rem=Math.max(Number(p.amount||0)-Number(p.paid_amount||0),0);
+   return rem>0&&p.due_date&&p.due_date<today;
+  });
+  return {...x,overduePlans:plans,overdueAmount:plans.reduce((s,p)=>s+Math.max(Number(p.amount||0)-Number(p.paid_amount||0),0),0)};
+ }).filter(x=>x.overduePlans.length>0)
+  .filter(x=>!q||[x.p?.full_name,x.b?.full_name,x.p?.phone,x.b?.booking_number].join(' ').toLowerCase().includes(q))
+  .sort((a,b)=>b.overdueAmount-a.overdueAmount);
+ if(!overdue.length)return alert('لا توجد أقساط متأخرة للطباعة حسب البيانات الحالية.');
+ const total=overdue.reduce((s,x)=>s+x.overdueAmount,0);
+ const rows=overdue.map((x,i)=>{
+  const name=x.p?.full_name||x.b?.full_name||'—';
+  const phone=x.p?.phone||'—';
+  const booking=x.b?.booking_number||'—';
+  const dates=x.overduePlans.map(p=>'القسط '+esc(p.installment_number||'—')+' ('+esc(p.due_date||'—')+'): '+fmt(Math.max(Number(p.amount||0)-Number(p.paid_amount||0),0))).join('<br>');
+  return '<tr><td>'+(i+1)+'</td><td><b>'+esc(name)+'</b></td><td>'+esc(phone)+'</td><td>'+esc(booking)+'</td><td>'+esc(programName(x.b?.program_id))+'</td><td>'+dates+'</td><td class="amount">'+fmt(x.overdueAmount)+'</td></tr>';
+ }).join('');
+ const w=window.open('','_blank','width=1000,height=900');
+ if(!w)return alert('يرجى السماح بالنوافذ المنبثقة لطباعة القائمة.');
+ w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>قائمة الأقساط المتأخرة - قوافل الحرمين</title><style>body{font-family:Tahoma,Arial,sans-serif;color:#18364d;margin:0;padding:22px}.head{text-align:center;border-bottom:2px solid #18364d;padding-bottom:12px}.head h1{margin:0 0 6px;font-size:22px}.meta{display:flex;justify-content:space-between;gap:12px;margin:14px 0;font-size:12px}.summary{display:flex;gap:12px;margin:12px 0}.summary div{border:1px solid #dce3e7;border-radius:8px;padding:10px;flex:1}.summary b{display:block;font-size:18px;margin-top:5px;color:#a33}table{width:100%;border-collapse:collapse;margin-top:14px}th,td{border:1px solid #dce3e7;padding:8px;text-align:right;font-size:10px;vertical-align:top}th{background:#eef3f6;color:#18364d}.amount{font-weight:900;color:#a33;white-space:nowrap}.foot{text-align:center;margin-top:18px;font-size:10px;color:#718390}@page{size:A4 portrait;margin:12mm}@media print{body{padding:0}.no-print{display:none}}</style></head><body><div class="head"><h1>شركة قوافل الحرمين للحج والعمرة</h1><div>قائمة المعتمرين الذين عليهم أقساط متأخرة</div></div><div class="meta"><span>تاريخ الطباعة: '+esc(new Date().toLocaleDateString('ar-IQ'))+'</span><span>عدد المعتمرين: '+overdue.length+'</span></div><div class="summary"><div>عدد المعتمرين المتأخرين<b>'+overdue.length+'</b></div><div>إجمالي الأقساط المتأخرة<b>'+fmt(total)+'</b></div></div><table><thead><tr><th>#</th><th>اسم المعتمر</th><th>رقم الهاتف</th><th>رقم الحجز</th><th>البرنامج</th><th>تفاصيل الأقساط المتأخرة وتواريخها</th><th>إجمالي المتأخر</th></tr></thead><tbody>'+rows+'</tbody></table><div class="foot">هذه القائمة مستخرجة من بيانات الأقساط المسجلة في منصة قوافل الحرمين.</div><button class="no-print" onclick="window.print()" style="margin-top:16px;padding:10px 18px">طباعة</button><script>window.onload=function(){setTimeout(function(){window.print()},250)}<\\/script></body></html>');
+ w.document.close();
+}
+
 function printInstallmentStatement(x){
  const name=x.p?.full_name||x.b?.full_name||'المعتمر';
  const booking=x.b?.booking_number||'—';
