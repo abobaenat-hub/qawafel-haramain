@@ -373,7 +373,7 @@ function renderTripPilgrims(){
  }).join(''):'<div class="empty-pilgrims" style="grid-column:1/-1">لا يوجد معتمرون مطابقون للبحث في هذه الرحلة.</div>';
 }
 
-function openPilgrimFromTrip(id){window.location.href='./pilgrims.html?open='+encodeURIComponent(id)+'#profile'}
+function openPilgrimFromTrip(id){window.location.href='./pilgrims.html?open='+encodeURIComponent(id)+(activeTrip?.id?'&program='+encodeURIComponent(activeTrip.id):'')+'#profile'}
 async function openTripPilgrims(id){
  const p=window.__programs?.find(x=>x.id===id); if(!p)return;
  $('tripFullPanel')?.classList.add('hidden');$('tripPilgrimArea')?.classList.remove('hidden');
