@@ -49,9 +49,10 @@
 #qawafelDrawer .qd-arrow{color:#718390}.qd-searching .qd-section,.qd-searching .qd-links{display:none!important}
 #qawafelDrawer .qd-searching .qd-section.match,.qd-searching .qd-links.match{display:block!important}
 @media(max-width:600px){#qawafelDrawer{width:min(310px,88vw)}}
-</style><style id="qawafel-agreement-delete-v288">.agreement-delete-btn{background:#fff0f0!important;color:#a43b3b!important;border:1px solid #efcaca!important}.agreement-delete-btn:hover{background:#ffe4e4!important}</style><style id="qawafel-group-drag-select">#groupPilgrimList .group-pilgrim-item{touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}#groupPilgrimList .group-pilgrim-item input{pointer-events:none}</style>
+</style><style id="qawafel-agreement-delete-v288">.agreement-delete-btn{background:#fff0f0!important;color:#a43b3b!important;border:1px solid #efcaca!important}.agreement-delete-btn:hover{background:#ffe4e4!important}</style><style id="qawafel-live-selection-counter">#groupSelectionFloating{position:fixed;left:50%;bottom:calc(14px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:10000;display:flex;align-items:center;gap:12px;padding:11px 18px;background:#0b3556;color:#fff;border:2px solid #c99a32;border-radius:999px;box-shadow:0 6px 24px #092b4770;font:900 13px Tahoma;white-space:nowrap;pointer-events:none}#groupSelectionFloating strong{display:inline-grid;place-items:center;min-width:32px;height:32px;padding:0 8px;border-radius:50%;background:#c99a32;color:#fff;font-size:16px}#groupSelectionFloating small{font-size:11px;color:#f3dfb1}@media(min-width:900px){#groupSelectionFloating{bottom:20px}}</style><style id="qawafel-group-drag-select">#groupPilgrimList .group-pilgrim-item{touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer}#groupPilgrimList .group-pilgrim-item input{pointer-events:none}</style>
 </head>
 <body>
+<div id="groupSelectionFloating" aria-live="polite"><small>المعتمرون المحددون</small><strong id="groupSelectionFloatingCount">0</strong><small>معتمر</small></div>
 <header class="top"><div class="topin"><div class="brand"><img src="./logo.png" class="logo"><div><b>قوافل الحرمين</b><small>إدارة الاتفاقيات</small></div></div><div class="toolbar"><a href="./internal.html">⌂ لوحة الإدارة</a><a href="./nusuk.html">🛂 نسك</a><button id="logout">تسجيل الخروج</button></div></div></header>
 <div id="qawafelDrawerOverlay"></div>
 <aside id="qawafelDrawer">
@@ -319,6 +320,7 @@ function updateGroupSelectionInfo(){
  const md=$('groupMadinahAgreement')?.value,mk=$('groupMakkahAgreement')?.value;
  const labels=[]; if(md){const a=A.find(x=>x.id===md);if(a)labels.push('المدينة: '+a.agreement_number+' (متبقي '+remaining(a)+')');} if(mk){const a=A.find(x=>x.id===mk);if(a)labels.push('مكة: '+a.agreement_number+' (متبقي '+remaining(a)+')');}
  $('groupSelectionInfo').innerHTML='<b>المحدد: '+n+'</b>'+(labels.length?' | '+labels.join(' | '):'');
+ const floatingCount=$('groupSelectionFloatingCount');if(floatingCount)floatingCount.textContent=n;
  updateGroupAgreementInfoOnly();
 }
 function updateGroupAgreementInfoOnly(){
