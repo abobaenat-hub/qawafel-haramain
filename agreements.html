@@ -116,17 +116,24 @@ async function auth(){
  return true;
 }
 async function load(){
-  // تحميل بيانات الصفحة دفعة واحدة حتى لا تُرسم القوائم قبل اكتمال
-  // الرحلات والاتفاقيات وروابطها والمعتمرين.
-  const [ar,rr,sr,br,pr,agr]=await Promise.all([
+  // حمّل الرحلات أولاً حتى تظهر خياراتها فوراً، ولا تبقى الواجهة على رسالة الانتظار
+  // بسبب بطء أي استعلام آخر في بيانات الاتفاقيات.
+  const rr=await db.from('programs').select('id,title,departure_date,return_date,status,travel_type').order('departure_date',{ascending:false});
+  if(rr.error){
+    toast('تعذر تحميل الرحلات: '+rr.error.message,false);
+    $('groupProgramSelect').innerHTML='<div class="notice">تعذر تحميل الرحلات المنشورة. اضغط تحديث للمحاولة مجددًا.</div>';
+    return;
+  }
+  PROGRAMS=rr.data||[];
+  renderPilgrimLinker();
+  const [ar,sr,br,pr,agr]=await Promise.all([
     db.from('travel_agreements').select('*').order('created_at',{ascending:false}),
-    db.from('programs').select('id,title,departure_date,return_date,status,travel_type').order('departure_date',{ascending:false}),
     db.from('travel_agreement_assignments').select('*').order('slot_number'),
     db.from('bookings').select('id,program_id'),
     db.from('pilgrims').select('id,full_name,passport_number,profile_code,visa_status,visa_transferred_at,booking_id').order('created_at',{ascending:false}),
     db.from('travel_agreement_programs').select('agreement_id,program_id').order('created_at',{ascending:true})
   ]);
-  const errors=[ar,rr,sr,br,pr,agr].filter(x=>x.error);
+  const errors=[ar,sr,br,pr,agr].filter(x=>x.error);
   if(errors.length){
     const message=errors.map(x=>x.error.message).join(' | ');
     toast('تعذر تحميل بيانات إدارة الاتفاقيات: '+message,false);
@@ -135,7 +142,6 @@ async function load(){
     return;
   }
   A=ar.data||[];
-  PROGRAMS=rr.data||[];
   AS=sr.data||[];
   BOOKING_PROGRAMS=Object.fromEntries((br.data||[]).map(x=>[x.id,x.program_id]));
   P=pr.data||[];
