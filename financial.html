@@ -282,9 +282,6 @@ async function saveWalletTx(){
   const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
   const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const PAGE_TITLE='الإدارة المالية';
-  // عميل Supabase واحد مشترك بين شريط الإدارة وصفحة المالية.
-  const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-  window.qawafelDb=db;
   function boot(){
     if(document.getElementById('qawafelGlobalAdminBar')) return document.getElementById('qawafelGlobalAdminBar');
     const bar=document.createElement('div'); bar.id='qawafelGlobalAdminBar';
@@ -305,6 +302,7 @@ async function saveWalletTx(){
   async function init(){
     if(!window.supabase) return;
     const bar=boot();
+    const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
     const labels={super_admin:'مدير عام',manager:'مدير',booking_staff:'موظف الحجوزات والمعتمرين',finance:'موظف المالية',trips:'موظف الرحلات',visa:'موظف التأشيرات',archive:'موظف الأرشيف',agents:'موظف المتعهدين',supervisors:'إدارة المشرفين والسائقين',nusuk:'موظف نسك',supervisor:'مشرف رحلة'};
     const dash=document.getElementById('qgaDashboard'); if(PAGE_TITLE==='لوحة الإدارة') dash.style.display='none';
     document.getElementById('qgaLogout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
@@ -458,8 +456,8 @@ async function saveWalletTx(){
 
 <section id="pilgrims" class="hidden">
 <div class="panel"><div class="sectionTitle"><h2>👤 سداد المعتمرين</h2><div><span class="muted">لا نعتبر الحجز مدفوعًا إلا إذا توجد عملية قبض فعلية</span> <button class="btn primary" onclick="printPilgrimPaymentReport()">🖨️ طباعة كشف الرحلة</button></div></div>
- <div class="grid3"><div class="field"><label>بحث</label><input id="pilgrimSearch" oninput="renderBookings()" placeholder="اسم المعتمر أو رقم الحجز"></div><div class="field"><label>الرحلة</label><select id="pilgrimProgramFilter" onchange="renderBookings()"><option value="">كل الرحلات</option></select></div><div class="field"><label>الحالة</label><select id="dueFilter" onchange="renderBookings()"><option value="">الكل</option><option value="due">عليه مبلغ</option><option value="paid">مسدد</option></select></div></div>
- <div class="table" style="margin-top:12px"><table><thead><tr><th>المعتمر/الحجز</th><th>الرحلة</th><th>قيمة الحجز</th><th>المقبوض فعليًا</th><th>المتبقي</th><th>إجراء</th></tr></thead><tbody id="bookingRows"></tbody></table></div></div>
+<div class="grid3"><div class="field"><label>بحث</label><input id="pilgrimSearch" oninput="renderBookings()" placeholder="اسم المعتمر أو رقم الحجز"></div><div class="field"><label>الرحلة</label><select id="pilgrimProgramFilter" onchange="renderBookings()"><option value="">كل الرحلات</option></select></div><div class="field"><label>الحالة</label><select id="dueFilter" onchange="renderBookings()"><option value="">الكل</option><option value="due">عليه مبلغ</option><option value="paid">مسدد</option></select></div></div>
+<div class="table" style="margin-top:12px"><table><thead><tr><th>المعتمر/الحجز</th><th>الرحلة</th><th>قيمة الحجز</th><th>المقبوض فعليًا</th><th>المتبقي</th><th>إجراء</th></tr></thead><tbody id="bookingRows"></tbody></table></div></div>
 </section>
 
 <section id="settlement" class="hidden"><div class="panel"><div class="sectionTitle"><h2>⏳ الرحلات المكتملة — معلقة للتصفية</h2><span class="muted">لا تدخل السجل المالي الرسمي حتى تُصفّى</span></div><div id="settlementRows"></div></div></section>
@@ -521,9 +519,9 @@ async function saveWalletTx(){
 <div id="login" class="panel" style="max-width:420px;margin:80px auto"><h2>تسجيل الدخول</h2><input id="email" type="email" placeholder="البريد الإلكتروني" style="width:100%;padding:11px;margin:6px 0"><input id="password" type="password" placeholder="كلمة المرور" style="width:100%;padding:11px;margin:6px 0"><button class="btn primary" style="width:100%;margin-top:8px" onclick="login()">دخول</button><div id="loginMsg"></div></div>
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
-let financeUserId=null;
-function qawafelUserId(){return financeUserId}
-const db=window.qawafelDb;
+function qawafelAccessToken(){try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i)||'';if(!key.endsWith('-auth-token'))continue;const raw=localStorage.getItem(key);if(!raw)continue;const s=JSON.parse(raw);if(s?.access_token)return s.access_token}}catch(e){console.error('finance token read',e)}return null}
+function qawafelUserId(){const t=qawafelAccessToken();if(!t)return null;try{const p=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return p?.sub||null}catch(e){return null}}
+const db=window.supabase.createClient(U,K,{accessToken:async()=>qawafelAccessToken(),auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,skipAutoInitialize:true}});
 let editingCustomerInvoiceId=null;
 const FOCUS_PROGRAM_ID=new URLSearchParams(location.search).get('program')||'';let TX=[],BOOK=[],PAY=[],PROGS=[],FIN_TX_PROGRAMS=[];let COMPLETED_PENDING=[];
 const $=id=>document.getElementById(id),fmt=n=>new Intl.NumberFormat('ar-IQ',{maximumFractionDigits:2}).format(Number(n||0));
@@ -533,9 +531,9 @@ $('inDate').value=dateToday();$('outDate').value=dateToday();$('reportFrom').val
 $('outAmount')?.addEventListener('input',()=>{if($('outSharedToggle')?.checked)renderSharedAllocationEditor()});
 $('outCurrency')?.addEventListener('change',()=>{if($('outSharedToggle')?.checked)renderSharedAllocationEditor()});
 $('outSharedPrograms')?.addEventListener('change',renderSharedAllocationEditor);
-async function login(){const r=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(r.error){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+r.error.message+'</div>';return}if(!r.data?.user){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">تعذر إنشاء جلسة الدخول.</div>';return}financeUserId=r.data.user.id;await init();}
-async function signOut(){await db.auth.signOut();location.href='./internal.html'}
-async function init(sessionOverride){let session=sessionOverride;if(arguments.length===0){const {data,error}=await db.auth.getSession();if(error)console.error('finance getSession',error);session=data?.session||null}financeUserId=session?.user?.id||null;if(!financeUserId){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+esc(e?.message||e)+'</span>'}}
+async function login(){const r=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(r.error){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+r.error.message+'</div>';return}if(!r.data?.user){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">تعذر إنشاء جلسة الدخول.</div>';return}init();}
+async function signOut(){const t=qawafelAccessToken();if(t){try{await fetch(U+'/auth/v1/logout',{method:'POST',headers:{apikey:K,Authorization:'Bearer '+t}})}catch(e){}}try{for(let i=localStorage.length-1;i>=0;i--){const key=localStorage.key(i)||'';if(key.endsWith('-auth-token'))localStorage.removeItem(key)}}catch(e){}location.href='./internal.html'}
+async function init(){const uid=qawafelUserId();if(!uid){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+esc(e?.message||e)+'</span>'}}
 async function loadAll(){
  const withTimeout=(p,ms=15000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة جلب البيانات بعد 15 ثانية')),ms))]);
  const [tx,b,p,pgr,ftp]=await Promise.all([
@@ -936,7 +934,7 @@ function printPilgrimPaymentReport(){
  w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><title>كشف سداد المعتمرين</title><style>@page{size:A4 landscape;margin:12mm}body{font-family:Tahoma,Arial;color:#18384f;margin:0}h1{text-align:center;font-size:22px}p{text-align:center}table{width:100%;border-collapse:collapse;font-size:12px}th,td{border:1px solid #9aa9b3;padding:8px;text-align:right}th{background:#edf3f7}tfoot{font-weight:bold;background:#edf3f7}.foot{margin-top:25px;display:flex;justify-content:space-between}</style></head><body><h1>قوافل الحرمين — كشف سداد المعتمرين</h1><p><b>الرحلة: '+esc(programName(pf))+'</b> | تاريخ الطباعة: '+esc(new Date().toLocaleDateString('ar-IQ'))+'</p><table><thead><tr><th>ت</th><th>اسم المعتمر</th><th>الرحلة</th><th>قيمة الحجز</th><th>المقبوض فعليًا</th><th>المتبقي</th></tr></thead><tbody>'+rows+'</tbody><tfoot><tr><td colspan="3">الإجمالي ('+arr.length+' معتمر)</td><td>'+fmt(total)+'</td><td>'+fmt(paid)+'</td><td>'+fmt(Math.max(0,total-paid))+'</td></tr></tfoot></table><div class="foot"><span>إعداد: ____________</span><span>التوقيع: ____________</span></div></body></html>');
  w.document.close();w.focus();setTimeout(()=>w.print(),350);
 }
-function renderBookings(){const q=($('pilgrimSearch').value||'').trim().toLowerCase(),pf=$('pilgrimProgramFilter').value,df=$('dueFilter').value;let arr=BOOK.filter(b=>(!q||(b.full_name||'').toLowerCase().includes(q)||(b.booking_number||'').toLowerCase().includes(q))&&(!pf||b.program_id===pf));arr=arr.filter(b=>{const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(b.id));return !df||(df==='due'&&rem>0)||(df==='paid'&&rem===0)});$('bookingRows').innerHTML=arr.map(b=>{const paid=bookingPaid(b.id),rem=Math.max(0,Number(b.total_amount||0)-paid);return '<tr><td><b>'+esc(b.full_name||'—')+'</b><br><span class="pill">'+esc(b.booking_number||'')+'</span></td><td>'+esc(programName(b.program_id))+'</td><td>'+fmt(b.total_amount)+'</td><td class="in">'+fmt(paid)+'</td><td class="'+(rem?'out':'in')+'">'+fmt(rem)+'</td><td><button class="btn primary" onclick="payBooking(\\''+b.id+'\\')">قبض دفعة</button></td></tr>'}).join('')||'<tr><td colspan="6">لا توجد نتائج</td></tr>'}
+function renderBookings(){const q=($('pilgrimSearch').value||'').trim().toLowerCase(),pf=$('pilgrimProgramFilter').value,df=$('dueFilter').value;let arr=BOOK.filter(b=>(!q||(b.full_name||'').toLowerCase().includes(q)||(b.booking_number||'').toLowerCase().includes(q))&&(!pf||b.program_id===pf));arr=arr.filter(b=>{const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(b.id));return !df||(df==='due'&&rem>0)||(df==='paid'&&rem===0)});$('bookingRows').innerHTML=arr.map(b=>{const paid=bookingPaid(b.id),rem=Math.max(0,Number(b.total_amount||0)-paid);return '<tr><td><b>'+esc(b.full_name||'—')+'</b><br><span class="pill">'+esc(b.booking_number||'')+'</span></td><td>'+esc(programName(b.program_id))+'</td><td>'+fmt(b.total_amount)+'</td><td class="in">'+fmt(paid)+'</td><td class="'+(rem?'out':'in')+'">'+fmt(rem)+'</td><td><button class="btn primary" onclick="payBooking(\''+b.id+'\')">قبض دفعة</button></td></tr>'}).join('')||'<tr><td colspan="6">لا توجد نتائج</td></tr>'}
 async function payBooking(id){const b=BOOK.find(x=>x.id===id);if(!b)return;const rem=Math.max(0,Number(b.total_amount||0)-bookingPaid(id));const amount=prompt('المتبقي: '+fmt(rem)+'\nأدخل المبلغ المقبوض فعليًا:');if(amount===null)return;const n=Number(amount);if(!n||n<=0||n>rem){alert('المبلغ غير صحيح.');return}const r=await db.from('payments').insert({booking_id:id,amount:n,currency:'IQD',payment_method:'cash',payment_date:new Date().toISOString()});if(r.error){alert(r.error.message);return}await loadAll();alert('تم تسجيل القبض وإضافته لصندوق الوارد.')}
 async function addManual(direction){
  const pre=direction==='in'?'in':'out',amount=Number($(pre+'Amount').value);
@@ -1427,15 +1425,7 @@ function renderDebtors(){
 }
 function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(id==='receivables')loadCustomerInvoices();if(id==='installments')loadInstallmentCustomers();if(id==='debts')loadDebtors()}
 function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-// اعتمد على حدث INITIAL_SESSION من عميل الإدارة نفسه؛ لا تعرض شاشة الدخول قبل اكتمال تهيئة الجلسة.
-let financeAuthStarted=false;
-db.auth.onAuthStateChange((event,session)=>{
- if(event==='INITIAL_SESSION'||event==='SIGNED_IN'||event==='TOKEN_REFRESHED'){
-  if(!financeAuthStarted||event!=='INITIAL_SESSION'){financeAuthStarted=true;init(session)}
- }else if(event==='SIGNED_OUT'){
-  financeUserId=null;$('login').classList.remove('hidden');$('app').classList.add('hidden');
- }
-});
+init();
 setTimeout(()=>{if(FOCUS_PROGRAM_ID){const ef=$('expenseProgramFilter');if(ef)ef.value=FOCUS_PROGRAM_ID;renderExpenseTable();const outTab=[...document.querySelectorAll('.tab')].find(x=>x.textContent.includes('الصرف'));if(outTab)showTab('out',outTab);renderTripFocus();}},500);
 </script>
 </body></html
