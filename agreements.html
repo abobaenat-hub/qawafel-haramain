@@ -251,19 +251,12 @@ function agreementsForProgram(city=null){
  return A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false&&(!city||a.city===city));
 }
 function agreementLinkedToSelectedProgram(a){
- if(!a||!selectedLinkProgramIds.length)return false;
- const linked=AGP.filter(x=>x.agreement_id===a.id).map(x=>x.program_id);
- // الاتفاقية التي لا تملك روابط محددة متاحة لكل الرحلات؛ أما المرتبطة فتشترط الربط بجميع الرحلات المختارة.
- return linked.length===0||selectedLinkProgramIds.every(pid=>linked.includes(pid));
+ // الاتفاقيات عامة، ويُحدد نطاق استخدامها من الرحلة المختارة وقت توزيع المعتمرين.
+ return !!(a&&selectedLinkProgramIds.length>0);
 }
 function selectedAgreementProgramIds(){
- if(!selectedLinkProgramIds.length)return [];
- const selectedAids=[$('groupMadinahAgreement')?.value,$('groupMakkahAgreement')?.value].filter(Boolean);
- if(!selectedAids.length)return [...selectedLinkProgramIds];
- return selectedLinkProgramIds.filter(pid=>selectedAids.some(aid=>{
-   const linked=AGP.filter(x=>x.agreement_id===aid).map(x=>x.program_id);
-   return linked.length===0||linked.includes(pid);
- }));
+ // لا نعتمد على روابط الاتفاقيات القديمة؛ تُطبق الاتفاقية على الرحلات المختارة الآن.
+ return [...selectedLinkProgramIds];
 }
 function renderPilgrimLinker(){
  const box=$('groupProgramSelect');if(box){
@@ -279,7 +272,7 @@ function renderGroupAgreementOptions(){
  const md=$('groupMadinahAgreement'),mk=$('groupMakkahAgreement'); if(!md||!mk)return;
  const mdCur=md.value,mkCur=mk.value;
  const madinah=agreementsForProgram('madinah'),makkah=agreementsForProgram('makkah');
- md.innerHTML='<option value="">بدون اتفاقية مدينة</option>'+madinah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramIds.length&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramIds.length?'اختر الرحلة أولاً':!linked?'غير مرتبطة بهذه الرحلة':'متبقي '+rem)+'</option>';}).join('');
+ md.innerHTML='<option value="">بدون اتفاقية مدينة</option>'+madinah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramIds.length&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramIds.length?'اختر الرحلة أولاً':'متبقي '+rem)+'</option>';}).join('');
  mk.innerHTML='<option value="">بدون اتفاقية مكة</option>'+makkah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramIds.length&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramIds.length?'اختر الرحلة أولاً':!linked?'غير مرتبطة بهذه الرحلة':'متبقي '+rem)+'</option>';}).join('');
  if(mdCur&&madinah.some(a=>a.id===mdCur&&remaining(a)>0&&agreementLinkedToSelectedProgram(a)))md.value=mdCur;
  if(mkCur&&makkah.some(a=>a.id===mkCur&&remaining(a)>0&&agreementLinkedToSelectedProgram(a)))mk.value=mkCur;
@@ -387,8 +380,6 @@ async function saveGroupAssignments(){
    const p=P.find(x=>x.id===pid),pidProgram=bookingProgramId(p?.booking_id);
    if(!pidProgram||!checkedPrograms.includes(pidProgram))continue;
    for(const aid of uniqueAids){
-     const linkedTrips=AGP.filter(x=>x.agreement_id===aid).map(x=>x.program_id);
-     if(linkedTrips.length&&!linkedTrips.includes(pidProgram))continue;
      const agreement=A.find(x=>x.id===aid);
      if(!agreement){toast('إحدى الاتفاقيات غير موجودة.',false);return;}
      // لا نكرر ربط المعتمر بالاتفاقية نفسها، لكن نسمح بربطه باتفاقية أخرى في الرحلة نفسها.
