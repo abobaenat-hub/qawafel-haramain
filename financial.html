@@ -520,7 +520,18 @@ async function saveWalletTx(){
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 let financeAccessToken=null;
-function qawafelAccessToken(){if(financeAccessToken)return financeAccessToken;try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i)||'';if(!key.endsWith('-auth-token'))continue;const raw=localStorage.getItem(key);if(!raw)continue;const s=JSON.parse(raw);if(s?.access_token)return s.access_token}}catch(e){console.error('finance token read',e)}return null}
+function qawafelAccessToken(){
+ if(financeAccessToken)return financeAccessToken;
+ // استلام الجلسة التي تحفظها لوحة الإدارة قبل الانتقال إلى صفحة المالية.
+ for(const store of [localStorage,sessionStorage]){
+  try{
+   const bridge=JSON.parse(store.getItem('qawafel_auth_bridge')||store.getItem('qawafel_auth_handoff')||'null');
+   if(bridge?.access_token){financeAccessToken=bridge.access_token;return financeAccessToken}
+  }catch(e){console.warn('finance auth bridge read',e)}
+ }
+ try{for(let i=0;i<localStorage.length;i++){const key=localStorage.key(i)||'';if(!key.endsWith('-auth-token'))continue;const raw=localStorage.getItem(key);if(!raw)continue;const s=JSON.parse(raw);if(s?.access_token){financeAccessToken=s.access_token;return financeAccessToken}}}catch(e){console.error('finance token read',e)}
+ return null
+}
 function qawafelUserId(){const t=qawafelAccessToken();if(!t)return null;try{const p=JSON.parse(atob(t.split('.')[1].replace(/-/g,'+').replace(/_/g,'/')));return p?.sub||null}catch(e){return null}}
 const db=window.supabase.createClient(U,K,{accessToken:async()=>qawafelAccessToken(),auth:{persistSession:false,autoRefreshToken:false,detectSessionInUrl:false,skipAutoInitialize:true}});
 let editingCustomerInvoiceId=null;
