@@ -273,7 +273,7 @@ function renderGroupAgreementOptions(){
  const mdCur=md.value,mkCur=mk.value;
  const madinah=agreementsForProgram('madinah'),makkah=agreementsForProgram('makkah');
  md.innerHTML='<option value="">بدون اتفاقية مدينة</option>'+madinah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramIds.length&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramIds.length?'اختر الرحلة أولاً':'متبقي '+rem)+'</option>';}).join('');
- mk.innerHTML='<option value="">بدون اتفاقية مكة</option>'+makkah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramIds.length&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramIds.length?'اختر الرحلة أولاً':!linked?'غير مرتبطة بهذه الرحلة':'متبقي '+rem)+'</option>';}).join('');
+ mk.innerHTML='<option value="">بدون اتفاقية مكة</option>'+makkah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramIds.length&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramIds.length?'اختر الرحلة أولاً':'متبقي '+rem)+'</option>';}).join('');
  if(mdCur&&madinah.some(a=>a.id===mdCur&&remaining(a)>0&&agreementLinkedToSelectedProgram(a)))md.value=mdCur;
  if(mkCur&&makkah.some(a=>a.id===mkCur&&remaining(a)>0&&agreementLinkedToSelectedProgram(a)))mk.value=mkCur;
  if(!selectedLinkProgramIds.length){md.value='';mk.value='';}
@@ -368,7 +368,7 @@ async function copyAgreementMessage(){
 async function saveGroupAssignments(){
  const checkedPrograms=selectedAgreementProgramIds();
  if(!selectedLinkProgramIds.length){toast('اختر رحلة واحدة على الأقل.',false);return;}
- if(!checkedPrograms.length){toast('الاتفاقية المختارة غير مرتبطة بهذه الرحلة.',false);return;}
+ if(!checkedPrograms.length){toast('حدد الرحلات أولاً.',false);return;}
  const aidList=[$('groupMadinahAgreement').value,$('groupMakkahAgreement').value].filter(Boolean);
  if(!aidList.length){toast('اختر اتفاقية المدينة أو اتفاقية مكة على الأقل.',false);return;}
  const ids=groupSelectedIds();
