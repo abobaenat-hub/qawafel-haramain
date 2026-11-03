@@ -124,7 +124,8 @@ async function load(){
     new Promise(resolve=>setTimeout(()=>resolve({error:{message:'انتهت مهلة الاتصال بقاعدة البيانات بعد 12 ثانية. تحقق من اتصال الإنترنت أو جلسة الدخول ثم اضغط تحديث.'},data:null}),12000))
   ]);
   if(rr.error){
-    console.error('Trip list query failed or timed out:',rr.error);\n    toast('تعذر تحميل الرحلات: '+rr.error.message,false);
+    console.error('Trip list query failed or timed out:',rr.error);
+    toast('تعذر تحميل الرحلات: '+rr.error.message,false);
     $('groupProgramSelect').innerHTML='<div class="notice">خطأ تحميل الرحلات: '+esc(rr.error.message)+' — اضغط تحديث للمحاولة مجددًا.</div>';
     return;
   }
@@ -304,7 +305,8 @@ function renderGroupPilgrims(){
    // إذا اختيرت اتفاقيتا المدينة ومكة: يبقى ظاهرًا حتى يكتمل الربط بالاثنتين.
    if(selectedAgreements.length){
      const linked=new Set(AS.filter(x=>x.pilgrim_id===p.id&&x.program_id===pid).map(x=>x.agreement_id));
-     const applicableAgreements=selectedAgreements.filter(aid=>AGP.some(x=>x.agreement_id===aid&&x.program_id===pid));\n     const fullyLinked=applicableAgreements.length>0&&applicableAgreements.every(aid=>linked.has(aid));
+     const applicableAgreements=selectedAgreements.filter(aid=>AGP.some(x=>x.agreement_id===aid&&x.program_id===pid));
+     const fullyLinked=applicableAgreements.length>0&&applicableAgreements.every(aid=>linked.has(aid));
      if(fullyLinked)return false;
    }
    return !q||[p.full_name,p.passport_number,p.profile_code].join(' ').toLowerCase().includes(q);
