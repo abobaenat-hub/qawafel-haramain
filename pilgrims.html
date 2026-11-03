@@ -1182,12 +1182,23 @@ function renderFoodSubscriptions(){
 }
 function initFoodSubscriptions(){
  const panel=document.getElementById('foodSubscriptionsPanel'),open=document.getElementById('openFoodSubscriptions');
- const sel=document.getElementById('foodProgramFilter');
- if(!panel||!sel)return;
+ const sel=document.getElementById('foodProgramFilter'),main=document.getElementById('app');
+ const grid=main?.querySelector('.grid'),stats=main?.querySelector(':scope > .stats'),banner=document.getElementById('programViewBanner'),profile=document.getElementById('profile');
+ if(!panel||!sel||!main||!grid)return;
+ // Make food subscribers a standalone screen, separate from adding and browsing pilgrims.
+ panel.classList.remove('hide');
+ main.insertBefore(panel,grid);
+ panel.classList.add('hide');
  sel.innerHTML='<option value="">كل الرحلات</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title||'رحلة')+'</option>').join('');
- const showFoodSubscriptions=()=>{panel.classList.remove('hide');renderFoodSubscriptions();panel.scrollIntoView({behavior:'smooth',block:'start'});};
+ const showFoodSubscriptions=()=>{
+   grid.style.display='none';if(stats)stats.style.display='none';if(banner)banner.style.display='none';if(profile)profile.classList.add('hide');
+   panel.classList.remove('hide');renderFoodSubscriptions();window.scrollTo({top:0,behavior:'smooth'});
+ };
+ const closeFoodSubscriptions=()=>{
+   panel.classList.add('hide');grid.style.display='';if(stats)stats.style.display='';if(banner)banner.style.display='';history.replaceState(null,'',location.pathname+location.search);
+ };
  if(open)open.onclick=showFoodSubscriptions;
- document.getElementById('foodCloseBtn').onclick=()=>panel.classList.add('hide');
+ document.getElementById('foodCloseBtn').onclick=closeFoodSubscriptions;
  sel.onchange=renderFoodSubscriptions;document.getElementById('foodSearch').oninput=renderFoodSubscriptions;
  document.getElementById('foodPrintBtn').onclick=()=>window.print();
  if(location.hash==='#food-subscriptions')showFoodSubscriptions();
