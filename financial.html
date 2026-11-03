@@ -535,7 +535,7 @@ $('outCurrency')?.addEventListener('change',()=>{if($('outSharedToggle')?.checke
 $('outSharedPrograms')?.addEventListener('change',renderSharedAllocationEditor);
 async function login(){const r=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(r.error){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">'+r.error.message+'</div>';return}if(!r.data?.user){$('loginMsg').innerHTML='<div class="msg" style="color:#a33">تعذر إنشاء جلسة الدخول.</div>';return}financeUserId=r.data.user.id;await init();}
 async function signOut(){await db.auth.signOut();location.href='./internal.html'}
-async function init(){const {data,error}=await db.auth.getSession();if(error){console.error('finance getSession',error)}financeUserId=data?.session?.user?.id||null;if(!financeUserId){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+esc(e?.message||e)+'</span>'}}
+async function init(sessionOverride){let session=sessionOverride;if(arguments.length===0){const {data,error}=await db.auth.getSession();if(error)console.error('finance getSession',error);session=data?.session||null}financeUserId=session?.user?.id||null;if(!financeUserId){$('login').classList.remove('hidden');$('app').classList.add('hidden');return}$('login').classList.add('hidden');$('app').classList.remove('hidden');$('dashboardText').innerHTML='<b>جاري جلب البيانات المالية...</b>';try{await loadAll()}catch(e){console.error('finance loadAll',e);$('dashboardText').innerHTML='<span style="color:#a33">تعذر جلب البيانات المالية: '+esc(e?.message||e)+'</span>'}}
 async function loadAll(){
  const withTimeout=(p,ms=15000)=>Promise.race([p,new Promise((_,rej)=>setTimeout(()=>rej(new Error('انتهت مهلة جلب البيانات بعد 15 ثانية')),ms))]);
  const [tx,b,p,pgr,ftp]=await Promise.all([
@@ -1427,7 +1427,15 @@ function renderDebtors(){
 }
 function showTab(id,el){document.querySelectorAll('main section[id]').forEach(s=>s.classList.add('hidden'));$(id).classList.remove('hidden');document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));el.classList.add('active');if(id==='receivables')loadCustomerInvoices();if(id==='installments')loadInstallmentCustomers();if(id==='debts')loadDebtors()}
 function programName(id){const p=PROGS.find(x=>x.id===id);return p?p.title:'—'}function fmtDate(v){return v?new Date(v).toLocaleDateString('ar-IQ'):''}function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
-init();
+// اعتمد على حدث INITIAL_SESSION من عميل الإدارة نفسه؛ لا تعرض شاشة الدخول قبل اكتمال تهيئة الجلسة.
+let financeAuthStarted=false;
+db.auth.onAuthStateChange((event,session)=>{
+ if(event==='INITIAL_SESSION'||event==='SIGNED_IN'||event==='TOKEN_REFRESHED'){
+  if(!financeAuthStarted||event!=='INITIAL_SESSION'){financeAuthStarted=true;init(session)}
+ }else if(event==='SIGNED_OUT'){
+  financeUserId=null;$('login').classList.remove('hidden');$('app').classList.add('hidden');
+ }
+});
 setTimeout(()=>{if(FOCUS_PROGRAM_ID){const ef=$('expenseProgramFilter');if(ef)ef.value=FOCUS_PROGRAM_ID;renderExpenseTable();const outTab=[...document.querySelectorAll('.tab')].find(x=>x.textContent.includes('الصرف'));if(outTab)showTab('out',outTab);renderTripFocus();}},500);
 </script>
 </body></html
