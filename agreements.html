@@ -111,6 +111,7 @@ function cityLabel(c){return c==='madinah'?'المدينة المنورة':c==='
 function assigned(aid,programId=null){return AS.filter(x=>x.agreement_id===aid&&(!programId||x.program_id===programId));}
 function globalAssigned(aid){return AS.filter(x=>x.agreement_id===aid);}
 function remaining(a){return a.agreement_kind==='hotel'?Math.max(0,(a.capacity||0)-globalAssigned(a.id).length):null;}function bookingProgramId(bookingId){return BOOKING_PROGRAMS[bookingId]||null;}
+function agreementTravelType(programId){const t=PROGRAMS.find(p=>p.id===programId)?.travel_type;return t==='جو'||t==='air'?'air':t==='بر'||t==='ground'?'ground':null;}
 function programLabel(p){return `${p.title||'رحلة'} — ${p.departure_date||'بدون تاريخ'}${p.travel_type?' — '+p.travel_type:''}`;}
 
 async function auth(){
@@ -397,7 +398,7 @@ async function saveGroupAssignments(){
        if(!agreement){showLinkMessage('إحدى الاتفاقيات غير موجودة. حدّث الصفحة وحاول مجددًا.');return;}
        if(AS.some(x=>x.agreement_id===aid&&x.program_id===pidProgram&&x.pilgrim_id===pid))continue;
        const used=usedByAgreement.get(aid);let slot=1;while(used.has(slot))slot++;used.add(slot);
-       rows.push({agreement_id:aid,pilgrim_id:pid,program_id:pidProgram,slot_number:slot,travel_type:(PROGRAMS.find(p=>p.id===pidProgram)?.travel_type||null),status:'reserved'});
+       rows.push({agreement_id:aid,pilgrim_id:pid,program_id:pidProgram,slot_number:slot,travel_type:agreementTravelType(pidProgram),status:'reserved'});
      }
    }
    if(!rows.length){showLinkMessage('لم تتم إضافة أي ربط جديد؛ قد يكون المعتمرون مرتبطين مسبقًا بالاتفاقيات المختارة أو لا ينتمون إلى الرحلات المحددة.');return;}
@@ -491,7 +492,7 @@ async function assignCandidate(pid){
  if(!selectedProgram){toast('اختر الرحلة أولاً.',false);return;}
  if(remaining(a)<=0){toast(`الاتفاقية ${a.agreement_number} مكتملة ولا توجد أسرة متبقية.`,false);closeCandidate();return;}
  if(globalAssigned(a.id).some(x=>x.slot_number===selectedSlot)){toast('هذه الخانة مستخدمة بالفعل.',false);closeCandidate();return;}
- const r=await db.from('travel_agreement_assignments').insert({agreement_id:a.id,pilgrim_id:pid,program_id:selectedProgram,slot_number:selectedSlot,travel_type:(PROGRAMS.find(p=>p.id===selectedProgram)?.travel_type||null),status:'reserved'});
+ const r=await db.from('travel_agreement_assignments').insert({agreement_id:a.id,pilgrim_id:pid,program_id:selectedProgram,slot_number:selectedSlot,travel_type:agreementTravelType(selectedProgram),status:'reserved'});
  if(r.error){toast(r.error.message,false);return;}
  closeCandidate();toast('تم حجز المعتمر في الخانة. لم يتم ترحيله إلى الفيزا بعد.');await load();document.getElementById('agreementDetail')?.remove();openAgreement(a.id);
 }
