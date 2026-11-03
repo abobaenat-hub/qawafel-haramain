@@ -217,6 +217,13 @@ body.focused-profile-view #profile { margin-top:18px; }
 
 <main id="app" class="wrap hide">
 <div id="programViewBanner" class="panel noPrint" style="display:none;margin-top:0;background:#f7fbfd;border-color:#cbdde7"><h2 id="programViewTitle" style="margin:0;color:#0c3b63">إدارة معتمري الرحلة</h2><div id="programViewSub" style="margin-top:5px;color:#6b7780;font-size:12px"></div></div>
+<div class="noPrint" style="margin:12px 0"><button type="button" class="btn p" id="openFoodSubscriptions">🍽️ قائمة المشتركين بالطعام</button></div>
+<section id="foodSubscriptionsPanel" class="panel hide">
+ <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2 style="margin:0;color:#0c3b63">🍽️ المشتركين بالطعام</h2><small style="color:#687984">قائمة المعتمرين الذين اختاروا الاشتراك بالطعام</small></div><div class="noPrint"><button type="button" class="btn w" id="foodPrintBtn">🖨️ طباعة القائمة</button><button type="button" class="btn w" id="foodCloseBtn">إغلاق</button></div></div>
+ <div class="stats" style="margin:14px 0"><div class="stat">عدد المشتركين<b id="foodPeopleCount">0</b></div><div class="stat">إجمالي الوجبات<b id="foodMealsTotal">0</b></div><div class="stat">مدفوع<b id="foodPaidCount">0</b></div><div class="stat">غير مدفوع/جزئي<b id="foodUnpaidCount">0</b></div></div>
+ <div class="cols noPrint" style="margin-bottom:12px"><div><label>تصفية حسب الرحلة</label><select id="foodProgramFilter"><option value="">كل الرحلات</option></select></div><div><label>بحث بالاسم أو الهاتف</label><input id="foodSearch" placeholder="اكتب اسم المعتمر أو رقم الهاتف"></div></div>
+ <div class="table"><table style="min-width:850px"><thead><tr><th>#</th><th>اسم المعتمر</th><th>رقم الهاتف</th><th>الرحلة</th><th>عدد الوجبات</th><th>نوع الوجبات</th><th>مبلغ الطعام</th><th>حالة الدفع</th></tr></thead><tbody id="foodSubscriptionRows"><tr><td colspan="8">لا توجد بيانات بعد.</td></tr></tbody></table></div>
+</section>
 <div class="stats">
 <div class="stat">المعتمرون<b id="pc">0</b></div>
 <div class="stat">الحجوزات<b id="bc">0</b></div>
@@ -1158,7 +1165,32 @@ await checkDuplicateName();if(archiveMatch && !archiveConfirmed){return msg('for
  }catch(err){console.error('save pilgrim',err);const detail=[err?.message,err?.details,err?.hint,err?.code?('code '+err.code):''].filter(Boolean).join(' — ');msg('formMsg','❌ تعذر حفظ المعتمر: '+(detail||'خطأ غير معروف')+'. لم يتم مسح البيانات، ويمكنك المحاولة مرة أخرى.',true)} finally { saveInProgress=false; if(submitBtn)submitBtn.disabled=!validatePassportExpiry(false); }
 };
 
-(async()=>{try{const{data:{session}}=await db.auth.getSession();if(session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load()}else{document.body.classList.remove('auth-pending')}}catch(e){document.body.classList.remove('auth-pending');msg('loginMsg',e.message||'تعذر فحص الجلسة.',true)}})();
+function renderFoodSubscriptions(){
+ const filter=document.getElementById('foodProgramFilter')?.value||'';
+ const q=(document.getElementById('foodSearch')?.value||'').trim().toLowerCase();
+ const rows=P.filter(p=>p.food_subscribed===true).map(p=>({p,b:B.find(x=>x.id===p.booking_id)})).filter(x=>x.b&&x.b.status!=='cancelled').filter(x=>!filter||String(x.b.program_id)===filter).filter(x=>[x.p.full_name,x.p.phone].some(v=>String(v||'').toLowerCase().includes(q)));
+ const names={all:'جميع الوجبات',breakfast:'فطور',lunch:'غداء',dinner:'عشاء',custom:'اشتراك مخصص'};
+ const states={paid:'مدفوع',unpaid:'غير مدفوع',partial:'مدفوع جزئيًا'};
+ const moneyFood=n=>Number(n||0).toLocaleString('en-US');
+ const body=document.getElementById('foodSubscriptionRows');
+ body.innerHTML=rows.length?rows.map((x,i)=>'<tr><td>'+(i+1)+'</td><td><b>'+esc(x.p.full_name||'—')+'</b></td><td>'+esc(x.p.phone||'—')+'</td><td>'+esc(PR.find(z=>z.id===x.b.program_id)?.title||'—')+'</td><td><b>'+Number(x.p.food_meals_count||0)+'</b></td><td>'+esc(names[x.p.food_meal_type]||'—')+'</td><td>'+moneyFood(x.p.food_amount)+'</td><td><span class="badge '+(x.p.food_payment_status==='paid'?'ok':'')+'">'+(states[x.p.food_payment_status]||'غير محدد')+'</span></td></tr>').join(''):'<tr><td colspan="8" style="text-align:center">لا يوجد مشتركون مطابقون.</td></tr>';
+ document.getElementById('foodPeopleCount').textContent=rows.length;
+ document.getElementById('foodMealsTotal').textContent=rows.reduce((n,x)=>n+Number(x.p.food_meals_count||0),0);
+ document.getElementById('foodPaidCount').textContent=rows.filter(x=>x.p.food_payment_status==='paid').length;
+ document.getElementById('foodUnpaidCount').textContent=rows.filter(x=>x.p.food_payment_status!=='paid').length;
+}
+function initFoodSubscriptions(){
+ const panel=document.getElementById('foodSubscriptionsPanel'),open=document.getElementById('openFoodSubscriptions');
+ const sel=document.getElementById('foodProgramFilter');
+ if(!panel||!open||!sel)return;
+ sel.innerHTML='<option value="">كل الرحلات</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title||'رحلة')+'</option>').join('');
+ open.onclick=()=>{panel.classList.remove('hide');panel.scrollIntoView({behavior:'smooth',block:'start'});renderFoodSubscriptions();};
+ document.getElementById('foodCloseBtn').onclick=()=>panel.classList.add('hide');
+ sel.onchange=renderFoodSubscriptions;document.getElementById('foodSearch').oninput=renderFoodSubscriptions;
+ document.getElementById('foodPrintBtn').onclick=()=>window.print();
+ if(location.hash==='#food-subscriptions')open.click();
+}
+(async()=>{try{const{data:{session}}=await db.auth.getSession();if(session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load();initFoodSubscriptions()}else{document.body.classList.remove('auth-pending')}}catch(e){document.body.classList.remove('auth-pending');msg('loginMsg',e.message||'تعذر فحص الجلسة.',true)}})();
 </script>
 <script id="v111-passport-tools">
 (function(){
