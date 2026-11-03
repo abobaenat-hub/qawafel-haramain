@@ -372,6 +372,7 @@ async function saveGroupAssignments(){
    const p=P.find(x=>x.id===pid),pidProgram=bookingProgramId(p?.booking_id);
    if(!pidProgram||!checkedPrograms.includes(pidProgram))continue;
    for(const aid of uniqueAids){
+     if(!AGP.some(x=>x.agreement_id===aid&&x.program_id===pidProgram))continue;
      const agreement=A.find(x=>x.id===aid);
      if(!agreement){toast('إحدى الاتفاقيات غير موجودة.',false);return;}
      // لا نكرر ربط المعتمر بالاتفاقية نفسها، لكن نسمح بربطه باتفاقية أخرى في الرحلة نفسها.
