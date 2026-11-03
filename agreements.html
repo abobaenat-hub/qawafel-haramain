@@ -231,19 +231,19 @@ function agreementProgramsLabel(aid){
 
 function agreementRemainingLabel(a){const rem=remaining(a);return rem>0?`متبقي ${rem} من ${a.capacity||0} سرير`:'مكتملة — 0 متبقي';}
 function agreementsForProgram(city=null){
- // اعرض كل اتفاقية فندقية فعالة مرتبطة برحلة منشورة قادمة،
- // دون الاعتماد على اختيارات نموذج إضافة الاتفاقية.
- const activeProgramIds=new Set(PROGRAMS.filter(isCurrentActiveProgram).map(p=>p.id));
+ // اعرض الاتفاقيات الفندقية الفعالة المرتبطة برحلات منشورة،
+ // حتى لو كانت الرحلة قديمة؛ فالاتفاقية القديمة يجب أن تبقى قابلة للإدارة.
+ const publishedProgramIds=new Set(PROGRAMS.filter(p=>p&&p.status==='published').map(p=>p.id));
  return A.filter(a=>{
    if(a.agreement_kind!=='hotel'||a.active===false||(city&&a.city!==city))return false;
-   return AGP.some(x=>x.agreement_id===a.id&&activeProgramIds.has(x.program_id));
+   return AGP.some(x=>x.agreement_id===a.id&&publishedProgramIds.has(x.program_id));
  });
 }
 function selectedAgreementProgramIds(){
  const ids=new Set();
  [$('groupMadinahAgreement')?.value,$('groupMakkahAgreement')?.value].filter(Boolean).forEach(aid=>AGP.filter(x=>x.agreement_id===aid).forEach(x=>{
    const p=PROGRAMS.find(z=>z.id===x.program_id);
-   if(isCurrentActiveProgram(p))ids.add(x.program_id);
+   if(p&&p.status==='published')ids.add(x.program_id);
  }));
  return [...ids];
 }
