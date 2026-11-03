@@ -217,13 +217,7 @@ body.focused-profile-view #profile { margin-top:18px; }
 
 <main id="app" class="wrap hide">
 <div id="programViewBanner" class="panel noPrint" style="display:none;margin-top:0;background:#f7fbfd;border-color:#cbdde7"><h2 id="programViewTitle" style="margin:0;color:#0c3b63">إدارة معتمري الرحلة</h2><div id="programViewSub" style="margin-top:5px;color:#6b7780;font-size:12px"></div></div>
-<div class="noPrint" style="margin:12px 0"><button type="button" class="btn p" id="openFoodSubscriptions">🍽️ قائمة المشتركين بالطعام</button></div>
-<section id="foodSubscriptionsPanel" class="panel hide">
- <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2 style="margin:0;color:#0c3b63">🍽️ المشتركين بالطعام</h2><small style="color:#687984">قائمة المعتمرين الذين اختاروا الاشتراك بالطعام</small></div><div class="noPrint"><button type="button" class="btn w" id="foodPrintBtn">🖨️ طباعة القائمة</button><button type="button" class="btn w" id="foodCloseBtn">إغلاق</button></div></div>
- <div class="stats" style="margin:14px 0"><div class="stat">عدد المشتركين<b id="foodPeopleCount">0</b></div><div class="stat">إجمالي الوجبات<b id="foodMealsTotal">0</b></div><div class="stat">مدفوع<b id="foodPaidCount">0</b></div><div class="stat">غير مدفوع/جزئي<b id="foodUnpaidCount">0</b></div></div>
- <div class="cols noPrint" style="margin-bottom:12px"><div><label>تصفية حسب الرحلة</label><select id="foodProgramFilter"><option value="">كل الرحلات</option></select></div><div><label>بحث بالاسم أو الهاتف</label><input id="foodSearch" placeholder="اكتب اسم المعتمر أو رقم الهاتف"></div></div>
- <div class="table"><table style="min-width:850px"><thead><tr><th>#</th><th>اسم المعتمر</th><th>رقم الهاتف</th><th>الرحلة</th><th>عدد الوجبات</th><th>نوع الوجبات</th><th>مبلغ الطعام</th><th>حالة الدفع</th></tr></thead><tbody id="foodSubscriptionRows"><tr><td colspan="8">لا توجد بيانات بعد.</td></tr></tbody></table></div>
-</section>
+
 <div class="stats">
 <div class="stat">المعتمرون<b id="pc">0</b></div>
 <div class="stat">الحجوزات<b id="bc">0</b></div>
@@ -337,7 +331,15 @@ body.focused-profile-view #profile { margin-top:18px; }
 <p style="margin:6px 0;color:#6b7780">عند إدخال اسم معتمر مسجل سابقًا، سيكتشفه النظام تلقائيًا ويعرض خيار إضافته إلى الرحلة الحالية مع استرجاع بيانات ملفه من الأرشيف.</p>
 </section>
 <section class="panel">
-<h2>قائمة المعتمرين</h2><input id="search" placeholder="بحث بالاسم أو الهاتف أو الجواز أو رمز الملف">
+<h2>قائمة المعتمرين</h2>
+<div class="noPrint" style="margin:10px 0 14px"><button type="button" class="btn p" id="openFoodSubscriptions" style="font-weight:800;padding:11px 16px">🍽️ قائمة المشتركين بالطعام</button></div>
+<section id="foodSubscriptionsPanel" class="panel hide">
+ <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap"><div><h2 style="margin:0;color:#0c3b63">🍽️ المشتركين بالطعام</h2><small style="color:#687984">قائمة المعتمرين الذين اختاروا الاشتراك بالطعام</small></div><div class="noPrint"><button type="button" class="btn w" id="foodPrintBtn">🖨️ طباعة القائمة</button><button type="button" class="btn w" id="foodCloseBtn">إغلاق</button></div></div>
+ <div class="stats" style="margin:14px 0"><div class="stat">عدد المشتركين<b id="foodPeopleCount">0</b></div><div class="stat">إجمالي الوجبات<b id="foodMealsTotal">0</b></div><div class="stat">مدفوع<b id="foodPaidCount">0</b></div><div class="stat">غير مدفوع/جزئي<b id="foodUnpaidCount">0</b></div></div>
+ <div class="cols noPrint" style="margin-bottom:12px"><div><label>تصفية حسب الرحلة</label><select id="foodProgramFilter"><option value="">كل الرحلات</option></select></div><div><label>بحث بالاسم أو الهاتف</label><input id="foodSearch" placeholder="اكتب اسم المعتمر أو رقم الهاتف"></div></div>
+ <div class="table"><table style="min-width:850px"><thead><tr><th>#</th><th>اسم المعتمر</th><th>رقم الهاتف</th><th>الرحلة</th><th>عدد الوجبات</th><th>نوع الوجبات</th><th>مبلغ الطعام</th><th>حالة الدفع</th></tr></thead><tbody id="foodSubscriptionRows"><tr><td colspan="8">لا توجد بيانات بعد.</td></tr></tbody></table></div>
+</section>
+<input id="search" placeholder="بحث بالاسم أو الهاتف أو الجواز أو رمز الملف">
 <div id="listMsg"></div>
 <div id="unpaidAlert" class="hide" style="margin:12px 0;padding:14px 16px;border:1px solid #f0c36d;background:#fff8e7;color:#7a5510;border-radius:12px;font-weight:800;line-height:1.8"></div>
 <div class="table"><table><thead><tr><th>الاسم</th><th>الهاتف</th><th>الجواز</th><th>الفيزا</th><th>البرنامج</th><th>السداد</th><th>الملف</th></tr></thead>
