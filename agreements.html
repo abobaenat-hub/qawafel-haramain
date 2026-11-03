@@ -118,9 +118,13 @@ async function auth(){
 async function load(){
   // حمّل الرحلات أولاً حتى تظهر خياراتها فوراً، ولا تبقى الواجهة على رسالة الانتظار
   // بسبب بطء أي استعلام آخر في بيانات الاتفاقيات.
-  const rr=await db.from('programs').select('id,title,departure_date,status,travel_type').order('departure_date',{ascending:false});
+  const tripQuery=db.from('programs').select('id,title,departure_date,status,travel_type').order('departure_date',{ascending:false});
+  const rr=await Promise.race([
+    tripQuery,
+    new Promise(resolve=>setTimeout(()=>resolve({error:{message:'انتهت مهلة الاتصال بقاعدة البيانات بعد 12 ثانية. تحقق من اتصال الإنترنت أو جلسة الدخول ثم اضغط تحديث.'},data:null}),12000))
+  ]);
   if(rr.error){
-    toast('تعذر تحميل الرحلات: '+rr.error.message,false);
+    console.error('Trip list query failed or timed out:',rr.error);\n    toast('تعذر تحميل الرحلات: '+rr.error.message,false);
     $('groupProgramSelect').innerHTML='<div class="notice">خطأ تحميل الرحلات: '+esc(rr.error.message)+' — اضغط تحديث للمحاولة مجددًا.</div>';
     return;
   }
