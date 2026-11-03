@@ -231,14 +231,12 @@ function agreementProgramsLabel(aid){
 
 function agreementRemainingLabel(a){const rem=remaining(a);return rem>0?`متبقي ${rem} من ${a.capacity||0} سرير`:'مكتملة — 0 متبقي';}
 function agreementsForProgram(city=null){
- const activeProgramIds=new Set(
-   PROGRAMS.filter(isCurrentActiveProgram).map(p=>p.id)
- );
- const selectedIds=new Set(selectedProgramIds.filter(id=>activeProgramIds.has(id)));
+ // اعرض كل اتفاقية فندقية فعالة مرتبطة برحلة منشورة قادمة،
+ // دون الاعتماد على اختيارات نموذج إضافة الاتفاقية.
+ const activeProgramIds=new Set(PROGRAMS.filter(isCurrentActiveProgram).map(p=>p.id));
  return A.filter(a=>{
-   if(a.agreement_kind!=='hotel'||a.active===false|| (city&&a.city!==city))return false;
-   const linked=AGP.filter(x=>x.agreement_id===a.id).some(x=>selectedIds.has(x.program_id));
-   return linked;
+   if(a.agreement_kind!=='hotel'||a.active===false||(city&&a.city!==city))return false;
+   return AGP.some(x=>x.agreement_id===a.id&&activeProgramIds.has(x.program_id));
  });
 }
 function selectedAgreementProgramIds(){
@@ -352,34 +350,43 @@ async function copyAgreementMessage(){
 }
 async function saveGroupAssignments(){
  const checkedPrograms=selectedAgreementProgramIds();
- if(!checkedPrograms.length){toast('الاتفاقيات المختارة غير مرتبطة بأي رحلة منشورة.',false);return;}
- selectedProgramIds=checkedPrograms; selectedProgram=checkedPrograms.length===1?checkedPrograms[0]:null;
+ if(!checkedPrograms.length){toast('الاتفاقيات المختارة غير مرتبطة بأي رحلة منشورة قادمة.',false);return;}
  const aidList=[$('groupMadinahAgreement').value,$('groupMakkahAgreement').value].filter(Boolean);
  if(!aidList.length){toast('اختر اتفاقية المدينة أو اتفاقية مكة على الأقل.',false);return;}
  const ids=groupSelectedIds();
  if(!ids.length){toast('حدد معتمرًا واحدًا على الأقل.',false);return;}
  const uniqueAids=[...new Set(aidList)];
- for(const aid of uniqueAids){const a=A.find(x=>x.id===aid);if(!a){toast('إحدى الاتفاقيات غير موجودة.',false);return;}if(ids.length>remaining(a)){toast('عدد المحددين ('+ids.length+') أكبر من المتبقي في الاتفاقية '+a.agreement_number+' ('+remaining(a)+').',false);return;}}
  const usedByAgreement=new Map(uniqueAids.map(aid=>[aid,new Set(globalAssigned(aid).map(x=>x.slot_number))]));
  const rows=[];
  for(const pid of ids){
    const p=P.find(x=>x.id===pid),pidProgram=bookingProgramId(p?.booking_id);
-   if(!pidProgram||!selectedProgramIds.includes(pidProgram))continue;
+   if(!pidProgram||!checkedPrograms.includes(pidProgram))continue;
    for(const aid of uniqueAids){
+     const agreement=A.find(x=>x.id===aid);
+     if(!agreement){toast('إحدى الاتفاقيات غير موجودة.',false);return;}
+     // لا نكرر ربط المعتمر بالاتفاقية نفسها، لكن نسمح بربطه باتفاقية أخرى في الرحلة نفسها.
      if(AS.some(x=>x.agreement_id===aid&&x.program_id===pidProgram&&x.pilgrim_id===pid))continue;
      const used=usedByAgreement.get(aid);let slot=1;while(used.has(slot))slot++;used.add(slot);
      rows.push({agreement_id:aid,pilgrim_id:pid,program_id:pidProgram,slot_number:slot,travel_type:(PROGRAMS.find(p=>p.id===pidProgram)?.travel_type||null),status:'reserved'});
    }
  }
- if(!rows.length){toast('المعتمرون المحددون مرتبطون بالفعل بالاتفاقيات المختارة.',false);return;} const r=await db.from('travel_agreement_assignments').insert(rows);
+ if(!rows.length){toast('المعتمرون المحددون مرتبطون بالفعل بالاتفاقيات المختارة.',false);return;}
+ // تحقق من السعة بعد استبعاد الروابط الموجودة مسبقًا؛ حتى لا يُحسب المعتمر مرتين.
+ for(const aid of uniqueAids){
+   const agreement=A.find(x=>x.id===aid);
+   const newCount=rows.filter(x=>x.agreement_id===aid).length;
+   if(agreement?.agreement_kind==='hotel'&&newCount>remaining(agreement)){
+     toast('عدد الإضافات الجديدة ('+newCount+') يتجاوز المتبقي في الاتفاقية '+agreement.agreement_number+' ('+remaining(agreement)+').',false);return;
+   }
+ }
+ const r=await db.from('travel_agreement_assignments').insert(rows);
  if(r.error){toast(r.error.message,false);return;}
- toast('تم ربط '+ids.length+' معتمر بالاتفاقيات المحددة وتوزيع الخانات تلقائيًا ✅');
+ toast('تم ربط '+new Set(rows.map(x=>x.pilgrim_id)).size+' معتمر بالاتفاقيات المحددة وتوزيع الخانات تلقائيًا ✅');
  await load();
  if($('groupMadinahAgreement'))$('groupMadinahAgreement').value=uniqueAids.find(id=>A.find(a=>a.id===id)?.city==='madinah')||'';
  if($('groupMakkahAgreement'))$('groupMakkahAgreement').value=uniqueAids.find(id=>A.find(a=>a.id===id)?.city==='makkah')||'';
  renderGroupPilgrims();
 }
-
 function resetAgreementForm(){
  $('editAgreementId').value='';$('agreementFormTitle').textContent='2) إضافة اتفاقية جديدة';$('add').textContent='+ إضافة الاتفاقية';$('cancelEditAgreement').classList.add('hide');
  ['number','hotel','checkin','checkout','capacity','notes'].forEach(id=>$(id).value='');document.querySelectorAll('#agreementProgramSelect input[type="checkbox"]').forEach(x=>x.checked=false);toggleHotelFields();
