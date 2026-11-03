@@ -76,7 +76,7 @@
 <section class="card add-agreement-panel">
 <div class="toolbar"><button class="btn gold" type="button" id="toggleAddAgreement">＋ إضافة اتفاقية جديدة</button></div>
 <div id="addAgreementBody" class="hide" style="margin-top:12px"><input type="hidden" id="editAgreementId"><h3 id="agreementFormTitle" style="margin:0 0 12px;color:var(--n)">2) إضافة اتفاقية جديدة</h3>
-<div class="field" style="margin-bottom:10px"><label>الرحلات المرتبطة بالاتفاقية</label><div id="agreementProgramSelect" class="trip-checkboxes"><div class="notice">جاري تحميل الرحلات...</div></div><div class="notice" style="margin-top:6px">حدد الرحلة أو الرحلات المنشورة التي تنطبق عليها هذه الاتفاقية.</div></div><div class="grid"><div class="field"><label>نوع الاتفاقية</label><select id="kind"><option value="hotel">🏨 فندق</option><option value="air">✈️ طيران</option><option value="ground">🚌 بر</option></select></div><div class="field"><label>رقم الاتفاقية</label><input id="number" placeholder="رقم الاتفاقية"></div><div class="field hotelOnly"><label>المدينة</label><select id="city"><option value="madinah">المدينة المنورة</option><option value="makkah">مكة المكرمة</option></select></div><div class="field hotelOnly"><label>اسم الفندق</label><input id="hotel" placeholder="اسم الفندق"></div><div class="field hotelOnly"><label>تاريخ الدخول</label><input id="checkin" type="date"></div><div class="field hotelOnly"><label>تاريخ الخروج</label><input id="checkout" type="date"></div><div class="field hotelOnly"><label>عدد الأسرّة</label><input id="capacity" type="number" min="0" step="1" placeholder="مثلاً 6"></div><div class="field"><label>ملاحظات</label><input id="notes" placeholder="ملاحظات اختيارية"></div></div>
+<div class="field" style="margin-bottom:10px"><label>الرحلات المرتبطة بالاتفاقية</label><div id="agreementProgramSelect" class="trip-checkboxes"><div class="notice">جاري تحميل الرحلات...</div></div><div id="programInfo" class="notice" style="margin-top:6px">جاري تجهيز الرحلات...</div><div class="notice" style="margin-top:6px">حدد الرحلة أو الرحلات المنشورة التي تنطبق عليها هذه الاتفاقية.</div></div><div class="grid"><div class="field"><label>نوع الاتفاقية</label><select id="kind"><option value="hotel">🏨 فندق</option><option value="air">✈️ طيران</option><option value="ground">🚌 بر</option></select></div><div class="field"><label>رقم الاتفاقية</label><input id="number" placeholder="رقم الاتفاقية"></div><div class="field hotelOnly"><label>المدينة</label><select id="city"><option value="madinah">المدينة المنورة</option><option value="makkah">مكة المكرمة</option></select></div><div class="field hotelOnly"><label>اسم الفندق</label><input id="hotel" placeholder="اسم الفندق"></div><div class="field hotelOnly"><label>تاريخ الدخول</label><input id="checkin" type="date"></div><div class="field hotelOnly"><label>تاريخ الخروج</label><input id="checkout" type="date"></div><div class="field hotelOnly"><label>عدد الأسرّة</label><input id="capacity" type="number" min="0" step="1" placeholder="مثلاً 6"></div><div class="field"><label>ملاحظات</label><input id="notes" placeholder="ملاحظات اختيارية"></div></div>
 <div class="toolbar" style="margin-top:11px"><button class="btn primary" id="add">+ إضافة الاتفاقية</button><button class="btn gray hide" type="button" id="cancelEditAgreement">إلغاء التعديل</button></div><div id="msg" class="msg hide"></div></div>
 </section>
 
@@ -181,7 +181,7 @@ function updateProgramInfo(){
  $('programInfo').innerHTML=selected.length?'<b>تم اختيار '+selected.length+' رحلة</b><br><span style="font-size:9px">'+selected.map(x=>esc(programLabel(x))).join(' | ')+'</span><br><span style="font-size:9px">'+(p?'يمكن الآن العمل على هذه الرحلة.':'عند اختيار أكثر من رحلة، ربط الاتفاقية يشملها كلها. لإدارة خانات المعتمرين يجب اختيار رحلة واحدة فقط.')+'</span>':'اختر رحلة منشورة واحدة أو أكثر. الاتفاقية سترتبط بكل الرحلات المختارة.';
 }
 function getSelectedProgramId(){
- const ids=Array.from(document.querySelectorAll('#programSelect input[type="checkbox"]:checked')).map(o=>o.value).filter(Boolean);
+ const ids=Array.from(document.querySelectorAll('#agreementProgramSelect input[type="checkbox"]:checked')).map(o=>o.value).filter(Boolean);
  return ids.length===1?ids[0]:null;
 }
 function selectPrograms(){
@@ -506,6 +506,7 @@ async function transferOne(id){
  toast('تم ترحيل '+(p.full_name||'المعتمر')+' إلى الفيزا وتثبيت الاتفاقيات ✅');await load();document.getElementById('agreementDetail')?.remove();openAgreement(selectedAgreement);
 }
 async function start(){
+ try{
  if(!await auth())return;
  $('agreementProgramSelect').addEventListener('change',selectPrograms);
  $('toggleAddAgreement').onclick=()=>{$('addAgreementBody').classList.toggle('hide');};$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('groupMadinahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupMakkahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupPilgrimSearch').oninput=renderGroupPilgrims;$('groupPilgrimList').addEventListener('change',updateGroupSelectionInfo);$('groupSelectAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=true);updateGroupSelectionInfo();};$('groupClearAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=false);updateGroupSelectionInfo();};$('saveGroupAssignments').onclick=saveGroupAssignments;
@@ -514,6 +515,13 @@ async function start(){
  $('copyAgreementMessage').onclick=copyAgreementMessage;
  $('add').onclick=addAgreement;$('refresh').onclick=load;$('logout').onclick=async()=>{await db.auth.signOut();location.href='./index.html'};
  toggleHotelFields();await load();
+ }catch(e){
+  console.error('Agreements page startup failed:',e);
+  const message=e?.message||String(e);
+  const rows=$('rows');if(rows)rows.innerHTML='<tr><td colspan="12">تعذر تشغيل الصفحة: '+esc(message)+'</td></tr>';
+  const list=$('groupPilgrimList');if(list)list.innerHTML='<div class="notice">تعذر تشغيل الصفحة: '+esc(message)+'</div>';
+  const msg=$('msg');if(msg){msg.textContent='تعذر تشغيل صفحة الاتفاقيات: '+message;msg.className='msg err';}
+ }
 }
 start();
 </script>
