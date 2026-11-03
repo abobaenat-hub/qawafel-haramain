@@ -238,9 +238,8 @@ function agreementProgramsLabel(aid){
 
 function agreementRemainingLabel(a){const rem=remaining(a);return rem>0?`متبقي ${rem} من ${a.capacity||0} سرير`:'مكتملة — 0 متبقي';}
 function agreementsForProgram(city=null){
- // اعرض الاتفاقيات الفعالة المسجلة في المدينة المختارة دائماً،
- // مع تمييز الاتفاقية المرتبطة بالرحلة عن غير المرتبطة بدلاً من إخفائها.
- if(!selectedLinkProgramId)return [];
+ // لا نخفي الاتفاقيات المسجلة عند عدم اختيار رحلة؛ نعرضها دائماً
+ // ونمنع اختيارها حتى يحدد المستخدم رحلة مرتبطة بها.
  return A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false&&(!city||a.city===city));
 }
 function agreementLinkedToSelectedProgram(a){
@@ -262,8 +261,8 @@ function renderGroupAgreementOptions(){
  const md=$('groupMadinahAgreement'),mk=$('groupMakkahAgreement'); if(!md||!mk)return;
  const mdCur=md.value,mkCur=mk.value;
  const madinah=agreementsForProgram('madinah'),makkah=agreementsForProgram('makkah');
- md.innerHTML='<option value="">بدون اتفاقية مدينة</option>'+madinah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a);return '<option value="'+a.id+'" '+(rem<=0||!linked?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!linked?'غير مرتبطة بهذه الرحلة':'متبقي '+rem)+'</option>';}).join('');
- mk.innerHTML='<option value="">بدون اتفاقية مكة</option>'+makkah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a);return '<option value="'+a.id+'" '+(rem<=0||!linked?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!linked?'غير مرتبطة بهذه الرحلة':'متبقي '+rem)+'</option>';}).join('');
+ md.innerHTML='<option value="">بدون اتفاقية مدينة</option>'+madinah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramId&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramId?'اختر الرحلة أولاً':!linked?'غير مرتبطة بهذه الرحلة':'متبقي '+rem)+'</option>';}).join('');
+ mk.innerHTML='<option value="">بدون اتفاقية مكة</option>'+makkah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramId&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramId?'اختر الرحلة أولاً':!linked?'غير مرتبطة بهذه الرحلة':'متبقي '+rem)+'</option>';}).join('');
  if(mdCur&&madinah.some(a=>a.id===mdCur&&remaining(a)>0))md.value=mdCur;
  if(mkCur&&makkah.some(a=>a.id===mkCur&&remaining(a)>0))mk.value=mkCur;
  if(!selectedLinkProgramId){md.value='';mk.value='';}
