@@ -1183,13 +1183,14 @@ function renderFoodSubscriptions(){
 function initFoodSubscriptions(){
  const panel=document.getElementById('foodSubscriptionsPanel'),open=document.getElementById('openFoodSubscriptions');
  const sel=document.getElementById('foodProgramFilter');
- if(!panel||!open||!sel)return;
+ if(!panel||!sel)return;
  sel.innerHTML='<option value="">كل الرحلات</option>'+PR.map(x=>'<option value="'+x.id+'">'+esc(x.title||'رحلة')+'</option>').join('');
- open.onclick=()=>{panel.classList.remove('hide');panel.scrollIntoView({behavior:'smooth',block:'start'});renderFoodSubscriptions();};
+ const showFoodSubscriptions=()=>{panel.classList.remove('hide');renderFoodSubscriptions();panel.scrollIntoView({behavior:'smooth',block:'start'});};
+ if(open)open.onclick=showFoodSubscriptions;
  document.getElementById('foodCloseBtn').onclick=()=>panel.classList.add('hide');
  sel.onchange=renderFoodSubscriptions;document.getElementById('foodSearch').oninput=renderFoodSubscriptions;
  document.getElementById('foodPrintBtn').onclick=()=>window.print();
- if(location.hash==='#food-subscriptions')open.click();
+ if(location.hash==='#food-subscriptions')showFoodSubscriptions();
 }
 (async()=>{try{const{data:{session}}=await db.auth.getSession();if(session&&await isAdmin()){$('login').classList.add('hide');$('app').classList.remove('hide');document.body.classList.remove('auth-pending');await load();initFoodSubscriptions()}else{document.body.classList.remove('auth-pending')}}catch(e){document.body.classList.remove('auth-pending');msg('loginMsg',e.message||'تعذر فحص الجلسة.',true)}})();
 </script>
