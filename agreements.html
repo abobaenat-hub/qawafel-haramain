@@ -67,7 +67,7 @@
 <section class="card">
 <h3 style="margin-top:0;color:var(--n)">1) ربط اتفاقيات المعتمرين</h3>
 <div class="notice">يمكنك تحديد مجموعة من المعتمرين دفعة واحدة. لكل معتمر يمكن ربط <b>اتفاقية المدينة</b> و<b>اتفاقية مكة</b> معًا، أو ربط واحدة منهما فقط.</div>
-<div class="grid2" style="margin-top:10px"><div class="field"><label>اختر الرحلة أولاً</label><select id="groupProgramSelect"><option value="">— اختر رحلة منشورة —</option></select><div id="linkProgramInfo" class="notice" style="margin-top:6px">لن تظهر أسماء المعتمرين حتى تختار الرحلة.</div></div><div class="field"><label>عدد المعتمرين المحددين</label><div id="groupSelectionInfo" class="notice">المحدد: 0</div></div></div>
+<div class="grid2" style="margin-top:10px"><div class="field"><label>اختر الرحلة أولاً</label><div id="groupProgramSelect" class="trip-checkboxes"><div class="notice">جارٍ تحميل الرحلات المنشورة...</div></div><div id="linkProgramInfo" class="notice" style="margin-top:6px">لن تظهر أسماء المعتمرين حتى تختار الرحلة.</div></div><div class="field"><label>عدد المعتمرين المحددين</label><div id="groupSelectionInfo" class="notice">المحدد: 0</div></div></div>
 <div class="grid2" style="margin-top:10px"><div class="field"><label>اتفاقية المدينة <span style="color:var(--muted);font-size:9px">(اختيارية)</span></label><select id="groupMadinahAgreement"><option value="">بدون اتفاقية مدينة</option></select><div id="groupMadinahInfo" class="agreement-capacity" style="margin-top:5px"></div></div><div class="field"><label>اتفاقية مكة <span style="color:var(--muted);font-size:9px">(اختيارية)</span></label><select id="groupMakkahAgreement"><option value="">بدون اتفاقية مكة</option></select><div id="groupMakkahInfo" class="agreement-capacity" style="margin-top:5px"></div></div></div>
 <div class="field" style="margin-top:10px"><label>المعتمرون — اختيار جماعي</label><div class="toolbar" style="margin-bottom:7px"><input id="groupPilgrimSearch" placeholder="بحث بالاسم أو الجواز أو رمز الملف"><button class="btn gray" type="button" id="groupSelectAll">تحديد الكل</button><button class="btn gray" type="button" id="groupClearAll">إلغاء التحديد</button></div><div id="groupPilgrimList" class="group-pilgrim-list"><div class="notice">اختر رحلة من الأعلى أولاً.</div></div></div>
 <div class="toolbar" style="margin-top:11px"><button class="btn primary" id="saveGroupAssignments">ربط المعتمرين المحددين بالاتفاقيات</button><button class="btn gold" type="button" id="showAgreementMessage">📋 رسالة الاتفاقية</button></div><div id="linkMsg" class="msg hide"></div>
@@ -99,7 +99,7 @@
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
 const db=window.supabase.createClient(U,K);
-let A=[],AS=[],P=[],PROGRAMS=[],BOOKING_PROGRAMS={},AGP=[],selectedProgramIds=[],selectedProgram=null,selectedAgreement=null,selectedSlot=null,selectedLinkProgramId='';
+let A=[],AS=[],P=[],PROGRAMS=[],BOOKING_PROGRAMS={},AGP=[],selectedProgramIds=[],selectedProgram=null,selectedAgreement=null,selectedSlot=null,selectedLinkProgramIds=[];
 
 const $=id=>document.getElementById(id);
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -243,29 +243,33 @@ function agreementsForProgram(city=null){
  return A.filter(a=>a.agreement_kind==='hotel'&&a.active!==false&&(!city||a.city===city));
 }
 function agreementLinkedToSelectedProgram(a){
- return !!(a&&selectedLinkProgramId&&AGP.some(x=>x.agreement_id===a.id&&x.program_id===selectedLinkProgramId));
+ return !!(a&&selectedLinkProgramIds.some(pid=>AGP.some(x=>x.agreement_id===a.id&&x.program_id===pid)));
 }
 function selectedAgreementProgramIds(){
- if(!selectedLinkProgramId)return [];
+ if(!selectedLinkProgramIds.length)return [];
  const selectedAids=[$('groupMadinahAgreement')?.value,$('groupMakkahAgreement')?.value].filter(Boolean);
- if(!selectedAids.length)return [selectedLinkProgramId];
- return selectedAids.some(aid=>AGP.some(x=>x.agreement_id===aid&&x.program_id===selectedLinkProgramId))?[selectedLinkProgramId]:[];
+ if(!selectedAids.length)return [...selectedLinkProgramIds];
+ return selectedLinkProgramIds.filter(pid=>selectedAids.some(aid=>AGP.some(x=>x.agreement_id===aid&&x.program_id===pid)));
 }
 function renderPilgrimLinker(){
- const sel=$('groupProgramSelect');if(sel){const current=selectedLinkProgramId;sel.innerHTML='<option value="">— اختر رحلة منشورة —</option>'+PROGRAMS.filter(isCurrentActiveProgram).map(p=>'<option value="'+p.id+'">'+esc(programLabel(p))+'</option>').join('');if(current&&PROGRAMS.some(p=>p.id===current&&isCurrentActiveProgram(p)))sel.value=current;else selectedLinkProgramId='';}
- const p=PROGRAMS.find(x=>x.id===selectedLinkProgramId);
- $('linkProgramInfo').innerHTML=p?'<b>الرحلة المختارة:</b> '+esc(programLabel(p)):'اختر رحلة منشورة أولاً؛ بعدها ستظهر اتفاقياتها ومعتمروها فقط.';
+ const box=$('groupProgramSelect');if(box){
+   const valid=new Set(PROGRAMS.filter(isCurrentActiveProgram).map(p=>p.id));
+   selectedLinkProgramIds=selectedLinkProgramIds.filter(id=>valid.has(id));
+   box.innerHTML=PROGRAMS.filter(isCurrentActiveProgram).map(p=>'<label class="trip-check"><input type="checkbox" value="'+p.id+'" '+(selectedLinkProgramIds.includes(p.id)?'checked':'')+'><span class="trip-text"><span class="trip-title">'+esc(p.title||'رحلة')+'</span><span class="trip-meta">'+esc((p.departure_date||'بدون تاريخ')+(p.travel_type?' — '+p.travel_type:''))+'</span><span class="trip-status">منشورة</span></span></label>').join('')||'<div class="notice">لا توجد رحلات منشورة متاحة.</div>';
+ }
+ const chosen=PROGRAMS.filter(p=>selectedLinkProgramIds.includes(p.id));
+ $('linkProgramInfo').innerHTML=chosen.length?'<b>الرحلات المختارة ('+chosen.length+'):</b> '+chosen.map(p=>esc(programLabel(p))).join(' | '):'اختر رحلة منشورة واحدة أو أكثر؛ بعدها ستظهر أسماء معتمري الرحلات المحددة فقط.';
  renderGroupAgreementOptions();renderGroupPilgrims();
 }
 function renderGroupAgreementOptions(){
  const md=$('groupMadinahAgreement'),mk=$('groupMakkahAgreement'); if(!md||!mk)return;
  const mdCur=md.value,mkCur=mk.value;
  const madinah=agreementsForProgram('madinah'),makkah=agreementsForProgram('makkah');
- md.innerHTML='<option value="">بدون اتفاقية مدينة</option>'+madinah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramId&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramId?'اختر الرحلة أولاً':!linked?'غير مرتبطة بهذه الرحلة':'متبقي '+rem)+'</option>';}).join('');
+ md.innerHTML='<option value="">بدون اتفاقية مدينة</option>'+madinah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramId&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramIds.length?'اختر الرحلة أولاً':!linked?'غير مرتبطة بهذه الرحلة':'متبقي '+rem)+'</option>';}).join('');
  mk.innerHTML='<option value="">بدون اتفاقية مكة</option>'+makkah.map(a=>{const rem=remaining(a),linked=agreementLinkedToSelectedProgram(a),canSelect=!!selectedLinkProgramId&&linked&&rem>0;return '<option value="'+a.id+'" '+(!canSelect?'disabled':'')+'>رقم الاتفاقية: '+esc(a.agreement_number||'—')+' — '+esc(a.hotel_name||'فندق')+' — '+(rem<=0?'مكتملة — 0':!selectedLinkProgramId?'اختر الرحلة أولاً':!linked?'غير مرتبطة بهذه الرحلة':'متبقي '+rem)+'</option>';}).join('');
  if(mdCur&&madinah.some(a=>a.id===mdCur&&remaining(a)>0))md.value=mdCur;
  if(mkCur&&makkah.some(a=>a.id===mkCur&&remaining(a)>0))mk.value=mkCur;
- if(!selectedLinkProgramId){md.value='';mk.value='';}
+ if(!selectedLinkProgramIds.length){md.value='';mk.value='';}
  updateGroupAgreementInfo();
 }
 function updateGroupAgreementInfo(){
@@ -276,7 +280,7 @@ function updateGroupAgreementInfo(){
 function renderGroupPilgrims(){
  const linkedProgramIds=selectedAgreementProgramIds();
  const box=$('groupPilgrimList'); if(!box)return;
- if(!selectedLinkProgramId){box.innerHTML='<div class="notice">اختر رحلة منشورة من القائمة أعلاه حتى تظهر أسماء معتمريها فقط.</div>';updateGroupSelectionInfo();return;}
+ if(!selectedLinkProgramIds.length){box.innerHTML='<div class="notice">اختر رحلة منشورة من القائمة أعلاه حتى تظهر أسماء معتمريها فقط.</div>';updateGroupSelectionInfo();return;}
  const q=($('groupPilgrimSearch').value||'').trim().toLowerCase();
  const selected=new Set(Array.from(box.querySelectorAll('input[type="checkbox"]:checked')).map(x=>x.value));
  const mdAgreement=$('groupMadinahAgreement')?.value||'';
@@ -289,7 +293,7 @@ function renderGroupPilgrims(){
    // إذا اختيرت اتفاقيتا المدينة ومكة: يبقى ظاهرًا حتى يكتمل الربط بالاثنتين.
    if(selectedAgreements.length){
      const linked=new Set(AS.filter(x=>x.pilgrim_id===p.id&&x.program_id===pid).map(x=>x.agreement_id));
-     const fullyLinked=selectedAgreements.every(aid=>linked.has(aid));
+     const applicableAgreements=selectedAgreements.filter(aid=>AGP.some(x=>x.agreement_id===aid&&x.program_id===pid));\n     const fullyLinked=applicableAgreements.length>0&&applicableAgreements.every(aid=>linked.has(aid));
      if(fullyLinked)return false;
    }
    return !q||[p.full_name,p.passport_number,p.profile_code].join(' ').toLowerCase().includes(q);
@@ -355,7 +359,7 @@ async function copyAgreementMessage(){
 }
 async function saveGroupAssignments(){
  const checkedPrograms=selectedAgreementProgramIds();
- if(!selectedLinkProgramId){toast('اختر الرحلة أولاً.',false);return;}
+ if(!selectedLinkProgramIds.length){toast('اختر رحلة واحدة على الأقل.',false);return;}
  if(!checkedPrograms.length){toast('الاتفاقية المختارة غير مرتبطة بهذه الرحلة.',false);return;}
  const aidList=[$('groupMadinahAgreement').value,$('groupMakkahAgreement').value].filter(Boolean);
  if(!aidList.length){toast('اختر اتفاقية المدينة أو اتفاقية مكة على الأقل.',false);return;}
@@ -509,7 +513,7 @@ async function start(){
  if(!await auth())return;
  $('agreementProgramSelect').addEventListener('change',selectPrograms);
  $('toggleAddAgreement').onclick=()=>{$('addAgreementBody').classList.toggle('hide');};$('kind').onchange=toggleHotelFields;$('search').oninput=render;$('filter').onchange=render;$('groupMadinahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupMakkahAgreement').onchange=()=>{renderGroupPilgrims();updateGroupAgreementInfo();};$('groupPilgrimSearch').oninput=renderGroupPilgrims;$('groupPilgrimList').addEventListener('change',updateGroupSelectionInfo);$('groupSelectAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=true);updateGroupSelectionInfo();};$('groupClearAll').onclick=()=>{document.querySelectorAll('#groupPilgrimList input[type="checkbox"]').forEach(x=>x.checked=false);updateGroupSelectionInfo();};$('saveGroupAssignments').onclick=saveGroupAssignments;
- $('groupProgramSelect').onchange=()=>{selectedLinkProgramId=$('groupProgramSelect').value; $('groupMadinahAgreement').value='';$('groupMakkahAgreement').value='';$('groupPilgrimSearch').value='';renderPilgrimLinker();};
+ $('groupProgramSelect').onchange=(e)=>{const t=e.target;if(t?.type!=='checkbox')return;selectedLinkProgramIds=Array.from($('groupProgramSelect').querySelectorAll('input[type="checkbox"]:checked')).map(x=>x.value);$('groupMadinahAgreement').value='';$('groupMakkahAgreement').value='';$('groupPilgrimSearch').value='';renderPilgrimLinker();};
  $('showAgreementMessage').onclick=openAgreementMessage;$('cancelEditAgreement').onclick=resetAgreementForm;
  $('closeAgreementMessage').onclick=closeAgreementMessage;
  $('copyAgreementMessage').onclick=copyAgreementMessage;
