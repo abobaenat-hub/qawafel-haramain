@@ -118,14 +118,15 @@ async function auth(){
 async function load(){
   // حمّل الرحلات أولاً حتى تظهر خياراتها فوراً، ولا تبقى الواجهة على رسالة الانتظار
   // بسبب بطء أي استعلام آخر في بيانات الاتفاقيات.
-  const rr=await db.from('programs').select('id,title,departure_date,return_date,status,travel_type').order('departure_date',{ascending:false});
+  const rr=await db.from('programs').select('id,title,departure_date,status,travel_type').order('departure_date',{ascending:false});
   if(rr.error){
     toast('تعذر تحميل الرحلات: '+rr.error.message,false);
-    $('groupProgramSelect').innerHTML='<div class="notice">تعذر تحميل الرحلات المنشورة. اضغط تحديث للمحاولة مجددًا.</div>';
+    $('groupProgramSelect').innerHTML='<div class="notice">خطأ تحميل الرحلات: '+esc(rr.error.message)+' — اضغط تحديث للمحاولة مجددًا.</div>';
     return;
   }
   PROGRAMS=rr.data||[];
-  renderPilgrimLinker();
+  if(!PROGRAMS.length){$('groupProgramSelect').innerHTML='<div class="notice">تم الاتصال بقاعدة البيانات، لكن لم تُرجع قائمة الرحلات أي سجلات.</div>';}
+  else { renderPilgrimLinker(); }
   const [ar,sr,br,pr,agr]=await Promise.all([
     db.from('travel_agreements').select('*').order('created_at',{ascending:false}),
     db.from('travel_agreement_assignments').select('*').order('slot_number'),
