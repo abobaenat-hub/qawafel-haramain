@@ -516,29 +516,45 @@ async function transferOne(id){
 function setupGroupPilgrimDragSelection(){
  const box=$('groupPilgrimList');if(!box||box.dataset.dragSelectReady==='1')return;
  box.dataset.dragSelectReady='1';
- let active=false,pointerId=null;
+ let active=false,dragging=false,pointerId=null,startX=0,startY=0,startRow=null,startChecked=false;
+ const setRow=(row,checked)=>{
+   const cb=row?.querySelector?.('input[type="checkbox"]');
+   if(cb&&cb.checked!==checked){cb.checked=checked;updateGroupSelectionInfo();}
+ };
  const selectAt=(x,y)=>{
    const el=document.elementFromPoint(x,y);
    const row=el?.closest?.('.group-pilgrim-item');
-   if(!row||!box.contains(row))return;
-   const cb=row.querySelector('input[type="checkbox"]');
-   if(cb&&!cb.checked){cb.checked=true;updateGroupSelectionInfo();}
+   if(row&&box.contains(row))setRow(row,true);
  };
  box.addEventListener('pointerdown',e=>{
    const row=e.target?.closest?.('.group-pilgrim-item');
-   if(!row||!box.contains(row)||e.button!==0&&e.pointerType==='mouse')return;
+   if(!row||!box.contains(row)||(e.pointerType==='mouse'&&e.button!==0))return;
    const cb=row.querySelector('input[type="checkbox"]');if(!cb)return;
-   active=true;pointerId=e.pointerId;
-   if(!cb.checked){cb.checked=true;updateGroupSelectionInfo();}
+   active=true;dragging=false;pointerId=e.pointerId;
+   startX=e.clientX;startY=e.clientY;startRow=row;startChecked=cb.checked;
    try{box.setPointerCapture(pointerId);}catch(_){}
    e.preventDefault();
  });
  box.addEventListener('pointermove',e=>{
    if(!active||e.pointerId!==pointerId)return;
-   selectAt(e.clientX,e.clientY);
+   if(!dragging&&Math.hypot(e.clientX-startX,e.clientY-startY)>7){
+     dragging=true;
+     // عند بدء السحب نبدأ بتحديد العنصر الأول ثم كل عنصر يمر عليه المؤشر.
+     setRow(startRow,true);
+   }
+   if(dragging)selectAt(e.clientX,e.clientY);
  });
- const stop=e=>{if(!active||e.pointerId!==pointerId)return;active=false;pointerId=null;};
- box.addEventListener('pointerup',stop);box.addEventListener('pointercancel',stop);box.addEventListener('lostpointercapture',stop);
+ const stop=e=>{
+   if(!active||e.pointerId!==pointerId)return;
+   if(!dragging&&startRow){
+     // النقرة المفردة تبدّل حالة المربع: تحديد أو إلغاء تحديد.
+     setRow(startRow,!startChecked);
+   }
+   active=false;dragging=false;pointerId=null;startRow=null;
+ };
+ box.addEventListener('pointerup',stop);
+ box.addEventListener('pointercancel',stop);
+ box.addEventListener('lostpointercapture',stop);
 }
 async function start(){
  try{
