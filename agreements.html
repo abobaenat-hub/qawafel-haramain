@@ -145,13 +145,17 @@ async function load(){
   renderGroupAgreementOptions();
   renderPilgrimLinker();
 }
+function baghdadTodayISO(){
+ const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Baghdad',year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date());
+ const part=k=>parts.find(x=>x.type===k)?.value||'';
+ return part('year')+'-'+part('month')+'-'+part('day');
+}
 function isCurrentActiveProgram(p){
- // صفحة الاتفاقيات تتعامل حصراً مع الرحلات المنشورة القادمة.
- // الرحلات الممتلئة/المكتملة أو المؤرشفة لا تظهر في أي اختيار.
+ // لا تظهر إلا الرحلات المنشورة التي لم يحن موعد مغادرتها بعد.
+ // أي حالة أخرى، ومنها المكتملة/الممتلئة/المؤرشفة، مستبعدة تماماً.
  if(!p||p.status!=='published')return false;
  if(!p.departure_date)return true;
- const today=new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Baghdad'});
- return p.departure_date>=today;
+ return String(p.departure_date).slice(0,10)>=baghdadTodayISO();
 }
 function renderPrograms(){
  const box=$('agreementProgramSelect');
@@ -236,7 +240,7 @@ function agreementRemainingLabel(a){const rem=remaining(a);return rem>0?`متب�
 function agreementsForProgram(city=null){
  // اعرض الاتفاقيات الفندقية الفعالة المرتبطة برحلات منشورة،
  // حتى لو كانت الرحلة قديمة؛ فالاتفاقية القديمة يجب أن تبقى قابلة للإدارة.
- const publishedProgramIds=new Set(PROGRAMS.filter(p=>p&&p.status==='published').map(p=>p.id));
+ const publishedProgramIds=new Set(PROGRAMS.filter(isCurrentActiveProgram).map(p=>p.id));
  return A.filter(a=>{
    if(a.agreement_kind!=='hotel'||a.active===false||(city&&a.city!==city))return false;
    return AGP.some(x=>x.agreement_id===a.id&&publishedProgramIds.has(x.program_id));
@@ -246,7 +250,7 @@ function selectedAgreementProgramIds(){
  const ids=new Set();
  [$('groupMadinahAgreement')?.value,$('groupMakkahAgreement')?.value].filter(Boolean).forEach(aid=>AGP.filter(x=>x.agreement_id===aid).forEach(x=>{
    const p=PROGRAMS.find(z=>z.id===x.program_id);
-   if(p&&p.status==='published')ids.add(x.program_id);
+   if(isCurrentActiveProgram(p))ids.add(x.program_id);
  }));
  return [...ids];
 }
@@ -403,7 +407,7 @@ function editAgreement(id){
 async function addAgreement(){
  const editId=$('editAgreementId').value||null,kind=$('kind').value,num=$('number').value.trim(),programIds=selectedProgramsForAgreement();
  if(!num){toast('أدخل رقم الاتفاقية.',false);return;}if(!programIds.length){toast('اختر رحلة منشورة واحدة على الأقل للاتفاقية.',false);return;}
- const invalid=programIds.map(id=>PROGRAMS.find(p=>p.id===id)).find(p=>!p||p.status!=='published');if(invalid){toast('يمكن ربط الاتفاقية بالرحلات المنشورة فقط.',false);return;}
+ const invalid=programIds.map(id=>PROGRAMS.find(p=>p.id===id)).find(p=>!isCurrentActiveProgram(p));if(invalid){toast('يمكن ربط الاتفاقية بالرحلات المنشورة القادمة فقط.',false);return;}
  const payload={agreement_number:num,agreement_kind:kind,city:kind==='hotel'?$('city').value:null,hotel_name:kind==='hotel'?($('hotel').value.trim()||null):null,check_in:kind==='hotel'?($('checkin').value||null):null,check_out:kind==='hotel'?($('checkout').value||null):null,capacity:kind==='hotel'?Number($('capacity').value||0):null,notes:$('notes').value.trim()||null};
  if(kind==='hotel'&&!payload.capacity){toast('أدخل عدد الأسرة للاتفاقية الفندقية.',false);return;}
  if(editId){
