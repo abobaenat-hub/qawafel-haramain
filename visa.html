@@ -124,8 +124,21 @@
       if(auditLink) auditLink.style.display=(role==='super_admin')?'flex':'none';
       bar.style.display='block';
     }
-    try{const s=await db.auth.getSession(); await load(s.data?.session);}catch(e){bar.style.display='none';}
-    db.auth.onAuthStateChange(function(event,session){setTimeout(()=>load(session),0);});
+    let loadedUserId=null, loadingUserId=null;
+    async function loadOnce(session){
+      const id=session?.user?.id||null;
+      if(id && (id===loadedUserId || id===loadingUserId)) return;
+      if(!id){loadedUserId=null;bar.style.display='none';return;}
+      loadingUserId=id;
+      try{await load(session);loadedUserId=id;}
+      finally{loadingUserId=null;}
+    }
+    try{const s=await db.auth.getSession(); await loadOnce(s.data?.session);}catch(e){bar.style.display='none';}
+    db.auth.onAuthStateChange(function(event,session){
+      if(event==='INITIAL_SESSION') return;
+      if(event==='SIGNED_OUT'){loadedUserId=null;bar.style.display='none';return;}
+      if(event==='SIGNED_IN' || event==='TOKEN_REFRESHED' || event==='USER_UPDATED') loadOnce(session);
+    });
   }
   if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init); else init();
 })();
@@ -455,45 +468,7 @@ Promise.allSettled([markUnreadVisaEventsViewedOnOpen(),load(),loadVisaEmailLog()
   }
 })();
 </script>
-<script id="qawafel-permission-menu-v174">
-(function(){
- const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
- const map={programs:'trips',pilgrims:'booking_staff',agents:'agents',supervisors:'supervisors',visa:'visa',nusuk:'nusuk',archive:'archive',financial:'finance',employees:'manager',audit:'super_admin'};
- let perms=null, busy=false;
- function pageKey(h){const x=(h||'').split('?')[0].split('#')[0].split('/').pop();return map[x]||null}
- function apply(){
-   if(!perms || busy)return; busy=true;
-   try{
-     document.querySelectorAll('a[href]').forEach(a=>{
-       const k=pageKey(a.getAttribute('href')); if(!k)return;
-       let ok=perms.has(k);
-       if(k==='nusuk') ok=ok||perms.has('booking_staff')||perms.has('visa');
-       if(k==='supervisors') ok=ok||perms.has('supervisor')||perms.has('driver');
-       if(k==='super_admin') ok=false;
-       a.style.display=ok?'':'none';
-       a.setAttribute('aria-hidden',ok?'false':'true');
-     });
-   }finally{busy=false}
- }
- async function run(){
-   try{
-     if(!window.supabase)return;
-     const db=window.supabase.createClient(U,K);
-     const r=await db.auth.getUser(),u=r.data&&r.data.user;if(!u)return;
-     const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
-     const s=q.data;if(!s||s.active===false)return;
-     if(['super_admin','manager'].includes(s.role)) return; // المدير والمدير العام يرون كل الأقسام
-     perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
-     apply();
-     const obs=new MutationObserver(()=>apply());
-     obs.observe(document.body,{childList:true,subtree:true});
-     setTimeout(()=>obs.disconnect(),15000);
-     [100,300,700,1500,3000].forEach(t=>setTimeout(apply,t));
-   }catch(e){console.warn('permission menu',e)}
- }
- if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run);else run();
-})();
-</script><script id="qawafel-permission-guard-v175">
+<!-- Removed duplicate permission loader: v175 now performs one profile lookup. --><script id="qawafel-permission-guard-v176">
 (function(){
   const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
   const map={
@@ -501,54 +476,59 @@ Promise.allSettled([markUnreadVisaEventsViewedOnOpen(),load(),loadVisaEmailLog()
     'visa.html':'visa','nusuk.html':'nusuk','archive.html':'archive','financial.html':'finance','employees.html':'manager','audit.html':'super_admin'
   };
   const sensitive=Object.keys(map);
-  let applied=false;
   function key(h){
     try{return new URL(h,location.href).pathname.split('/').pop().toLowerCase()}catch(e){return String(h||'').split('?')[0].split('#')[0].split('/').pop().toLowerCase()}
   }
   function hideAll(){
     document.querySelectorAll('a[href]').forEach(a=>{
-      const k=key(a.getAttribute('href')); if(sensitive.includes(k)) a.style.display='none';
+      if(sensitive.includes(key(a.getAttribute('href')))) a.style.display='none';
     });
   }
   function sectionCleanup(){
     document.querySelectorAll('#qawafelAdminDrawer .qad-section').forEach(sec=>{
       let n=sec.nextElementSibling,has=false;
-      while(n && !n.classList.contains('qad-section')){if(n.matches&&n.matches('.qad-link')&&n.style.display!=='none')has=true;n=n.nextElementSibling}
+      while(n && !n.classList.contains('qad-section')){
+        if(n.matches&&n.matches('.qad-link')&&n.style.display!=='none')has=true;
+        n=n.nextElementSibling;
+      }
       if(sec.textContent.includes('المالية')||sec.textContent.includes('العمليات')) sec.style.display=has?'':'none';
     });
   }
   async function apply(){
+    if(!window.supabase)return;
+    const db=window.qawafelSharedDb||window.supabase.createClient(U,K);
     try{
-      if(!window.supabase){return false;}
-      const db=window.supabase.createClient(U,K);
-      const r=await db.auth.getUser(); const u=r.data&&r.data.user;
-      if(!u){hideAll();return false;}
-      const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',u.id).maybeSingle();
-      const s=q.data;
-      if(!s || s.active===false){hideAll();return false;}
-      if(s.role==='super_admin'||s.role==='manager'){
-        document.querySelectorAll('a[href]').forEach(a=>{const k=key(a.getAttribute('href'));if(sensitive.includes(k))a.style.display='';});
-        sectionCleanup(); applied=true; return true;
+      const {data,error}=await db.auth.getSession();
+      if(error)throw error;
+      const user=data?.session?.user;
+      if(!user){hideAll();return;}
+      const q=await db.from('staff_profiles').select('role,permissions,active').eq('user_id',user.id).maybeSingle();
+      if(q.error)throw q.error;
+      const profile=q.data;
+      if(!profile||profile.active===false){hideAll();return;}
+      if(profile.role==='super_admin'||profile.role==='manager'){
+        document.querySelectorAll('a[href]').forEach(a=>{
+          if(sensitive.includes(key(a.getAttribute('href'))))a.style.display='';
+        });
+        sectionCleanup();return;
       }
-      const perms=new Set([s.role,...(Array.isArray(s.permissions)?s.permissions:[])]);
+      const perms=new Set([profile.role,...(Array.isArray(profile.permissions)?profile.permissions:[])]);
       document.querySelectorAll('a[href]').forEach(a=>{
-        const k=key(a.getAttribute('href')); const need=map[k]; if(!need)return;
+        const k=key(a.getAttribute('href')),need=map[k];if(!need)return;
         let ok=perms.has(need);
-        if(k==='nusuk.html') ok=ok||perms.has('booking_staff')||perms.has('visa');
-        if(k==='supervisors.html') ok=ok||perms.has('supervisor')||perms.has('driver');
+        if(k==='nusuk.html')ok=ok||perms.has('booking_staff')||perms.has('visa');
+        if(k==='supervisors.html')ok=ok||perms.has('supervisor')||perms.has('driver');
         a.style.display=ok?'':'none';
         a.setAttribute('aria-hidden',ok?'false':'true');
       });
-      sectionCleanup(); applied=true; return true;
-    }catch(e){console.warn('permission guard',e);hideAll();return false;}
+      sectionCleanup();
+    }catch(e){
+      console.warn('permission guard',e);
+      hideAll();
+    }
   }
   hideAll();
-  let tries=0;
-  const timer=setInterval(async()=>{tries++;const ok=await apply();if(ok||tries>=20){clearInterval(timer);}},500);
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{hideAll();apply();});
-  else {hideAll();apply();}
-  const obs=new MutationObserver(()=>{if(applied)apply();});
-  obs.observe(document.documentElement,{childList:true,subtree:true});
-  setTimeout(()=>obs.disconnect(),20000);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',apply,{once:true});
+  else apply();
 })();
 </script></body></html>
