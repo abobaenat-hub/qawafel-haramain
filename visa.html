@@ -278,25 +278,46 @@ async function applyVisaBranding(){
  }catch(e){console.warn('visa branding',e)}
 }
 async function load(){
+ const rows=$('rows');
  try{
-  const [pr,bk,pg]=await Promise.all([
-   withTimeout(db.from('pilgrims').select('id,full_name,profile_code,passport_number,passport_first_name,visa_status,visa_number,visa_issued_at,visa_document_path,booking_id,created_at').order('created_at',{ascending:false}).limit(5000),20000),
-   withTimeout(db.from('bookings').select('id,program_id,created_at').limit(5000),20000),
-   withTimeout(db.from('programs').select('id,title,status,departure_date,travel_type').order('departure_date',{ascending:false}).limit(500),20000)
+  // Load pilgrims independently: trips/bookings must never hide saved names or visa records.
+  const pr=await withTimeout(
+   db.from('pilgrims')
+    .select('id,full_name,profile_code,passport_number,passport_first_name,visa_status,visa_number,visa_issued_at,visa_document_path,booking_id,created_at')
+    .order('created_at',{ascending:false}).limit(5000),
+   25000
+  );
+  if(pr.error)throw pr.error;
+  const savedPilgrims=pr.data||[];
+  all=savedPilgrims.map(p=>({...p,bookings:null}));
+  render();
+  if(rows && !all.length) rows.innerHTML='<tr><td colspan="8" class="muted">لا توجد أسماء معتمرين في البيانات المعادة من قاعدة البيانات.</td></tr>';
+
+  // Enrichment is optional and isolated from the primary pilgrims list.
+  const [bkResult,pgResult]=await Promise.allSettled([
+   withTimeout(db.from('bookings').select('id,program_id,created_at').limit(5000),12000),
+   withTimeout(db.from('programs').select('id,title,status,departure_date,travel_type').order('departure_date',{ascending:false}).limit(500),12000)
   ]);
-  if(pr.error)throw pr.error;if(bk.error)throw bk.error;if(pg.error)throw pg.error;
-  const bookings=bk.data||[];
+  const bookings=(bkResult.status==='fulfilled'&&!bkResult.value.error)?(bkResult.value.data||[]):[];
+  const programs=(pgResult.status==='fulfilled'&&!pgResult.value.error)?(pgResult.value.data||[]):[];
   const bookingMap=new Map(bookings.map(b=>[b.id,b]));
-  const programMap=new Map((pg.data||[]).map(p=>[p.id,p]));
-  all=(pr.data||[]).map(p=>{
-    const b=bookingMap.get(p.booking_id)||null;
-    return {...p,bookings:b?{...b,programs:programMap.get(b.program_id)||null}:null};
+  const programMap=new Map(programs.map(p=>[p.id,p]));
+  programsList=programs;
+  all=savedPilgrims.map(p=>{
+   const b=bookingMap.get(p.booking_id)||null;
+   return {...p,bookings:b?{...b,programs:programMap.get(b.program_id)||null}:null};
   });
-  programsList=pg.data||[];
-  render();return all;
+  render();
+  if(bkResult.status==='rejected'||pgResult.status==='rejected'||
+     (bkResult.status==='fulfilled'&&bkResult.value.error)||
+     (pgResult.status==='fulfilled'&&pgResult.value.error)){
+    console.warn('Visa page: pilgrims loaded; trip enrichment partially unavailable.',bkResult,pgResult);
+  }
+  return all;
  }catch(e){
-  all=[];programsList=[];render();
-  $('rows').innerHTML='<tr><td colspan="8" class="muted">تعذر تحميل بيانات الرحلات والمعتمرين: '+esc(e?.message||String(e))+'</td></tr>';
+  // Do not replace a previously loaded list with an empty array on transient failures.
+  console.error('Visa page pilgrims load failed:',e);
+  if(!all.length && rows) rows.innerHTML='<tr><td colspan="8" class="muted">تعذر تحميل أسماء المعتمرين: '+esc(e?.message||String(e))+'</td></tr>';
   throw e;
  }
 }
