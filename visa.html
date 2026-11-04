@@ -355,7 +355,7 @@ async function openBrandedVisa(path,pilgrimId,eventId){
   const source=await brandPdfInBrowser(path,pilgrimId,eventId);
   if(!source)throw new Error('تعذر تحديد ملف التأشيرة الأصلي.');
   let url=source;
-  if(!/^https?:\\/\\//i.test(String(source))){
+  if(!/^https?:\/\//i.test(String(source))){
    const signed=await db.storage.from('pilgrim-photos').createSignedUrl(String(source),300);
    if(signed.error)throw signed.error;
    url=signed.data?.signedUrl;
