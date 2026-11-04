@@ -229,7 +229,7 @@ function renderTripOptions(){
  const currentPrograms=programsList.filter(isCurrentVisaProgram);
  const requested=new URLSearchParams(location.search).get('program')||'';
  if(requested&&currentPrograms.some(x=>x.id===requested)) selectedTripId=requested;
- sel.innerHTML='<option value="">اختر الرحلة...</option>'+currentPrograms.map(p=>{
+ sel.innerHTML='<option value="">كل المعتمرين</option>'+currentPrograms.map(p=>{
    const count=all.filter(x=>tripInfo(x).id===p.id).length;
    return '<option value="'+esc(p.id)+'">'+esc(p.title)+' — '+count+' معتمر</option>';
  }).join('');
@@ -238,11 +238,10 @@ function renderTripOptions(){
 }
 function renderTripVisas(){
  const q=($('search').value||'').trim().toLowerCase();
- const list=selectedTripId?all.filter(x=>tripInfo(x).id===selectedTripId&&statusMatches(x)&&(!q||[x.full_name,x.profile_code,x.passport_number,x.visa_number].some(v=>String(v||'').toLowerCase().includes(q)))):[];
+ const list=all.filter(x=>(!selectedTripId||tripInfo(x).id===selectedTripId)&&statusMatches(x)&&(!q||[x.full_name,x.profile_code,x.passport_number,x.visa_number].some(v=>String(v||'').toLowerCase().includes(q))));
  const trip=programsList.find(t=>t.id===selectedTripId);
- $('selectedTripVisaSummary').innerHTML=trip?'<b>'+esc(trip.title)+'</b><br>'+list.length+' معتمر ظاهر — '+list.filter(x=>x.visa_document_path).length+' PDF محفوظ':'اختر الرحلة لعرض أسماء المعتمرين وتأشيراتهم.';
- if(!selectedTripId){$('rows').innerHTML='<tr><td colspan="8" class="muted">اختر الرحلة أولاً، وستظهر أسماء معتمريها هنا.</td></tr>';return}
- if(!list.length){$('rows').innerHTML='<tr><td colspan="8" class="muted">لا توجد أسماء ضمن الرحلة بهذا التصنيف.</td></tr>';return}
+ $('selectedTripVisaSummary').innerHTML=(trip?'<b>'+esc(trip.title)+'</b>':'<b>جميع المعتمرين</b>')+'<br>'+list.length+' معتمر ظاهر — '+list.filter(x=>x.visa_document_path).length+' PDF محفوظ';
+ if(!list.length){$('rows').innerHTML='<tr><td colspan="8" class="muted">لا توجد أسماء معتمرين مطابقة للتصنيف أو البحث الحالي.</td></tr>';return}
  $('rows').innerHTML=list.map(x=>visaRow(x,false)).join('')
 }
 function renderArchiveOptions(){
