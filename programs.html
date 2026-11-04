@@ -527,9 +527,63 @@ async function printTripBadges(){
 }
 
 $('printBadgesTrip')?.addEventListener('click',printTripBadges);
-$('passportStickersTrip')?.addEventListener('click',()=>alert('ستيكر الجواز سنربطه بطباعة جماعية من هذه الرحلة في المرحلة التالية.'));
+$('passportStickersTrip')?.addEventListener('click',printTripPassportStickers);
 $('zamzamStickersTrip')?.addEventListener('click',printTripZamzamStickers);
 $('baggageStickersTrip')?.addEventListener('click',printTripBaggageStickers);
+function passportStickerData(p){
+ return {name:p?.full_name||'—',passport:p?.passport_number||'',trip:activeTrip?.title||'—',date:activeTrip?.departure_date||''};
+}
+function passportStickerHtml(d){
+ return `<article class="passport-sticker">
+   <div class="passport-sticker-head"><img src="./logo.png" alt="قوافل الحرمين"><div><b>قوافل الحرمين</b><small>للحج والعمرة</small></div></div>
+   <div class="passport-sticker-name">${esc(d.name)}</div>
+   <div class="passport-sticker-rule"></div>
+   <div class="passport-sticker-row"><span>رقم الجواز</span><b dir="ltr">${esc(d.passport||'—')}</b></div>
+   <div class="passport-sticker-row trip"><span>الرحلة</span><b>${esc(d.trip)}</b></div>
+   ${d.date?`<div class="passport-sticker-date">تاريخ المغادرة: ${esc(d.date)}</div>`:''}
+ </article>`;
+}
+function passportStickerPrintCSS(){return `
+*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;font-family:Tahoma,Arial,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+.passport-page{width:210mm;min-height:297mm;margin:0 auto;padding:9mm;display:grid;grid-template-columns:repeat(2,90mm);grid-auto-rows:49mm;gap:5mm;justify-content:center;align-content:start;page-break-after:always;break-after:page}
+.passport-sticker{width:90mm;height:49mm;border:.35mm solid #c79a3b;border-radius:2.5mm;background:linear-gradient(135deg,#fff 0%,#f8f7f1 100%);padding:3mm 4mm;position:relative;overflow:hidden;direction:rtl;display:flex;flex-direction:column;gap:1.5mm}
+.passport-sticker:before{content:"";position:absolute;right:0;top:0;bottom:0;width:2.2mm;background:#082f50}
+.passport-sticker-head{display:flex;align-items:center;justify-content:center;gap:2mm;height:11mm;color:#082f50}
+.passport-sticker-head img{width:22mm;height:10mm;object-fit:contain}
+.passport-sticker-head b{font-size:3.7mm;display:block}.passport-sticker-head small{font-size:2.3mm;color:#9a762d;display:block;margin-top:.5mm}
+.passport-sticker-name{text-align:center;font-weight:900;font-size:4mm;color:#082f50;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1mm}
+.passport-sticker-rule{height:.35mm;background:#c79a3b;margin:0 2mm}
+.passport-sticker-row{display:flex;align-items:center;justify-content:space-between;gap:3mm;font-size:2.8mm;color:#526575}
+.passport-sticker-row b{font-size:3.5mm;color:#082f50;direction:ltr;unicode-bidi:embed}
+.passport-sticker-row.trip b{font-size:2.8mm;direction:rtl}
+.passport-sticker-date{text-align:center;font-size:2.2mm;color:#8b6b25;margin-top:auto}
+@page{size:A4 portrait;margin:0}
+@media print{html,body{width:210mm;background:#fff}.passport-page{margin:0}.passport-sticker{break-inside:avoid}}
+`;}
+async function printTripPassportStickers(){
+ if(!activeTrip?.id)return alert('افتح الرحلة أولاً.');
+ const list=allProgramPilgrims||[];
+ if(!list.length)return alert('لا يوجد معتمرون في هذه الرحلة.');
+ const ready=list.filter(p=>String(p.passport_number||'').trim());
+ const missing=list.length-ready.length;
+ if(!ready.length)return alert('لا توجد أرقام جوازات مسجلة لمعتمري هذه الرحلة.');
+ const message='سيتم تجهيز '+ready.length+' ستيكر جواز'+(missing?'، مع استبعاد '+missing+' معتمر لعدم وجود رقم جواز.':'')+' هل تريد المتابعة؟';
+ if(!confirm(message))return;
+ const w=window.open('about:blank','_blank');
+ if(!w)return alert('المتصفح منع نافذة الطباعة. اسمح بالنوافذ المنبثقة للمنصة.');
+ w.document.open();
+ w.document.write('<!doctype html><html lang="ar" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ستيكرات الجواز — قوافل الحرمين</title><style>'+passportStickerPrintCSS()+'</style></head><body><div id="passportPrint"></div></body></html>');
+ w.document.close();
+ const area=w.document.getElementById('passportPrint');
+ const cards=ready.map(p=>passportStickerHtml(passportStickerData(p)));
+ for(let i=0;i<cards.length;i+=8){
+   const page=w.document.createElement('section');page.className='passport-page';
+   for(const card of cards.slice(i,i+8)){const cell=w.document.createElement('div');cell.innerHTML=card;page.appendChild(cell.firstElementChild);}
+   area.appendChild(page);
+ }
+ await waitBadgeImages(w);
+ setTimeout(()=>{w.focus();w.print()},700);
+}
 function baggageStickerData(p){return {flight:activeTrip?.flight_number||'',name:p?.full_name||'',phone:p?.phone||'',departureAirport:activeTrip?.departure_airport||'',arrivalAirport:activeTrip?.arrival_airport||''};}
 function baggageStickerHtml(d){
  return `<article class="baggage-sticker">
