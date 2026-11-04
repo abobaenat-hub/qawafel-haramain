@@ -312,6 +312,29 @@ async function brandPdfInBrowser(path,pilgrimId,eventId){
  if(!path)return null;
  return await resolveVisaSourcePath(path,pilgrimId);
 }
+// فتح التأشيرة المحفوظة من التخزين الخاص برابط مؤقت آمن.
+async function openBrandedVisa(path,pilgrimId,eventId){
+ if(!path)throw new Error('لا يوجد مسار لملف التأشيرة.');
+ // افتح النافذة فور النقر حتى لا يمنع المتصفح النافذة بعد انتظار الشبكة.
+ const popup=window.open('about:blank','_blank');
+ if(!popup)throw new Error('المتصفح منع نافذة التأشيرة. اسمح بالنوافذ المنبثقة للمنصة ثم أعد المحاولة.');
+ try{
+  const source=await brandPdfInBrowser(path,pilgrimId,eventId);
+  if(!source)throw new Error('تعذر تحديد ملف التأشيرة الأصلي.');
+  let url=source;
+  if(!/^https?:\\/\\//i.test(String(source))){
+   const signed=await db.storage.from('pilgrim-photos').createSignedUrl(String(source),300);
+   if(signed.error)throw signed.error;
+   url=signed.data?.signedUrl;
+  }
+  if(!url)throw new Error('تعذر إنشاء رابط آمن لملف التأشيرة.');
+  popup.location.replace(url);
+  return true;
+ }catch(error){
+  try{popup.close()}catch(_){}
+  throw error;
+ }
+}
 async function viewEmailPdf(path,eventId){
  if(!path)return alert('لا يوجد ملف PDF محفوظ.');
  try{
