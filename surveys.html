@@ -25,7 +25,7 @@
 <div class="tools"><select id="program"><option value="">استبانة عامة — بدون تحديد رحلة</option></select><button class="btn green" id="copy">نسخ الرابط</button></div>
 <div class="linkbox"><input id="surveyLink" readonly></div><div id="msg" class="msg"></div></div>
 <div class="card"><div style="display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px"><div><h2>آخر الاستبانات</h2><p>آخر 100 إجابة مسجلة.</p></div><button class="btn" style="background:#edf4f8;color:var(--navy)" id="refresh">تحديث</button></div>
-<div class="table"><table><thead><tr><th>التاريخ</th><th>الرحلة</th><th>النوع</th><th>التقييم العام</th><th>الفريق</th><th>السكن مكة</th><th>السكن المدينة</th><th>الباص/الطيران</th><th>المتعهد</th><th>مشكلة</th><th>ملاحظات</th></tr></thead><tbody id="rows"></tbody></table></div></div>
+<div class="table"><table><thead><tr><th>التاريخ</th><th>الرحلة</th><th>النوع</th><th>التقييم العام</th><th>الفريق</th><th>تقييم المشرف (المدينة/مكة/التعامل/المزارات)</th><th>السكن مكة</th><th>السكن المدينة</th><th>الباص/الطيران</th><th>المتعهد</th><th>مشكلة</th><th>ملاحظات</th></tr></thead><tbody id="rows"></tbody></table></div></div>
 </div></div>
 <script>
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K);
@@ -53,7 +53,7 @@ async function load(){
  $('rows').innerHTML=a.map(x=>{
  const p=pm.get(x.program_id);let special=x.travel_type==='ground'?stars(x.bus_comfort_rating)+' / '+stars(x.driver_rating):stars(x.air_travel_rating)+' / '+stars(x.air_airport_rating);
  const note=[x.favorite,x.improvement].filter(Boolean).join(' — ');
- return '<tr><td>'+new Date(x.created_at).toLocaleString('ar-IQ')+'</td><td>'+esc(p?.title||'استبانة عامة')+'</td><td><span class="pill">'+(x.travel_type==='ground'?'🚌 بر':'✈️ طيران')+'</span></td><td>'+stars(x.overall_rating)+'</td><td>'+stars(x.staff_rating)+'</td><td>'+stars(x.makkah_hotel_rating)+'</td><td>'+stars(x.madinah_hotel_rating)+'</td><td>'+special+'</td><td>'+(x.travel_type==='ground'?stars(x.contractor_rating):'—')+'</td><td>'+(x.problem_reported?'نعم':'لا')+'</td><td>'+esc(note||'—')+'</td></tr>'
+ return '<tr><td>'+new Date(x.created_at).toLocaleString('ar-IQ')+'</td><td>'+esc(p?.title||'استبانة عامة')+'</td><td><span class="pill">'+(x.travel_type==='ground'?'🚌 بر':'✈️ طيران')+'</span></td><td>'+stars(x.overall_rating)+'</td><td>'+stars(x.staff_rating)+'</td><td>'+[x.supervisor_madinah_rating,x.supervisor_makkah_rating,x.supervisor_interaction_rating,x.supervisor_ziyarat_rating].map(stars).join(' / ')+'</td><td>'+stars(x.makkah_hotel_rating)+'</td><td>'+stars(x.madinah_hotel_rating)+'</td><td>'+special+'</td><td>'+(x.travel_type==='ground'?stars(x.contractor_rating):'—')+'</td><td>'+(x.problem_reported?'نعم':'لا')+'</td><td>'+esc(note||'—')+'</td></tr>'
  }).join('')||'<tr><td colspan="11" class="empty">لا توجد استبانات حتى الآن.</td></tr>';
 }
 $('program').onchange=link;$('copy').onclick=async()=>{try{await navigator.clipboard.writeText($('surveyLink').value);$('msg').textContent='تم نسخ الرابط.';$('msg').style.display='block';setTimeout(()=>$('msg').style.display='none',2500)}catch(e){$('surveyLink').select();document.execCommand('copy')}};$('refresh').onclick=load;
