@@ -30,6 +30,11 @@ label.q{display:block;font-size:12px;font-weight:900;margin:14px 0 7px}select,in
 <div id="common" class="card hide"><div class="title">ثانيًا: تقييم الرحلة والخدمات</div><div class="hint">التقييم من 1 إلى 5: ⭐ 1 = ضعيف جدًا، و⭐ 5 = ممتاز.</div>
 <label class="q">التسجيل والحجز</label><div class="rating" data-field="registration_rating"></div>
 <label class="q">تعامل فريق قوافل الحرمين</label><div class="rating" data-field="staff_rating"></div>
+<div class="title" style="margin-top:20px">تقييم أداء المشرف الميداني</div>
+<label class="q">متابعة المشرف وخدمته للمعتمرين في المدينة المنورة</label><div class="rating" data-field="supervisor_madinah_rating"></div>
+<label class="q">متابعة المشرف وخدمته للمعتمرين في مكة المكرمة</label><div class="rating" data-field="supervisor_makkah_rating"></div>
+<label class="q">حسن تعامل المشرف وتعاونه وسرعة استجابته</label><div class="rating" data-field="supervisor_interaction_rating"></div>
+<label class="q">تنظيم المشرف للمزارات ومرافقته للمعتمرين</label><div class="rating" data-field="supervisor_ziyarat_rating"></div>
 <label class="q">وضوح المعلومات قبل وأثناء الرحلة</label><div class="rating" data-field="clarity_rating"></div>
 <label class="q">السكن في المدينة المنورة</label><div class="rating" data-field="madinah_hotel_rating"></div>
 <label class="q">السكن في مكة المكرمة</label><div class="rating" data-field="makkah_hotel_rating"></div>
@@ -72,13 +77,16 @@ label.q{display:block;font-size:12px;font-weight:900;margin:14px 0 7px}select,in
 const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ',db=supabase.createClient(U,K);
 const params=new URLSearchParams(location.search),programId=params.get('program_id'),bookingId=params.get('booking_id');
 const $=id=>document.getElementById(id);
-const fields=['registration_rating','staff_rating','clarity_rating','madinah_hotel_rating','makkah_hotel_rating','organization_rating','bus_comfort_rating','bus_cleanliness_rating','driver_rating','stops_rating','contractor_rating','contractor_followup_rating','air_travel_rating','air_airport_rating','air_schedule_rating','overall_rating'];
+const fields=['registration_rating','staff_rating','supervisor_madinah_rating','supervisor_makkah_rating','supervisor_interaction_rating','supervisor_ziyarat_rating','clarity_rating','madinah_hotel_rating','makkah_hotel_rating','organization_rating','bus_comfort_rating','bus_cleanliness_rating','driver_rating','stops_rating','contractor_rating','contractor_followup_rating','air_travel_rating','air_airport_rating','air_schedule_rating','overall_rating'];
 function ratingHtml(name){return [1,2,3,4,5].map(n=>'<label><input type="radio" name="'+name+'" value="'+n+'"><span>'+n+'</span></label>').join('')}
 document.querySelectorAll('.rating').forEach(el=>el.innerHTML=ratingHtml(el.dataset.field));
 function val(name){const x=document.querySelector('[name="'+name+'"]:checked');return x?x.value:''}
-function showType(type){
+function showType(type,linkedTrip=false){
  $('common').classList.remove('hide');$('final').classList.remove('hide');$('optional').classList.remove('hide');$('submitBtn').classList.remove('hide');
  $('ground').classList.toggle('hide',type!=='ground');$('air').classList.toggle('hide',type!=='air');
+ $('common').querySelector('.title').textContent=linkedTrip?'أولًا: تقييم الرحلة والخدمات':'ثانيًا: تقييم الرحلة والخدمات';
+ $(type==='air'?'air':'ground').querySelector('.title').textContent=linkedTrip?(type==='air'?'ثانيًا: تقييم رحلة الطيران':'ثانيًا: تقييم الرحلة البرية'):(type==='air'?'ثالثًا: تقييم رحلة الطيران':'ثالثًا: تقييم الرحلة البرية');
+ $('final').querySelector('.title').textContent=linkedTrip?'ثالثًا: رأيكم وملاحظاتكم':'رابعًا: رأيكم وملاحظاتكم';
 }
 document.querySelectorAll('[name="travel_type"]').forEach(x=>x.addEventListener('change',()=>showType(val('travel_type'))));
 async function initProgramContext(){
@@ -91,7 +99,7 @@ async function initProgramContext(){
  $('travelTypeCard').classList.add('hide');
  document.querySelector('.head h1').textContent='استبانة رضا المعتمرين';
  document.querySelector('.head p').textContent='نرحب بتقييمكم لخدمات '+(data.title||'هذه الرحلة')+' مع قوافل الحرمين. رأيكم يساعدنا على التطوير.';
- showType(type);
+ showType(type,true);
 }
 initProgramContext();
 document.querySelectorAll('[name="problem_reported"]').forEach(x=>x.addEventListener('change',()=> $('resolvedWrap').classList.toggle('hide',val('problem_reported')!=='true')));
