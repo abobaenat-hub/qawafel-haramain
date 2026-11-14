@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>تحليل رضا المعتمرين | قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
+<style>
+:root{--navy:#0b3556;--blue:#155985;--gold:#c99a32;--bg:#f4f6f8;--line:#e3e9ee;--text:#18384f;--muted:#718390;--green:#18734e;--red:#a43b3b;--shadow:0 5px 22px rgba(11,53,86,.07)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif}.wrap{max-width:1450px;margin:auto;padding:24px 18px}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:14px;margin-bottom:18px}.eyebrow{color:var(--gold);font-size:11px;font-weight:900}.head h1{margin:6px 0;color:var(--navy);font-size:26px}.head p{margin:0;color:var(--muted);font-size:11px}.actions,.filters{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.btn{border:0;border-radius:9px;padding:10px 13px;font:inherit;font-size:11px;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}.primary{background:var(--navy);color:#fff}.soft{background:#eaf1f5;color:var(--navy)}.gold{background:var(--gold);color:#fff}.panel{background:#fff;border:1px solid var(--line);border-radius:15px;padding:16px;box-shadow:var(--shadow);margin-bottom:13px}.filters select,.filters input{padding:10px;border:1px solid #ccd8df;border-radius:9px;background:#fff;font:inherit;font-size:11px;color:var(--text);min-width:190px}.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}.kpi{background:#fff;border:1px solid var(--line);border-radius:14px;padding:15px;box-shadow:var(--shadow)}.kpi span{display:block;color:var(--muted);font-size:10px}.kpi b{display:block;color:var(--navy);font-size:25px;margin-top:6px}.kpi small{display:block;color:var(--muted);font-size:9px;margin-top:4px}.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.section-title h2{margin:0;color:var(--navy);font-size:15px}.section-title p{margin:5px 0 0;color:var(--muted);font-size:10px}.cols{display:grid;grid-template-columns:1.15fr .85fr;gap:13px}.rating-list{display:grid;gap:10px}.rating-row{display:grid;grid-template-columns:155px 1fr 44px;gap:10px;align-items:center}.rating-name{font-size:10px;font-weight:800}.track{height:11px;background:#edf1f3;border-radius:99px;overflow:hidden}.fill{height:100%;border-radius:99px;background:var(--blue)}.score{font-size:11px;font-weight:900;color:var(--navy);direction:ltr;text-align:left}.muted{color:var(--muted)}.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:700px}th,td{text-align:right;padding:10px 8px;border-bottom:1px solid var(--line);font-size:10px;vertical-align:top}th{background:#f4f7f9;color:var(--navy);white-space:nowrap}.pill{display:inline-block;border-radius:99px;padding:4px 8px;background:#edf4f8;color:var(--navy);font-size:9px;font-weight:900}.good{color:var(--green);font-weight:900}.bad{color:var(--red);font-weight:900}.feedback{border:1px solid var(--line);border-radius:11px;padding:12px;margin:8px 0;background:#fff}.feedback b{font-size:10px;color:var(--navy)}.feedback p{font-size:11px;line-height:1.8;margin:7px 0 0;white-space:pre-wrap}.empty{text-align:center;padding:24px;color:var(--muted);font-size:11px}.notice{padding:12px;border-radius:10px;background:#fff8e7;border-right:3px solid var(--gold);font-size:11px;line-height:1.8;margin-bottom:12px}.error{background:#fff0f0;color:var(--red);padding:14px;border-radius:10px;font-size:11px;display:none}.auth{max-width:480px;margin:90px auto;text-align:center}.hide{display:none!important}.footer-note{font-size:9px;color:var(--muted);margin-top:10px}
+@media(max-width:900px){.cols{grid-template-columns:1fr}.grid{grid-template-columns:repeat(2,1fr)}.head{align-items:flex-start;flex-direction:column}}@media(max-width:520px){.wrap{padding:15px 10px}.grid{grid-template-columns:repeat(2,1fr);gap:8px}.kpi{padding:12px}.kpi b{font-size:21px}.filters select,.filters input{width:100%;min-width:0}.filters{display:grid;grid-template-columns:1fr 1fr}.rating-row{grid-template-columns:110px 1fr 38px;gap:6px}.rating-name{font-size:9px}.head h1{font-size:22px}}
+@media print{body{background:#fff}.wrap{max-width:none;padding:0}.actions,.filters,.no-print{display:none!important}.panel,.kpi{box-shadow:none;break-inside:avoid}.grid{grid-template-columns:repeat(4,1fr)}.cols{grid-template-columns:1fr 1fr}.feedback{break-inside:avoid}#login{display:none!important}#app{display:block!important}}
+</style>
+</head>
+<body>
+<div id="login" class="panel auth"><h2>جاري التحقق من صلاحية الدخول...</h2><p class="muted">هذه الصفحة مخصصة لإدارة الشركة.</p></div>
+<div id="app" class="wrap hide">
+<header class="head"><div><div class="eyebrow">قوافل الحرمين للحج والعمرة</div><h1>تحليل رضا المعتمرين</h1><p>لوحة إدارية لتحليل التقييمات ومتابعة جودة الخدمات في كل رحلة.</p></div><div class="actions"><a class="btn soft" href="./surveys.html">إدارة الاستبيانات</a><button class="btn primary" id="print">طباعة التقرير / PDF</button><button class="btn gold" id="csv">تصدير CSV</button></div></header>
+<div id="error" class="error"></div>
+<div class="panel no-print"><div class="filters"><select id="program"><option value="">كل الرحلات</option></select><select id="type"><option value="">كل أنواع السفر</option><option value="ground">الرحلات البرية</option><option value="air">رحلات الطيران</option></select><input id="from" type="date" aria-label="من تاريخ"><input id="to" type="date" aria-label="إلى تاريخ"><button class="btn soft" id="reset">إعادة ضبط</button><button class="btn primary" id="refresh">تحديث البيانات</button></div></div>
+<div class="grid">
+<div class="kpi"><span>عدد الاستجابات</span><b id="count">0</b><small>حسب عوامل التصفية</small></div>
+<div class="kpi"><span>متوسط التقييم العام</span><b id="avg">—</b><small>من 5 درجات، دون احتساب الإجابات الفارغة</small></div>
+<div class="kpi"><span>مشكلات تم الإبلاغ عنها</span><b id="issues">0</b><small id="issuesHint">من إجمالي الاستجابات</small></div>
+<div class="kpi"><span>التوصية بالشركة</span><b id="recommend">—</b><small id="recommendHint">من الإجابات التي اختارت نعم أو لا</small></div>
+</div>
+<div class="cols" style="margin-top:13px">
+<section class="panel"><div class="section-title"><div><h2>معدلات تقييم محاور الخدمة</h2><p>المتوسط لكل محور من الإجابات المتاحة فقط</p></div></div><div id="ratings" class="rating-list"><div class="empty">جاري التحميل...</div></div></section>
+<section class="panel"><div class="section-title"><div><h2>حالة المشكلات</h2><p>مؤشر متابعة الشكاوى الواردة</p></div></div><div id="problemStats"></div><div class="notice" style="margin-top:12px">لا تُعدّ الإجابة الفارغة تقييماً صفرياً، ولا تُصنّف المشكلة محلولة ما لم يحدد المجيب ذلك صراحةً.</div></section>
+</div>
+<section class="panel"><div class="section-title"><div><h2>مقارنة الرحلات</h2><p>متوسط التقييم العام وعدد الاستجابات لكل رحلة</p></div></div><div class="table-wrap"><table><thead><tr><th>الرحلة</th><th>النوع</th><th>عدد الردود</th><th>المتوسط العام</th><th>مشكلات مبلّغ عنها</th><th>التوصية</th></tr></thead><tbody id="tripRows"></tbody></table></div></section>
+<section class="panel"><div class="section-title"><div><h2>ملاحظات المعتمرين</h2><p>الآراء والاقتراحات والشكاوى النصية الواردة</p></div></div><div id="feedback"></div></section>
+<div class="footer-note">يتم تحديث النتائج مباشرة من سجلات الاستبيانات في المنصة. تاريخ التقرير: <span id="generated"></span></div>
+</div>
+<script>
+const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+const db=supabase.createClient(SUPABASE_URL,SUPABASE_KEY),$=id=>document.getElementById(id);
+let allSurveys=[],programs=[];
+const defs={
+ registration_rating:'التسجيل والحجز',staff_rating:'فريق الشركة',clarity_rating:'وضوح المعلومات',madinah_hotel_rating:'فندق المدينة',makkah_hotel_rating:'فندق مكة',organization_rating:'التنظيم والمتابعة',
+ supervisor_madinah_rating:'مشرف المدينة',supervisor_makkah_rating:'مشرف مكة',supervisor_interaction_rating:'تعامل المشرف',supervisor_ziyarat_rating:'تنظيم المزارات',
+ bus_comfort_rating:'راحة الباص',bus_cleanliness_rating:'نظافة الباص',driver_rating:'السائق',stops_rating:'الاستراحات',contractor_rating:'المتعهد',contractor_followup_rating:'متابعة المتعهد',
+ air_travel_rating:'تنسيق السفر بالطائرة',air_airport_rating:'متابعة المطار',air_schedule_rating:'تعليمات ومواعيد السفر'
+};
+const groundFields=['bus_comfort_rating','bus_cleanliness_rating','driver_rating','stops_rating','contractor_rating','contractor_followup_rating'];
+const airFields=['air_travel_rating','air_airport_rating','air_schedule_rating'];
+function mean(rows,key){const v=rows.map(x=>Number(x[key])).filter(x=>Number.isFinite(x)&&x>=1&&x<=5);return v.length?{avg:v.reduce((a,b)=>a+b,0)/v.length,n:v.length}:null}
+function fmt(x){return x?x.avg.toFixed(2)+'/5':'—'}
+function safe(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+function dateText(v){return v?new Date(v).toLocaleDateString('ar-IQ'):'—'}
+function filtered(){const pid=$('program').value,type=$('type').value,from=$('from').value,to=$('to').value;return allSurveys.filter(x=>(!pid||x.program_id===pid)&&(!type||x.travel_type===type)&&(!from||x.created_at.slice(0,10)>=from)&&(!to||x.created_at.slice(0,10)<=to))}
+function tripName(id){return programs.find(p=>p.id===id)?.title||'استبانة عامة'}
+function render(){
+ const rows=filtered(),n=rows.length,avg=mean(rows,'overall_rating'),issues=rows.filter(x=>x.problem_reported===true).length,unresolved=rows.filter(x=>x.problem_reported===true&&x.problem_resolved===false).length,responses=rows.filter(x=>typeof x.recommend==='boolean'),yes=responses.filter(x=>x.recommend).length;
+ $('count').textContent=n;$('avg').textContent=fmt(avg);$('issues').textContent=issues;$('issuesHint').textContent='من '+n+' استجابة';$('recommend').textContent=responses.length?Math.round(yes/responses.length*100)+'%':'—';$('recommendHint').textContent=yes+' نعم من '+responses.length+' إجابة صريحة';
+ const kinds=$('type').value?[$('type').value]:[...new Set(rows.map(x=>x.travel_type))];
+ let keys=['registration_rating','staff_rating','clarity_rating','madinah_hotel_rating','makkah_hotel_rating','organization_rating','supervisor_madinah_rating','supervisor_makkah_rating','supervisor_interaction_rating','supervisor_ziyarat_rating'];
+ if(kinds.includes('ground'))keys=keys.concat(groundFields);if(kinds.includes('air'))keys=keys.concat(airFields);
+ $('ratings').innerHTML=keys.map(k=>{const m=mean(rows,k);return '<div class="rating-row"><div class="rating-name">'+defs[k]+'</div><div class="track"><div class="fill" style="width:'+(m?m.avg/5*100:0)+'%"></div></div><div class="score">'+(m?m.avg.toFixed(2):'—')+'</div></div>'}).join('')||'<div class="empty">لا توجد بيانات تقييم.</div>';
+ const resolved=rows.filter(x=>x.problem_reported===true&&x.problem_resolved===true).length,unknown=rows.filter(x=>x.problem_reported===true&&x.problem_resolved==null).length;
+ $('problemStats').innerHTML='<div class="grid" style="grid-template-columns:repeat(2,1fr)"><div class="kpi"><span>المشكلات المبلّغ عنها</span><b>'+issues+'</b></div><div class="kpi"><span>غير محلولة</span><b class="bad">'+unresolved+'</b></div><div class="kpi"><span>تم حلها</span><b class="good">'+resolved+'</b></div><div class="kpi"><span>حالة المعالجة غير محددة</span><b>'+unknown+'</b></div></div>';
+ const groups=new Map();rows.forEach(x=>{const key=x.program_id||'general';if(!groups.has(key))groups.set(key,[]);groups.get(key).push(x)});
+ $('tripRows').innerHTML=[...groups.entries()].map(([id,a])=>{const m=mean(a,'overall_rating'),rec=a.filter(x=>typeof x.recommend==='boolean'),rYes=rec.filter(x=>x.recommend).length;return '<tr><td><b>'+safe(tripName(id==='general'?null:id))+'</b></td><td><span class="pill">'+(a[0].travel_type==='ground'?'بر':'طيران')+'</span></td><td>'+a.length+'</td><td><b>'+(m?m.avg.toFixed(2)+'/5':'—')+'</b></td><td>'+a.filter(x=>x.problem_reported===true).length+'</td><td>'+(rec.length?Math.round(rYes/rec.length*100)+'%':'—')+'</td></tr>'}).join('')||'<tr><td colspan="6" class="empty">لا توجد استجابات ضمن هذا الاختيار.</td></tr>';
+ const notes=rows.filter(x=>x.favorite||x.improvement||x.problem_details);
+ $('feedback').innerHTML=notes.length?notes.slice().sort((a,b)=>new Date(b.created_at)-new Date(a.created_at)).map(x=>'<article class="feedback"><b>'+safe(tripName(x.program_id))+' · '+dateText(x.created_at)+'</b>'+(x.favorite?'<p><span class="good">ما أعجب المعتمر:</span> '+safe(x.favorite)+'</p>':'')+(x.improvement?'<p><span class="bad">اقتراح التحسين:</span> '+safe(x.improvement)+'</p>':'')+(x.problem_details?'<p><span class="bad">تفاصيل المشكلة:</span> '+safe(x.problem_details)+'</p>':'')+'</article>').join(''):'<div class="empty">لا توجد ملاحظات نصية ضمن هذا الاختيار.</div>';
+}
+async function load(){
+ $('error').style.display='none';
+ const session=await db.auth.getSession(),user=session.data?.session?.user;
+ if(!user){$('login').innerHTML='<h2>يلزم تسجيل الدخول</h2><p>سجّل الدخول إلى لوحة الإدارة ثم افتح هذه الصفحة.</p><a class="btn primary" href="./internal.html">العودة إلى لوحة الإدارة</a>';return}
+ const role=await db.from('staff_profiles').select('role,active').eq('user_id',user.id).maybeSingle(),profile=role.data;
+ if(role.error||!profile||profile.active===false||!['super_admin','manager'].includes(profile.role)){$('login').innerHTML='<h2>لا تملك صلاحية الوصول</h2><p>هذه التقارير متاحة للمدير أو المدير العام فقط.</p><a class="btn primary" href="./internal.html">العودة إلى لوحة الإدارة</a>';return}
+ $('login').classList.add('hide');$('app').classList.remove('hide');
+ const [p,s]=await Promise.all([db.from('programs').select('id,title,travel_type,departure_date').order('departure_date',{ascending:false}),db.from('pilgrim_surveys').select('*').order('created_at',{ascending:false}).limit(5000)]);
+ if(p.error||s.error){$('error').textContent='تعذر تحميل بيانات الرحلات أو الاستبيانات: '+(p.error?.message||s.error?.message||'خطأ غير معروف');$('error').style.display='block';return}
+ programs=p.data||[];allSurveys=s.data||[];
+ $('program').innerHTML='<option value="">كل الرحلات</option>'+programs.map(x=>'<option value="'+x.id+'">'+safe(x.title||'رحلة')+' — '+(x.travel_type==='air'||x.travel_type==='جو'?'طيران':'بر')+'</option>').join('');
+ $('generated').textContent=new Date().toLocaleString('ar-IQ');render();
+}
+$('program').onchange=render;$('type').onchange=render;$('from').onchange=render;$('to').onchange=render;
+$('reset').onclick=()=>{$('program').value='';$('type').value='';$('from').value='';$('to').value='';render()};
+$('refresh').onclick=load;$('print').onclick=()=>window.print();
+$('csv').onclick=()=>{const rows=filtered(),cols=['created_at','program_id','travel_type','overall_rating',...Object.keys(defs),'problem_reported','problem_resolved','recommend','favorite','improvement','problem_details'];const csv=[cols.join(','),...rows.map(x=>cols.map(k=>'"'+String(x[k]??'').replace(/"/g,'""')+'"').join(','))].join('\r\n');const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='qawafel-satisfaction-report.csv';a.click();URL.revokeObjectURL(url)};
+load();
+</script>
+</body></html>
