@@ -78,7 +78,7 @@ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5g
 const params=new URLSearchParams(location.search),programId=params.get('program_id'),bookingId=params.get('booking_id');
 const $=id=>document.getElementById(id);
 const fields=['registration_rating','staff_rating','supervisor_madinah_rating','supervisor_makkah_rating','supervisor_interaction_rating','supervisor_ziyarat_rating','clarity_rating','madinah_hotel_rating','makkah_hotel_rating','organization_rating','bus_comfort_rating','bus_cleanliness_rating','driver_rating','stops_rating','contractor_rating','contractor_followup_rating','air_travel_rating','air_airport_rating','air_schedule_rating','overall_rating'];
-function ratingHtml(name){return [1,2,3,4,5].map(n=>'<label><input type="radio" name="'+name+'" value="'+n+'"><span>'+n+'</span></label>').join('')}
+function ratingHtml(name){const labels={1:'ضعيف',2:'متوسط',3:'جيد',4:'جيد جدًا',5:'ممتاز'};return [1,2,3,4,5].map(n=>'<label><input type="radio" name="'+name+'" value="'+n+'"><span>'+labels[n]+'</span></label>').join('')}
 document.querySelectorAll('.rating').forEach(el=>el.innerHTML=ratingHtml(el.dataset.field));
 function val(name){const x=document.querySelector('[name="'+name+'"]:checked');return x?x.value:''}
 function showType(type,linkedTrip=false){
