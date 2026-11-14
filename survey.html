@@ -22,7 +22,7 @@ label.q{display:block;font-size:12px;font-weight:900;margin:14px 0 7px}select,in
 <div class="wrap">
 <header class="head"><img class="logo" src="./logo.png" alt="قوافل الحرمين"><h1>استبانة رضا المعتمرين</h1><p>نسعد برأيكم، وملاحظاتكم تساعدنا على تطوير خدمات قوافل الحرمين وتحسين رحلاتنا القادمة.</p></header>
 <form id="surveyForm">
-<div class="card"><div class="title">أولًا: نوع الرحلة</div><div class="choice">
+<div id="travelTypeCard" class="card"><div class="title">أولًا: نوع الرحلة</div><div class="choice">
 <label><input type="radio" name="travel_type" value="ground"><span>🚌 بر</span></label>
 <label><input type="radio" name="travel_type" value="air"><span>✈️ طيران</span></label>
 </div></div>
@@ -81,6 +81,19 @@ function showType(type){
  $('ground').classList.toggle('hide',type!=='ground');$('air').classList.toggle('hide',type!=='air');
 }
 document.querySelectorAll('[name="travel_type"]').forEach(x=>x.addEventListener('change',()=>showType(val('travel_type'))));
+async function initProgramContext(){
+ if(!programId)return;
+ const {data,error}=await db.from('programs').select('id,title,travel_type').eq('id',programId).maybeSingle();
+ if(error||!data){$('error').textContent='تعذر التحقق من الرحلة المرتبطة بهذا الرابط. يرجى التواصل مع الشركة.';$('error').style.display='block';return}
+ const type=(data.travel_type==='جو'||data.travel_type==='air')?'air':'ground';
+ const radio=document.querySelector('[name="travel_type"][value="'+type+'"]');
+ if(radio)radio.checked=true;
+ $('travelTypeCard').classList.add('hide');
+ document.querySelector('.head h1').textContent='استبانة رضا المعتمرين';
+ document.querySelector('.head p').textContent='نرحب بتقييمكم لخدمات '+(data.title||'هذه الرحلة')+' مع قوافل الحرمين. رأيكم يساعدنا على التطوير.';
+ showType(type);
+}
+initProgramContext();
 document.querySelectorAll('[name="problem_reported"]').forEach(x=>x.addEventListener('change',()=> $('resolvedWrap').classList.toggle('hide',val('problem_reported')!=='true')));
 $('surveyForm').addEventListener('submit',async e=>{
  e.preventDefault(); const err=$('error');err.style.display='none';
