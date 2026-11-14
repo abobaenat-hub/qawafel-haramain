@@ -40,7 +40,7 @@ async function boot(){
  if(!st||st.active===false||!['super_admin','manager'].includes(st.role)){$('login').innerHTML='<h2>ليس لديك صلاحية لعرض الاستبانات.</h2>';return}
  $('login').classList.add('hide');$('app').classList.remove('hide');
  const p=await db.from('programs').select('id,title,departure_date,travel_type').order('departure_date',{ascending:false});
- programs=p.data||[];$('program').innerHTML='<option value="">استبانة عامة — بدون تحديد رحلة</option>'+programs.map(x=>'<option value="'+x.id+'">'+esc(x.title||'رحلة')+' — '+esc(x.departure_date||'')+' — '+(x.travel_type==='air'?'طيران':'بر')+'</option>').join('');
+ programs=p.data||[];$('program').innerHTML='<option value="">استبانة عامة — بدون تحديد رحلة</option>'+programs.map(x=>'<option value="'+x.id+'">'+esc(x.title||'رحلة')+' — '+esc(x.departure_date||'')+' — '+((x.travel_type==='air'||x.travel_type==='جو')?'طيران':'بر')+'</option>').join('');
  link();await load();
 }
 async function load(){
