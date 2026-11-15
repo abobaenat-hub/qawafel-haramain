@@ -27,6 +27,25 @@
     <div class="tools"><select class="select" id="range"><option value="today">اليوم</option><option value="7daysAgo" selected>آخر 7 أيام</option><option value="30daysAgo">آخر 30 يومًا</option></select><button class="btn refresh" id="refresh">↻ تحديث</button></div>
   </div>
   <div id="status" class="status">⏳ جاري التحقق من الاتصال...</div>
+  <section class="card" id="customerAppAnalytics" style="margin-bottom:16px">
+    <div class="sect"><div><h2>📱 إحصائيات تطبيق الزبائن</h2><small>زيارات تطبيق قوافل الحرمين وتفاعل المعتمرين معه — بيانات مجهولة الهوية</small></div><span class="pill" id="appAnalyticsUpdated">جاري التحميل</span></div>
+    <div id="appAnalyticsStatus" class="status">⏳ جاري تحميل إحصائيات التطبيق...</div>
+    <div id="appAnalyticsBody" class="hide">
+      <div class="kpis">
+        <div class="kpi"><div class="icon">👥</div><span>زوار فريدون (متصفحات/أجهزة)</span><b id="appUnique">0</b></div>
+        <div class="kpi"><div class="icon">📲</div><span>مرات فتح التطبيق</span><b id="appOpens">0</b></div>
+        <div class="kpi"><div class="icon">🕋</div><span>مشاهدات البرامج</span><b id="appProgramViews">0</b></div>
+        <div class="kpi"><div class="icon">📝</div><span>بدء طلب الحجز</span><b id="appBookingStarts">0</b></div>
+        <div class="kpi live"><div class="icon">✅</div><span>طلبات الحجز المرسلة</span><b id="appBookingSubmits">0</b></div>
+      </div>
+      <div class="grid" style="margin-top:14px">
+        <div class="card"><div class="sect"><div><h2>📈 فتح التطبيق حسب الأيام</h2><small>عدد مرات فتح التطبيق خلال الفترة المختارة</small></div></div><div id="appDaily"></div></div>
+        <div class="card"><div class="sect"><div><h2>📱 نوع الجهاز</h2><small>الأجهزة المستخدمة في التصفح</small></div></div><div id="appDevices"></div></div>
+      </div>
+      <div class="card"><div class="sect"><div><h2>🏨 أكثر البرامج مشاهدة</h2><small>البرامج التي وصلت بطاقاتها إلى شاشة الزائر</small></div></div><div id="appTopPrograms" class="table"></div></div>
+      <div class="updated">ملاحظة: الزائر الفريد يُحتسب بمعرّف مجهول محفوظ في متصفح الجهاز، وليس باسم الشخص. قد يستخدم الشخص أكثر من جهاز أو متصفح.</div>
+    </div>
+  </section>
   <section id="dashboard" class="hide">
     <div class="kpis">
       <div class="kpi"><div class="icon">👥</div><span>المستخدمون</span><b id="totalUsers">—</b></div>
@@ -99,8 +118,44 @@ async function load(){
     showStatus('✅ تم تحديث الإحصائيات بنجاح <div class="updated">آخر تحديث: '+new Date().toLocaleString('ar-IQ')+'</div>','ok');
   }catch(e){console.error(e);showStatus('❌ تعذر تحميل الإحصائيات.<br>'+String(e?.message||e)+'<br><small>إذا كان الربط جديدًا، تأكد من إعداد Google Analytics Data API وصلاحية حساب الخدمة على موقع Analytics.</small>','err');}
 }
-$('refresh').onclick=load;$('range').onchange=load;
+
+async function loadAppAnalytics(){
+  const status=$('appAnalyticsStatus'),body=$('appAnalyticsBody');
+  body.classList.add('hide');status.className='status';status.textContent='⏳ جاري تحميل إحصائيات التطبيق...';
+  try{
+    const range=$('range').value;
+    const days=range==='today'?1:range==='30daysAgo'?30:7;
+    const from=new Date();from.setDate(from.getDate()-(days-1));from.setHours(0,0,0,0);
+    const {data,error}=await db.from('customer_app_events')
+      .select('visitor_id,event_name,program_id,device_type,created_at')
+      .gte('created_at',from.toISOString()).order('created_at',{ascending:false}).limit(10000);
+    if(error)throw error;
+    const events=data||[];
+    const count=name=>events.filter(x=>x.event_name===name).length;
+    $('appUnique').textContent=fmt(new Set(events.map(x=>x.visitor_id)).size);
+    $('appOpens').textContent=fmt(count('page_view'));
+    $('appProgramViews').textContent=fmt(count('program_view'));
+    $('appBookingStarts').textContent=fmt(count('booking_start'));
+    $('appBookingSubmits').textContent=fmt(count('booking_submit'));
+    const dayMap=new Map();
+    for(let i=0;i<days;i++){const d=new Date(from);d.setDate(from.getDate()+i);dayMap.set(d.toISOString().slice(0,10),0);}
+    events.filter(x=>x.event_name==='page_view').forEach(x=>{const k=new Date(x.created_at).toISOString().slice(0,10);if(dayMap.has(k))dayMap.set(k,dayMap.get(k)+1);});
+    const daily=[...dayMap.entries()].map(([day,value])=>[new Date(day+'T12:00:00').toLocaleDateString('ar-IQ',{day:'numeric',month:'numeric'}),value]);
+    $('appDaily').innerHTML=daily.length?'<div class="chart">'+daily.map(([label,value])=>{const max=Math.max(1,...daily.map(x=>x[1]));return '<div class="chartcol"><div class="chartbars"><div class="chartbar pages" style="height:'+Math.max(2,Math.round(value/max*100))+'%" title="'+fmt(value)+' فتح"></div></div><div class="chartlabel">'+label+'</div></div>';}).join('')+'</div>':'<div class="empty">لا توجد بيانات بعد.</div>';
+    const devices={mobile:0,tablet:0,desktop:0,unknown:0};events.filter(x=>x.event_name==='page_view').forEach(x=>devices[x.device_type]=(devices[x.device_type]||0)+1);
+    $('appDevices').innerHTML=bars(Object.entries(devices).filter(x=>x[1]>0).map(([k,v])=>[({mobile:'هاتف محمول',tablet:'جهاز لوحي',desktop:'كمبيوتر',unknown:'غير محدد'}[k]||k),v]));
+    const ids=[...new Set(events.filter(x=>x.event_name==='program_view'&&x.program_id).map(x=>x.program_id))];
+    let names={};
+    if(ids.length){const p=await db.from('programs').select('id,title').in('id',ids);if(!p.error)(p.data||[]).forEach(x=>names[x.id]=x.title);}
+    const top={};events.filter(x=>x.event_name==='program_view'&&x.program_id).forEach(x=>top[x.program_id]=(top[x.program_id]||0)+1);
+    const list=Object.entries(top).sort((a,b)=>b[1]-a[1]).slice(0,10);
+    $('appTopPrograms').innerHTML=list.length?'<table><thead><tr><th>البرنامج</th><th>المشاهدات</th></tr></thead><tbody>'+list.map(([id,n])=>'<tr><td>'+String(names[id]||'برنامج غير متاح').replace(/[&<>"]/g,'')+'</td><td>'+fmt(n)+'</td></tr>').join('')+'</tbody></table>':'<div class="empty">لم تُسجّل مشاهدات للبرامج بعد.</div>';
+    body.classList.remove('hide');status.className='status ok';status.textContent='✅ تم تحميل إحصائيات التطبيق بنجاح.';$('appAnalyticsUpdated').textContent='آخر تحديث: '+new Date().toLocaleTimeString('ar-IQ');
+  }catch(e){console.error(e);status.className='status err';status.textContent='تعذر تحميل إحصائيات التطبيق: '+String(e?.message||e);}
+}
+
+$('refresh').onclick=()=>{load();loadAppAnalytics();};$('range').onchange=()=>{load();loadAppAnalytics();};
 $('logout').onclick=async()=>{await db.auth.signOut();location.href='./internal.html';};
-(async()=>{try{const s=await db.auth.getSession();if(!s.data?.session){location.href='./internal.html';return;}load();}catch(e){location.href='./internal.html';}})();
+(async()=>{try{const s=await db.auth.getSession();if(!s.data?.session){location.href='./internal.html';return;}load();loadAppAnalytics();}catch(e){location.href='./internal.html';}})();
 </script>
 </body></html>
