@@ -68,7 +68,13 @@
   <p id="bookingProgram" class="selected-program"></p>
   <form id="bookingForm">
    <label for="customerName">الاسم الكامل</label><input id="customerName" class="plain-input" required minlength="3" maxlength="160" autocomplete="name" placeholder="اكتب اسمك الكامل">
-   <label for="customerPhone">رقم الهاتف للتواصل</label><input id="customerPhone" class="plain-input" type="tel" inputmode="tel" autocomplete="tel" required maxlength="15" placeholder="077XXXXXXXX">\n   <label for="passengers">عدد المسافرين</label><input id="passengers" class="plain-input" type="number" min="1" max="20" value="1" required>
+   <label for="customerPhone">رقم الهاتف للتواصل</label><input id="customerPhone" class="plain-input" type="tel" inputmode="tel" autocomplete="tel" required maxlength="15" placeholder="077XXXXXXXX">
+   <div class="passenger-breakdown"><strong>أعداد المسافرين حسب الفئة العمرية</strong><small>البالغون: 12 سنة فما فوق · الأطفال: من 3 إلى أقل من 12 سنة · الرضع: من يوم إلى أقل من 3 سنوات</small>
+    <label for="adultsCount">البالغون (12 سنة فما فوق)</label><input id="adultsCount" class="plain-input passenger-count" type="number" min="0" max="20" value="1" required>
+    <label for="childrenCount">الأطفال (3 إلى أقل من 12 سنة)</label><input id="childrenCount" class="plain-input passenger-count" type="number" min="0" max="20" value="0" required>
+    <label for="infantsCount">الرضع (من يوم إلى أقل من 3 سنوات)</label><input id="infantsCount" class="plain-input passenger-count" type="number" min="0" max="20" value="0" required>
+    <label for="passengers">المجموع الكلي للمسافرين</label><input id="passengers" class="plain-input" type="number" value="1" readonly aria-live="polite">
+   </div>
    <div id="packageField" class="hidden"><label for="packageSelect">اختر السكن / الباقة</label><select id="packageSelect" class="plain-input"></select></div>
    <label for="bookingNotes">ملاحظات (اختياري)</label><textarea id="bookingNotes" class="plain-input" rows="3" maxlength="1000" placeholder="أي تفاصيل ترغب بإضافتها"></textarea>
    <button id="bookingSubmit" class="primary-btn full-btn" type="submit">إرسال طلب الحجز</button>

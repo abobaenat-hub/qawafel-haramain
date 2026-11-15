@@ -101,10 +101,16 @@
     $("bookingProgram").textContent=selectedProgram.title;
     $("packageField").classList.toggle("hidden",!pp.length);
     $("packageSelect").innerHTML=pp.map(x=>`<option value="${x.id}">${safe(x.name)} — ${money(x.price,selectedProgram.currency)}</option>`).join("");
-    $("bookingForm").reset(); $("bookingMessage").textContent=""; $("passengers").value=1;
+    $("bookingForm").reset(); $("bookingMessage").textContent=""; $("adultsCount").value=1; $("childrenCount").value=0; $("infantsCount").value=0; updatePassengerTotal();
     track("booking_start", id);
     showModal("bookingModal");
   };
+  const updatePassengerTotal = () => {
+    const total = ["adultsCount","childrenCount","infantsCount"].reduce((sum,id)=>sum+Math.max(0,Number($(id).value)||0),0);
+    $("passengers").value=total;
+    return total;
+  };
+  document.querySelectorAll(".passenger-count").forEach(input=>input.addEventListener("input",updatePassengerTotal));
   const submitBooking = async (event) => {
     event.preventDefault();
     let phone;
@@ -113,7 +119,7 @@
     const payload={
       user_id:null,program_id:selectedProgram.id,package_id:$("packageSelect").value||null,
       full_name:$("customerName").value.trim(),phone,
-      passengers_count:Number($("passengers").value),
+      adults_count,children_count,infants_count,passengers_count,
       notes:$("bookingNotes").value.trim()||null,status:"pending"
     };
     $("bookingSubmit").disabled=true; $("bookingSubmit").textContent="جارٍ إرسال الطلب…";
