@@ -21,14 +21,14 @@
     <img src="https://qawafialharamainiq.com/logo.png" alt="شعار قوافل الحرمين" onerror="this.style.display='none'">
     <span><b>قوافل الحرمين</b><small>للحج والعمرة</small></span>
   </a>
-  <button id="accountBtn" class="account-btn" type="button">دخول الزبائن</button>
+  <a class="account-btn" href="tel:+9647780077122">اتصل بنا</a>
 </header>
 <main>
 <section id="home" class="hero">
   <div class="hero-copy">
     <span class="eyebrow">رحلتك إلى الحرمين تبدأ من هنا</span>
     <h1>بكل طمأنينة…<br><em>إلى أطهر البقاع</em></h1>
-    <p>تعرّف على برامج العمرة، أرسل طلب حجزك، وتابع حالة طلبك من هاتفك.</p>
+    <p>تعرّف على برامج العمرة، وأرسل طلب الحجز مباشرة دون إنشاء حساب.</p>
     <button class="primary-btn" data-scroll="programs">استعرض برامج العمرة <span>←</span></button>
   </div>
   <div class="hero-mark" aria-hidden="true"><span>🕋</span><i>رحلة إيمانية<br>بخدمة تليق بكم</i></div>
@@ -64,21 +64,6 @@
   <button id="navAccount" type="button"><span>♙</span>حسابي</button>
 </nav>
 </div>
-<div id="authModal" class="modal" aria-hidden="true">
- <div class="modal-backdrop" data-close="auth"></div>
- <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="authTitle">
-  <button class="close-btn" data-close="auth" aria-label="إغلاق">×</button>
-  <div class="modal-icon">✦</div><span class="eyebrow">حساب الزبون</span><h2 id="authTitle">الدخول برقم الهاتف</h2>
-  <p id="authHelp">أدخل رقم هاتفك العراقي لنرسل إليك رمز تحقق برسالة نصية.</p>
-  <label id="phoneLabel">رقم الهاتف</label>
-  <div class="phone-field"><span>+964</span><input id="phoneInput" inputmode="tel" autocomplete="tel-national" placeholder="7XXXXXXXXX" maxlength="12"></div>
-  <div id="otpWrap" class="hidden"><label for="otpInput">رمز التحقق</label><input id="otpInput" class="plain-input" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="أدخل الرمز المكوّن من 6 أرقام"></div>
-  <button id="authSubmit" class="primary-btn full-btn">إرسال رمز التحقق</button>
-  <button id="authBack" class="text-btn hidden">تغيير رقم الهاتف</button>
-  <p id="authMessage" class="form-message" role="status"></p>
-  <small class="privacy-note">باستمرارك، فأنت توافق على استخدام رقمك لإدارة طلبات الحجز والتواصل بشأنها.</small>
- </section>
-</div>
 <div id="bookingModal" class="modal" aria-hidden="true">
  <div class="modal-backdrop" data-close="booking"></div>
  <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
@@ -87,7 +72,7 @@
   <p id="bookingProgram" class="selected-program"></p>
   <form id="bookingForm">
    <label for="customerName">الاسم الكامل</label><input id="customerName" class="plain-input" required minlength="3" maxlength="160" autocomplete="name" placeholder="اكتب اسمك الكامل">
-   <label for="passengers">عدد المسافرين</label><input id="passengers" class="plain-input" type="number" min="1" max="20" value="1" required>
+   <label for="customerPhone">رقم الهاتف للتواصل</label><input id="customerPhone" class="plain-input" type="tel" inputmode="tel" autocomplete="tel" required maxlength="15" placeholder="077XXXXXXXX">\n   <label for="passengers">عدد المسافرين</label><input id="passengers" class="plain-input" type="number" min="1" max="20" value="1" required>
    <div id="packageField" class="hidden"><label for="packageSelect">اختر السكن / الباقة</label><select id="packageSelect" class="plain-input"></select></div>
    <label for="bookingNotes">ملاحظات (اختياري)</label><textarea id="bookingNotes" class="plain-input" rows="3" maxlength="1000" placeholder="أي تفاصيل ترغب بإضافتها"></textarea>
    <button id="bookingSubmit" class="primary-btn full-btn" type="submit">إرسال طلب الحجز</button>
@@ -95,7 +80,7 @@
   </form>
  </section>
 </div>
-<div id="toast" class="toast" role="status"></div>
+<div id="successModal" class="modal" aria-hidden="true"><div class="modal-backdrop" data-close="success"></div><section class="modal-card" role="dialog" aria-modal="true"><button class="close-btn" data-close="success" aria-label="إغلاق">×</button><div class="modal-icon">✓</div><h2>وصل طلبك بنجاح</h2><p id="successMessage"></p><a class="primary-btn full-btn" href="https://wa.me/9647780077122" target="_blank" rel="noopener">تواصل معنا عبر واتساب</a></section></div>\n<div id="toast" class="toast" role="status"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
 <script src="/app/app.js" defer></script>
 </body>
