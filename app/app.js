@@ -2,6 +2,39 @@
   const SUPABASE_URL = "https://ymjkzvdjpuuxkcgkmbtc.supabase.co";
   const SUPABASE_KEY = "sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ";
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // Anonymous, privacy-minimal usage analytics: no names, phone numbers, or IP addresses.
+  const makeVisitorId = () => window.crypto?.randomUUID
+    ? window.crypto.randomUUID()
+    : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === "x" ? r : (r & 3 | 8)).toString(16);
+      });
+  const getVisitorId = () => {
+    const key = "qawafel_customer_visitor_v1";
+    try {
+      let id = localStorage.getItem(key);
+      if (!id) { id = makeVisitorId(); localStorage.setItem(key, id); }
+      return id;
+    } catch (_) { return makeVisitorId(); }
+  };
+  const visitorId = getVisitorId();
+  const seenPrograms = new Set();
+  const deviceType = () => {
+    const width = Math.min(window.innerWidth || 1200, screen.width || 1200);
+    return width <= 767 ? "mobile" : width <= 1024 ? "tablet" : "desktop";
+  };
+  const track = (eventName, programId = null) => {
+    try {
+      db.from("customer_app_events").insert({
+        visitor_id: visitorId,
+        event_name: eventName,
+        page_path: "/app/",
+        program_id: programId,
+        device_type: deviceType()
+      }).then(({ error }) => { if (error) console.debug("analytics event not recorded", error.message); });
+    } catch (_) {}
+  };
+  track("page_view");
   const $ = (id) => document.getElementById(id);
   let programs = [], packages = [], selectedProgram = null, toastTimer;
   const money = (value,currency) => {
@@ -32,11 +65,12 @@
     ]);
     if(pRes.error){$("programsState").textContent="تعذر تحميل البرامج حالياً. حاول تحديث الصفحة.";console.error(pRes.error);return;}
     programs=pRes.data||[]; packages=packRes.data||[];
+    track("program_list_view");
     if(!programs.length){$("programsState").textContent="لا توجد برامج منشورة للحجز حالياً. تابعنا لمعرفة الرحلات القادمة.";return;}
     $("programsState").classList.add("hidden");
     $("programsGrid").innerHTML=programs.map(p=>{
       const pp=packages.filter(x=>x.program_id===p.id);
-      return `<article class="program-card">
+      return `<article class="program-card" data-program-id="${p.id}">
         <div class="program-visual"><span class="symbol">${safe(p.icon||"🕋")}</span><span class="trip-type">${safe(p.travel_type||"عمرة")}</span></div>
         <div class="program-body"><h3>${safe(p.title)}</h3>
           <p class="program-description">${safe(p.description||p.services||"برنامج عمرة تنظمه قوافل الحرمين مع متابعة فريقنا لطلب الحجز.")}</p>
@@ -46,6 +80,20 @@
           <div class="program-footer"><span class="price">${money(p.price,p.currency)}<small>${Number(p.seats_available)>0?"المقاعد المتاحة: "+p.seats_available:"استفسر عن توفر المقاعد"}</small></span><button class="book-btn" data-book="${p.id}">اطلب الحجز</button></div>
         </div></article>`;
     }).join("");
+    // Count a program as viewed only when its card actually enters the screen.
+    if ("IntersectionObserver" in window) {
+      const observer = new IntersectionObserver(entries => {
+        entries.forEach(entry => {
+          if (!entry.isIntersecting) return;
+          const id = entry.target.dataset.programId;
+          if (!seenPrograms.has(id)) { seenPrograms.add(id); track("program_view", id); }
+          observer.unobserve(entry.target);
+        });
+      }, { threshold: 0.35 });
+      document.querySelectorAll("[data-program-id]").forEach(card => observer.observe(card));
+    } else {
+      document.querySelectorAll("[data-program-id]").forEach(card => track("program_view", card.dataset.programId));
+    }
   };
   const beginBooking = (id) => {
     selectedProgram=programs.find(p=>p.id===id); if(!selectedProgram)return;
@@ -54,6 +102,7 @@
     $("packageField").classList.toggle("hidden",!pp.length);
     $("packageSelect").innerHTML=pp.map(x=>`<option value="${x.id}">${safe(x.name)} — ${money(x.price,selectedProgram.currency)}</option>`).join("");
     $("bookingForm").reset(); $("bookingMessage").textContent=""; $("passengers").value=1;
+    track("booking_start", id);
     showModal("bookingModal");
   };
   const submitBooking = async (event) => {
@@ -71,6 +120,7 @@
     const {error}=await db.from("customer_booking_requests").insert(payload);
     $("bookingSubmit").disabled=false; $("bookingSubmit").textContent="إرسال طلب الحجز";
     if(error){$("bookingMessage").textContent="تعذر إرسال الطلب حالياً. يرجى المحاولة مجدداً أو التواصل معنا هاتفياً.";console.error(error);return;}
+    track("booking_submit", selectedProgram.id);
     hideModal("bookingModal");
     $("successMessage").textContent="تم استلام طلبك بنجاح. سيتواصل معك فريق قوافل الحرمين على رقم الهاتف الذي أدخلته لتأكيد التفاصيل والحجز.";
     showModal("successModal");
