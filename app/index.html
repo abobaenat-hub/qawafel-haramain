@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07543f">
+<meta name="description" content="تطبيق قوافل الحرمين للحج والعمرة - برامج العمرة وطلبات الحجز">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="قوافل الحرمين">
+<link rel="manifest" href="/app/manifest.webmanifest">
+<link rel="icon" href="/app/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/app/icon.svg">
+<link rel="stylesheet" href="/app/styles.css">
+<title>قوافل الحرمين | تطبيق الزبائن</title>
+</head>
+<body>
+<div class="app-shell">
+<header class="topbar">
+  <a class="brand" href="#home" aria-label="قوافل الحرمين">
+    <img src="https://qawafialharamainiq.com/logo.png" alt="شعار قوافل الحرمين" onerror="this.style.display='none'">
+    <span><b>قوافل الحرمين</b><small>للحج والعمرة</small></span>
+  </a>
+  <a class="account-btn" href="tel:+9647780077122">اتصل بنا</a>
+</header>
+<main>
+<section id="home" class="hero">
+  <div class="hero-copy">
+    <span class="eyebrow">رحلتك إلى الحرمين تبدأ من هنا</span>
+    <h1>بكل طمأنينة…<br><em>إلى أطهر البقاع</em></h1>
+    <p>تعرّف على برامج العمرة، وأرسل طلب الحجز مباشرة دون إنشاء حساب.</p>
+    <button class="primary-btn" data-scroll="programs">استعرض برامج العمرة <span>←</span></button>
+  </div>
+  <div class="hero-mark" aria-hidden="true"><span>🕋</span><i>رحلة إيمانية<br>بخدمة تليق بكم</i></div>
+</section>
+<section class="trust-strip">
+  <div><b>حجز سهل</b><small>خطوات واضحة</small></div>
+  <div><b>متابعة مباشرة</b><small>من فريق قوافل الحرمين</small></div>
+  <div><b>خدمة موثوقة</b><small>من العراق إلى الحرمين</small></div>
+</section>
+<section id="programs" class="section">
+  <div class="section-heading"><div><span class="eyebrow">اختر رحلتك القادمة</span><h2>برامج العمرة</h2></div><button id="refreshBtn" class="text-btn">تحديث البرامج ↻</button></div>
+  <div id="programsState" class="state-card">جارٍ تحميل البرامج المتاحة…</div>
+  <div id="programsGrid" class="program-grid"></div>
+</section>
+<section id="bookingInfo" class="section requests-section"><div class="section-heading"><div><span class="eyebrow">خطوات بسيطة</span><h2>كيف يتم الحجز؟</h2></div></div><div class="state-card">اختر البرنامج وأرسل بياناتك ورقم هاتفك. سيصل طلبك إلى إدارة قوافل الحرمين، وسيتواصل معك الموظف المختص لتأكيد الحجز والتفاصيل.</div></section>
+<section class="contact-panel">
+  <div><span class="eyebrow">نحن بخدمتك</span><h2>هل تحتاج إلى مساعدة؟</h2><p>يسعد فريق قوافل الحرمين بالإجابة عن استفساراتك.</p></div>
+  <div class="contact-actions">
+    <a href="https://wa.me/9647780077122" target="_blank" rel="noopener">تواصل عبر واتساب</a>
+    <a href="tel:+9647780077122">اتصل بنا</a>
+  </div>
+</section>
+</main>
+<footer><b>قوافل الحرمين للحج والعمرة</b><span>بغداد – العامرية – شارع العمل الشعبي</span><small>© <span id="year"></span> جميع الحقوق محفوظة</small></footer>
+<nav class="bottom-nav" aria-label="التنقل الرئيسي">
+  <a href="#home" class="active"><span>⌂</span>الرئيسية</a>
+  <a href="#programs"><span>🕋</span>البرامج</a>
+  <a href="#bookingInfo"><span>▤</span>خطوات الحجز</a>
+  <a href="tel:+9647780077122"><span>☎</span>اتصل بنا</a>
+</nav>
+</div>
+<div id="bookingModal" class="modal" aria-hidden="true">
+ <div class="modal-backdrop" data-close="booking"></div>
+ <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="bookingTitle">
+  <button class="close-btn" data-close="booking" aria-label="إغلاق">×</button>
+  <span class="eyebrow">طلب حجز جديد</span><h2 id="bookingTitle">بيانات طلب الحجز</h2>
+  <p id="bookingProgram" class="selected-program"></p>
+  <form id="bookingForm">
+   <label for="customerName">الاسم الكامل</label><input id="customerName" class="plain-input" required minlength="3" maxlength="160" autocomplete="name" placeholder="اكتب اسمك الكامل">
+   <label for="customerPhone">رقم الهاتف للتواصل</label><input id="customerPhone" class="plain-input" type="tel" inputmode="tel" autocomplete="tel" required maxlength="15" placeholder="077XXXXXXXX">\n   <label for="passengers">عدد المسافرين</label><input id="passengers" class="plain-input" type="number" min="1" max="20" value="1" required>
+   <div id="packageField" class="hidden"><label for="packageSelect">اختر السكن / الباقة</label><select id="packageSelect" class="plain-input"></select></div>
+   <label for="bookingNotes">ملاحظات (اختياري)</label><textarea id="bookingNotes" class="plain-input" rows="3" maxlength="1000" placeholder="أي تفاصيل ترغب بإضافتها"></textarea>
+   <button id="bookingSubmit" class="primary-btn full-btn" type="submit">إرسال طلب الحجز</button>
+   <p id="bookingMessage" class="form-message" role="status"></p>
+  </form>
+ </section>
+</div>
+<div id="successModal" class="modal" aria-hidden="true"><div class="modal-backdrop" data-close="success"></div><section class="modal-card" role="dialog" aria-modal="true"><button class="close-btn" data-close="success" aria-label="إغلاق">×</button><div class="modal-icon">✓</div><h2>وصل طلبك بنجاح</h2><p id="successMessage"></p><a class="primary-btn full-btn" href="https://wa.me/9647780077122" target="_blank" rel="noopener">تواصل معنا عبر واتساب</a></section></div>\n<div id="toast" class="toast" role="status"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
+<script src="/app/app.js" defer></script>
+</body>
+</html>
