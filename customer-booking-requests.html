@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="qawafel-build" content="V298-CUSTOMER-BOOKING-INBOX">
+<title>طلبات حجز التطبيق | قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
+<style>
+:root{--n:#082f50;--b:#155985;--g:#c99a32;--bg:#f4f6f8;--line:#e2e8ed;--muted:#718390;--green:#18734e;--red:#a43b3b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:#18384f;font-family:Tahoma,Arial,sans-serif}
+header{background:var(--n);color:white;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:5;border-bottom:2px solid var(--g)}
+.brand{display:flex;align-items:center;gap:10px}.brand img{width:44px;height:44px;object-fit:contain;background:#fff;border-radius:9px}.brand b{display:block;font-size:15px}.brand small{display:block;color:#e4c878;font-size:10px;margin-top:4px}
+.actions{display:flex;gap:7px;flex-wrap:wrap}.btn{border:0;border-radius:9px;padding:9px 12px;font:inherit;font-size:11px;font-weight:900;cursor:pointer;text-decoration:none}.light{background:#ffffff18;color:white;border:1px solid #ffffff40}.gold{background:var(--g);color:var(--n)}
+main{max-width:1400px;margin:auto;padding:23px 18px}.head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:17px}.eyebrow{font-size:10px;color:var(--g);font-weight:900}.head h1{margin:6px 0;color:var(--n);font-size:25px}.head p{margin:0;color:var(--muted);font-size:11px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.stat,.panel{background:white;border:1px solid var(--line);border-radius:14px;box-shadow:0 4px 18px #082f5009}.stat{padding:14px}.stat span{font-size:10px;color:var(--muted)}.stat b{display:block;font-size:24px;color:var(--n);margin-top:5px}.panel{padding:15px;margin-bottom:13px}
+.filters{display:grid;grid-template-columns:1fr 190px auto;gap:8px}.filters input,.filters select{width:100%;padding:11px;border:1px solid #d5dfe5;border-radius:9px;background:white;font:inherit;font-size:11px}
+.table-wrap{overflow:auto}table{width:100%;border-collapse:collapse;min-width:900px}th,td{text-align:right;padding:11px 9px;border-bottom:1px solid var(--line);font-size:11px;vertical-align:top}th{background:#f4f7f9;color:var(--n);font-size:10px;white-space:nowrap}td{line-height:1.7}.person{font-weight:900;color:var(--n)}.muted{color:var(--muted);font-size:10px}.pill{display:inline-block;border-radius:30px;padding:5px 9px;font-size:9px;font-weight:900;background:#fff4d9;color:#76580e}.pill.contacted{background:#eaf3fb;color:#155985}.pill.confirmed{background:#e9f7ef;color:var(--green)}.pill.rejected,.pill.cancelled{background:#fff0f0;color:var(--red)}
+.row-actions{display:flex;gap:5px;align-items:center;flex-wrap:wrap}.mini{border:1px solid #d8e1e7;border-radius:8px;padding:7px 9px;background:white;color:var(--n);font:inherit;font-size:10px;font-weight:900;cursor:pointer;text-decoration:none;white-space:nowrap}.whatsapp{background:#eaf7ef;border-color:#cce8d7;color:#18734e}.save{background:var(--n);color:#fff;border-color:var(--n)}
+.note{width:150px;padding:7px;border:1px solid #d8e1e7;border-radius:7px;font:inherit;font-size:10px}
+.status-edit{padding:7px;border:1px solid #d8e1e7;border-radius:7px;font:inherit;font-size:10px;background:#fff}
+.empty{text-align:center;color:var(--muted);padding:35px;font-size:12px}.notice{padding:12px;border-radius:10px;background:#fff7e6;color:#745512;font-size:11px;line-height:1.8;margin-bottom:13px}.error{background:#fff0f0;color:#9c3030}.hidden{display:none!important}
+@media(max-width:700px){header{padding:10px}.brand b{font-size:12px}.brand small{font-size:9px}.brand img{width:38px;height:38px}.actions .btn{font-size:9px;padding:8px}.stats{grid-template-columns:repeat(2,1fr)}main{padding:16px 10px}.head{display:block}.head h1{font-size:21px}.filters{grid-template-columns:1fr 1fr}.filters input{grid-column:1/-1}.stat b{font-size:21px}}
+</style></head>
+<body>
+<header><div class="brand"><img src="./logo.png" alt="قوافل الحرمين"><div><b>قوافل الحرمين للحج والعمرة</b><small>صندوق طلبات الحجز الواردة من التطبيق</small></div></div><div class="actions"><a class="btn light" href="./internal.html">لوحة الإدارة</a><button class="btn gold" id="logout">تسجيل الخروج</button></div></header>
+<main>
+<div class="head"><div><div class="eyebrow">إدارة الحجوزات الإلكترونية</div><h1>طلبات حجز التطبيق</h1><p>تصل هنا طلبات العملاء المرسلة من تطبيق الزبائن، وتبقى بانتظار تواصل الموظف وتأكيد الحجز.</p></div><button class="btn gold" id="refresh">↻ تحديث الطلبات</button></div>
+<div id="notice" class="notice">⏳ جارٍ التحقق من صلاحية الدخول وتحميل الطلبات...</div>
+<section id="content" class="hidden">
+<div class="stats">
+<div class="stat"><span>جميع الطلبات</span><b id="countAll">0</b></div>
+<div class="stat"><span>جديدة بانتظار الاتصال</span><b id="countPending">0</b></div>
+<div class="stat"><span>تم التواصل</span><b id="countContacted">0</b></div>
+<div class="stat"><span>تم تأكيدها</span><b id="countConfirmed">0</b></div>
+</div>
+<div class="panel"><div class="filters"><input id="search" placeholder="ابحث باسم العميل أو رقم الهاتف"><select id="filter"><option value="all">كل الحالات</option><option value="pending">جديدة</option><option value="contacted">تم التواصل</option><option value="confirmed">مؤكدة</option><option value="rejected">مرفوضة</option><option value="cancelled">ملغاة</option></select><button class="btn gold" id="clear">مسح البحث</button></div></div>
+<div class="panel"><div class="table-wrap"><table><thead><tr><th>العميل</th><th>البرنامج / الباقة</th><th>العدد</th><th>وقت الطلب</th><th>الحالة</th><th>ملاحظة الموظف</th><th>التواصل والإجراء</th></tr></thead><tbody id="rows"><tr><td colspan="7" class="empty">لا توجد طلبات حالياً</td></tr></tbody></table></div></div>
+</section>
+</main>
+<script>
+(() => {
+ const URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+ const KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const db=window.supabase.createClient(URL,KEY);
+ const $=id=>document.getElementById(id);
+ let requests=[],programs={},packages={},allowed=false;
+ const labels={pending:'جديد - بانتظار الاتصال',contacted:'تم التواصل',confirmed:'تم التأكيد',rejected:'مرفوض',cancelled:'ملغى'};
+ const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+ const date=v=>v?new Intl.DateTimeFormat('ar-IQ',{dateStyle:'medium',timeStyle:'short'}).format(new Date(v)):'—';
+ function notice(t,error=false){$('notice').textContent=t;$('notice').className='notice'+(error?' error':'');}
+ async function auth(){
+   const {data,error}=await db.auth.getSession();
+   if(error||!data.session){notice('يرجى تسجيل الدخول من لوحة الإدارة أولاً. سيتم تحويلك إلى صفحة الدخول...',true);setTimeout(()=>location.href='./internal.html',1300);return false;}
+   const uid=data.session.user.id;
+   let profile=await db.from('staff_profiles').select('role,active').eq('user_id',uid).maybeSingle();
+   let role=profile.data?.active!==false?profile.data?.role:null;
+   if(!role){const admin=await db.from('admin_users').select('role').eq('user_id',uid).maybeSingle();role=admin.data?.role||null;}
+   allowed=['super_admin','manager','booking_staff'].includes(role);
+   if(!allowed){notice('عذراً، هذه الصفحة مخصصة للمدير أو موظفي الحجوزات فقط.',true);return false;}
+   return true;
+ }
+ async function load(){
+   $('refresh').disabled=true;$('refresh').textContent='جارٍ التحديث...';
+   const {data,error}=await db.from('customer_booking_requests').select('id,program_id,package_id,full_name,phone,passengers_count,notes,status,staff_note,created_at,updated_at').order('created_at',{ascending:false});
+   if(error){notice('تعذر تحميل الطلبات: '+error.message,true);$('refresh').disabled=false;$('refresh').textContent='↻ تحديث الطلبات';return;}
+   requests=data||[];
+   const pids=[...new Set(requests.map(x=>x.program_id).filter(Boolean))],pkids=[...new Set(requests.map(x=>x.package_id).filter(Boolean))];
+   programs={};packages={};
+   if(pids.length){const r=await db.from('programs').select('id,title,departure_date').in('id',pids);(r.data||[]).forEach(x=>programs[x.id]=x);}
+   if(pkids.length){const r=await db.from('program_packages').select('id,name').in('id',pkids);(r.data||[]).forEach(x=>packages[x.id]=x);}
+   $('content').classList.remove('hidden');notice('تم تحميل الطلبات. الطلب الجديد لا يتحول إلى حجز فعلي أو ملف معتمر إلا بعد مراجعة الموظف وتأكيده.');
+   render();$('refresh').disabled=false;$('refresh').textContent='↻ تحديث الطلبات';
+ }
+ function render(){
+   const all=requests.length;
+   $('countAll').textContent=all;
+   $('countPending').textContent=requests.filter(x=>x.status==='pending').length;
+   $('countContacted').textContent=requests.filter(x=>x.status==='contacted').length;
+   $('countConfirmed').textContent=requests.filter(x=>x.status==='confirmed').length;
+   const term=$('search').value.trim().toLowerCase(),filter=$('filter').value;
+   const rows=requests.filter(x=>(filter==='all'||x.status===filter)&&(!term||x.full_name.toLowerCase().includes(term)||x.phone.includes(term)));
+   $('rows').innerHTML=rows.length?rows.map(x=>{
+     const prog=programs[x.program_id],pack=packages[x.package_id];
+     const phone=x.phone.replace(/[^0-9+]/g,'');
+     const wa=phone.replace(/^\+/,'');
+     return '<tr><td><div class="person">'+esc(x.full_name)+'</div><div class="muted" dir="ltr" style="text-align:right">'+esc(x.phone)+'</div></td>'+
+     '<td><b>'+esc(prog?.title||'برنامج غير متاح')+'</b><div class="muted">'+(prog?.departure_date?'المغادرة: '+esc(prog.departure_date):'موعد يحدد لاحقاً')+'</div>'+(pack?'<div class="muted">الباقة: '+esc(pack.name)+'</div>':'')+'</td>'+
+     '<td>'+esc(x.passengers_count)+' أشخاص</td><td>'+esc(date(x.created_at))+'</td>'+
+     '<td><span class="pill '+esc(x.status)+'">'+esc(labels[x.status]||x.status)+'</span><div style="margin-top:7px"><select class="status-edit" id="status-'+x.id+'">'+Object.entries(labels).map(([k,v])=>'<option value="'+k+'" '+(x.status===k?'selected':'')+'>'+v+'</option>').join('')+'</select></div></td>'+
+     '<td><input class="note" id="note-'+x.id+'" value="'+esc(x.staff_note||'')+'" placeholder="ملاحظة داخلية"><div class="muted" style="margin-top:5px">'+(x.notes?'طلب العميل: '+esc(x.notes):'لا توجد ملاحظات من العميل')+'</div></td>'+
+     '<td><div class="row-actions"><a class="mini whatsapp" target="_blank" rel="noopener" href="https://wa.me/'+esc(wa)+'">واتساب</a><a class="mini" href="tel:'+esc(phone)+'">اتصال</a><button class="mini save" data-save="'+x.id+'">حفظ التحديث</button></div></td></tr>';
+   }).join(''):'<tr><td colspan="7" class="empty">لا توجد طلبات مطابقة للبحث</td></tr>';
+   document.querySelectorAll('[data-save]').forEach(btn=>btn.addEventListener('click',()=>save(btn.dataset.save,btn)));
+ }
+ async function save(id,btn){
+   const status=$('status-'+id).value,staff_note=$('note-'+id).value.trim();
+   btn.disabled=true;btn.textContent='جارٍ الحفظ...';
+   const {error}=await db.from('customer_booking_requests').update({status,staff_note:staff_note||null,updated_at:new Date().toISOString()}).eq('id',id);
+   if(error){alert('تعذر حفظ التحديث: '+error.message);btn.disabled=false;btn.textContent='حفظ التحديث';return;}
+   const item=requests.find(x=>x.id===id);if(item){item.status=status;item.staff_note=staff_note||null;item.updated_at=new Date().toISOString();}
+   render();
+ }
+ $('refresh').addEventListener('click',load);$('search').addEventListener('input',render);$('filter').addEventListener('change',render);
+ $('clear').addEventListener('click',()=>{$('search').value='';$('filter').value='all';render();});
+ $('logout').addEventListener('click',async()=>{await db.auth.signOut();location.href='./internal.html';});
+ (async()=>{if(await auth()){await load();}})();
+})();
+</script></body></html>
