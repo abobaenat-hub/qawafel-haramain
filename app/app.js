@@ -145,5 +145,5 @@
   $("refreshBtn").addEventListener("click",loadPrograms);
   $("year").textContent=new Date().getFullYear();
   loadPrograms();
-  if("serviceWorker" in navigator)window.addEventListener("load",()=>navigator.serviceWorker.register("/app/sw.js").catch(console.warn));
+  if("serviceWorker" in navigator)window.addEventListener("load",async()=>{try{const registration=await navigator.serviceWorker.register("/app/sw.js",{updateViaCache:"none"});await registration.update();if(navigator.serviceWorker.controller){navigator.serviceWorker.addEventListener("controllerchange",()=>window.location.reload(),{once:true});}}catch(error){console.warn("تعذر تحديث التطبيق:",error);}});
 })();
