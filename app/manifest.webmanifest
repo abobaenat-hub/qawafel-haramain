@@ -1,0 +1,17 @@
+{
+  "id": "/app/",
+  "name": "قوافل الحرمين للحج والعمرة",
+  "short_name": "قوافل الحرمين",
+  "description": "برامج العمرة وطلبات الحجز ومتابعتها",
+  "lang": "ar-IQ",
+  "dir": "rtl",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f8f3",
+  "theme_color": "#07543f",
+  "icons": [
+    {"src": "/app/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}
+  ]
+}
