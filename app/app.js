@@ -33,8 +33,8 @@
     $("programsState").classList.remove("hidden");
     $("programsState").textContent="جارٍ تحميل البرامج المتاحة…";
     $("programsGrid").innerHTML="";
-    const [pRes, packRes] = await Promise.all([
-      db.from("programs").select("id,title,departure_date,return_date,city_hotel,makkah_hotel,travel_type,price,currency,seats_available,services,description,status,icon,image_url,package_mode").eq("status","published").order("departure_date",{ascending:true}),
+    const today = new Date().toISOString().slice(0,10);\n    const [pRes, packRes] = await Promise.all([
+      db.from("programs").select("id,title,departure_date,return_date,city_hotel,makkah_hotel,travel_type,price,currency,seats_available,services,description,status,icon,image_url,package_mode").eq("status","published").or("departure_date.is.null,departure_date.gte."+today).order("departure_date",{ascending:true}),
       db.from("program_packages").select("id,program_id,name,city_hotel,makkah_hotel,price,installment_price,seats_available,active").eq("active",true)
     ]);
     if (pRes.error) { $("programsState").textContent="تعذر تحميل البرامج حالياً. حاول تحديث الصفحة."; console.error(pRes.error); return; }
