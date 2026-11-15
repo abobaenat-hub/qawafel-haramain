@@ -116,6 +116,11 @@
     let phone;
     try{phone=normalizePhone($("customerPhone").value);}catch(e){$("bookingMessage").textContent=e.message;return;}
     if(!selectedProgram)return;
+    const adults_count=Number($("adultsCount").value)||0;
+    const children_count=Number($("childrenCount").value)||0;
+    const infants_count=Number($("infantsCount").value)||0;
+    const passengers_count=adults_count+children_count+infants_count;
+    if(passengers_count<1||passengers_count>20){$("bookingMessage").textContent="يجب أن يكون مجموع المسافرين من 1 إلى 20 شخصاً.";return;}
     const payload={
       user_id:null,program_id:selectedProgram.id,package_id:$("packageSelect").value||null,
       full_name:$("customerName").value.trim(),phone,
