@@ -3,21 +3,22 @@
   const SUPABASE_KEY = "sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ";
   const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   // Anonymous, privacy-minimal usage analytics: no names, phone numbers, or IP addresses.
+  const makeVisitorId = () => window.crypto?.randomUUID
+    ? window.crypto.randomUUID()
+    : "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, c => {
+        const r = Math.random() * 16 | 0;
+        return (c === "x" ? r : (r & 3 | 8)).toString(16);
+      });
   const getVisitorId = () => {
     const key = "qawafel_customer_visitor_v1";
     try {
       let id = localStorage.getItem(key);
-      if (!id) { id = crypto.randomUUID(); localStorage.setItem(key, id); }
+      if (!id) { id = makeVisitorId(); localStorage.setItem(key, id); }
       return id;
-    } catch (_) {
-      try {
-        let id = sessionStorage.getItem(key);
-        if (!id) { id = crypto.randomUUID(); sessionStorage.setItem(key, id); }
-        return id;
-      } catch (_) { return crypto.randomUUID(); }
-    }
+    } catch (_) { return makeVisitorId(); }
   };
   const visitorId = getVisitorId();
+  const seenPrograms = new Set();
   const deviceType = () => {
     const width = Math.min(window.innerWidth || 1200, screen.width || 1200);
     return width <= 767 ? "mobile" : width <= 1024 ? "tablet" : "desktop";
@@ -85,8 +86,7 @@
         entries.forEach(entry => {
           if (!entry.isIntersecting) return;
           const id = entry.target.dataset.programId;
-          const key = "qawafel_program_seen_" + id;
-          if (!sessionStorage.getItem(key)) { sessionStorage.setItem(key, "1"); track("program_view", id); }
+          if (!seenPrograms.has(id)) { seenPrograms.add(id); track("program_view", id); }
           observer.unobserve(entry.target);
         });
       }, { threshold: 0.35 });
