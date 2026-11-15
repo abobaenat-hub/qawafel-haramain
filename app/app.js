@@ -105,7 +105,13 @@
     track("booking_start", id);
     showModal("bookingModal");
   };
-  const updatePassengerTotal = () => {\n    const total = ["adultsCount","childrenCount","infantsCount"].reduce((sum,id)=>sum+Math.max(0,Number($(id).value)||0),0);\n    $("passengers").value=total;\n    return total;\n  };\n  document.querySelectorAll(".passenger-count").forEach(input=>input.addEventListener("input",updatePassengerTotal));\n  const submitBooking = async (event) => {
+  const updatePassengerTotal = () => {
+    const total = ["adultsCount","childrenCount","infantsCount"].reduce((sum,id)=>sum+Math.max(0,Number($(id).value)||0),0);
+    $("passengers").value=total;
+    return total;
+  };
+  document.querySelectorAll(".passenger-count").forEach(input=>input.addEventListener("input",updatePassengerTotal));
+  const submitBooking = async (event) => {
     event.preventDefault();
     let phone;
     try{phone=normalizePhone($("customerPhone").value);}catch(e){$("bookingMessage").textContent=e.message;return;}
