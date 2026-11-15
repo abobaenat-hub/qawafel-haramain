@@ -34,7 +34,7 @@ main{max-width:1400px;margin:auto;padding:23px 18px}.head{display:flex;justify-c
 <div class="stat"><span>تم تأكيدها</span><b id="countConfirmed">0</b></div>
 </div>
 <div class="panel"><div class="filters"><input id="search" placeholder="ابحث باسم العميل أو رقم الهاتف"><select id="filter"><option value="all">كل الحالات</option><option value="pending">جديدة</option><option value="contacted">تم التواصل</option><option value="confirmed">مؤكدة</option><option value="rejected">مرفوضة</option><option value="cancelled">ملغاة</option></select><button class="btn gold" id="clear">مسح البحث</button></div></div>
-<div class="panel"><div class="table-wrap"><table><thead><tr><th>العميل</th><th>البرنامج / الباقة</th><th>العدد</th><th>وقت الطلب</th><th>الحالة</th><th>ملاحظة الموظف</th><th>التواصل والإجراء</th></tr></thead><tbody id="rows"><tr><td colspan="7" class="empty">لا توجد طلبات حالياً</td></tr></tbody></table></div></div>
+<div class="panel"><div class="table-wrap"><table><thead><tr><th>العميل</th><th>البرنامج / الباقة</th><th>تفاصيل المسافرين</th><th>وقت الطلب</th><th>الحالة</th><th>ملاحظة الموظف</th><th>التواصل والإجراء</th></tr></thead><tbody id="rows"><tr><td colspan="7" class="empty">لا توجد طلبات حالياً</td></tr></tbody></table></div></div>
 </section>
 </main>
 <script>
@@ -61,7 +61,7 @@ main{max-width:1400px;margin:auto;padding:23px 18px}.head{display:flex;justify-c
  }
  async function load(){
    $('refresh').disabled=true;$('refresh').textContent='جارٍ التحديث...';
-   const {data,error}=await db.from('customer_booking_requests').select('id,program_id,package_id,full_name,phone,passengers_count,notes,status,staff_note,created_at,updated_at').order('created_at',{ascending:false});
+   const {data,error}=await db.from('customer_booking_requests').select('id,program_id,package_id,full_name,phone,passengers_count,adults_count,children_count,infants_count,notes,status,staff_note,created_at,updated_at').order('created_at',{ascending:false});
    if(error){notice('تعذر تحميل الطلبات: '+error.message,true);$('refresh').disabled=false;$('refresh').textContent='↻ تحديث الطلبات';return;}
    requests=data||[];
    const pids=[...new Set(requests.map(x=>x.program_id).filter(Boolean))],pkids=[...new Set(requests.map(x=>x.package_id).filter(Boolean))];
@@ -85,7 +85,7 @@ main{max-width:1400px;margin:auto;padding:23px 18px}.head{display:flex;justify-c
      const wa=phone.replace(/^\+/,'');
      return '<tr><td><div class="person">'+esc(x.full_name)+'</div><div class="muted" dir="ltr" style="text-align:right">'+esc(x.phone)+'</div></td>'+
      '<td><b>'+esc(prog?.title||'برنامج غير متاح')+'</b><div class="muted">'+(prog?.departure_date?'المغادرة: '+esc(prog.departure_date):'موعد يحدد لاحقاً')+'</div>'+(pack?'<div class="muted">الباقة: '+esc(pack.name)+'</div>':'')+'</td>'+
-     '<td>'+esc(x.passengers_count)+' أشخاص</td><td>'+esc(date(x.created_at))+'</td>'+
+     '<td><b>الإجمالي: '+esc(x.passengers_count)+'</b><div class="muted">بالغون: '+esc(x.adults_count??x.passengers_count)+' · أطفال: '+esc(x.children_count??0)+' · رضع: '+esc(x.infants_count??0)+'</div></td><td>'+esc(date(x.created_at))+'</td>'+
      '<td><span class="pill '+esc(x.status)+'">'+esc(labels[x.status]||x.status)+'</span><div style="margin-top:7px"><select class="status-edit" id="status-'+x.id+'">'+Object.entries(labels).map(([k,v])=>'<option value="'+k+'" '+(x.status===k?'selected':'')+'>'+v+'</option>').join('')+'</select></div></td>'+
      '<td><input class="note" id="note-'+x.id+'" value="'+esc(x.staff_note||'')+'" placeholder="ملاحظة داخلية"><div class="muted" style="margin-top:5px">'+(x.notes?'طلب العميل: '+esc(x.notes):'لا توجد ملاحظات من العميل')+'</div></td>'+
      '<td><div class="row-actions"><a class="mini whatsapp" target="_blank" rel="noopener" href="https://wa.me/'+esc(wa)+'">واتساب</a><a class="mini" href="tel:'+esc(phone)+'">اتصال</a><button class="mini save" data-save="'+x.id+'">حفظ التحديث</button></div></td></tr>';
