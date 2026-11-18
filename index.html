@@ -49,9 +49,76 @@
 @media(max-width:900px){.hero .copy{padding-top:18px}.hero .actions{margin-top:24px}}
 @media(max-width:560px){.actions .admin{display:inline-flex}.actions .userhead,.actions .agenthead,.actions .admin{padding:9px 9px;font-size:9px}.hero .actions{margin-top:22px}}
 </style>
-</head><body>
-<div class="top"><div class="w"><div class="phones"><span>📍 بغداد - العراق</span><span>📞 +964 778 007 7122</span><span>📞 +964 781 479 9623</span></div><span class="note">رحلتك إلى الحرمين ... مسؤوليتنا</span></div></div>
-<header class="head"><div class="w"><img class="logo" src="logo.png" alt="قوافل الحرمين"><nav class="nav"><a class="active" href="#home">الرئيسية</a><a href="#programs">برامج العمرة</a><a href="#services">خدماتنا</a><a href="./gallery.html">معرض الصور</a><a href="#agents">المتعهدون</a><a href="#visa">متابعة التأشيرة</a><a href="#contact">تواصل معنا</a></nav><div class="actions"><a class="btn galleryhead" href="./gallery.html">معرض الصور</a><a class="btn userhead" href="/pilgrim.html">دخول المستخدم</a><a class="btn agenthead" href="/agent">دخول المتعهدين</a><a class="btn admin" href="/admin">دخول الإدارة</a><button class="btn menu" aria-label="القائمة">☰</button></div></div></header>
+<style id="homepage-redesign-v1">
+:root{--n:#073b32;--b:#0b6554;--g:#c99a32;--bg:#fbfaf6;--m:#687b75;--l:#e9e1cf;--sh:0 14px 38px rgba(7,59,50,.10)}
+body{background:#fbfaf6;color:#123d35}
+.top{background:#073b32}.note{color:#f0d28a}
+.head{height:auto;min-height:0;background:#fff;box-shadow:0 5px 22px rgba(7,59,50,.07);border-bottom:1px solid #eee7d8}
+.head .w{height:auto;display:flex;flex-direction:column;align-items:stretch;gap:0;padding:8px 0 0}
+.brandline{min-height:82px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo{width:178px;height:76px;object-fit:contain;flex:0 0 auto}
+.auth-actions{display:flex;align-items:center;gap:9px}
+.auth-actions .btn{min-width:145px;border-radius:12px;padding:13px 18px;font-size:13px;box-shadow:0 5px 13px rgba(0,0,0,.07)}
+.auth-actions .admin{background:linear-gradient(135deg,#d5aa4b,#b9851d);color:#fff}
+.auth-actions .agenthead{background:#0a5144;color:#fff}
+.auth-actions .userhead{background:#f7f4ec;color:#17463d;border:1px solid #e5d9bd}
+.nav{width:100%;justify-content:center;gap:3px;margin-top:7px;background:#073b32;border-radius:14px 14px 0 0;padding:0 8px}
+.nav a{color:#fff;padding:17px 15px;border:0;border-bottom:3px solid transparent}
+.nav a:hover,.nav a.active{color:#f2d58e;border-bottom-color:#d2a13b}
+.hero{height:465px;background:#073b32}
+.hero:before{background:linear-gradient(90deg,rgba(3,40,34,.08) 0%,rgba(3,40,34,.20) 34%,rgba(3,40,34,.82) 69%,#073b32 100%),url('hero.jpg');background-size:cover;background-position:center left}
+.copy{width:53%;color:#fff;padding-right:14px}
+.hero h1{color:#fff;font-size:54px}
+.hero h1 span{color:#f0cf7d}
+.hero p{color:#f0eee6}
+.tag{background:rgba(255,255,255,.14);color:#f3d68e;border:1px solid rgba(240,207,125,.35)}
+.hero .outline{background:transparent;color:#fff;border-color:#e6d29c}
+.hero .gold,.btn.gold{background:linear-gradient(135deg,#e4bf68,#bd8c29);color:#173b33}
+.trustbox,.searchbox,.card{border-color:#eee5d3;box-shadow:0 12px 32px rgba(7,59,50,.08)}
+.searchbox{border-radius:20px}
+.searchbtn{background:#0a5144}
+.sh h2,.st h2{color:#073b32}
+.all{border-color:#c99a32;color:#805e19}
+.badge{background:#0b6554}
+.visa{background:linear-gradient(125deg,#073b32,#0b6554)}
+.footer{background:#052e28}
+.portal{display:none}
+@media(max-width:900px){
+ .head .w{padding-top:5px}.brandline{min-height:72px}.logo{width:135px;height:64px}
+ .auth-actions .btn{min-width:0;padding:11px 13px;font-size:11px}
+ .nav{display:flex;overflow-x:auto;justify-content:flex-start;border-radius:12px 12px 0 0;white-space:nowrap}
+ .nav a{padding:14px 12px;font-size:12px}
+ .hero{height:410px}.copy{width:64%}.hero h1{font-size:43px}
+}
+@media(max-width:560px){
+ .top .w{justify-content:center}.phones{gap:9px}.phones span:first-child{display:inline}
+ .head .w{width:100%;padding:5px 10px 0}
+ .brandline{min-height:64px;gap:8px}.logo{width:105px;height:58px}
+ .auth-actions{gap:5px}.auth-actions .btn{padding:9px 8px;font-size:9px;border-radius:9px}
+ .auth-actions .admin,.auth-actions .agenthead{display:inline-flex}
+ .auth-actions .pilgrim-login{display:none}
+ .nav{margin-top:5px;gap:0;padding:0 3px}.nav a{font-size:10px;padding:12px 9px}
+ .hero{height:370px}.hero:before{background:linear-gradient(180deg,rgba(3,40,34,.12),rgba(3,40,34,.88) 65%,#073b32 100%),url('hero.jpg');background-position:center}
+ .hero .w{height:100%;justify-content:flex-end;align-items:center}.copy{width:100%;text-align:center;padding:0 10px;margin:0}
+ .hero h1{font-size:35px}.hero p{color:#f4f0e6}.hero .actions{justify-content:center}
+ .hero .actions .btn{min-width:0}
+ .trust{padding-top:32px}
+}
+</style></head><body>
+<div class="top"><div class="w"><div class="phones"><span>📍 بغداد – العامرية</span><span>📞 +964 778 007 7122</span><span>📞 +964 781 479 9623</span></div><span class="note">رحلتك إلى الحرمين ... مسؤوليتنا</span></div></div>
+<header class="head"><div class="w">
+  <div class="brandline">
+    <img class="logo" src="logo.png" alt="شعار قوافل الحرمين للحج والعمرة">
+    <div class="auth-actions" aria-label="بوابات الدخول">
+      <a class="btn admin" href="/admin" aria-label="دخول الإدارة">دخول الإدارة</a>
+      <a class="btn agenthead" href="/agent" aria-label="دخول المتعاهدين">دخول المتعاهدين</a>
+      <a class="btn userhead pilgrim-login" href="/pilgrim.html" aria-label="دخول المعتمر">دخول المعتمر</a>
+    </div>
+  </div>
+  <nav class="nav" aria-label="القائمة الرئيسية">
+    <a class="active" href="#home">الرئيسية</a><a href="#programs">برامج العمرة</a><a href="#services">خدماتنا</a><a href="./gallery.html">معرض الصور</a><a href="#agents">المتعهدون</a><a href="#visa">متابعة التأشيرة</a><a href="#contact">تواصل معنا</a>
+  </nav>
+</div></header>
 <main id="home"><section class="hero"><div class="talbiyah">لبيك اللهم لبيك</div><div class="w"><div class="copy"><span class="tag">قوافل الحرمين للحج والعمرة</span><h1>رحلتك إلى الحرمين<br><span>تبدأ من هنا</span></h1><p>خدمة منظمة وتجربة إيمانية مميزة .. نرافقك من اختيار البرنامج إلى التسجيل ومتابعة التأشيرة والرحلة.</p><div class="actions"><a class="btn gold" href="#programs">استعرض برامج العمرة ✈</a><a class="btn outline" href="#visa">معرفة المزيد　›</a></div></div></div></section>
 
 <section class="search"><div class="w"><div class="searchbox"><div class="st"><h2>إبحث عن برنامج العمرة المناسب لك</h2><button class="reset" onclick="resetFilters()">↻ إعادة الضبط</button></div><div class="fields"><div class="field"><label>وجهة الرحلة</label><select id="city"><option value="">مكة والمدينة</option><option value="مكة">مكة</option><option value="المدينة">المدينة</option></select></div><div class="field"><label>نوع الرحلة</label><select id="type"><option value="">كل الرحلات</option><option value="بر">بر</option><option value="جوا">جواً</option></select></div><div class="field"><label>موعد الرحلة</label><input id="date" placeholder="مثلاً: منتصف الشهر"></div><div class="field"><label>بحث عن برنامج</label><input id="q" placeholder="اسم البرنامج أو الفندق"></div></div><button class="btn searchbtn" onclick="filterPrograms()">بحث في البرامج　⌕</button></div></div></section>
