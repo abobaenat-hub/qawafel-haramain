@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>معرض الصور | قوافل الحرمين للحج والعمرة</title>
+<meta name="description" content="شاهد صور رحلات وفعاليات قوافل الحرمين للحج والعمرة.">
+<link rel="canonical" href="https://qawafialharamainiq.com/gallery.html">
+<meta name="theme-color" content="#07385d">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
+<style>
+:root{--n:#07385d;--b:#145f8d;--g:#d19a18;--bg:#f4f8fb;--m:#6e818e;--l:#dce7ed}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--n);font-family:Tahoma,Arial,sans-serif}a{text-decoration:none;color:inherit}.w{width:min(1200px,calc(100% - 32px));margin:auto}
+header{background:#fff;border-bottom:1px solid var(--l);position:sticky;top:0;z-index:10}.head{height:82px;display:flex;align-items:center;justify-content:space-between;gap:20px}.logo{width:145px;height:70px;object-fit:contain}.nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.nav a{padding:12px 13px;font-size:13px;font-weight:900}.nav a.active,.nav a:hover{color:var(--g)}.back{background:var(--n);color:#fff;border-radius:10px;padding:11px 15px;font-size:12px;font-weight:900}
+.hero{background:linear-gradient(115deg,#07385d,#145f8d);color:#fff;padding:55px 0 48px;text-align:center}.eyebrow{color:#e7bd53;font-size:11px;font-weight:900;letter-spacing:1px}.hero h1{font-size:36px;margin:12px 0}.hero p{color:#e0edf4;font-size:13px;line-height:2;margin:0}
+main{padding:28px 0 65px}.filters{display:flex;gap:9px;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap}.albums{display:flex;gap:8px;flex-wrap:wrap}.album{border:1px solid #d5e1e8;background:#fff;color:var(--n);border-radius:999px;padding:9px 15px;font:inherit;font-size:11px;font-weight:900;cursor:pointer}.album.active{background:var(--n);color:#fff;border-color:var(--n)}.count{font-size:11px;color:var(--m)}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.tile{background:#fff;border:1px solid var(--l);border-radius:16px;overflow:hidden;box-shadow:0 8px 24px #07385d0d}.media{height:220px;background:#e9f0f4;position:relative;display:grid;place-items:center;cursor:zoom-in;overflow:hidden}.media img,.media video{width:100%;height:100%;object-fit:cover}.play{position:absolute;background:#062b47bb;color:#fff;border-radius:50%;width:48px;height:48px;display:grid;place-items:center;font-size:20px;pointer-events:none}.caption{padding:12px 14px}.caption b{display:block;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.caption small{display:block;color:var(--m);font-size:10px;margin-top:6px}.empty{background:#fff;border:1px dashed #cbd9e1;border-radius:14px;padding:45px 20px;text-align:center;color:var(--m);font-size:13px;grid-column:1/-1;line-height:2}
+.lightbox{display:none;position:fixed;inset:0;background:#031a2beF;z-index:100;align-items:center;justify-content:center;padding:18px}.lightbox.show{display:flex}.lbinner{max-width:min(1100px,96vw);max-height:94vh;display:flex;flex-direction:column;align-items:center;gap:10px}.lbinner img,.lbinner video{max-width:100%;max-height:83vh;object-fit:contain;border-radius:10px;background:#111}.close{align-self:flex-end;border:0;border-radius:9px;background:#fff;color:var(--n);padding:10px 15px;font-weight:900;cursor:pointer}.lbtitle{color:#fff;font-size:12px;text-align:center}
+footer{background:#062b47;color:#d7e4ea;padding:25px 0;text-align:center;font-size:10px;line-height:2}
+@media(max-width:800px){.head{height:auto;min-height:72px}.logo{width:110px}.nav{gap:0;justify-content:flex-end}.nav a{font-size:11px;padding:9px}.back{display:none}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.media{height:175px}}
+@media(max-width:520px){.w{width:calc(100% - 22px)}.head{display:block;text-align:center;padding:7px 0}.logo{height:48px}.nav{justify-content:center}.nav a{font-size:10px;padding:8px}.hero{padding:38px 0}.hero h1{font-size:28px}.grid{gap:9px}.media{height:130px}.caption{padding:9px}.caption b{font-size:10px}.filters{display:block}.count{display:block;margin-top:12px}}
+</style>
+</head>
+<body>
+<header><div class="w head"><a href="./index.html"><img class="logo" src="./logo.png" alt="قوافل الحرمين"></a><nav class="nav"><a href="./index.html">الرئيسية</a><a href="./index.html#programs">برامج العمرة</a><a class="active" href="./gallery.html">معرض الصور</a><a href="./index.html#contact">تواصل معنا</a></nav><a class="back" href="./index.html">العودة للموقع</a></div></header>
+<section class="hero"><div class="w"><div class="eyebrow">QAWAFEL ALHARAMAIN · GALLERY</div><h1>معرض الصور</h1><p>لحظات من رحلاتنا وفعالياتنا في خدمة ضيوف الرحمن</p></div></section>
+<main class="w"><div class="filters"><div id="albums" class="albums"><button class="album active" data-album="">كل الألبومات</button></div><span id="count" class="count"></span></div><div id="gallery" class="grid"><div class="empty">جارٍ تحميل الصور...</div></div></main>
+<div id="lightbox" class="lightbox" role="dialog" aria-modal="true"><div class="lbinner"><button class="close" id="close">إغلاق ✕</button><div id="lbmedia"></div><div id="lbtitle" class="lbtitle"></div></div></div>
+<footer><div class="w">قوافل الحرمين للحج والعمرة · رحلة منظمة... وخدمة تستحق الثقة.</div></footer>
+<script>
+(function(){
+ const U='https://ymjkzvdjpuuxkcgkmbtc.supabase.co',K='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+ const db=window.supabase.createClient(U,K),$=id=>document.getElementById(id);
+ let albums=[],assets=[],active='';
+ const esc=v=>String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));
+ function url(path){return db.storage.from('media-center').getPublicUrl(path).data.publicUrl;}
+ function renderAlbums(){
+  const visible=albums.filter(a=>assets.some(x=>x.album_id===a.id));
+  $('albums').innerHTML='<button class="album '+(!active?'active':'')+'" data-album="">كل الألبومات</button>'+visible.map(a=>'<button class="album '+(active===a.id?'active':'')+'" data-album="'+a.id+'">'+esc(a.title)+'</button>').join('');
+ }
+ function render(){
+  const rows=assets.filter(x=>!active||x.album_id===active);
+  $('count').textContent=rows.length+' ملف';
+  if(!rows.length){$('gallery').innerHTML='<div class="empty">لا توجد صور منشورة في هذا الألبوم حالياً.<br>تُعرض هنا الصور التي تعتمدها إدارة قوافل الحرمين.</div>';return;}
+  $('gallery').innerHTML=rows.map(x=>{
+   const u=url(x.storage_path),album=albums.find(a=>a.id===x.album_id);
+   const media=x.media_type==='video'?'<video src="'+u+'" muted playsinline preload="metadata"></video><span class="play">▶</span>':'<img src="'+u+'" alt="'+esc(x.caption||x.original_filename)+'" loading="lazy">';
+   return '<article class="tile"><div class="media" data-id="'+x.id+'">'+media+'</div><div class="caption"><b>'+esc(x.caption||x.original_filename)+'</b><small>'+esc(album?.title||'')+'</small></div></article>';
+  }).join('');
+ }
+ function close(){ $('lightbox').classList.remove('show');$('lbmedia').innerHTML='';document.removeEventListener('keydown',key);}
+ function key(e){if(e.key==='Escape')close();}
+ function preview(id){
+  const x=assets.find(a=>a.id===id);if(!x)return;
+  const u=url(x.storage_path);
+  $('lbmedia').innerHTML=x.media_type==='video'?'<video src="'+u+'" controls autoplay playsinline></video>':'<img src="'+u+'" alt="'+esc(x.caption||x.original_filename)+'">';
+  $('lbtitle').textContent=x.caption||x.original_filename;
+  $('lightbox').classList.add('show');document.addEventListener('keydown',key);
+ }
+ $('albums').onclick=e=>{const b=e.target.closest('[data-album]');if(!b)return;active=b.dataset.album;renderAlbums();render();};
+ $('gallery').onclick=e=>{const t=e.target.closest('[data-id]');if(t)preview(t.dataset.id);};
+ $('close').onclick=close;$('lightbox').onclick=e=>{if(e.target===$('lightbox'))close();};
+ async function load(){
+  try{
+   const [a,m]=await Promise.all([
+    db.from('media_albums').select('id,title,description,event_date,created_at').order('created_at',{ascending:false}),
+    db.from('media_assets').select('id,album_id,storage_path,original_filename,media_type,caption,created_at').eq('approval_status','approved').order('created_at',{ascending:false})
+   ]);
+   if(a.error)throw a.error;if(m.error)throw m.error;
+   albums=a.data||[];assets=m.data||[];renderAlbums();render();
+  }catch(e){console.error(e);$('gallery').innerHTML='<div class="empty">تعذر تحميل المعرض حالياً. يرجى المحاولة لاحقاً.</div>';}
+ }
+ load();
+})();
+</script>
+</body></html>
