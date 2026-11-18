@@ -201,7 +201,7 @@ async function createAlbum(){
  }catch(e){message('pageMsg',e.message||'تعذر إنشاء الألبوم.',true);}
  finally{$('createAlbumBtn').disabled=false;}
 }
-function safeName(name){return name.normalize('NFKC').replace(/[^\p{L}\p{N}._-]+/gu,'_').slice(-100)||'media';}
+function safeExtension(file){const fromName=(file.name.split('.').pop()||'').toLowerCase();if(/^[a-z0-9]{1,10}$/.test(fromName))return fromName;const byMime={'image/jpeg':'jpg','image/png':'png','image/webp':'webp','image/heic':'heic','video/mp4':'mp4','video/quicktime':'mov','video/webm':'webm'};return byMime[file.type]||'bin';}
 async function uploadFiles(){
  const albumId=$('uploadAlbum').value,files=[...$('mediaFiles').files];
  if(!albumId)return message('pageMsg','اختر الألبوم أولاً.',true);
@@ -212,7 +212,7 @@ async function uploadFiles(){
  try{
   for(const file of files){
    message('pageMsg','جارٍ رفع '+(done+1)+' من '+files.length+': '+file.name);
-   const path=albumId+'/'+Date.now()+'_'+crypto.randomUUID()+'_'+safeName(file.name);
+   const path=albumId+'/'+crypto.randomUUID()+'.'+safeExtension(file);
    const up=await db.storage.from('media-center').upload(path,file,{contentType:file.type,upsert:false});
    if(up.error)throw up.error;
    const row={album_id:albumId,storage_path:path,original_filename:file.name,mime_type:file.type,file_size:file.size,media_type:file.type.startsWith('video/')?'video':'image',uploaded_by:user.id};
