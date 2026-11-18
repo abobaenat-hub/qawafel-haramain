@@ -125,7 +125,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;border-
   </section>
   <section class="panel">
    <div class="toolbar"><div><h2 style="margin:0">مكتبة الوسائط</h2><div class="hint" style="margin:5px 0 0">اختر ألبوماً لعرض مواده ومتابعة حالة الاعتماد.</div></div><select id="albumFilter"><option value="">كل الألبومات</option></select></div>
-   <div id="albumList" class="albums"></div><div id="gallery" class="gallery"><div class="empty">جارٍ تحميل المكتبة...</div></div>
+   <div class="panel" style="margin:0 0 16px;background:#f8fbff;border-color:#cbdcf0"><h2>ترشيحات الذكاء الاصطناعي</h2><div class="hint">تُفحص الصور الجديدة تلقائياً بعد رفعها. تظهر هنا الصور الموصى بها فقط، ولا تُنشر إلا بعد اعتمادك.</div><div id="aiRecommendations" class="gallery"><div class="empty">بانتظار تحليل الصور الجديدة...</div></div></div><div id="albumList" class="albums"></div><div id="gallery" class="gallery"><div class="empty">جارٍ تحميل المكتبة...</div></div>
   </section>
  </div>
 </main>
@@ -173,11 +173,19 @@ async function loadLibrary(){
  $('pendingCount').textContent=assets.filter(x=>x.approval_status==='pending').length;
  const opts='<option value="">'+ 'كل الألبومات' +'</option>'+albums.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
  $('albumFilter').innerHTML=opts;$('uploadAlbum').innerHTML='<option value="">اختر ألبوماً</option>'+albums.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
- renderAlbums();await renderGallery();
+ renderAlbums();await renderRecommendations();await renderGallery();
 }
 function renderAlbums(){
  const selected=$('albumFilter').value;
  $('albumList').innerHTML=albums.length?albums.map(a=>'<button class="album '+(selected===a.id?'active':'')+'" data-album="'+a.id+'"><b>'+esc(a.title)+'</b><small>'+esc(a.trip_label||'')+' · '+assets.filter(x=>x.album_id===a.id).length+' ملف</small></button>').join(''):'<div class="empty">لا توجد ألبومات بعد. أنشئ أول ألبوم من النموذج.</div>';
+}
+async function renderRecommendations(){
+ const list=assets.filter(x=>x.media_type==='image'&&x.ai_recommendation==='recommended'&&x.approval_status!=='approved');
+ const root=$('aiRecommendations');
+ if(!list.length){root.innerHTML='<div class="empty">لا توجد صور مرشحة حالياً. ستظهر الصور المميزة هنا تلقائياً بعد رفعها وتحليلها.</div>';return;}
+ const urls=await Promise.all(list.map(async x=>{if(signedUrls[x.id])return [x.id,signedUrls[x.id]];const r=await db.storage.from('media-center').createSignedUrl(x.storage_path,3600);if(r.error)return [x.id,''];signedUrls[x.id]=r.data.signedUrl;return [x.id,r.data.signedUrl];}));
+ const map=Object.fromEntries(urls);
+ root.innerHTML=list.map(x=>'<article class="asset" data-asset-id="'+x.id+'"><div class="preview">'+(map[x.id]?'<img src="'+map[x.id]+'" alt="'+esc(x.original_filename)+'" loading="lazy">':'<span>تعذرت المعاينة</span>')+'</div><div class="assetbody"><b>'+esc(x.original_filename)+'</b><small>درجة الجودة: '+Number(x.quality_score||0)+'/100</small><span class="badge">مرشحة من الذكاء الاصطناعي</span><div class="ai-meta">'+(x.face_review_status==='faces_detected'?'تنبيه: رُصدت وجوه وتلزم مراجعة الخصوصية قبل النشر.':x.face_review_status==='manual_review'?'تنبيه: تلزم مراجعة خصوصية يدوية.':x.face_review_status==='no_faces'?'لم يرصد النموذج وجوهاً؛ يُفضّل التحقق البصري.':'حالة الخصوصية غير محسومة.')+'</div><div class="asset-actions"><button class="primary rec-approve" data-id="'+x.id+'">اعتماد للنشر</button><button class="secondary rec-preview" data-id="'+x.id+'">معاينة</button><button class="danger rec-reject" data-id="'+x.id+'">استبعاد</button></div></div></article>').join('');
 }
 async function renderGallery(){
  const filter=$('albumFilter').value;const list=assets.filter(x=>!filter||x.album_id===filter);
@@ -215,7 +223,7 @@ async function uploadFiles(){
  if(!files.length)return message('pageMsg','اختر ملفاً واحداً على الأقل.',true);
  const invalid=files.find(f=>f.size<=0||f.size>MAX_SIZE||(!f.type.startsWith('image/')&&!f.type.startsWith('video/')));
  if(invalid)return message('pageMsg','الملف غير مدعوم أو يتجاوز 200 ميغابايت: '+invalid.name,true);
- $('uploadBtn').disabled=true;let done=0;
+ $('uploadBtn').disabled=true;let done=0,aiDone=0,aiFailed=0;
  try{
   for(const file of files){
    message('pageMsg','جارٍ رفع '+(done+1)+' من '+files.length+': '+file.name);
@@ -223,13 +231,17 @@ async function uploadFiles(){
    const up=await db.storage.from('media-center').upload(path,file,{contentType:file.type,upsert:false});
    if(up.error)throw up.error;
    const row={album_id:albumId,storage_path:path,original_filename:file.name,mime_type:file.type,file_size:file.size,media_type:file.type.startsWith('video/')?'video':'image',uploaded_by:user.id};
-   const ins=await db.from('media_assets').insert(row);
+   const ins=await db.from('media_assets').insert(row).select('id').single();
    if(ins.error){await db.storage.from('media-center').remove([path]);throw ins.error;}
    done++;
+   if(row.media_type==='image'&&['image/jpeg','image/png','image/webp'].includes(String(file.type).toLowerCase())){
+    try{const ai=await db.functions.invoke('media-ai-review',{body:{asset_id:ins.data.id}});if(ai.error||!ai.data?.ok)aiFailed++;else aiDone++;}
+    catch(_){aiFailed++;}
+   }
   }
   $('mediaFiles').value='';$('fileList').textContent='';await loadLibrary();
   $('albumFilter').value=albumId;renderAlbums();await renderGallery();
-  message('pageMsg','اكتمل رفع '+done+' ملف. الملفات الآن بانتظار مراجعة الإدارة.');
+  message('pageMsg','اكتمل رفع '+done+' ملف. فُحص تلقائياً '+aiDone+' صورة، وتعذر تحليل '+aiFailed+'. راجع قسم ترشيحات الذكاء الاصطناعي.');
  }catch(e){message('pageMsg','تم رفع '+done+' ملف، لكن تعذّر إكمال العملية: '+(e.message||'خطأ غير معروف'),true);await loadLibrary();}
  finally{$('uploadBtn').disabled=false;}
 }
@@ -279,6 +291,7 @@ async function aiReviewAsset(id,button){
  }catch(e){message('pageMsg','تعذر تحليل الصورة: '+(e.message||'خطأ غير معروف'),true);}
  finally{button.disabled=false;button.textContent='تحليل بالذكاء الاصطناعي';}
 }
+$('aiRecommendations').onclick=e=>{const approve=e.target.closest('.rec-approve'),reject=e.target.closest('.rec-reject'),preview=e.target.closest('.rec-preview');if(approve)setApproval(approve.dataset.id,'approved');if(reject&&confirm('استبعاد هذه الصورة من الترشيحات؟')){const id=reject.dataset.id;db.from('media_assets').update({ai_recommendation:'not_recommended'}).eq('id',id).then(async r=>{if(r.error)message('pageMsg',r.error.message,true);else{await loadLibrary();message('pageMsg','تم استبعاد الصورة من الترشيحات.');}});}if(preview)previewAsset(preview.dataset.id);};
 async function setApproval(id,status){
  const row={approval_status:status,approved_by:status==='approved'?user.id:null,approved_at:status==='approved'?new Date().toISOString():null};
  const r=await db.from('media_assets').update(row).eq('id',id);if(r.error){message('pageMsg',r.error.message,true);return;}
