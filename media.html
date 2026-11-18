@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="qawafel-build" content="V286-MEDIA-CENTER-V1">
+<title>المركز الإعلامي | قوافل الحرمين</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" onerror="this.onerror=null;this.src='https://unpkg.com/@supabase/supabase-js@2/dist/umd/supabase.js'"></script>
+<style>
+:root{--navy:#0b3556;--blue:#155985;--gold:#c99a32;--bg:#f4f6f8;--line:#e3e9ee;--text:#18384f;--muted:#718390;--green:#18734e;--red:#a43b3b}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif}
+.top{background:var(--navy);color:#fff;padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;position:sticky;top:0;z-index:5}
+.brand{display:flex;align-items:center;gap:12px}.brand img{width:54px;height:48px;object-fit:contain;background:#fff;border:1px solid var(--gold);border-radius:9px}.brand b{display:block;font-size:17px}.brand small{display:block;color:#e4c878;font-size:10px;margin-top:4px}
+button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;border-radius:10px;padding:11px 15px;font-weight:800}.primary{background:var(--navy);color:#fff}.gold{background:var(--gold);color:#fff}.secondary{background:#edf3f6;color:var(--navy);border:1px solid #d8e3e9}.logout{background:#ffffff15;border:1px solid #ffffff40;color:#fff}
+.wrap{max-width:1350px;margin:25px auto;padding:0 18px}.head{display:flex;align-items:end;justify-content:space-between;gap:12px;margin-bottom:20px}.eyebrow{color:var(--gold);font-size:11px;font-weight:900}.head h1{margin:7px 0;color:var(--navy);font-size:27px}.head p{margin:0;color:var(--muted);font-size:12px;line-height:1.8}
+.login{max-width:430px;margin:70px auto;background:#fff;padding:28px;border:1px solid var(--line);border-radius:18px;box-shadow:0 6px 25px #0b355610}.login h2{margin:0 0 8px;color:var(--navy)}.login p{font-size:12px;color:var(--muted);line-height:1.8}.field{margin:12px 0}.field label{display:block;font-size:11px;font-weight:800;margin-bottom:6px}.field input,.field textarea,.field select{width:100%;border:1px solid #ccd8df;border-radius:10px;padding:11px;background:#fff;outline-color:var(--blue)}.msg{display:none;margin:12px 0;padding:11px;border-radius:10px;background:#edf8f3;color:var(--green);font-size:12px;line-height:1.7}.msg.show{display:block}.msg.err{background:#fff0f0;color:var(--red)}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.stat,.panel{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px;box-shadow:0 4px 18px #0b355608}.stat small{color:var(--muted);font-size:10px}.stat b{display:block;color:var(--navy);font-size:24px;margin-top:6px}
+.layout{display:grid;grid-template-columns:340px 1fr;gap:15px;align-items:start}.panel h2{margin:0 0 7px;color:var(--navy);font-size:17px}.hint{font-size:10px;color:var(--muted);line-height:1.8;margin-bottom:13px}
+.drop{border:2px dashed #cbd9e1;background:#f8fbfc;border-radius:13px;padding:20px;text-align:center;color:var(--muted);font-size:11px;line-height:1.8}.drop input{display:block;width:100%;margin-top:10px;font-size:11px}.file-list{font-size:10px;color:var(--blue);margin-top:7px;line-height:1.8;word-break:break-word}
+.toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}.toolbar select{border:1px solid #d5e0e6;background:#fff;border-radius:9px;padding:9px;min-width:160px}
+.albums{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px}.album{border:1px solid var(--line);border-radius:12px;padding:13px;background:#fff;cursor:pointer;text-align:right}.album.active{border-color:var(--gold);box-shadow:0 0 0 2px #c99a3220}.album b{display:block;color:var(--navy);font-size:12px}.album small{display:block;color:var(--muted);font-size:9px;margin-top:5px}
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.asset{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff}.preview{height:155px;background:#edf2f5;display:grid;place-items:center;overflow:hidden}.preview img,.preview video{width:100%;height:100%;object-fit:cover}.assetbody{padding:11px}.assetbody b{font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.assetbody small{font-size:9px;color:var(--muted);display:block;margin-top:5px}.badge{display:inline-block;padding:5px 8px;border-radius:8px;font-size:9px;font-weight:900;margin-top:7px;background:#fff4dd;color:#8a641c}.badge.approved{background:#e9f7ef;color:var(--green)}.badge.rejected{background:#fff0f0;color:var(--red)}.asset-actions{display:flex;gap:6px;margin-top:9px}.asset-actions button{flex:1;padding:8px 5px;font-size:9px}
+.empty{padding:35px;text-align:center;border:1px dashed #cbd9e1;border-radius:13px;color:var(--muted);font-size:12px;grid-column:1/-1}
+@media(max-width:950px){.layout{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.top{padding:10px}.brand img{width:43px;height:40px}.brand b{font-size:14px}.brand small{font-size:9px}.wrap{padding:0 11px;margin:17px auto}.head{display:block}.head h1{font-size:23px}.stats{gap:7px}.stat{padding:11px}.stat b{font-size:19px}.stat small{font-size:9px}.panel{padding:13px}.albums{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.preview{height:120px}.assetbody{padding:8px}.asset-actions{flex-direction:column}.logout{font-size:10px;padding:9px}}
+</style>
+</head>
+<body>
+<header class="top">
+ <div class="brand"><img src="./logo.png" alt="قوافل الحرمين"><div><b>قوافل الحرمين</b><small>المركز الإعلامي</small></div></div>
+ <div style="display:flex;align-items:center;gap:8px"><span id="userName" style="font-size:11px"></span><button class="logout" id="logoutBtn" style="display:none">خروج</button></div>
+</header>
+<section id="loginView" class="login">
+ <h2>دخول المركز الإعلامي</h2><p>هذا القسم مخصص للموظفين المخولين في قوافل الحرمين. سجّل الدخول بحساب الموظف.</p>
+ <div class="field"><label>البريد الإلكتروني</label><input id="email" type="email" autocomplete="username" placeholder="البريد الإلكتروني"></div>
+ <div class="field"><label>كلمة المرور</label><input id="password" type="password" autocomplete="current-password" placeholder="كلمة المرور"></div>
+ <button id="loginBtn" class="primary" style="width:100%">تسجيل الدخول</button><div id="loginMsg" class="msg"></div>
+</section>
+<main id="appView" class="wrap" style="display:none">
+ <div class="head"><div><div class="eyebrow">MEDIA CENTER · V1</div><h1>المركز الإعلامي</h1><p>أرشفة صور وفيديوهات الرحلات والفعاليات، ورفعها للمراجعة قبل اعتمادها للنشر.</p></div><button class="secondary" onclick="location.href='./internal.html'">العودة إلى لوحة الإدارة</button></div>
+ <div class="stats"><div class="stat"><small>الألبومات</small><b id="albumCount">0</b></div><div class="stat"><small>إجمالي الملفات</small><b id="assetCount">0</b></div><div class="stat"><small>بانتظار الاعتماد</small><b id="pendingCount">0</b></div></div>
+ <div class="layout">
+  <section class="panel">
+   <h2>إنشاء ألبوم جديد</h2><div class="hint">أنشئ ألبوماً لكل رحلة أو فعالية حتى تبقى المواد مرتبة.</div>
+   <div class="field"><label>اسم الألبوم *</label><input id="albumTitle" maxlength="160" placeholder="مثال: رحلة عمرة 18 تشرين الثاني"></div>
+   <div class="field"><label>وصف مختصر</label><textarea id="albumDescription" rows="2" placeholder="تفاصيل الألبوم أو المناسبة"></textarea></div>
+   <div class="field"><label>اسم الرحلة / الفعالية</label><input id="tripLabel" placeholder="مثال: رحلة المدينة ومكة"></div>
+   <div class="field"><label>تاريخ الفعالية</label><input id="eventDate" type="date"></div>
+   <button id="createAlbumBtn" class="primary" style="width:100%">إنشاء الألبوم</button>
+   <hr style="border:0;border-top:1px solid var(--line);margin:20px 0">
+   <h2>رفع الصور والفيديوهات</h2><div class="hint">الحد الأعلى للملف 200 ميغابايت. الملفات خاصة ولا تظهر للعامة قبل اعتمادها.</div>
+   <div class="field"><label>الألبوم</label><select id="uploadAlbum"><option value="">اختر ألبوماً</option></select></div>
+   <div class="drop">اختر صوراً أو فيديوهات من هاتفك
+    <input id="mediaFiles" type="file" multiple accept="image/jpeg,image/png,image/webp,image/heic,video/mp4,video/quicktime,video/webm">
+   </div><div id="fileList" class="file-list"></div>
+   <button id="uploadBtn" class="gold" style="width:100%;margin-top:12px">رفع الملفات</button>
+   <div id="pageMsg" class="msg"></div>
+  </section>
+  <section class="panel">
+   <div class="toolbar"><div><h2 style="margin:0">مكتبة الوسائط</h2><div class="hint" style="margin:5px 0 0">اختر ألبوماً لعرض مواده ومتابعة حالة الاعتماد.</div></div><select id="albumFilter"><option value="">كل الألبومات</option></select></div>
+   <div id="albumList" class="albums"></div><div id="gallery" class="gallery"><div class="empty">جارٍ تحميل المكتبة...</div></div>
+  </section>
+ </div>
+</main>
+<script>
+(function(){
+const SUPABASE_URL='https://ymjkzvdjpuuxkcgkmbtc.supabase.co';
+const SUPABASE_KEY='sb_publishable_PIYJ3bv6D5gWl3nXyot3Qg__gZKtexJ';
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const $=id=>document.getElementById(id);
+let user=null, profile=null, isManager=false, albums=[], assets=[], signedUrls={};
+const MAX_SIZE=209715200;
+const labels={pending:'بانتظار المراجعة',approved:'معتمد',rejected:'مرفوض'};
+function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
+function message(id,t,error=false){$(id).textContent=t;$(id).className='msg show'+(error?' err':'');}
+function canManage(){return isManager;}
+async function authorize(session){
+ user=session?.user;if(!user)return false;
+ const s=await db.from('staff_profiles').select('full_name,role,active,permissions').eq('user_id',user.id).maybeSingle();
+ if(!s.error&&s.data&&s.data.active!==false){
+  profile=s.data;isManager=['super_admin','manager'].includes(profile.role);
+  return isManager||profile.role==='media'||(Array.isArray(profile.permissions)&&profile.permissions.includes('media'));
+ }
+ const a=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
+ if(!a.error&&a.data?.role==='super_admin'){profile={full_name:user.email,role:'super_admin'};isManager=true;return true;}
+ return false;
+}
+async function enter(session){
+ if(!await authorize(session)){await db.auth.signOut();$('loginView').style.display='block';$('appView').style.display='none';message('loginMsg','هذا الحساب لا يملك صلاحية دخول المركز الإعلامي.',true);return;}
+ $('loginView').style.display='none';$('appView').style.display='block';$('logoutBtn').style.display='inline-block';$('userName').textContent=profile.full_name||user.email||'';
+ await loadLibrary();
+}
+async function loadLibrary(){
+ const [a,m]=await Promise.all([
+  db.from('media_albums').select('*').order('created_at',{ascending:false}),
+  db.from('media_assets').select('*').order('created_at',{ascending:false})
+ ]);
+ if(a.error)throw a.error;if(m.error)throw m.error;
+ albums=a.data||[];assets=m.data||[];
+ $('albumCount').textContent=albums.length;$('assetCount').textContent=assets.length;
+ $('pendingCount').textContent=assets.filter(x=>x.approval_status==='pending').length;
+ const opts='<option value="">'+ 'كل الألبومات' +'</option>'+albums.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
+ $('albumFilter').innerHTML=opts;$('uploadAlbum').innerHTML='<option value="">اختر ألبوماً</option>'+albums.map(x=>'<option value="'+x.id+'">'+esc(x.title)+'</option>').join('');
+ renderAlbums();await renderGallery();
+}
+function renderAlbums(){
+ const selected=$('albumFilter').value;
+ $('albumList').innerHTML=albums.length?albums.map(a=>'<button class="album '+(selected===a.id?'active':'')+'" data-album="'+a.id+'"><b>'+esc(a.title)+'</b><small>'+esc(a.trip_label||'')+' · '+assets.filter(x=>x.album_id===a.id).length+' ملف</small></button>').join(''):'<div class="empty">لا توجد ألبومات بعد. أنشئ أول ألبوم من النموذج.</div>';
+}
+async function renderGallery(){
+ const filter=$('albumFilter').value;const list=assets.filter(x=>!filter||x.album_id===filter);
+ if(!list.length){$('gallery').innerHTML='<div class="empty">لا توجد ملفات في هذا الألبوم حالياً.</div>';return;}
+ $('gallery').innerHTML='<div class="empty">جارٍ تجهيز المعاينات...</div>';
+ const urls=await Promise.all(list.map(async x=>{if(signedUrls[x.id])return [x.id,signedUrls[x.id]];const r=await db.storage.from('media-center').createSignedUrl(x.storage_path,3600);if(r.error)return [x.id,''];signedUrls[x.id]=r.data.signedUrl;return [x.id,r.data.signedUrl];}));
+ const urlMap=Object.fromEntries(urls);
+ $('gallery').innerHTML=list.map(x=>{
+  const u=urlMap[x.id]||'', preview=!u?'<div style="font-size:11px;color:#718390">تعذر تحميل المعاينة</div>':x.media_type==='video'?'<video src="'+u+'" controls preload="metadata"></video>':'<img src="'+u+'" alt="'+esc(x.original_filename)+'" loading="lazy">';
+  const actions=canManage()&&x.approval_status!=='approved'?'<div class="asset-actions"><button class="primary approve" data-id="'+x.id+'">اعتماد</button><button class="secondary reject" data-id="'+x.id+'">رفض</button></div>':'';
+  return '<article class="asset"><div class="preview">'+preview+'</div><div class="assetbody"><b>'+esc(x.original_filename)+'</b><small>'+esc(albums.find(a=>a.id===x.album_id)?.title||'')+' · '+(x.file_size/1048576).toFixed(1)+' MB</small><span class="badge '+x.approval_status+'">'+labels[x.approval_status]+'</span>'+actions+'</div></article>';
+ }).join('');
+}
+async function createAlbum(){
+ const title=$('albumTitle').value.trim();if(title.length<2)return message('pageMsg','اكتب اسماً واضحاً للألبوم.',true);
+ $('createAlbumBtn').disabled=true;
+ try{
+  const row={title,description:$('albumDescription').value.trim()||null,trip_label:$('tripLabel').value.trim()||null,event_date:$('eventDate').value||null,created_by:user.id};
+  const r=await db.from('media_albums').insert(row).select().single();if(r.error)throw r.error;
+  $('albumTitle').value='';$('albumDescription').value='';$('tripLabel').value='';$('eventDate').value='';
+  await loadLibrary();$('uploadAlbum').value=r.data.id;$('albumFilter').value=r.data.id;renderAlbums();await renderGallery();
+  message('pageMsg','تم إنشاء الألبوم بنجاح.');
+ }catch(e){message('pageMsg',e.message||'تعذر إنشاء الألبوم.',true);}
+ finally{$('createAlbumBtn').disabled=false;}
+}
+function safeName(name){return name.normalize('NFKC').replace(/[^\p{L}\p{N}._-]+/gu,'_').slice(-100)||'media';}
+async function uploadFiles(){
+ const albumId=$('uploadAlbum').value,files=[...$('mediaFiles').files];
+ if(!albumId)return message('pageMsg','اختر الألبوم أولاً.',true);
+ if(!files.length)return message('pageMsg','اختر ملفاً واحداً على الأقل.',true);
+ const invalid=files.find(f=>f.size<=0||f.size>MAX_SIZE||(!f.type.startsWith('image/')&&!f.type.startsWith('video/')));
+ if(invalid)return message('pageMsg','الملف غير مدعوم أو يتجاوز 200 ميغابايت: '+invalid.name,true);
+ $('uploadBtn').disabled=true;let done=0;
+ try{
+  for(const file of files){
+   message('pageMsg','جارٍ رفع '+(done+1)+' من '+files.length+': '+file.name);
+   const path=albumId+'/'+Date.now()+'_'+crypto.randomUUID()+'_'+safeName(file.name);
+   const up=await db.storage.from('media-center').upload(path,file,{contentType:file.type,upsert:false});
+   if(up.error)throw up.error;
+   const row={album_id:albumId,storage_path:path,original_filename:file.name,mime_type:file.type,file_size:file.size,media_type:file.type.startsWith('video/')?'video':'image',uploaded_by:user.id};
+   const ins=await db.from('media_assets').insert(row);
+   if(ins.error){await db.storage.from('media-center').remove([path]);throw ins.error;}
+   done++;
+  }
+  $('mediaFiles').value='';$('fileList').textContent='';await loadLibrary();
+  $('albumFilter').value=albumId;renderAlbums();await renderGallery();
+  message('pageMsg','اكتمل رفع '+done+' ملف. الملفات الآن بانتظار مراجعة الإدارة.');
+ }catch(e){message('pageMsg','تم رفع '+done+' ملف، لكن تعذّر إكمال العملية: '+(e.message||'خطأ غير معروف'),true);await loadLibrary();}
+ finally{$('uploadBtn').disabled=false;}
+}
+async function setApproval(id,status){
+ const row={approval_status:status,approved_by:status==='approved'?user.id:null,approved_at:status==='approved'?new Date().toISOString():null};
+ const r=await db.from('media_assets').update(row).eq('id',id);if(r.error){message('pageMsg',r.error.message,true);return;}
+ await loadLibrary();message('pageMsg',status==='approved'?'تم اعتماد الملف.':'تم رفض الملف.');
+}
+$('loginBtn').onclick=async()=>{const email=$('email').value.trim(),password=$('password').value;if(!email||!password)return message('loginMsg','أدخل البريد وكلمة المرور.',true);$('loginBtn').disabled=true;try{const r=await db.auth.signInWithPassword({email,password});if(r.error)throw r.error;await enter(r.data.session);}catch(e){message('loginMsg',e.message||'تعذر تسجيل الدخول.',true);}finally{$('loginBtn').disabled=false;}};
+$('password').addEventListener('keydown',e=>{if(e.key==='Enter')$('loginBtn').click();});
+$('logoutBtn').onclick=async()=>{await db.auth.signOut();location.reload();};
+$('createAlbumBtn').onclick=createAlbum;$('uploadBtn').onclick=uploadFiles;
+$('mediaFiles').onchange=()=>{$('fileList').textContent=[...$('mediaFiles').files].map(f=>f.name+' ('+(f.size/1048576).toFixed(1)+' MB)').join(' · ');};
+$('albumFilter').onchange=()=>{renderAlbums();renderGallery();};
+$('albumList').onclick=e=>{const b=e.target.closest('[data-album]');if(b){$('albumFilter').value=b.dataset.album;renderAlbums();renderGallery();}};
+$('gallery').onclick=e=>{const a=e.target.closest('.approve'),r=e.target.closest('.reject');if(a)setApproval(a.dataset.id,'approved');if(r&&confirm('هل تريد رفض هذا الملف؟'))setApproval(r.dataset.id,'rejected');};
+db.auth.getSession().then(({data})=>{if(data.session)enter(data.session).catch(e=>message('pageMsg',e.message,true));});
+})();
+</script>
+</body></html>
