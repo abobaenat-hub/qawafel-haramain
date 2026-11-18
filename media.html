@@ -161,6 +161,24 @@ async function enter(session){
  if(!await authorize(session)){await db.auth.signOut();$('loginView').style.display='block';$('appView').style.display='none';message('loginMsg','هذا الحساب لا يملك صلاحية دخول المركز الإعلامي.',true);return;}
  $('loginView').style.display='none';$('appView').style.display='block';$('logoutBtn').style.display='inline-block';$('userName').textContent=profile.full_name||user.email||'';
  await loadLibrary();
+ // فحص الصور القديمة التي رُفعت قبل تفعيل التحليل التلقائي.
+ await reviewUnreviewedImages();
+}
+async function reviewUnreviewedImages(){
+ const pending=assets.filter(x=>x.media_type==='image'&&!x.ai_reviewed_at&&['image/jpeg','image/png','image/webp'].includes(String(x.mime_type||'').toLowerCase()));
+ if(!pending.length)return;
+ message('pageMsg','يجري الآن فحص الصور السابقة تلقائياً: '+pending.length+' صورة...');
+ let done=0,failed=0;
+ for(const asset of pending){
+  try{
+   const {data,error}=await db.functions.invoke('media-ai-review',{body:{asset_id:asset.id}});
+   if(error||!data?.ok)failed++;else done++;
+  }catch(_){failed++;}
+  message('pageMsg','فحص الصور السابقة: '+(done+failed)+' من '+pending.length+' — نجح '+done+'، تعذر '+failed+'.');
+ }
+ await loadLibrary();
+ if(failed)message('pageMsg','اكتمل فحص '+done+' صورة، وتعذر فحص '+failed+'. راجع الصور غير المفحوصة أو أرسل لي النتيجة لأعالج سبب التعذر.',true);
+ else message('pageMsg','اكتمل فحص الصور السابقة بنجاح. راجع قسم ترشيحات الذكاء الاصطناعي.');
 }
 async function loadLibrary(){
  const [a,m]=await Promise.all([
