@@ -18,7 +18,7 @@ button,input,textarea,select{font:inherit}button{cursor:pointer;border:0;border-
 .drop{border:2px dashed #cbd9e1;background:#f8fbfc;border-radius:13px;padding:20px;text-align:center;color:var(--muted);font-size:11px;line-height:1.8}.drop input{display:block;width:100%;margin-top:10px;font-size:11px}.file-list{font-size:10px;color:var(--blue);margin-top:7px;line-height:1.8;word-break:break-word}
 .toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap}.toolbar select{border:1px solid #d5e0e6;background:#fff;border-radius:9px;padding:9px;min-width:160px}
 .albums{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-bottom:15px}.album{border:1px solid var(--line);border-radius:12px;padding:13px;background:#fff;cursor:pointer;text-align:right}.album.active{border-color:var(--gold);box-shadow:0 0 0 2px #c99a3220}.album b{display:block;color:var(--navy);font-size:12px}.album small{display:block;color:var(--muted);font-size:9px;margin-top:5px}
-.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.asset{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff}.preview{height:155px;background:#edf2f5;display:grid;place-items:center;overflow:hidden}.preview img,.preview video{width:100%;height:100%;object-fit:cover}.assetbody{padding:11px}.assetbody b{font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.assetbody small{font-size:9px;color:var(--muted);display:block;margin-top:5px}.badge{display:inline-block;padding:5px 8px;border-radius:8px;font-size:9px;font-weight:900;margin-top:7px;background:#fff4dd;color:#8a641c}.badge.approved{background:#e9f7ef;color:var(--green)}.badge.rejected{background:#fff0f0;color:var(--red)}.asset-actions{display:flex;gap:6px;margin-top:9px}.asset-actions button{flex:1;padding:8px 5px;font-size:9px}.asset-actions .danger{background:#fff0f0;color:#a43b3b;border:1px solid #f0cccc}
+.gallery{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}.asset{border:1px solid var(--line);border-radius:13px;overflow:hidden;background:#fff}.preview{height:155px;background:#edf2f5;display:grid;place-items:center;overflow:hidden}.preview img,.preview video{width:100%;height:100%;object-fit:cover}.assetbody{padding:11px}.assetbody b{font-size:11px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.assetbody small{font-size:9px;color:var(--muted);display:block;margin-top:5px}.badge{display:inline-block;padding:5px 8px;border-radius:8px;font-size:9px;font-weight:900;margin-top:7px;background:#fff4dd;color:#8a641c}.badge.approved{background:#e9f7ef;color:var(--green)}.badge.rejected{background:#fff0f0;color:var(--red)}.asset-actions{display:flex;gap:6px;margin-top:9px}.asset-actions button{flex:1;padding:8px 5px;font-size:9px}.asset-actions .danger{background:#fff0f0;color:#a43b3b;border:1px solid #f0cccc}.asset-actions .preview-btn{background:#edf4f8;color:#0b3556;border:1px solid #cbdce6}.media-lightbox{position:fixed;inset:0;background:rgba(4,20,32,.88);z-index:100010;display:flex;align-items:center;justify-content:center;padding:22px}.media-lightbox-inner{position:relative;max-width:min(1100px,96vw);max-height:92vh;display:flex;flex-direction:column;align-items:center;gap:10px}.media-lightbox img,.media-lightbox video{display:block;max-width:100%;max-height:82vh;object-fit:contain;border-radius:10px;background:#111}.media-lightbox .close-preview{align-self:flex-end;background:#fff;color:#0b3556;padding:8px 13px}
 .empty{padding:35px;text-align:center;border:1px dashed #cbd9e1;border-radius:13px;color:var(--muted);font-size:12px;grid-column:1/-1}
 @media(max-width:950px){.layout{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.top{padding:10px}.brand img{width:43px;height:40px}.brand b{font-size:14px}.brand small{font-size:9px}.wrap{padding:0 11px;margin:17px auto}.head{display:block}.head h1{font-size:23px}.stats{gap:7px}.stat{padding:11px}.stat b{font-size:19px}.stat small{font-size:9px}.panel{padding:13px}.albums{grid-template-columns:1fr}.gallery{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.preview{height:120px}.assetbody{padding:8px}.asset-actions{flex-direction:column}.logout{font-size:10px;padding:9px}}
@@ -183,8 +183,9 @@ async function renderGallery(){
  $('gallery').innerHTML=list.map(x=>{
   const u=urlMap[x.id]||'', preview=!u?'<div style="font-size:11px;color:#718390">تعذر تحميل المعاينة</div>':x.media_type==='video'?'<video src="'+u+'" controls preload="metadata"></video>':'<img src="'+u+'" alt="'+esc(x.original_filename)+'" loading="lazy">';
   const reviewActions=canManage()&&x.approval_status!=='approved'?'<button class="primary approve" data-id="'+x.id+'">اعتماد</button><button class="secondary reject" data-id="'+x.id+'">رفض</button>':'';
+  const previewAction=canManage()&&x.approval_status==='approved'?'<button class="preview-btn preview-asset" data-id="'+x.id+'">معاينة</button>':'';
   const deleteAction=canManage()?'<button class="danger delete-asset" data-id="'+x.id+'">حذف</button>':'';
-  const actions=reviewActions||deleteAction?'<div class="asset-actions">'+reviewActions+deleteAction+'</div>':'';
+  const actions=reviewActions||previewAction||deleteAction?'<div class="asset-actions">'+reviewActions+previewAction+deleteAction+'</div>':'';
   return '<article class="asset"><div class="preview">'+preview+'</div><div class="assetbody"><b>'+esc(x.original_filename)+'</b><small>'+esc(albums.find(a=>a.id===x.album_id)?.title||'')+' · '+(x.file_size/1048576).toFixed(1)+' MB</small><span class="badge '+x.approval_status+'">'+labels[x.approval_status]+'</span>'+actions+'</div></article>';
  }).join('');
 }
@@ -225,6 +226,22 @@ async function uploadFiles(){
  }catch(e){message('pageMsg','تم رفع '+done+' ملف، لكن تعذّر إكمال العملية: '+(e.message||'خطأ غير معروف'),true);await loadLibrary();}
  finally{$('uploadBtn').disabled=false;}
 }
+function closeMediaPreview(){
+ const modal=document.getElementById('mediaPreviewModal');if(modal)modal.remove();
+ document.removeEventListener('keydown',onPreviewKeydown);
+}
+function onPreviewKeydown(e){if(e.key==='Escape')closeMediaPreview();}
+async function previewAsset(id){
+ const asset=assets.find(x=>x.id===id);if(!asset)return;
+ let url=signedUrls[id];
+ if(!url){const r=await db.storage.from('media-center').createSignedUrl(asset.storage_path,3600);if(r.error)return message('pageMsg','تعذرت معاينة الملف: '+r.error.message,true);url=r.data.signedUrl;signedUrls[id]=url;}
+ closeMediaPreview();
+ const modal=document.createElement('div');modal.id='mediaPreviewModal';modal.className='media-lightbox';
+ const media=asset.media_type==='video'?'<video src="'+url+'" controls autoplay playsinline></video>':'<img src="'+url+'" alt="'+esc(asset.original_filename)+'">';
+ modal.innerHTML='<div class="media-lightbox-inner"><button type="button" class="close-preview">إغلاق ✕</button>'+media+'<div style="color:#fff;font-size:12px">'+esc(asset.original_filename)+'</div></div>';
+ modal.addEventListener('click',e=>{if(e.target===modal||e.target.closest('.close-preview'))closeMediaPreview();});
+ document.body.appendChild(modal);document.addEventListener('keydown',onPreviewKeydown);
+}
 async function deleteAsset(id){
  if(!canManage())return message('pageMsg','الحذف متاح للمدير فقط.',true);
  const asset=assets.find(x=>x.id===id);if(!asset)return;
@@ -254,7 +271,7 @@ $('createAlbumBtn').onclick=createAlbum;$('uploadBtn').onclick=uploadFiles;
 $('mediaFiles').onchange=()=>{$('fileList').textContent=[...$('mediaFiles').files].map(f=>f.name+' ('+(f.size/1048576).toFixed(1)+' MB)').join(' · ');};
 $('albumFilter').onchange=()=>{renderAlbums();renderGallery();};
 $('albumList').onclick=e=>{const b=e.target.closest('[data-album]');if(b){$('albumFilter').value=b.dataset.album;renderAlbums();renderGallery();}};
-$('gallery').onclick=e=>{const a=e.target.closest('.approve'),r=e.target.closest('.reject'),d=e.target.closest('.delete-asset');if(a)setApproval(a.dataset.id,'approved');if(r&&confirm('هل تريد رفض هذا الملف؟'))setApproval(r.dataset.id,'rejected');if(d)deleteAsset(d.dataset.id);};
+$('gallery').onclick=e=>{const a=e.target.closest('.approve'),r=e.target.closest('.reject'),d=e.target.closest('.delete-asset'),p=e.target.closest('.preview-asset');if(a)setApproval(a.dataset.id,'approved');if(r&&confirm('هل تريد رفض هذا الملف؟'))setApproval(r.dataset.id,'rejected');if(d)deleteAsset(d.dataset.id);if(p)previewAsset(p.dataset.id);};
 db.auth.getSession().then(({data})=>{if(data.session)enter(data.session).catch(e=>message('pageMsg',e.message,true));});
 })();
 </script>
