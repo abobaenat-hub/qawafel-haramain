@@ -143,13 +143,18 @@ function message(id,t,error=false){$(id).textContent=t;$(id).className='msg show
 function canManage(){return isManager;}
 async function authorize(session){
  user=session?.user;if(!user)return false;
+ // المدير العام يُتحقق منه أولاً من سجل الإدارة المستقل.
+ const a=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
+ if(!a.error&&String(a.data?.role||'').toLowerCase()==='super_admin'){
+  profile={full_name:user.email,role:'super_admin'};isManager=true;return true;
+ }
  const s=await db.from('staff_profiles').select('full_name,role,active,permissions').eq('user_id',user.id).maybeSingle();
  if(!s.error&&s.data&&s.data.active!==false){
-  profile=s.data;isManager=['super_admin','manager'].includes(profile.role);
-  return isManager||profile.role==='media'||(Array.isArray(profile.permissions)&&profile.permissions.includes('media'));
+  profile=s.data;
+  const role=String(profile.role||'').toLowerCase();
+  isManager=['super_admin','manager'].includes(role);
+  return isManager||role==='media'||(Array.isArray(profile.permissions)&&profile.permissions.includes('media'));
  }
- const a=await db.from('admin_users').select('role').eq('user_id',user.id).maybeSingle();
- if(!a.error&&a.data?.role==='super_admin'){profile={full_name:user.email,role:'super_admin'};isManager=true;return true;}
  return false;
 }
 async function enter(session){
